@@ -1,4 +1,4 @@
-/Data
+Data/
 *.ipynb
 *.csv
 *.pdf
@@ -6,3 +6,5 @@
 *.jpg
 *.jpeg
 *.html
+__pycache__/
+.DS_Store
