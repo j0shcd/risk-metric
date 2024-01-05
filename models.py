@@ -24,3 +24,9 @@ def simple_risk(daily_data_path, weekly_data_path):
     # data.to_csv('./Data/combined_data.csv')
 
     viz.plot_simple_risk(data)
+
+
+def log_reg(daily_data_path):
+    data = proc.calculate_log_regression_overvaluation(data_path=daily_data_path, extension_years=3)
+    viz.plot_overvaluation(data)
+    # viz.plot_log_fit(data)

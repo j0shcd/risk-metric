@@ -1,4 +1,4 @@
-from models import simple_risk
+import models as models
 from update import update_data
 from cleanCSV import cleanCSV
 
@@ -14,4 +14,6 @@ if __name__ == '__main__':
         cleanCSV(daily_data_path)
         cleanCSV(weekly_data_path)
 
-    simple_risk(daily_data_path, weekly_data_path)
+    # models.simple_risk(daily_data_path, weekly_data_path)
+    models.log_reg(daily_data_path)
+    
