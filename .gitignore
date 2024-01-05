@@ -9,3 +9,4 @@ Data/
 __pycache__/
 .DS_Store
 viz
+*.docx
