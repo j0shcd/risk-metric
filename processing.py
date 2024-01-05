@@ -53,9 +53,9 @@ def calculate_log_regression_overvaluation(data_path, extension_years=3, plot=Fa
 
     # Return only the original date range data if not plotting
     if not plot:
-        return data[['Price', 'Overvaluation']]
+        return data[['Price', 'Overvaluation']], coefficients
     else:
         data = data.reindex(data.index.union(future_index))  # Include future dates if plotting
         data.loc[future_index, 'Model_Price'] = np.exp(extended_price_log[len(t):])
-        return data[['Price', 'Overvaluation', 'Model_Price']]
+        return data[['Price', 'Overvaluation', 'Model_Price']], coefficients
 
