@@ -21,7 +21,7 @@ def plot_simple_risk(data):
 
     # Create the second y-axis for the risk levels
     ax2 = ax1.twinx()
-    ax2.plot(data.index, data['risk levels'], label='Risk Levels', color='red', alpha=0.7)
+    ax2.plot(data.index, data['simple_risk'], label='Risk Levels', color='red', alpha=0.7)
     ax2.set_ylabel('Risk Levels', fontsize=14, color='red')
     ax2.tick_params(axis='y', labelcolor='red')
     ax2.legend(loc='upper right')
@@ -89,3 +89,32 @@ def plot_overvaluation(data):
 
     plt.show()
 
+def plot_risk_and_price(data):
+    # Create a new figure and a twin Axes sharing the xaxis
+    fig, ax1 = plt.subplots(figsize=(14, 7))
+
+    # Plot the Price and SMAs on the left y-axis
+    ax1.plot(data.index, data['Price'], label='Daily Price', alpha=0.7, linewidth=2)
+
+    # Set the y-axis label, the title and the legend
+    ax1.set_yscale('log')
+    ax1.set_ylabel('Price (Log Scale)', fontsize=14)
+    ax1.set_title('Bitcoin Price, and Risk Levels', fontsize=16)
+    ax1.legend(loc='upper left')
+
+    # Create the second y-axis for the risk levels
+    ax2 = ax1.twinx()
+    ax2.plot(data.index, data['risk_levels'], label='Risk Levels', color='red', alpha=0.7)
+    ax2.set_ylabel('Risk Levels', fontsize=14, color='red')
+    ax2.tick_params(axis='y', labelcolor='red')
+    ax2.legend(loc='upper right')
+
+    # Set the x-axis label and grid
+    ax1.set_xlabel('Date', fontsize=14)
+    ax1.grid(True)
+
+    # Save the plot to a file
+    plt.savefig('viz/bitcoin_risk.png')
+
+    # Show the plot
+    plt.show()
