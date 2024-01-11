@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from sklearn.preprocessing import StandardScaler
+
 def calculate_sma(prices, window):
     """
     Calculates Simple Moving Average 
@@ -9,9 +11,19 @@ def calculate_sma(prices, window):
     return sma
 
 
+def calculate_ema(prices, window):
+    """
+    Calculates Exponential Moving Average (EMA) over a given window.
+    
+    :param prices: Pandas Series with the price data.
+    :param window: Integer, the period over which to calculate the EMA.
+    :return: Pandas Series with the EMA.
+    """
+    return prices.ewm(span=window, adjust=False).mean()
+
 def normalize_risk_metric(risk_levels):
     """
-    Normalizes risk levels between 0 and 1 and applies diminishing returns if alpha and beta are provided.
+    Normalizes risk levels between 0 and 1 
     """
     risk_levels_min = risk_levels.min()
     risk_levels_max = risk_levels.max()
@@ -19,18 +31,14 @@ def normalize_risk_metric(risk_levels):
     
     return normalized_risk
 
-def apply_diminishing_returns(risk, coefficients):
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def calculate_z_score(data):
     """
-    Applies a diminishing returns function to the risk levels.
-    `alpha` and `beta` should be the coefficients from the price regression.
+    Standardizes the data using Z-score standardization and applies the sigmoid function.
     """
-    ### delete line when want to Re-enable diminishing returns:
-    coefficients = None
-    if coefficients is None:
-        print("No regression coefficients; Diminishing returns not applied.")
-        return risk
-    
-    current_time = np.arange(len(risk))
-    decay_factor = np.exp(np.polyval(coefficients, current_time))
-    adjusted_risk = risk * decay_factor
-    return adjusted_risk
+    scaler = StandardScaler()
+    z_scores = scaler.fit_transform(data.values.reshape(-1, 1)).flatten()
+    sigmoid_scores = sigmoid(z_scores)
+    return sigmoid_scores

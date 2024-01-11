@@ -11,7 +11,7 @@ import utils as utils
 
 def get_historical_smas(daily_data_path, daily_window, weekly_window):
     """
-    Retrieves historical SMAs and the original price data in the same DataFrame
+    Retrieves historical Simple MAs and the original price data in the same DataFrame
     """
     daily_data = get_historical_data(daily_data_path)
 
@@ -21,6 +21,22 @@ def get_historical_smas(daily_data_path, daily_window, weekly_window):
 
     daily_data['Daily_SMA'] = utils.calculate_sma(daily_data['Price'], window=daily_window)
     daily_data['Weekly_SMA'] = utils.calculate_sma(daily_data['Price'], window=weekly_window)
+
+    return daily_data
+
+
+def get_historical_emas(daily_data_path, daily_window, weekly_window):
+    """
+    Retrieves historical Exponential MAs and the original price data in the same DataFrame
+    """
+    daily_data = get_historical_data(daily_data_path)
+
+    # # Ensure the index is a DatetimeIndex for resampling to work
+    # if not isinstance(weekly_data.index, pd.DatetimeIndex):
+    daily_data.set_index('Date', inplace=True)
+
+    daily_data['Daily_SMA'] = utils.calculate_ema(daily_data['Price'], window=daily_window)
+    daily_data['Weekly_SMA'] = utils.calculate_ema(daily_data['Price'], window=weekly_window)
 
     return daily_data
 
@@ -49,13 +65,13 @@ def calculate_log_regression_overvaluation(data_path, extension_years=3, plot=Fa
     data['Model_Price'] = np.exp(extended_price_log[:len(t)])  # Only for the original period
 
     # Calculate the overvaluation/undervaluation metric
-    data['Overvaluation'] = data['Price'] / data['Model_Price']
+    data['overvaluation_risk'] = data['Price'] / data['Model_Price']
 
     # Return only the original date range data if not plotting
     if not plot:
-        return data[['Price', 'Overvaluation']], coefficients
+        return data[['Price', 'overvaluation_risk']], coefficients
     else:
         data = data.reindex(data.index.union(future_index))  # Include future dates if plotting
         data.loc[future_index, 'Model_Price'] = np.exp(extended_price_log[len(t):])
-        return data[['Price', 'Overvaluation', 'Model_Price']], coefficients
+        return data[['Price', 'overvaluation_risk', 'Model_Price']], coefficients
 
