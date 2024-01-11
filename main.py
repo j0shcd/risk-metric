@@ -14,7 +14,7 @@ if __name__ == '__main__':
         cleanCSV(daily_data_path)
         cleanCSV(weekly_data_path)
 
-    # models.simple_risk(daily_data_path, plot=True)
+    # models.MA_risk(daily_data_path, plot=True)
     # models.log_risk(daily_data_path, plot=True)
-    models.average_risk(daily_data_path, plot = True)
+    models.average_risk(daily_data_path, MA = "SMA", plot = True)
     

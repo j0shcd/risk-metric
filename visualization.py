@@ -9,7 +9,7 @@ from matplotlib.colors import LinearSegmentedColormap
 
 
 
-def plot_simple_risk(data):
+def plot_MA_risk(data):
     # Create a new figure and a twin Axes sharing the xaxis
     fig, ax1 = plt.subplots(figsize=(14, 7))
 
@@ -26,7 +26,7 @@ def plot_simple_risk(data):
 
     # Create the second y-axis for the risk levels
     ax2 = ax1.twinx()
-    ax2.plot(data.index, data['simple_risk'], label='Risk Levels', color='red', alpha=0.7)
+    ax2.plot(data.index, data['MA_risk'], label='Risk Levels', color='red', alpha=0.7)
     ax2.set_ylabel('Risk Levels', fontsize=14, color='red')
     ax2.tick_params(axis='y', labelcolor='red')
     ax2.legend(loc='upper right')
@@ -36,7 +36,7 @@ def plot_simple_risk(data):
     ax1.grid(True)
 
     # Save the plot to a file
-    plt.savefig('viz/bitcoin_simple_risk.png')
+    plt.savefig('viz/bitcoin_MA_risk.png')
 
     # Show the plot
     plt.show()
