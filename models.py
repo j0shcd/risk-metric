@@ -92,3 +92,4 @@ def average_risk(daily_data_path, MA="SMA", plot=False, weight_log=1, weight_sma
 
     # Return the DataFrame with the new 'normalized_average_risk' column
     return avg_risk[['Price', 'risk_levels']]
+
