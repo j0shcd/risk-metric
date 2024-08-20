@@ -6,6 +6,7 @@ Data/
 *.jpg
 *.jpeg
 *.html
+*.txt
 __pycache__/
 .DS_Store
 viz

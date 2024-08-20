@@ -82,8 +82,6 @@ def average_risk(daily_data_path, MA="SMA", plot=False, weight_log=1, weight_sma
     # Remove the 'Price_ovr' column
     avg_risk = avg_risk.drop(columns=['Price_ovr'])
 
-    print(avg_risk.sample(10))
-
     if plot:
         # Assuming plot_risk_and_price function takes a dataframe with 'Price' and 'normalized_average_risk' columns
         viz.plot_risk_and_price(avg_risk[['Price', 'risk_levels']])

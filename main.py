@@ -1,3 +1,4 @@
+import sys
 import models as models
 from update import update_data
 from cleanCSV import cleanCSV
@@ -5,6 +6,9 @@ from cleanCSV import cleanCSV
 if __name__ == '__main__':
     daily_data_path = './data/btc_daily.csv'
     weekly_data_path = './data/btc_weekly.csv'
+
+    # Check if the script is run with the 'no-plot' argument
+    no_plot = '--no-plot' in sys.argv
 
     # Check if the update function added new data
     data_updated = update_data(daily_data_path, weekly_data_path)
@@ -18,7 +22,7 @@ if __name__ == '__main__':
     # models.log_risk(daily_data_path, plot=True)
     models.average_risk(daily_data_path, 
                         MA = "SMA", 
-                        plot = True, 
+                        plot = not no_plot, 
                         weight_log=0, # turned off log
                         weight_sma=1)
     
