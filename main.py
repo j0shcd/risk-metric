@@ -2,10 +2,11 @@ import sys
 import models as models
 from update import update_data
 from cleanCSV import cleanCSV
+from config import REPO_PATH
 
 if __name__ == '__main__':
-    daily_data_path = './data/btc_daily.csv'
-    weekly_data_path = './data/btc_weekly.csv'
+    daily_data_path = f"{REPO_PATH}/data/btc_daily.csv"
+    weekly_data_path = f"{REPO_PATH}/data/btc_weekly.csv"
 
     # Check if the script is run with the 'no-plot' argument
     no_plot = '--no-plot' in sys.argv

@@ -16,6 +16,8 @@ Implement a risk metric for financial markets, mostly focused on cryptocurrencie
     - better results for MA risk which trickle to average risk
 - added vizzes for price color coded by risk
     - one static and another using plotly, which launches a local web page where you can toggle the risk thresholds. 
+- Added scheduler file which you can run with the following commands:
+    - manually launch the script: "nohup python3 scheduled_run.py > scheduled_run.log 2>&1 &"
 
 
 ## What needs to be done:
