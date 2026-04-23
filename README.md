@@ -54,7 +54,7 @@ Validation includes:
 - Sentiment/social:
   - Fear & Greed index
   - YouTube activity basket
-  - Google Trends proxy (fallback CSV when official API unavailable)
+  - Google Trends (official API adapter when configured, fallback local history CSV otherwise)
   - Coinbase app-rank proxy (experimental, kill-switch enabled)
 
 ## Weighting
@@ -127,6 +127,9 @@ Important env vars:
 - `COINGECKO_API_KEY`
 - `YOUTUBE_API_KEY`
 - `YOUTUBE_CHANNEL_IDS` (comma-separated)
+- `GOOGLE_TRENDS_API_KEY` (optional)
+- `GOOGLE_TRENDS_API_URL` (optional; required for live Google Trends fetch)
+- `GOOGLE_TRENDS_TERMS` (comma-separated; default: `bitcoin`)
 - `TOTAL_MARKETCAP_CSV` (local history store for total market cap)
 - `ONCHAIN_FALLBACK_CSV` (local history store for on-chain metrics)
 - `YOUTUBE_FALLBACK_CSV` (local history store for youtube interest)

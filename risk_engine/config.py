@@ -27,11 +27,14 @@ class RuntimeConfig:
 
     glassnode_api_key: Optional[str] = None
     youtube_api_key: Optional[str] = None
+    google_trends_api_key: Optional[str] = None
+    google_trends_api_url: Optional[str] = None
     cmc_api_key: Optional[str] = None
     coingecko_api_key: Optional[str] = None
     coinmetrics_api_key: Optional[str] = None
 
     youtube_channel_ids: List[str] = field(default_factory=list)
+    google_trends_terms: List[str] = field(default_factory=list)
 
     total_marketcap_csv: Optional[Path] = None
     onchain_fallback_csv: Optional[Path] = None
@@ -54,9 +57,11 @@ def _parse_bool(value: Optional[str], default: bool) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
-def _split_csv(raw: Optional[str]) -> List[str]:
+def _split_csv(raw: Optional[str] | List[str]) -> List[str]:
     if not raw:
         return []
+    if isinstance(raw, list):
+        return [str(item).strip() for item in raw if str(item).strip()]
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
@@ -104,10 +109,13 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
         end_date=env.get("RISK_END_DATE", file_cfg.get("end_date")),
         glassnode_api_key=env.get("GLASSNODE_API_KEY", file_cfg.get("glassnode_api_key")),
         youtube_api_key=env.get("YOUTUBE_API_KEY", file_cfg.get("youtube_api_key")),
+        google_trends_api_key=env.get("GOOGLE_TRENDS_API_KEY", file_cfg.get("google_trends_api_key")),
+        google_trends_api_url=env.get("GOOGLE_TRENDS_API_URL", file_cfg.get("google_trends_api_url")),
         cmc_api_key=env.get("CMC_API_KEY", file_cfg.get("cmc_api_key")),
         coingecko_api_key=env.get("COINGECKO_API_KEY", file_cfg.get("coingecko_api_key")),
         coinmetrics_api_key=env.get("COINMETRICS_API_KEY", file_cfg.get("coinmetrics_api_key")),
         youtube_channel_ids=channel_ids,
+        google_trends_terms=_split_csv(env.get("GOOGLE_TRENDS_TERMS", file_cfg.get("google_trends_terms", ""))),
         total_marketcap_csv=_path_or_none(resolved_root, env.get("TOTAL_MARKETCAP_CSV", file_cfg.get("total_marketcap_csv"))),
         onchain_fallback_csv=_path_or_none(resolved_root, env.get("ONCHAIN_FALLBACK_CSV", file_cfg.get("onchain_fallback_csv"))),
         youtube_fallback_csv=_path_or_none(resolved_root, env.get("YOUTUBE_FALLBACK_CSV", file_cfg.get("youtube_fallback_csv"))),

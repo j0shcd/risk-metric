@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Any, Iterable, Optional
 
 import numpy as np
 import pandas as pd
@@ -33,6 +33,8 @@ def _merge_history(existing: Optional[pd.Series], snapshot: pd.Series) -> pd.Ser
 def _history_path(cfg: RuntimeConfig, kind: str) -> Path:
     if kind == "youtube_interest":
         return cfg.youtube_fallback_csv or (cfg.cache_dir / "youtube_interest.csv")
+    if kind == "google_trends_interest":
+        return cfg.google_trends_csv or (cfg.cache_dir / "google_trends_interest.csv")
     if kind == "coinbase_app_rank":
         return cfg.coinbase_rank_csv or (cfg.cache_dir / "coinbase_app_rank.csv")
     raise ValueError(f"Unknown history kind: {kind}")
@@ -90,12 +92,107 @@ def _load_youtube_interest(cfg: RuntimeConfig) -> pd.Series:
     return _update_history_with_snapshot(path=path, value_column="youtube_interest", snapshot=snapshot)
 
 
-def _load_google_trends_proxy(cfg: RuntimeConfig) -> pd.Series:
-    # The official Google Trends API is alpha-gated; use local fallback data for v1.
-    series = load_optional_csv(cfg.google_trends_csv, value_column="google_trends_interest")
-    if series is None:
+def _coerce_timestamp(raw: Any) -> Optional[pd.Timestamp]:
+    if raw is None:
+        return None
+    parsed = pd.to_datetime(raw, errors="coerce", utc=True)
+    if pd.isna(parsed):
+        return None
+    return parsed.tz_convert(None).normalize()
+
+
+def _coerce_numeric(raw: Any) -> Optional[float]:
+    if raw is None:
+        return None
+    if isinstance(raw, (list, tuple)):
+        nums = pd.to_numeric(pd.Series(raw), errors="coerce").dropna()
+        if nums.empty:
+            return None
+        return float(nums.mean())
+    value = pd.to_numeric(raw, errors="coerce")
+    if pd.isna(value):
+        return None
+    return float(value)
+
+
+def _extract_rows(payload: Any) -> Iterable[dict]:
+    if isinstance(payload, dict):
+        for key in ("data", "points", "timelineData", "timeline", "rows", "values", "series"):
+            value = payload.get(key)
+            if isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        yield item
+        for value in payload.values():
+            if isinstance(value, dict):
+                yield from _extract_rows(value)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        yield from _extract_rows(item)
+    elif isinstance(payload, list):
+        for item in payload:
+            if isinstance(item, dict):
+                yield from _extract_rows(item)
+
+
+def _parse_google_trends_series(payload: Any) -> pd.Series:
+    rows = []
+    for row in _extract_rows(payload):
+        timestamp = None
+        value = None
+
+        for time_key in ("date", "time", "timestamp", "datetime", "startTime", "week"):
+            timestamp = _coerce_timestamp(row.get(time_key))
+            if timestamp is not None:
+                break
+
+        for value_key in ("value", "interest", "score", "index", "popularity"):
+            value = _coerce_numeric(row.get(value_key))
+            if value is not None:
+                break
+
+        if timestamp is None or value is None:
+            continue
+
+        rows.append((timestamp, value))
+
+    if not rows:
         return pd.Series(dtype=float)
-    return series
+
+    frame = pd.DataFrame(rows, columns=["Date", "google_trends_interest"])
+    frame = frame.drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
+    return frame.set_index("Date")["google_trends_interest"]
+
+
+def _fetch_google_trends_interest(cfg: RuntimeConfig) -> pd.Series:
+    if not cfg.google_trends_api_key or not cfg.google_trends_api_url:
+        return pd.Series(dtype=float)
+
+    terms = cfg.google_trends_terms or ["bitcoin"]
+    payload = safe_get_json(
+        url=cfg.google_trends_api_url,
+        timeout_seconds=cfg.request_timeout_seconds,
+        headers={"X-Goog-Api-Key": cfg.google_trends_api_key},
+        params={
+            "terms": ",".join(terms),
+            "timeframe": "today 5-y",
+        },
+    )
+    if payload is None:
+        return pd.Series(dtype=float)
+
+    return _parse_google_trends_series(payload)
+
+
+def _load_google_trends_interest(cfg: RuntimeConfig) -> pd.Series:
+    path = _history_path(cfg, "google_trends_interest")
+    snapshot = _fetch_google_trends_interest(cfg)
+    return _update_history_with_snapshot(
+        path=path,
+        value_column="google_trends_interest",
+        snapshot=snapshot,
+    )
 
 
 def _fetch_coinbase_rank_snapshot(cfg: RuntimeConfig) -> pd.Series:
@@ -159,7 +256,7 @@ def load_social_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.DataF
     else:
         out["youtube_interest"] = youtube.reindex(index)
 
-    google_trends = _load_google_trends_proxy(cfg)
+    google_trends = _load_google_trends_interest(cfg)
     if google_trends.empty:
         out["google_trends_interest"] = np.nan
     else:
