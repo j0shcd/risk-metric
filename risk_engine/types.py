@@ -22,3 +22,4 @@ class RiskOutput:
     metric_health: pd.DataFrame = field(default_factory=pd.DataFrame)
     source_health: pd.DataFrame = field(default_factory=pd.DataFrame)
     category_breakdowns: Dict[str, pd.DataFrame] = field(default_factory=dict)
+    metric_breakdowns: Dict[str, pd.DataFrame] = field(default_factory=dict)

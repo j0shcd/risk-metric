@@ -99,6 +99,10 @@ class PipelineBehaviorTests(unittest.TestCase):
         self.assertIn("total_market", result.category_breakdowns)
         self.assertFalse(result.category_breakdowns["btc"].empty)
         self.assertIn("effective_weight_total", result.category_breakdowns["btc"].columns)
+        self.assertIn("btc", result.metric_breakdowns)
+        self.assertIn("total_market", result.metric_breakdowns)
+        self.assertFalse(result.metric_breakdowns["btc"].empty)
+        self.assertIn("effective_metric_weight_total", result.metric_breakdowns["btc"].columns)
 
     @patch("risk_engine.pipeline.load_social_metrics")
     @patch("risk_engine.pipeline.load_fear_greed_index")

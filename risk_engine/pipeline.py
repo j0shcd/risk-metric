@@ -172,6 +172,10 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
             "btc": btc_score.category_breakdown,
             "total_market": total_score.category_breakdown,
         },
+        metric_breakdowns={
+            "btc": btc_score.metric_breakdown,
+            "total_market": total_score.metric_breakdown,
+        },
     )
 
 
@@ -207,3 +211,11 @@ def write_outputs(result: RiskOutput, output_dir: Path) -> None:
             existing.unlink()
         for target, frame in result.category_breakdowns.items():
             frame.to_csv(category_dir / f"{target}.csv")
+
+    if result.metric_breakdowns:
+        metric_dir = output_dir / "metric_breakdowns"
+        metric_dir.mkdir(parents=True, exist_ok=True)
+        for existing in metric_dir.glob("*.csv"):
+            existing.unlink()
+        for target, frame in result.metric_breakdowns.items():
+            frame.to_csv(metric_dir / f"{target}.csv")

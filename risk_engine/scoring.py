@@ -27,6 +27,7 @@ class TargetScore:
     confidence: pd.Series
     coverage: pd.Series
     category_breakdown: pd.DataFrame
+    metric_breakdown: pd.DataFrame
 
 
 def _series_or_nan(index: pd.Index) -> pd.Series:
@@ -49,11 +50,12 @@ def score_target(
             confidence=nan_series,
             coverage=nan_series,
             category_breakdown=pd.DataFrame(index=index),
+            metric_breakdown=pd.DataFrame(index=index),
         )
 
-    category_frames: Dict[str, List[pd.DataFrame]] = {}
+    category_bundles: Dict[str, List[FeatureBundle]] = {}
     for bundle in bundles:
-        category_frames.setdefault(bundle.category, []).append(bundle.frame)
+        category_bundles.setdefault(bundle.category, []).append(bundle)
 
     category_heat = {}
     category_attention = {}
@@ -61,17 +63,21 @@ def score_target(
     category_coverage = {}
     category_gate = {}
 
-    for category, frames in category_frames.items():
-        stacked_heat = pd.concat([f["signed_heat"] for f in frames], axis=1)
-        stacked_attention = pd.concat([f["attention"] for f in frames], axis=1)
-        stacked_reliability = pd.concat([f["reliability"] for f in frames], axis=1)
-        column_ids = list(range(stacked_heat.shape[1]))
-        stacked_heat.columns = column_ids
-        stacked_attention.columns = column_ids
-        stacked_reliability.columns = column_ids
+    category_metric_heat = {}
+    category_metric_attention = {}
+    category_metric_reliability = {}
+
+    for category, scoped_bundles in category_bundles.items():
+        metric_names = [bundle.name for bundle in scoped_bundles]
+        stacked_heat = pd.concat([bundle.frame["signed_heat"] for bundle in scoped_bundles], axis=1)
+        stacked_attention = pd.concat([bundle.frame["attention"] for bundle in scoped_bundles], axis=1)
+        stacked_reliability = pd.concat([bundle.frame["reliability"] for bundle in scoped_bundles], axis=1)
+        stacked_heat.columns = metric_names
+        stacked_attention.columns = metric_names
+        stacked_reliability.columns = metric_names
 
         valid_count = stacked_heat.notna().sum(axis=1).astype(float)
-        total = float(len(frames))
+        total = float(len(scoped_bundles))
         coverage = valid_count / total
 
         gate = pd.Series(1.0, index=index, dtype=float)
@@ -91,6 +97,9 @@ def score_target(
         category_reliability[category] = reliability
         category_coverage[category] = coverage.clip(0.0, 1.0)
         category_gate[category] = gate
+        category_metric_heat[category] = stacked_heat
+        category_metric_attention[category] = stacked_attention
+        category_metric_reliability[category] = stacked_reliability
 
     weighted_heat_num = pd.Series(0.0, index=index)
     weighted_heat_den = pd.Series(0.0, index=index)
@@ -172,10 +181,64 @@ def score_target(
         else 0.0
     )
 
+    metric_breakdown = pd.DataFrame(index=index)
+    metric_effective_weights: Dict[str, pd.Series] = {}
+
+    for category in sorted(category_heat.keys()):
+        category_eff = category_effective_weight.get(category, pd.Series(0.0, index=index)).fillna(0.0)
+        metric_heat = category_metric_heat[category]
+        metric_attention = category_metric_attention[category]
+        metric_rel = category_metric_reliability[category]
+
+        rel_masked = metric_rel.where(metric_heat.notna())
+        rel_den = rel_masked.sum(axis=1, min_count=1)
+        inner_weight = rel_masked.div(rel_den, axis=0)
+        inner_weight = inner_weight.replace([np.inf, -np.inf], np.nan).fillna(0.0)
+
+        for metric_name in metric_heat.columns:
+            metric_prefix = f"metric_{metric_name}"
+            eff = category_eff * inner_weight[metric_name]
+            metric_effective_weights[metric_name] = eff
+
+            metric_breakdown[f"{metric_prefix}_effective_weight"] = eff
+            metric_breakdown[f"{metric_prefix}_category_inner_weight"] = inner_weight[metric_name]
+            metric_breakdown[f"{metric_prefix}_heat"] = metric_heat[metric_name]
+            metric_breakdown[f"{metric_prefix}_attention"] = metric_attention[metric_name]
+            metric_breakdown[f"{metric_prefix}_reliability"] = metric_rel[metric_name]
+            metric_breakdown[f"{metric_prefix}_coverage"] = metric_heat[metric_name].notna().astype(float)
+
+    metric_weight_total = pd.Series(0.0, index=index)
+    for weight in metric_effective_weights.values():
+        metric_weight_total += weight.fillna(0.0)
+
+    for metric_name in metric_effective_weights.keys():
+        metric_prefix = f"metric_{metric_name}"
+        eff = metric_effective_weights[metric_name].fillna(0.0)
+        norm = eff / metric_weight_total.replace({0.0: np.nan})
+        norm = norm.clip(lower=0.0, upper=1.0)
+        metric_breakdown[f"{metric_prefix}_normalized_weight"] = norm
+        metric_breakdown[f"{metric_prefix}_heat_contribution"] = (
+            norm * metric_breakdown[f"{metric_prefix}_heat"]
+        )
+        metric_breakdown[f"{metric_prefix}_attention_contribution"] = (
+            norm * metric_breakdown[f"{metric_prefix}_attention"]
+        )
+
+    metric_breakdown["effective_metric_weight_total"] = metric_weight_total
+    metric_breakdown["active_metric_count"] = (
+        pd.concat(
+            [series.notna().astype(float) for series in category_metric_heat.values()],
+            axis=1,
+        ).sum(axis=1)
+        if category_metric_heat
+        else 0.0
+    )
+
     return TargetScore(
         heat=heat,
         attention=attention,
         confidence=confidence,
         coverage=coverage,
         category_breakdown=breakdown,
+        metric_breakdown=metric_breakdown,
     )
