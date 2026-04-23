@@ -131,6 +131,6 @@ def load_total_market_cap(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Ser
     if merged.empty:
         return pd.Series(index=index, dtype=float, name="total_market_cap")
 
-    merged = merged.reindex(index).ffill()
+    merged = merged.reindex(index)
     merged.name = "total_market_cap"
     return merged

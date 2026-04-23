@@ -125,7 +125,7 @@ def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Data
         if series.empty:
             out[name] = np.nan
             continue
-        out[name] = series.reindex(index).ffill()
+        out[name] = series.reindex(index)
 
     out["supply_in_loss"] = 1.0 - out["supply_in_profit"]
     return out

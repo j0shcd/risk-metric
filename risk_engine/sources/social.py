@@ -79,18 +79,18 @@ def load_social_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.DataF
     if youtube.empty:
         out["youtube_interest"] = np.nan
     else:
-        out["youtube_interest"] = youtube.reindex(index).ffill()
+        out["youtube_interest"] = youtube.reindex(index)
 
     google_trends = _load_google_trends_proxy(cfg)
     if google_trends.empty:
         out["google_trends_interest"] = np.nan
     else:
-        out["google_trends_interest"] = google_trends.reindex(index).ffill()
+        out["google_trends_interest"] = google_trends.reindex(index)
 
     coinbase = _load_coinbase_app_rank(cfg)
     if coinbase.empty:
         out["coinbase_app_rank_proxy"] = np.nan
     else:
-        out["coinbase_app_rank_proxy"] = coinbase.reindex(index).ffill()
+        out["coinbase_app_rank_proxy"] = coinbase.reindex(index)
 
     return out

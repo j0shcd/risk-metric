@@ -44,4 +44,4 @@ def load_fear_greed_index(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Ser
     if series.empty:
         return pd.Series(index=index, dtype=float, name="fear_greed_index")
 
-    return series.reindex(index).ffill().rename("fear_greed_index")
+    return series.reindex(index).rename("fear_greed_index")

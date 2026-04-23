@@ -15,6 +15,7 @@ class MetricSpec:
     category: str
     target: str
     base_reliability: float
+    max_carry_days: int = 7
     direction: float = 1.0
     experimental: bool = False
 

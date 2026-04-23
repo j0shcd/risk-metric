@@ -62,24 +62,49 @@ def robust_bounded_signal(
 def build_feature_frame(
     raw_series: pd.Series,
     base_reliability: float = 1.0,
+    max_carry_days: int = 7,
     direction: float = 1.0,
     smooth_window: int = 7,
 ) -> pd.DataFrame:
-    bounded = robust_bounded_signal(raw_series)
+    observed_raw = raw_series.astype(float)
+    observed_mask = observed_raw.notna()
+
+    carried = observed_raw.ffill()
+    if max_carry_days <= 0:
+        carried = observed_raw.copy()
+        age_days = pd.Series(np.where(observed_mask, 0.0, np.nan), index=observed_raw.index, dtype=float)
+    else:
+        obs_idx = pd.Series(pd.NaT, index=observed_raw.index, dtype="datetime64[ns]")
+        obs_idx.loc[observed_mask] = observed_raw.index[observed_mask]
+        last_obs = obs_idx.ffill()
+        age_delta = observed_raw.index.to_series().sub(last_obs)
+        age_days = age_delta.dt.days.astype(float)
+        carried.loc[age_days > float(max_carry_days)] = np.nan
+
+    bounded = robust_bounded_signal(carried)
     signed_heat = (direction * bounded).clip(lower=-1.0, upper=1.0)
     attention = signed_heat.abs().clip(upper=1.0)
 
-    availability = raw_series.notna().astype(float)
-    reliability = (availability.rolling(smooth_window, min_periods=1).mean() * base_reliability).clip(0.0, 1.0)
+    availability = carried.notna().astype(float)
+    if max_carry_days <= 0:
+        freshness = observed_mask.astype(float)
+    else:
+        freshness = (1.0 - (age_days / float(max_carry_days))).clip(lower=0.0, upper=1.0).fillna(0.0)
+    rolling_availability = availability.rolling(smooth_window, min_periods=1).mean()
+    rolling_freshness = freshness.rolling(smooth_window, min_periods=1).mean()
+    reliability = (rolling_availability * rolling_freshness * base_reliability).clip(0.0, 1.0)
 
     frame = pd.DataFrame(
         {
             "signed_heat": signed_heat.rolling(smooth_window, min_periods=1).mean().clip(-1.0, 1.0),
             "attention": attention.rolling(smooth_window, min_periods=1).mean().clip(0.0, 1.0),
             "reliability": reliability,
-            "raw": raw_series,
+            "freshness": freshness.clip(0.0, 1.0),
+            "age_days": age_days,
+            "raw": observed_raw,
+            "raw_carried": carried,
         },
-        index=raw_series.index,
+        index=observed_raw.index,
     )
 
     return frame

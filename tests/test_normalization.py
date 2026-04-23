@@ -37,6 +37,22 @@ class NormalizationTests(unittest.TestCase):
 
         np.testing.assert_allclose(left.values, right.values, atol=1e-10)
 
+    def test_feature_carry_forward_uses_max_age_and_freshness_decay(self) -> None:
+        index = pd.date_range("2024-01-01", periods=12, freq="D")
+        values = pd.Series([10.0] + [np.nan] * 10 + [12.0], index=index)
+
+        frame = build_feature_frame(values, base_reliability=1.0, max_carry_days=4, smooth_window=1)
+
+        # Observed point plus four carry days; then carry expires.
+        self.assertEqual(int(frame["raw_carried"].notna().iloc[:11].sum()), 5)
+        self.assertTrue(frame["raw_carried"].iloc[5:11].isna().all())
+
+        # Freshness decays linearly and resets when a new observation arrives.
+        self.assertAlmostEqual(float(frame["freshness"].iloc[0]), 1.0)
+        self.assertAlmostEqual(float(frame["freshness"].iloc[1]), 0.75)
+        self.assertAlmostEqual(float(frame["freshness"].iloc[4]), 0.0)
+        self.assertAlmostEqual(float(frame["freshness"].iloc[-1]), 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()

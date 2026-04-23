@@ -22,33 +22,34 @@ from .types import FeatureBundle, RiskOutput
 
 def _metric_specs(cfg: RuntimeConfig) -> List[MetricSpec]:
     specs = [
-        MetricSpec("btc_trend_extension_50d_350d", "price_structure", "btc", base_reliability=0.95),
-        MetricSpec("btc_running_roi_1y", "price_structure", "btc", base_reliability=0.95),
-        MetricSpec("btc_log_reg_deviation", "price_structure", "btc", base_reliability=0.95),
-        MetricSpec("total_trend_extension_50d_350d", "price_structure", "total_market", base_reliability=0.90),
-        MetricSpec("total_running_roi_1y", "price_structure", "total_market", base_reliability=0.90),
-        MetricSpec("total_log_reg_deviation", "price_structure", "total_market", base_reliability=0.90),
+        MetricSpec("btc_trend_extension_50d_350d", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
+        MetricSpec("btc_running_roi_1y", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
+        MetricSpec("btc_log_reg_deviation", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
+        MetricSpec("total_trend_extension_50d_350d", "price_structure", "total_market", base_reliability=0.90, max_carry_days=7),
+        MetricSpec("total_running_roi_1y", "price_structure", "total_market", base_reliability=0.90, max_carry_days=7),
+        MetricSpec("total_log_reg_deviation", "price_structure", "total_market", base_reliability=0.90, max_carry_days=7),
         # Explicit fallback proxies when total market-cap history is unavailable.
-        MetricSpec("btc_trend_extension_50d_350d", "price_structure", "total_market", base_reliability=0.35),
-        MetricSpec("btc_running_roi_1y", "price_structure", "total_market", base_reliability=0.35),
-        MetricSpec("btc_log_reg_deviation", "price_structure", "total_market", base_reliability=0.35),
-        MetricSpec("total_trend_extension_50d_350d", "total_market_context", "btc", base_reliability=0.85),
-        MetricSpec("total_log_reg_deviation", "total_market_context", "btc", base_reliability=0.85),
-        MetricSpec("btc_dominance_proxy", "total_market_context", "both", base_reliability=0.60),
-        MetricSpec("mvrv_z_score", "onchain", "both", base_reliability=0.85),
-        MetricSpec("puell_multiple", "onchain", "both", base_reliability=0.85),
-        MetricSpec("supply_in_profit", "onchain", "both", base_reliability=0.80),
-        MetricSpec("supply_in_loss", "onchain", "both", base_reliability=0.80, direction=-1.0),
-        MetricSpec("youtube_interest", "social", "both", base_reliability=0.60),
-        MetricSpec("google_trends_interest", "social", "both", base_reliability=0.50),
+        MetricSpec("btc_trend_extension_50d_350d", "price_structure", "total_market", base_reliability=0.35, max_carry_days=7),
+        MetricSpec("btc_running_roi_1y", "price_structure", "total_market", base_reliability=0.35, max_carry_days=7),
+        MetricSpec("btc_log_reg_deviation", "price_structure", "total_market", base_reliability=0.35, max_carry_days=7),
+        MetricSpec("total_trend_extension_50d_350d", "total_market_context", "btc", base_reliability=0.85, max_carry_days=7),
+        MetricSpec("total_log_reg_deviation", "total_market_context", "btc", base_reliability=0.85, max_carry_days=7),
+        MetricSpec("btc_dominance_proxy", "total_market_context", "both", base_reliability=0.60, max_carry_days=14),
+        MetricSpec("mvrv_z_score", "onchain", "both", base_reliability=0.85, max_carry_days=5),
+        MetricSpec("puell_multiple", "onchain", "both", base_reliability=0.85, max_carry_days=5),
+        MetricSpec("supply_in_profit", "onchain", "both", base_reliability=0.80, max_carry_days=5),
+        MetricSpec("supply_in_loss", "onchain", "both", base_reliability=0.80, max_carry_days=5, direction=-1.0),
+        MetricSpec("youtube_interest", "social", "both", base_reliability=0.60, max_carry_days=14),
+        MetricSpec("google_trends_interest", "social", "both", base_reliability=0.50, max_carry_days=21),
         MetricSpec(
             "coinbase_app_rank_proxy",
             "social",
             "both",
             base_reliability=0.35,
+            max_carry_days=14,
             experimental=True,
         ),
-        MetricSpec("fear_greed_index", "fear_greed", "both", base_reliability=0.60),
+        MetricSpec("fear_greed_index", "fear_greed", "both", base_reliability=0.60, max_carry_days=7),
     ]
 
     if not cfg.enable_coinbase_app_rank:
@@ -66,6 +67,7 @@ def _build_feature_bundles(raw_features: pd.DataFrame, metric_specs: List[Metric
         frame = build_feature_frame(
             raw_series=raw_features[spec.name],
             base_reliability=spec.base_reliability,
+            max_carry_days=spec.max_carry_days,
             direction=spec.direction,
         )
         bundle_name = f"{spec.name}__{spec.target}__{spec.category}"
