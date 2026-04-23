@@ -99,7 +99,13 @@ python backfill_total_marketcap.py
 python backfill_social.py
 ```
 
-### 5) Validate output health
+### 5) Refresh on-chain local store only
+
+```bash
+python backfill_onchain.py
+```
+
+### 6) Validate output health
 
 ```bash
 python validate.py
@@ -122,6 +128,7 @@ Important env vars:
 - `YOUTUBE_API_KEY`
 - `YOUTUBE_CHANNEL_IDS` (comma-separated)
 - `TOTAL_MARKETCAP_CSV` (local history store for total market cap)
+- `ONCHAIN_FALLBACK_CSV` (local history store for on-chain metrics)
 - `YOUTUBE_FALLBACK_CSV` (local history store for youtube interest)
 - `APPLE_APP_STORE_COUNTRY` (default: `us`)
 - `COINBASE_IOS_APP_ID` (default: `886427730`)

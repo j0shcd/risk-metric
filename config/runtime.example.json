@@ -6,7 +6,7 @@
   "end_date": null,
   "youtube_channel_ids": "",
   "total_marketcap_csv": "data/total_marketcap.csv",
-  "onchain_fallback_csv": null,
+  "onchain_fallback_csv": "data/onchain_metrics.csv",
   "youtube_fallback_csv": null,
   "google_trends_csv": null,
   "coinbase_rank_csv": null,

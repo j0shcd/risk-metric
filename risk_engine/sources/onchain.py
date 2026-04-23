@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
 
 from ..config import RuntimeConfig
-from .common import load_optional_csv, safe_get_json
+from .common import safe_get_json
 
 
 GLASSNODE_BASE = "https://api.glassnode.com/v1/metrics"
+CORE_METRICS = ["mvrv_z_score", "puell_multiple", "supply_in_profit"]
 
 
 def _parse_glassnode_series(payload: dict) -> Optional[pd.Series]:
@@ -95,33 +97,85 @@ def _fetch_coinmetrics_mvrv_fallback(cfg: RuntimeConfig) -> Optional[pd.Series]:
     return pd.Series(mvrv_z.values, index=frame["Date"], name="mvrv_z_score")
 
 
-def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.DataFrame:
-    fallback_frame = None
-    if cfg.onchain_fallback_csv and cfg.onchain_fallback_csv.exists():
-        fallback_frame = pd.read_csv(cfg.onchain_fallback_csv, parse_dates=["Date"]).set_index("Date")
-        fallback_frame.index = pd.to_datetime(fallback_frame.index).tz_localize(None)
+def _onchain_store_path(cfg: RuntimeConfig) -> Path:
+    return cfg.onchain_fallback_csv or (cfg.cache_dir / "onchain_metrics.csv")
 
+
+def _load_onchain_store(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame()
+
+    frame = pd.read_csv(path, parse_dates=["Date"])
+    if "Date" not in frame.columns:
+        return pd.DataFrame()
+    frame["Date"] = pd.to_datetime(frame["Date"], utc=False).dt.tz_localize(None)
+    frame = frame.set_index("Date")
+    frame = frame[~frame.index.duplicated(keep="last")].sort_index()
+
+    for col in frame.columns:
+        frame[col] = pd.to_numeric(frame[col], errors="coerce")
+
+    return frame
+
+
+def _merge_metric(existing: Optional[pd.Series], updates: Optional[pd.Series], name: str) -> pd.Series:
+    base = existing.astype(float) if existing is not None and not existing.empty else pd.Series(dtype=float, name=name)
+    if updates is None or updates.empty:
+        return base
+
+    incoming = updates.astype(float)
+    if base.empty:
+        merged = incoming.sort_index()
+    else:
+        merged = pd.concat([base, incoming])
+    merged = merged[~merged.index.duplicated(keep="last")].sort_index()
+    merged.name = name
+    return merged
+
+
+def _save_onchain_store(path: Path, metrics: Dict[str, pd.Series]) -> None:
+    if not metrics:
+        return
+
+    frame = pd.DataFrame(metrics)
+    if frame.empty:
+        return
+
+    frame = frame.sort_index()
+    frame.index.name = "Date"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    frame.reset_index().to_csv(path, index=False)
+
+
+def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.DataFrame:
+    store_path = _onchain_store_path(cfg)
+    fallback_frame = _load_onchain_store(store_path)
     series_map: Dict[str, pd.Series] = {}
 
     mvrv = _fetch_glassnode_metric(cfg, endpoint="market/mvrv_z_score")
     if mvrv is None:
         mvrv = _fetch_coinmetrics_mvrv_fallback(cfg)
-    if mvrv is None and fallback_frame is not None and "mvrv_z_score" in fallback_frame.columns:
-        mvrv = fallback_frame["mvrv_z_score"].astype(float)
-    series_map["mvrv_z_score"] = mvrv if mvrv is not None else pd.Series(dtype=float)
+    local_mvrv = fallback_frame["mvrv_z_score"] if "mvrv_z_score" in fallback_frame.columns else None
+    series_map["mvrv_z_score"] = _merge_metric(local_mvrv, mvrv, "mvrv_z_score")
 
     puell = _fetch_glassnode_metric(cfg, endpoint="indicators/puell_multiple")
-    if puell is None and fallback_frame is not None and "puell_multiple" in fallback_frame.columns:
-        puell = fallback_frame["puell_multiple"].astype(float)
-    series_map["puell_multiple"] = puell if puell is not None else pd.Series(dtype=float)
+    local_puell = fallback_frame["puell_multiple"] if "puell_multiple" in fallback_frame.columns else None
+    series_map["puell_multiple"] = _merge_metric(local_puell, puell, "puell_multiple")
 
     supply_profit = _fetch_glassnode_metric(cfg, endpoint="supply/profit_relative")
-    if supply_profit is None and fallback_frame is not None and "supply_in_profit" in fallback_frame.columns:
-        supply_profit = fallback_frame["supply_in_profit"].astype(float)
-    series_map["supply_in_profit"] = supply_profit if supply_profit is not None else pd.Series(dtype=float)
+    local_supply = fallback_frame["supply_in_profit"] if "supply_in_profit" in fallback_frame.columns else None
+    series_map["supply_in_profit"] = _merge_metric(local_supply, supply_profit, "supply_in_profit")
+
+    # Keep unknown local columns if user stored additional on-chain metrics.
+    for col in fallback_frame.columns:
+        if col not in series_map:
+            series_map[col] = fallback_frame[col].astype(float)
+
+    _save_onchain_store(store_path, series_map)
 
     out = pd.DataFrame(index=index)
-    for name, series in series_map.items():
+    for name in CORE_METRICS:
+        series = series_map.get(name, pd.Series(dtype=float))
         if series.empty:
             out[name] = np.nan
             continue
