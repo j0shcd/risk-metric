@@ -91,6 +91,11 @@ class PipelineBehaviorTests(unittest.TestCase):
             self.assertIn(column, output.columns)
             self.assertFalse(output[column].dropna().empty)
 
+        self.assertFalse(result.metric_health.empty)
+        self.assertFalse(result.source_health.empty)
+        self.assertIn("metric", result.metric_health.columns)
+        self.assertIn("source", result.source_health.columns)
+
     @patch("risk_engine.pipeline.load_social_metrics")
     @patch("risk_engine.pipeline.load_fear_greed_index")
     @patch("risk_engine.pipeline.load_onchain_metrics")

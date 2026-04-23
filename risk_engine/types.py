@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict
 
 import pandas as pd
@@ -19,3 +19,5 @@ class FeatureBundle:
 class RiskOutput:
     series: pd.DataFrame
     feature_frames: Dict[str, pd.DataFrame]
+    metric_health: pd.DataFrame = field(default_factory=pd.DataFrame)
+    source_health: pd.DataFrame = field(default_factory=pd.DataFrame)

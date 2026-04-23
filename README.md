@@ -26,6 +26,13 @@ Pipeline layers:
 - `scoring` -> weighted category aggregation with availability and reliability controls
 - `outputs` -> CSV exports and validation checks
 
+Validation includes:
+
+- score bounds checks
+- recent-signal presence checks
+- staleness checks on key output columns
+- source health and metric health availability checks
+
 ## v1 Indicator Coverage
 
 - Price structure:
@@ -108,6 +115,8 @@ Important env vars:
 - `output/risk_scores_full.csv`
 - `output/latest_scores.csv`
 - `output/feature_frames/*.csv`
+- `output/metric_health.csv`
+- `output/source_health.csv`
 
 ## Phase 2 (deferred)
 

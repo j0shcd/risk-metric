@@ -16,6 +16,26 @@ def safe_get_json(url: str, timeout_seconds: int, headers: Optional[dict] = None
         return None
 
 
+def sanitize_series(series: pd.Series) -> pd.Series:
+    parsed_index = pd.to_datetime(series.index, utc=True, errors="coerce").tz_convert(None)
+    clean = pd.Series(series.values, index=parsed_index, name=series.name)
+    clean = clean[~clean.index.isna()]
+    clean = pd.to_numeric(clean, errors="coerce")
+    clean = clean.dropna()
+    clean = clean[~clean.index.duplicated(keep="last")]
+    return clean.sort_index()
+
+
+def series_staleness_days(series: pd.Series, as_of: Optional[pd.Timestamp] = None) -> Optional[int]:
+    clean = sanitize_series(series)
+    if clean.empty:
+        return None
+
+    now = as_of or pd.Timestamp.utcnow().tz_localize(None).normalize()
+    last_date = clean.index.max().normalize()
+    return int((now - last_date).days)
+
+
 def load_optional_csv(path: Optional[Path], value_column: str, date_column: str = "Date") -> Optional[pd.Series]:
     if path is None or not path.exists():
         return None
@@ -25,10 +45,11 @@ def load_optional_csv(path: Optional[Path], value_column: str, date_column: str 
         return None
 
     frame[date_column] = pd.to_datetime(frame[date_column], utc=False).dt.tz_localize(None)
-    series = pd.Series(frame[value_column].astype(float).values, index=frame[date_column], name=value_column)
-    return series.sort_index()
+    series = pd.Series(frame[value_column].values, index=frame[date_column], name=value_column)
+    return sanitize_series(series)
 
 
 def save_series_csv(path: Path, series: pd.Series, value_column: str) -> None:
-    export = pd.DataFrame({"Date": series.index, value_column: series.values})
+    clean = sanitize_series(series)
+    export = pd.DataFrame({"Date": clean.index, value_column: clean.values})
     export.to_csv(path, index=False)

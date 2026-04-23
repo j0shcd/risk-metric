@@ -14,6 +14,15 @@ if __name__ == "__main__":
     latest = result.series.tail(1)
 
     print(latest.to_string())
+    if not result.metric_health.empty:
+        unavailable = int((~result.metric_health["available"].fillna(False)).sum())
+        total = int(len(result.metric_health))
+        print(f"\nMetric health: {total - unavailable}/{total} available")
+    if not result.source_health.empty:
+        stale = result.source_health["staleness_days"].dropna()
+        if not stale.empty:
+            print(f"Source health: max staleness {int(stale.max())}d")
+
     if validation.passed:
         print("\nValidation: PASS")
     else:

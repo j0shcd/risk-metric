@@ -73,6 +73,52 @@ def _check_feature_reliability(feature_frames: dict, errors: List[str]) -> None:
             errors.append(f"Feature reliability out of [0, 1] bounds: {name}")
 
 
+def _check_output_staleness(
+    series: pd.DataFrame,
+    errors: List[str],
+    columns: List[str],
+    max_staleness_days: int = 7,
+) -> None:
+    now = pd.Timestamp.utcnow().tz_localize(None).normalize()
+    for column in columns:
+        values = series[column].dropna()
+        if values.empty:
+            continue
+        last_date = values.index.max().normalize()
+        staleness_days = int((now - last_date).days)
+        if staleness_days > max_staleness_days:
+            errors.append(
+                f"Column appears stale ({staleness_days}d > {max_staleness_days}d): {column}"
+            )
+
+
+def _check_source_health(result: RiskOutput, errors: List[str]) -> None:
+    if result.source_health.empty:
+        errors.append("Missing source health report.")
+        return
+
+    required_sources = {"btc_price"}
+    available_sources = set(
+        result.source_health.loc[result.source_health["available"].fillna(False), "source"].astype(str).tolist()
+    )
+    missing = sorted(required_sources - available_sources)
+    if missing:
+        errors.append(f"Critical sources unavailable: {', '.join(missing)}")
+
+
+def _check_metric_health(result: RiskOutput, errors: List[str]) -> None:
+    if result.metric_health.empty:
+        errors.append("Missing metric health report.")
+        return
+
+    required_targets = {"btc", "total_market"}
+    available = result.metric_health[result.metric_health["available"].fillna(False)]
+    available_targets = set(available["target"].astype(str).tolist())
+    missing_targets = sorted(required_targets - available_targets)
+    if missing_targets:
+        errors.append(f"No available metrics for targets: {', '.join(missing_targets)}")
+
+
 def validate_output(result: RiskOutput) -> ValidationResult:
     errors: List[str] = []
 
@@ -80,5 +126,20 @@ def validate_output(result: RiskOutput) -> ValidationResult:
     _check_bounds(result.series, errors)
     _check_recent_signal_presence(result.series, errors)
     _check_feature_reliability(result.feature_frames, errors)
+    _check_output_staleness(
+        result.series,
+        errors,
+        columns=[
+            "btc_risk_heat",
+            "btc_risk_attention",
+            "total_market_risk_heat",
+            "total_market_risk_attention",
+            "headline_attention",
+            "headline_direction",
+            "confidence_score",
+        ],
+    )
+    _check_source_health(result, errors)
+    _check_metric_health(result, errors)
 
     return ValidationResult(passed=not errors, errors=errors)
