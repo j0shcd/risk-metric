@@ -26,6 +26,7 @@ class TargetScore:
     attention: pd.Series
     confidence: pd.Series
     coverage: pd.Series
+    category_breakdown: pd.DataFrame
 
 
 def _series_or_nan(index: pd.Index) -> pd.Series:
@@ -42,7 +43,13 @@ def score_target(
 
     if not bundles:
         nan_series = _series_or_nan(index)
-        return TargetScore(heat=nan_series, attention=nan_series, confidence=nan_series, coverage=nan_series)
+        return TargetScore(
+            heat=nan_series,
+            attention=nan_series,
+            confidence=nan_series,
+            coverage=nan_series,
+            category_breakdown=pd.DataFrame(index=index),
+        )
 
     category_frames: Dict[str, List[pd.DataFrame]] = {}
     for bundle in bundles:
@@ -96,6 +103,7 @@ def score_target(
 
     weighted_rel_num = pd.Series(0.0, index=index)
     weighted_rel_den = pd.Series(0.0, index=index)
+    category_effective_weight = {}
 
     for category, base_weight in category_weights.items():
         if category not in category_heat:
@@ -112,6 +120,7 @@ def score_target(
         heat_mask = heat_values.notna()
         att_mask = att_values.notna()
         rel_mask = rel_values.notna()
+        category_effective_weight[category] = effective_weight.where(heat_mask, 0.0)
 
         weighted_heat_num += effective_weight * heat_values.fillna(0.0)
         weighted_heat_den += effective_weight.where(heat_mask, 0.0)
@@ -133,4 +142,40 @@ def score_target(
 
     confidence = (0.5 * coverage + 0.5 * reliability).clip(0.0, 1.0)
 
-    return TargetScore(heat=heat, attention=attention, confidence=confidence, coverage=coverage)
+    category_weight_total = pd.Series(0.0, index=index)
+    for category in category_heat.keys():
+        category_weight_total += category_effective_weight.get(category, pd.Series(0.0, index=index)).fillna(0.0)
+
+    breakdown = pd.DataFrame(index=index)
+    for category in sorted(category_heat.keys()):
+        prefix = f"category_{category}"
+        eff = category_effective_weight.get(category, pd.Series(0.0, index=index)).fillna(0.0)
+        norm = eff / category_weight_total.replace({0.0: np.nan})
+        norm = norm.clip(lower=0.0, upper=1.0)
+
+        breakdown[f"{prefix}_effective_weight"] = eff
+        breakdown[f"{prefix}_normalized_weight"] = norm
+        breakdown[f"{prefix}_heat"] = category_heat[category]
+        breakdown[f"{prefix}_attention"] = category_attention[category]
+        breakdown[f"{prefix}_coverage"] = category_coverage[category]
+        breakdown[f"{prefix}_reliability"] = category_reliability[category]
+        breakdown[f"{prefix}_heat_contribution"] = norm * category_heat[category]
+        breakdown[f"{prefix}_attention_contribution"] = norm * category_attention[category]
+
+    breakdown["effective_weight_total"] = category_weight_total
+    breakdown["active_category_count"] = (
+        pd.concat(
+            [series.notna().astype(float) for series in category_heat.values()],
+            axis=1,
+        ).sum(axis=1)
+        if category_heat
+        else 0.0
+    )
+
+    return TargetScore(
+        heat=heat,
+        attention=attention,
+        confidence=confidence,
+        coverage=coverage,
+        category_breakdown=breakdown,
+    )

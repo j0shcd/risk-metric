@@ -141,6 +141,7 @@ Important env vars:
 - `output/risk_scores_full.csv`
 - `output/latest_scores.csv`
 - `output/feature_frames/*.csv`
+- `output/category_breakdowns/{btc,total_market}.csv`
 - `output/metric_health.csv`
 - `output/source_health.csv`
 - `output/sanity_report.csv`

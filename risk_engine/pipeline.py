@@ -168,6 +168,10 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         feature_frames={bundle.name: bundle.frame for bundle in bundles},
         metric_health=metric_health,
         source_health=source_health,
+        category_breakdowns={
+            "btc": btc_score.category_breakdown,
+            "total_market": total_score.category_breakdown,
+        },
     )
 
 
@@ -195,3 +199,11 @@ def write_outputs(result: RiskOutput, output_dir: Path) -> None:
 
     if not result.source_health.empty:
         result.source_health.to_csv(output_dir / "source_health.csv", index=False)
+
+    if result.category_breakdowns:
+        category_dir = output_dir / "category_breakdowns"
+        category_dir.mkdir(parents=True, exist_ok=True)
+        for existing in category_dir.glob("*.csv"):
+            existing.unlink()
+        for target, frame in result.category_breakdowns.items():
+            frame.to_csv(category_dir / f"{target}.csv")
