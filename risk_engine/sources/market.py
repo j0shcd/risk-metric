@@ -105,6 +105,42 @@ def _fetch_coingecko_total_market_cap(cfg: RuntimeConfig) -> Optional[pd.Series]
     return frame.set_index("Date")["total_market_cap"]
 
 
+def _fetch_coingecko_global_latest(cfg: RuntimeConfig) -> Optional[pd.Series]:
+    payload = safe_get_json(
+        url="https://api.coingecko.com/api/v3/global",
+        timeout_seconds=cfg.request_timeout_seconds,
+    )
+
+    if payload is None:
+        return None
+
+    try:
+        data = payload["data"]
+        usd_cap = data["total_market_cap"]["usd"]
+    except Exception:
+        return None
+
+    updated_at = data.get("updated_at")
+    if updated_at is None:
+        timestamp = pd.Timestamp.utcnow().normalize()
+    else:
+        timestamp = pd.to_datetime(int(updated_at), unit="s").tz_localize(None).normalize()
+
+    return pd.Series([float(usd_cap)], index=[timestamp], name="total_market_cap")
+
+
+def _merge_series(base: Optional[pd.Series], updates: Optional[pd.Series]) -> pd.Series:
+    if base is None or base.empty:
+        return updates.copy() if updates is not None else pd.Series(dtype=float, name="total_market_cap")
+    if updates is None or updates.empty:
+        return base.copy()
+
+    merged = pd.concat([base, updates])
+    merged = merged[~merged.index.duplicated(keep="last")].sort_index()
+    merged.name = "total_market_cap"
+    return merged
+
+
 def load_total_market_cap(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Series:
     fallback_path = cfg.total_marketcap_csv or (cfg.cache_dir / "total_marketcap.csv")
 
@@ -121,16 +157,20 @@ def load_total_market_cap(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Ser
     if fetched is None:
         fetched = _fetch_coingecko_total_market_cap(cfg)
 
+    # 4) CoinGecko free global latest snapshot fallback (append-only style)
+    if fetched is None:
+        fetched = _fetch_coingecko_global_latest(cfg)
+
     if fetched is not None:
-        fetched = fetched[(fetched.index >= start) & (fetched.index <= end)]
-        save_series_csv(fallback_path, fetched, value_column="total_market_cap")
-        merged = fetched
+        merged = _merge_series(local_series, fetched)
+        save_series_csv(fallback_path, merged, value_column="total_market_cap")
     else:
-        merged = local_series if local_series is not None else pd.Series(dtype=float)
+        merged = local_series if local_series is not None else pd.Series(dtype=float, name="total_market_cap")
 
     if merged.empty:
         return pd.Series(index=index, dtype=float, name="total_market_cap")
 
+    merged = merged[(merged.index >= start) & (merged.index <= end)]
     merged = merged.reindex(index)
     merged.name = "total_market_cap"
     return merged

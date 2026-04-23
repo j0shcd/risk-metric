@@ -45,6 +45,7 @@ Validation includes:
   - Total market cap running `1Y ROI`
   - Total market cap log-regression deviation
   - BTC dominance proxy
+  - Local `total_marketcap.csv` is maintained over time (historical APIs when available, otherwise daily free global snapshot append)
 - On-chain:
   - MVRV Z-score
   - Puell Multiple
@@ -85,7 +86,13 @@ python main.py
 python backfill.py
 ```
 
-### 3) Validate output health
+### 3) Refresh total market cap local store only
+
+```bash
+python backfill_total_marketcap.py
+```
+
+### 4) Validate output health
 
 ```bash
 python validate.py
@@ -107,6 +114,7 @@ Important env vars:
 - `COINGECKO_API_KEY`
 - `YOUTUBE_API_KEY`
 - `YOUTUBE_CHANNEL_IDS` (comma-separated)
+- `TOTAL_MARKETCAP_CSV` (local history store for total market cap)
 - `GOOGLE_TRENDS_CSV` (fallback path)
 - `COINBASE_RANK_CSV` (fallback path)
 - `ENABLE_COINBASE_APP_RANK` (`true`/`false`)
