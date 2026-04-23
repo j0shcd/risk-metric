@@ -1,1 +1,4 @@
-REPO_PATH = "/Users/joshuacohendumani/documents/finance/risk-metric"
+from pathlib import Path
+
+# Backward-compatible project root reference.
+PROJECT_ROOT = Path(__file__).resolve().parent
