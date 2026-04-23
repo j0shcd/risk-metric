@@ -155,24 +155,24 @@ def score_target(
     for category in category_heat.keys():
         category_weight_total += category_effective_weight.get(category, pd.Series(0.0, index=index)).fillna(0.0)
 
-    breakdown = pd.DataFrame(index=index)
+    breakdown_columns: Dict[str, pd.Series] = {}
     for category in sorted(category_heat.keys()):
         prefix = f"category_{category}"
         eff = category_effective_weight.get(category, pd.Series(0.0, index=index)).fillna(0.0)
         norm = eff / category_weight_total.replace({0.0: np.nan})
         norm = norm.clip(lower=0.0, upper=1.0)
 
-        breakdown[f"{prefix}_effective_weight"] = eff
-        breakdown[f"{prefix}_normalized_weight"] = norm
-        breakdown[f"{prefix}_heat"] = category_heat[category]
-        breakdown[f"{prefix}_attention"] = category_attention[category]
-        breakdown[f"{prefix}_coverage"] = category_coverage[category]
-        breakdown[f"{prefix}_reliability"] = category_reliability[category]
-        breakdown[f"{prefix}_heat_contribution"] = norm * category_heat[category]
-        breakdown[f"{prefix}_attention_contribution"] = norm * category_attention[category]
+        breakdown_columns[f"{prefix}_effective_weight"] = eff
+        breakdown_columns[f"{prefix}_normalized_weight"] = norm
+        breakdown_columns[f"{prefix}_heat"] = category_heat[category]
+        breakdown_columns[f"{prefix}_attention"] = category_attention[category]
+        breakdown_columns[f"{prefix}_coverage"] = category_coverage[category]
+        breakdown_columns[f"{prefix}_reliability"] = category_reliability[category]
+        breakdown_columns[f"{prefix}_heat_contribution"] = norm * category_heat[category]
+        breakdown_columns[f"{prefix}_attention_contribution"] = norm * category_attention[category]
 
-    breakdown["effective_weight_total"] = category_weight_total
-    breakdown["active_category_count"] = (
+    breakdown_columns["effective_weight_total"] = category_weight_total
+    breakdown_columns["active_category_count"] = (
         pd.concat(
             [series.notna().astype(float) for series in category_heat.values()],
             axis=1,
@@ -180,9 +180,12 @@ def score_target(
         if category_heat
         else 0.0
     )
+    breakdown = pd.DataFrame(breakdown_columns, index=index)
 
-    metric_breakdown = pd.DataFrame(index=index)
+    metric_columns: Dict[str, pd.Series] = {}
     metric_effective_weights: Dict[str, pd.Series] = {}
+    metric_heat_series: Dict[str, pd.Series] = {}
+    metric_attention_series: Dict[str, pd.Series] = {}
 
     for category in sorted(category_heat.keys()):
         category_eff = category_effective_weight.get(category, pd.Series(0.0, index=index)).fillna(0.0)
@@ -199,13 +202,15 @@ def score_target(
             metric_prefix = f"metric_{metric_name}"
             eff = category_eff * inner_weight[metric_name]
             metric_effective_weights[metric_name] = eff
+            metric_heat_series[metric_name] = metric_heat[metric_name]
+            metric_attention_series[metric_name] = metric_attention[metric_name]
 
-            metric_breakdown[f"{metric_prefix}_effective_weight"] = eff
-            metric_breakdown[f"{metric_prefix}_category_inner_weight"] = inner_weight[metric_name]
-            metric_breakdown[f"{metric_prefix}_heat"] = metric_heat[metric_name]
-            metric_breakdown[f"{metric_prefix}_attention"] = metric_attention[metric_name]
-            metric_breakdown[f"{metric_prefix}_reliability"] = metric_rel[metric_name]
-            metric_breakdown[f"{metric_prefix}_coverage"] = metric_heat[metric_name].notna().astype(float)
+            metric_columns[f"{metric_prefix}_effective_weight"] = eff
+            metric_columns[f"{metric_prefix}_category_inner_weight"] = inner_weight[metric_name]
+            metric_columns[f"{metric_prefix}_heat"] = metric_heat[metric_name]
+            metric_columns[f"{metric_prefix}_attention"] = metric_attention[metric_name]
+            metric_columns[f"{metric_prefix}_reliability"] = metric_rel[metric_name]
+            metric_columns[f"{metric_prefix}_coverage"] = metric_heat[metric_name].notna().astype(float)
 
     metric_weight_total = pd.Series(0.0, index=index)
     for weight in metric_effective_weights.values():
@@ -216,16 +221,14 @@ def score_target(
         eff = metric_effective_weights[metric_name].fillna(0.0)
         norm = eff / metric_weight_total.replace({0.0: np.nan})
         norm = norm.clip(lower=0.0, upper=1.0)
-        metric_breakdown[f"{metric_prefix}_normalized_weight"] = norm
-        metric_breakdown[f"{metric_prefix}_heat_contribution"] = (
-            norm * metric_breakdown[f"{metric_prefix}_heat"]
-        )
-        metric_breakdown[f"{metric_prefix}_attention_contribution"] = (
-            norm * metric_breakdown[f"{metric_prefix}_attention"]
+        metric_columns[f"{metric_prefix}_normalized_weight"] = norm
+        metric_columns[f"{metric_prefix}_heat_contribution"] = norm * metric_heat_series[metric_name]
+        metric_columns[f"{metric_prefix}_attention_contribution"] = (
+            norm * metric_attention_series[metric_name]
         )
 
-    metric_breakdown["effective_metric_weight_total"] = metric_weight_total
-    metric_breakdown["active_metric_count"] = (
+    metric_columns["effective_metric_weight_total"] = metric_weight_total
+    metric_columns["active_metric_count"] = (
         pd.concat(
             [series.notna().astype(float) for series in category_metric_heat.values()],
             axis=1,
@@ -233,6 +236,7 @@ def score_target(
         if category_metric_heat
         else 0.0
     )
+    metric_breakdown = pd.DataFrame(metric_columns, index=index)
 
     return TargetScore(
         heat=heat,
