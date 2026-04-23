@@ -99,13 +99,41 @@ def _check_source_health(result: RiskOutput, errors: List[str]) -> None:
         errors.append("Missing source health report.")
         return
 
+    source_health = result.source_health.copy()
+    if "contract_passed" not in source_health.columns:
+        source_health["contract_passed"] = True
+    if "contract_issues" not in source_health.columns:
+        source_health["contract_issues"] = ""
+
     required_sources = {"btc_price"}
     available_sources = set(
-        result.source_health.loc[result.source_health["available"].fillna(False), "source"].astype(str).tolist()
+        source_health.loc[source_health["available"].fillna(False), "source"].astype(str).tolist()
     )
     missing = sorted(required_sources - available_sources)
     if missing:
         errors.append(f"Critical sources unavailable: {', '.join(missing)}")
+
+    critical = source_health[source_health["source"].astype(str).isin(required_sources)]
+    failing_critical = critical[~critical["contract_passed"].fillna(False)]
+    if not failing_critical.empty:
+        issues = []
+        for row in failing_critical.itertuples(index=False):
+            issues.append(f"{row.source}({row.contract_issues})")
+        errors.append(f"Critical source contract failed: {', '.join(issues)}")
+
+
+def _check_noncritical_source_contract_warnings(result: RiskOutput, warnings: List[str]) -> None:
+    if result.source_health.empty:
+        return
+
+    source_health = result.source_health.copy()
+    if "contract_passed" not in source_health.columns:
+        return
+
+    noncritical = source_health[~source_health["source"].astype(str).isin({"btc_price"})]
+    failing = noncritical[~noncritical["contract_passed"].fillna(False)]
+    for row in failing.itertuples(index=False):
+        warnings.append(f"Non-critical source contract failed: {row.source} ({row.contract_issues})")
 
 
 def _check_metric_health(result: RiskOutput, errors: List[str]) -> None:
@@ -232,6 +260,25 @@ def write_sanity_report(series: pd.DataFrame, output_dir: Path) -> pd.DataFrame:
     return report
 
 
+def _sanity_is_actionable(series: pd.DataFrame) -> bool:
+    required = {"confidence_score", "btc_risk_coverage", "total_market_risk_coverage"}
+    if not required.issubset(set(series.columns)):
+        return False
+
+    tail = series.tail(30)
+    if tail.empty:
+        return False
+
+    confidence = tail["confidence_score"].dropna().mean()
+    btc_cov = tail["btc_risk_coverage"].dropna().mean()
+    total_cov = tail["total_market_risk_coverage"].dropna().mean()
+
+    if np.isnan(confidence) or np.isnan(btc_cov) or np.isnan(total_cov):
+        return False
+
+    return bool(confidence >= 0.6 and btc_cov >= 0.5 and total_cov >= 0.4)
+
+
 def validate_output(result: RiskOutput) -> ValidationResult:
     errors: List[str] = []
     warnings: List[str] = []
@@ -254,11 +301,15 @@ def validate_output(result: RiskOutput) -> ValidationResult:
         ],
     )
     _check_source_health(result, errors)
+    _check_noncritical_source_contract_warnings(result, warnings)
     _check_metric_health(result, errors)
 
     sanity_report = build_walkforward_sanity_report(result.series)
-    for row in sanity_report.itertuples(index=False):
-        if not bool(getattr(row, "passed")):
-            warnings.append(f"Sanity check failed: {getattr(row, 'check')}")
+    if _sanity_is_actionable(result.series):
+        for row in sanity_report.itertuples(index=False):
+            if not bool(getattr(row, "passed")):
+                warnings.append(f"Sanity check failed: {getattr(row, 'check')}")
+    else:
+        warnings.append("Sanity checks are informational only (insufficient recent coverage/confidence).")
 
     return ValidationResult(passed=not errors, errors=errors, warnings=warnings)

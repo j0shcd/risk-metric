@@ -16,11 +16,64 @@ def _safe_float(value: float | int | np.floating | None) -> float:
     return float(value)
 
 
+def _source_staleness_threshold_days(source_name: str) -> int:
+    if source_name == "btc_price":
+        return 3
+    if source_name == "total_market_cap":
+        return 14
+    if source_name.startswith("onchain::"):
+        return 7
+    if source_name.startswith("social::"):
+        return 21
+    if source_name == "fear_greed_index":
+        return 14
+    return 30
+
+
+def _source_contract_status(
+    source_name: str,
+    series: pd.Series,
+    as_of: pd.Timestamp,
+    available: bool,
+) -> tuple[bool, str, int, int]:
+    issues: List[str] = []
+    duplicate_count = int(series.index.duplicated().sum())
+    if duplicate_count > 0:
+        issues.append("duplicate_timestamps")
+
+    if not series.index.is_monotonic_increasing:
+        issues.append("non_monotonic_index")
+
+    non_numeric_count = 0
+    if available:
+        numeric = pd.to_numeric(series.dropna(), errors="coerce")
+        non_numeric_count = int(numeric.isna().sum())
+        if non_numeric_count > 0:
+            issues.append("non_numeric_values")
+
+        staleness_days = series_staleness_days(series.dropna(), as_of=as_of)
+        threshold = _source_staleness_threshold_days(source_name)
+        if staleness_days is not None and staleness_days > threshold:
+            issues.append(f"stale:{staleness_days}d>{threshold}d")
+
+    contract_passed = len(issues) == 0
+    contract_issues = ";".join(issues)
+    return contract_passed, contract_issues, duplicate_count, non_numeric_count
+
+
 def build_source_health(source_map: Dict[str, pd.Series], as_of: pd.Timestamp, lookback_days: int = 30) -> pd.DataFrame:
     rows: List[dict] = []
 
     for source_name, series in source_map.items():
-        clean = series.dropna() if series is not None else pd.Series(dtype=float)
+        source_series = series if series is not None else pd.Series(dtype=float)
+        clean = source_series.dropna()
+        threshold_days = _source_staleness_threshold_days(source_name)
+        contract_passed, contract_issues, duplicate_count, non_numeric_count = _source_contract_status(
+            source_name=source_name,
+            series=source_series,
+            as_of=as_of,
+            available=not clean.empty,
+        )
         if clean.empty:
             rows.append(
                 {
@@ -29,6 +82,11 @@ def build_source_health(source_map: Dict[str, pd.Series], as_of: pd.Timestamp, l
                     "latest_timestamp": pd.NaT,
                     "staleness_days": np.nan,
                     "coverage_30d": 0.0,
+                    "staleness_threshold_days": threshold_days,
+                    "duplicate_timestamps": duplicate_count,
+                    "non_numeric_values": non_numeric_count,
+                    "contract_passed": contract_passed,
+                    "contract_issues": contract_issues,
                 }
             )
             continue
@@ -41,6 +99,11 @@ def build_source_health(source_map: Dict[str, pd.Series], as_of: pd.Timestamp, l
                 "latest_timestamp": clean.index.max(),
                 "staleness_days": _safe_float(series_staleness_days(clean, as_of=as_of)),
                 "coverage_30d": _safe_float(tail.notna().mean() if len(tail) else 0.0),
+                "staleness_threshold_days": threshold_days,
+                "duplicate_timestamps": duplicate_count,
+                "non_numeric_values": non_numeric_count,
+                "contract_passed": contract_passed,
+                "contract_issues": contract_issues,
             }
         )
 
