@@ -10,6 +10,8 @@
   "youtube_fallback_csv": null,
   "google_trends_csv": null,
   "coinbase_rank_csv": null,
+  "apple_app_store_country": "us",
+  "coinbase_ios_app_id": "886427730",
   "enable_coinbase_app_rank": true,
   "request_timeout_seconds": 20,
   "category_weights": {

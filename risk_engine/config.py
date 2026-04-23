@@ -38,6 +38,8 @@ class RuntimeConfig:
     youtube_fallback_csv: Optional[Path] = None
     google_trends_csv: Optional[Path] = None
     coinbase_rank_csv: Optional[Path] = None
+    apple_app_store_country: str = "us"
+    coinbase_ios_app_id: str = "886427730"
 
     enable_coinbase_app_rank: bool = True
 
@@ -111,6 +113,8 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
         youtube_fallback_csv=_path_or_none(resolved_root, env.get("YOUTUBE_FALLBACK_CSV", file_cfg.get("youtube_fallback_csv"))),
         google_trends_csv=_path_or_none(resolved_root, env.get("GOOGLE_TRENDS_CSV", file_cfg.get("google_trends_csv"))),
         coinbase_rank_csv=_path_or_none(resolved_root, env.get("COINBASE_RANK_CSV", file_cfg.get("coinbase_rank_csv"))),
+        apple_app_store_country=str(env.get("APPLE_APP_STORE_COUNTRY", file_cfg.get("apple_app_store_country", "us"))).lower(),
+        coinbase_ios_app_id=str(env.get("COINBASE_IOS_APP_ID", file_cfg.get("coinbase_ios_app_id", "886427730"))),
         enable_coinbase_app_rank=_parse_bool(
             env.get("ENABLE_COINBASE_APP_RANK"),
             file_cfg.get("enable_coinbase_app_rank", True),
