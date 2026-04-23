@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from risk_engine.config import load_runtime_config
 from risk_engine.pipeline import run_pipeline, write_outputs
-from risk_engine.validation import validate_output
+from risk_engine.validation import validate_output, write_sanity_report
 
 
 if __name__ == "__main__":
     cfg = load_runtime_config()
     result = run_pipeline(cfg)
     write_outputs(result, cfg.output_dir)
+    sanity_report = write_sanity_report(result.series, cfg.output_dir)
 
     validation = validate_output(result)
     latest = result.series.tail(1)
@@ -22,6 +23,10 @@ if __name__ == "__main__":
         stale = result.source_health["staleness_days"].dropna()
         if not stale.empty:
             print(f"Source health: max staleness {int(stale.max())}d")
+    if not sanity_report.empty:
+        passed = int(sanity_report["passed"].fillna(False).sum())
+        total = int(len(sanity_report))
+        print(f"Sanity checks: {passed}/{total} passed")
 
     if validation.passed:
         print("\nValidation: PASS")
@@ -29,3 +34,7 @@ if __name__ == "__main__":
         print("\nValidation: FAIL")
         for error in validation.errors:
             print(f" - {error}")
+    if validation.warnings:
+        print("\nValidation Warnings:")
+        for warning in validation.warnings:
+            print(f" - {warning}")

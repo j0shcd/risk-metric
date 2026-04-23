@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List
 
 import numpy as np
@@ -13,6 +14,7 @@ from .types import RiskOutput
 class ValidationResult:
     passed: bool
     errors: List[str]
+    warnings: List[str]
 
 
 def _check_index(series: pd.DataFrame, errors: List[str]) -> None:
@@ -119,8 +121,120 @@ def _check_metric_health(result: RiskOutput, errors: List[str]) -> None:
         errors.append(f"No available metrics for targets: {', '.join(missing_targets)}")
 
 
+def build_walkforward_sanity_report(
+    series: pd.DataFrame,
+    price_column: str = "btc_price",
+    heat_column: str = "btc_risk_heat",
+    attention_column: str = "headline_attention",
+) -> pd.DataFrame:
+    required = {price_column, heat_column, attention_column}
+    if not required.issubset(set(series.columns)):
+        return pd.DataFrame(
+            [
+                {
+                    "check": "required_columns_present",
+                    "passed": False,
+                    "value": np.nan,
+                    "threshold": np.nan,
+                    "comparator": "n/a",
+                    "details": "Missing columns for sanity checks.",
+                }
+            ]
+        )
+
+    frame = series[[price_column, heat_column, attention_column]].dropna()
+    if len(frame) < 365:
+        return pd.DataFrame(
+            [
+                {
+                    "check": "minimum_history_available",
+                    "passed": False,
+                    "value": float(len(frame)),
+                    "threshold": 365.0,
+                    "comparator": ">=",
+                    "details": "Need at least 365 rows for walk-forward sanity checks.",
+                }
+            ]
+        )
+
+    price = frame[price_column]
+    heat = frame[heat_column]
+    attention = frame[attention_column]
+
+    top_threshold = price.quantile(0.90)
+    bottom_threshold = price.quantile(0.10)
+    top_mask = price >= top_threshold
+    bottom_mask = price <= bottom_threshold
+
+    mid_low = price.quantile(0.40)
+    mid_high = price.quantile(0.60)
+    mid_mask = (price >= mid_low) & (price <= mid_high)
+
+    one_year_roi = price.pct_change(365, fill_method=None)
+    sideways_threshold = one_year_roi.abs().quantile(0.25)
+    sideways_mask = one_year_roi.abs() <= sideways_threshold
+
+    forward_return_90d = price.shift(-90) / price - 1.0
+    corr_data = pd.concat([heat, forward_return_90d], axis=1).dropna()
+    forward_corr = np.nan
+    if len(corr_data) >= 50:
+        forward_corr = corr_data.corr(method="spearman").iloc[0, 1]
+
+    top_heat = heat[top_mask].mean()
+    bottom_heat = heat[bottom_mask].mean()
+    extremes_attention = attention[top_mask | bottom_mask].mean()
+    mid_attention = attention[mid_mask].mean()
+    sideways_attention_std = attention[sideways_mask].std(ddof=0)
+    global_attention_std = attention.std(ddof=0)
+
+    rows = [
+        {
+            "check": "heat_higher_in_top_vs_bottom_regime",
+            "passed": bool(top_heat > bottom_heat),
+            "value": float(top_heat - bottom_heat),
+            "threshold": 0.0,
+            "comparator": ">",
+            "details": "Top-price regime should have higher heat than bottom regime.",
+        },
+        {
+            "check": "attention_higher_at_extremes_vs_mid",
+            "passed": bool(extremes_attention > mid_attention),
+            "value": float(extremes_attention - mid_attention),
+            "threshold": 0.0,
+            "comparator": ">",
+            "details": "Attention should be higher in extreme regimes than in mid regimes.",
+        },
+        {
+            "check": "attention_dispersion_lower_in_sideways",
+            "passed": bool(sideways_attention_std < global_attention_std),
+            "value": float(sideways_attention_std - global_attention_std),
+            "threshold": 0.0,
+            "comparator": "<",
+            "details": "Sideways periods should have lower attention dispersion.",
+        },
+        {
+            "check": "heat_vs_forward_90d_return_spearman_nonpositive",
+            "passed": bool(np.isnan(forward_corr) or forward_corr <= 0.0),
+            "value": float(forward_corr) if not np.isnan(forward_corr) else np.nan,
+            "threshold": 0.0,
+            "comparator": "<=",
+            "details": "Higher heat should not correlate positively with 90-day forward returns.",
+        },
+    ]
+
+    return pd.DataFrame(rows)
+
+
+def write_sanity_report(series: pd.DataFrame, output_dir: Path) -> pd.DataFrame:
+    report = build_walkforward_sanity_report(series)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    report.to_csv(output_dir / "sanity_report.csv", index=False)
+    return report
+
+
 def validate_output(result: RiskOutput) -> ValidationResult:
     errors: List[str] = []
+    warnings: List[str] = []
 
     _check_index(result.series, errors)
     _check_bounds(result.series, errors)
@@ -142,4 +256,9 @@ def validate_output(result: RiskOutput) -> ValidationResult:
     _check_source_health(result, errors)
     _check_metric_health(result, errors)
 
-    return ValidationResult(passed=not errors, errors=errors)
+    sanity_report = build_walkforward_sanity_report(result.series)
+    for row in sanity_report.itertuples(index=False):
+        if not bool(getattr(row, "passed")):
+            warnings.append(f"Sanity check failed: {getattr(row, 'check')}")
+
+    return ValidationResult(passed=not errors, errors=errors, warnings=warnings)

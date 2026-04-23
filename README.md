@@ -32,6 +32,7 @@ Validation includes:
 - recent-signal presence checks
 - staleness checks on key output columns
 - source health and metric health availability checks
+- walk-forward sanity checks (tops, bottoms, sideways, forward-return relationship)
 
 ## v1 Indicator Coverage
 
@@ -117,6 +118,7 @@ Important env vars:
 - `output/feature_frames/*.csv`
 - `output/metric_health.csv`
 - `output/source_health.csv`
+- `output/sanity_report.csv`
 
 ## Phase 2 (deferred)
 
