@@ -35,13 +35,19 @@ def load_fear_greed_index(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Ser
     fallback_path = cfg.cache_dir / "fear_greed_index.csv"
 
     series = _fetch_alternative_fear_greed(cfg)
+    source_mode = "alternative_me_api" if not series.empty else None
     if series.empty:
         fallback = load_optional_csv(fallback_path, value_column="fear_greed_index")
         series = fallback if fallback is not None else pd.Series(dtype=float)
+        source_mode = "local_cache" if fallback is not None and not fallback.empty else "unavailable"
     else:
         save_series_csv(fallback_path, series, value_column="fear_greed_index")
 
     if series.empty:
-        return pd.Series(index=index, dtype=float, name="fear_greed_index")
+        out = pd.Series(index=index, dtype=float, name="fear_greed_index")
+        out.attrs["source_mode"] = source_mode
+        return out
 
-    return series.reindex(index).rename("fear_greed_index")
+    out = series.reindex(index).rename("fear_greed_index")
+    out.attrs["source_mode"] = source_mode
+    return out

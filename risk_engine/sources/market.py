@@ -149,28 +149,40 @@ def load_total_market_cap(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Ser
 
     # 2) CMC (preferred when key is present)
     fetched = None
+    fetched_mode = None
     start = pd.Timestamp(index.min().date())
     end = pd.Timestamp(index.max().date())
     fetched = _fetch_cmc_total_market_cap(cfg, start=start, end=end)
+    if fetched is not None:
+        fetched_mode = "cmc_api"
 
     # 3) CoinGecko Pro fallback
     if fetched is None:
         fetched = _fetch_coingecko_total_market_cap(cfg)
+        if fetched is not None:
+            fetched_mode = "coingecko_pro"
 
     # 4) CoinGecko free global latest snapshot fallback (append-only style)
     if fetched is None:
         fetched = _fetch_coingecko_global_latest(cfg)
+        if fetched is not None:
+            fetched_mode = "coingecko_global_latest"
 
     if fetched is not None:
         merged = _merge_series(local_series, fetched)
         save_series_csv(fallback_path, merged, value_column="total_market_cap")
+        source_mode = str(fetched_mode or "api")
     else:
         merged = local_series if local_series is not None else pd.Series(dtype=float, name="total_market_cap")
+        source_mode = "local_cache" if local_series is not None and not local_series.empty else "unavailable"
 
     if merged.empty:
-        return pd.Series(index=index, dtype=float, name="total_market_cap")
+        out = pd.Series(index=index, dtype=float, name="total_market_cap")
+        out.attrs["source_mode"] = source_mode
+        return out
 
     merged = merged[(merged.index >= start) & (merged.index <= end)]
     merged = merged.reindex(index)
     merged.name = "total_market_cap"
+    merged.attrs["source_mode"] = source_mode
     return merged

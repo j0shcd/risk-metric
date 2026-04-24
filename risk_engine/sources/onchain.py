@@ -151,20 +151,40 @@ def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Data
     store_path = _onchain_store_path(cfg)
     fallback_frame = _load_onchain_store(store_path)
     series_map: Dict[str, pd.Series] = {}
+    source_modes: Dict[str, str] = {}
 
     mvrv = _fetch_glassnode_metric(cfg, endpoint="market/mvrv_z_score")
+    mvrv_mode = "glassnode_api" if mvrv is not None else None
     if mvrv is None:
         mvrv = _fetch_coinmetrics_mvrv_fallback(cfg)
+        mvrv_mode = "coinmetrics_community" if mvrv is not None else None
     local_mvrv = fallback_frame["mvrv_z_score"] if "mvrv_z_score" in fallback_frame.columns else None
     series_map["mvrv_z_score"] = _merge_metric(local_mvrv, mvrv, "mvrv_z_score")
+    source_modes["mvrv_z_score"] = (
+        str(mvrv_mode)
+        if mvrv_mode is not None
+        else ("local_cache" if local_mvrv is not None and not local_mvrv.empty else "unavailable")
+    )
 
     puell = _fetch_glassnode_metric(cfg, endpoint="indicators/puell_multiple")
+    puell_mode = "glassnode_api" if puell is not None else None
     local_puell = fallback_frame["puell_multiple"] if "puell_multiple" in fallback_frame.columns else None
     series_map["puell_multiple"] = _merge_metric(local_puell, puell, "puell_multiple")
+    source_modes["puell_multiple"] = (
+        str(puell_mode)
+        if puell_mode is not None
+        else ("local_cache" if local_puell is not None and not local_puell.empty else "unavailable")
+    )
 
     supply_profit = _fetch_glassnode_metric(cfg, endpoint="supply/profit_relative")
+    supply_mode = "glassnode_api" if supply_profit is not None else None
     local_supply = fallback_frame["supply_in_profit"] if "supply_in_profit" in fallback_frame.columns else None
     series_map["supply_in_profit"] = _merge_metric(local_supply, supply_profit, "supply_in_profit")
+    source_modes["supply_in_profit"] = (
+        str(supply_mode)
+        if supply_mode is not None
+        else ("local_cache" if local_supply is not None and not local_supply.empty else "unavailable")
+    )
 
     # Keep unknown local columns if user stored additional on-chain metrics.
     for col in fallback_frame.columns:
@@ -182,4 +202,6 @@ def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Data
         out[name] = series.reindex(index)
 
     out["supply_in_loss"] = 1.0 - out["supply_in_profit"]
+    source_modes["supply_in_loss"] = "derived_from_supply_in_profit"
+    out.attrs["source_modes"] = source_modes
     return out

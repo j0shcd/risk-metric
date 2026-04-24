@@ -150,10 +150,21 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         "total_market_cap": total_market_cap,
         "fear_greed_index": fear_greed,
     }
+    source_modes = {
+        "btc_price": "local_csv",
+        "total_market_cap": str(total_market_cap.attrs.get("source_mode", "unknown")),
+        "fear_greed_index": str(fear_greed.attrs.get("source_mode", "unknown")),
+    }
     for column in onchain_frame.columns:
         source_map[f"onchain::{column}"] = onchain_frame[column]
+    onchain_modes = onchain_frame.attrs.get("source_modes", {})
+    for column in onchain_frame.columns:
+        source_modes[f"onchain::{column}"] = str(onchain_modes.get(column, "unknown"))
     for column in social_frame.columns:
         source_map[f"social::{column}"] = social_frame[column]
+    social_modes = social_frame.attrs.get("source_modes", {})
+    for column in social_frame.columns:
+        source_modes[f"social::{column}"] = str(social_modes.get(column, "unknown"))
 
     metric_health = build_metric_health(
         metric_specs=metric_specs,
@@ -168,6 +179,7 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         feature_frames={bundle.name: bundle.frame for bundle in bundles},
         metric_health=metric_health,
         source_health=source_health,
+        source_modes=source_modes,
         category_breakdowns={
             "btc": btc_score.category_breakdown,
             "total_market": total_score.category_breakdown,
@@ -203,6 +215,15 @@ def write_outputs(result: RiskOutput, output_dir: Path) -> None:
 
     if not result.source_health.empty:
         result.source_health.to_csv(output_dir / "source_health.csv", index=False)
+    if result.source_modes:
+        source_modes_frame = (
+            pd.DataFrame(
+                [{"source": source, "mode": mode} for source, mode in sorted(result.source_modes.items())]
+            )
+            .sort_values("source")
+            .reset_index(drop=True)
+        )
+        source_modes_frame.to_csv(output_dir / "source_modes.csv", index=False)
 
     if result.category_breakdowns:
         category_dir = output_dir / "category_breakdowns"

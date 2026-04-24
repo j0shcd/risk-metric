@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -86,10 +86,16 @@ def _fetch_youtube_interest(cfg: RuntimeConfig) -> pd.Series:
     return pd.Series([interest], index=[today], name="youtube_interest")
 
 
-def _load_youtube_interest(cfg: RuntimeConfig) -> pd.Series:
+def _load_youtube_interest(cfg: RuntimeConfig) -> Tuple[pd.Series, str]:
     path = _history_path(cfg, "youtube_interest")
+    existing = load_optional_csv(path, value_column="youtube_interest")
     snapshot = _fetch_youtube_interest(cfg)
-    return _update_history_with_snapshot(path=path, value_column="youtube_interest", snapshot=snapshot)
+    merged = _update_history_with_snapshot(path=path, value_column="youtube_interest", snapshot=snapshot)
+    if not snapshot.empty:
+        return merged, "youtube_api"
+    if existing is not None and not existing.empty:
+        return merged, "local_cache"
+    return merged, "unavailable"
 
 
 def _coerce_timestamp(raw: Any) -> Optional[pd.Timestamp]:
@@ -185,14 +191,20 @@ def _fetch_google_trends_interest(cfg: RuntimeConfig) -> pd.Series:
     return _parse_google_trends_series(payload)
 
 
-def _load_google_trends_interest(cfg: RuntimeConfig) -> pd.Series:
+def _load_google_trends_interest(cfg: RuntimeConfig) -> Tuple[pd.Series, str]:
     path = _history_path(cfg, "google_trends_interest")
+    existing = load_optional_csv(path, value_column="google_trends_interest")
     snapshot = _fetch_google_trends_interest(cfg)
-    return _update_history_with_snapshot(
+    merged = _update_history_with_snapshot(
         path=path,
         value_column="google_trends_interest",
         snapshot=snapshot,
     )
+    if not snapshot.empty:
+        return merged, "google_trends_api"
+    if existing is not None and not existing.empty:
+        return merged, "local_cache"
+    return merged, "unavailable"
 
 
 def _fetch_coinbase_rank_snapshot(cfg: RuntimeConfig) -> pd.Series:
@@ -230,42 +242,54 @@ def _fetch_coinbase_rank_snapshot(cfg: RuntimeConfig) -> pd.Series:
     return pd.Series([float(rank)], index=[timestamp], name="coinbase_app_rank")
 
 
-def _load_coinbase_app_rank(cfg: RuntimeConfig) -> pd.Series:
+def _load_coinbase_app_rank(cfg: RuntimeConfig) -> Tuple[pd.Series, str]:
     if not cfg.enable_coinbase_app_rank:
-        return pd.Series(dtype=float)
+        return pd.Series(dtype=float), "disabled"
 
     path = _history_path(cfg, "coinbase_app_rank")
+    existing = load_optional_csv(path, value_column="coinbase_app_rank")
     snapshot = _fetch_coinbase_rank_snapshot(cfg)
     rank_series = _update_history_with_snapshot(path=path, value_column="coinbase_app_rank", snapshot=snapshot)
     if rank_series.empty:
-        return pd.Series(dtype=float)
+        if existing is not None and not existing.empty:
+            return pd.Series(dtype=float), "local_cache"
+        return pd.Series(dtype=float), "unavailable"
 
     # Lower rank means hotter market interest. Keep raw value as negative rank.
     transformed = -1.0 * rank_series.astype(float)
     transformed.name = "coinbase_app_rank_proxy"
-    return transformed
+    if not snapshot.empty:
+        return transformed, "apple_rss_top_free"
+    if existing is not None and not existing.empty:
+        return transformed, "local_cache"
+    return transformed, "unavailable"
 
 
 def load_social_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.DataFrame:
     out = pd.DataFrame(index=index)
+    source_modes = {}
 
-    youtube = _load_youtube_interest(cfg)
+    youtube, youtube_mode = _load_youtube_interest(cfg)
+    source_modes["youtube_interest"] = youtube_mode
 
     if youtube.empty:
         out["youtube_interest"] = np.nan
     else:
         out["youtube_interest"] = youtube.reindex(index)
 
-    google_trends = _load_google_trends_interest(cfg)
+    google_trends, trends_mode = _load_google_trends_interest(cfg)
+    source_modes["google_trends_interest"] = trends_mode
     if google_trends.empty:
         out["google_trends_interest"] = np.nan
     else:
         out["google_trends_interest"] = google_trends.reindex(index)
 
-    coinbase = _load_coinbase_app_rank(cfg)
+    coinbase, coinbase_mode = _load_coinbase_app_rank(cfg)
+    source_modes["coinbase_app_rank_proxy"] = coinbase_mode
     if coinbase.empty:
         out["coinbase_app_rank_proxy"] = np.nan
     else:
         out["coinbase_app_rank_proxy"] = coinbase.reindex(index)
 
+    out.attrs["source_modes"] = source_modes
     return out

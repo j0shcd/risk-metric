@@ -103,6 +103,10 @@ class PipelineBehaviorTests(unittest.TestCase):
         self.assertIn("total_market", result.metric_breakdowns)
         self.assertFalse(result.metric_breakdowns["btc"].empty)
         self.assertIn("effective_metric_weight_total", result.metric_breakdowns["btc"].columns)
+        self.assertIn("btc_price", result.source_modes)
+        self.assertIn("total_market_cap", result.source_modes)
+        self.assertIn("onchain::mvrv_z_score", result.source_modes)
+        self.assertIn("social::youtube_interest", result.source_modes)
 
     @patch("risk_engine.pipeline.load_social_metrics")
     @patch("risk_engine.pipeline.load_fear_greed_index")
