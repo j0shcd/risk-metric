@@ -122,6 +122,26 @@ python backfill.py --target onchain
 python validate.py
 ```
 
+### 7) Publish web contract artifacts (single-run orchestration)
+
+Runs pipeline once, validates once, writes CSV outputs, and exports web JSON artifacts to `data/web/v1`.
+
+```bash
+python publish_web_v1.py
+```
+
+Validation warnings do not block export. Hard validation failures return non-zero and block export.
+
+### 8) Run frontend dashboard locally
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+`npm run build` automatically syncs canonical artifacts from `data/web/v1` into `web/public/data/v1`.
+
 ## Configuration
 
 Configuration is loaded from:
@@ -163,8 +183,48 @@ Important env vars:
 - `output/source_modes.csv`
 - `output/sanity_report.csv`
 
+## Web Contract (`data/web/v1`)
+
+Canonical web artifacts are versioned under `data/web/v1`:
+
+- `manifest.json`
+- `latest_snapshot.json`
+- `history_core.json`
+- `category_breakdowns_btc.json`
+- `category_breakdowns_total_market.json`
+- `metric_breakdowns_btc.json`
+- `metric_breakdowns_total_market.json`
+- `diagnostics.json`
+
+Contract guarantees:
+
+- Stable score and confidence keys.
+- Stable ISO date/timestamp formats.
+- Explicit degraded-source metadata (mode + availability/staleness) is exported, never inferred.
+- Additive-only changes within `v1`; breaking changes require `v2`.
+
+## Cloud Deployment (Cloudflare Pages + GitHub Actions)
+
+Scheduled publishing is configured in `.github/workflows/daily-web-publish.yml` and runs daily at `06:00 UTC`.
+
+Behavior:
+
+- Executes `python publish_web_v1.py`.
+- Fails fast and does not commit when validation hard-fails.
+- Commits updated `data/web/v1` artifacts to `main` only when diffs exist.
+- Cloudflare Pages redeploys automatically from `main`.
+
+### One-Time Cloudflare Pages Setup
+
+1. In Cloudflare Pages, connect this GitHub repository.
+2. Set production branch to `main`.
+3. Set root directory to `web`.
+4. Set build command to `npm run build`.
+5. Set output directory to `dist`.
+6. Confirm deployments are public and use the free tier defaults.
+7. Trigger first deploy manually once, then rely on commits from the scheduled workflow.
+
 ## Phase 2 (deferred)
 
 - Macro/recession block (yield curve, labor, DXY/VIX)
-- Web frontend + scheduled cloud deployment
 - Notification redesign for hosted workflow

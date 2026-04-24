@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -130,7 +131,10 @@ def _records_payload(frame: pd.DataFrame) -> List[Dict[str, Any]]:
 
 def _write_json(path: Path, payload: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _latest_snapshot(series: pd.DataFrame) -> Dict[str, Any]:
@@ -187,6 +191,13 @@ def export_web_v1(
 ) -> WebExportResult:
     root = target_root / WEB_V1_VERSION
     generated_at_value = generated_at or _iso_utc_now()
+    root.mkdir(parents=True, exist_ok=True)
+
+    for existing in root.iterdir():
+        if existing.is_dir():
+            shutil.rmtree(existing)
+        else:
+            existing.unlink()
 
     series = result.series.copy().sort_index()
     history_frame = pd.DataFrame(index=series.index)
