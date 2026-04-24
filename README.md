@@ -75,6 +75,14 @@ Missing metric behavior:
 
 ## Running
 
+### 0) Install dependencies
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
 ### 1) Run main pipeline
 
 ```bash
@@ -148,6 +156,7 @@ Important env vars:
 - `output/metric_breakdowns/{btc,total_market}.csv`
 - `output/metric_health.csv`
 - `output/source_health.csv`
+- `output/source_modes.csv`
 - `output/sanity_report.csv`
 
 ## Phase 2 (deferred)
