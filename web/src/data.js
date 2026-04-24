@@ -58,17 +58,55 @@ export function pickLatestContributions(columnarPayload, limit = 12) {
   return entries.slice(0, limit);
 }
 
-export function chartData(columnarPayload, column) {
+function extractSeries(columnarPayload, column) {
   if (!columnarPayload || !column) {
-    return { labels: [], values: [] };
+    return { index: [], values: [] };
   }
 
-  const labels = Array.isArray(columnarPayload.index) ? columnarPayload.index : [];
+  const index = Array.isArray(columnarPayload.index) ? columnarPayload.index : [];
   const values = Array.isArray(columnarPayload.columns?.[column])
     ? columnarPayload.columns[column].map((item) => toNumber(item))
     : [];
 
-  return { labels, values };
+  return { index, values };
+}
+
+function firstFiniteIndex(values) {
+  for (let idx = 0; idx < values.length; idx += 1) {
+    if (values[idx] !== null) {
+      return idx;
+    }
+  }
+  return -1;
+}
+
+export function chartData(columnarPayload, column, options = {}) {
+  const { overlayPayload = null, overlayColumn = "" } = options;
+  const baseSeries = extractSeries(columnarPayload, column);
+  if (baseSeries.index.length === 0) {
+    return { labels: [], values: [], overlayValues: [] };
+  }
+
+  const start = firstFiniteIndex(baseSeries.values);
+  if (start < 0) {
+    return { labels: [], values: [], overlayValues: [] };
+  }
+
+  const labels = baseSeries.index.slice(start);
+  const values = baseSeries.values.slice(start);
+
+  if (!overlayPayload || !overlayColumn) {
+    return { labels, values, overlayValues: [] };
+  }
+
+  const overlaySeries = extractSeries(overlayPayload, overlayColumn);
+  const overlayMap = new Map();
+  for (let idx = 0; idx < overlaySeries.index.length; idx += 1) {
+    overlayMap.set(overlaySeries.index[idx], overlaySeries.values[idx] ?? null);
+  }
+  const overlayValues = labels.map((label) => overlayMap.get(label) ?? null);
+
+  return { labels, values, overlayValues };
 }
 
 export function listColumns(columnarPayload) {

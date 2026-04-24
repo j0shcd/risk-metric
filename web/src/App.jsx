@@ -4,6 +4,7 @@ import {
   Chart as ChartJS,
   Filler,
   Legend,
+  LogarithmicScale,
   LinearScale,
   LineElement,
   PointElement,
@@ -13,7 +14,7 @@ import { Line } from "react-chartjs-2";
 
 import { chartData, listColumns, loadDashboardData, pickLatestContributions, valueLabel } from "./data";
 
-ChartJS.register(CategoryScale, LineElement, LinearScale, PointElement, Tooltip, Legend, Filler);
+ChartJS.register(CategoryScale, LineElement, LinearScale, LogarithmicScale, PointElement, Tooltip, Legend, Filler);
 
 function StatCard({ label, value, tone = "neutral" }) {
   return (
@@ -24,7 +25,8 @@ function StatCard({ label, value, tone = "neutral" }) {
   );
 }
 
-function TrendChart({ title, labels, values, yBounds, color }) {
+function TrendChart({ title, labels, values, yBounds, color, showOverlay, overlayValues, overlayLabel, overlayLogScale }) {
+  const hasOverlayData = Array.isArray(overlayValues) && overlayValues.some((value) => value !== null);
   const dataset = useMemo(
     () => ({
       labels,
@@ -38,10 +40,25 @@ function TrendChart({ title, labels, values, yBounds, color }) {
           fill: true,
           backgroundColor: `${color}33`,
           tension: 0.2,
+          yAxisID: "y",
         },
+        ...(showOverlay && hasOverlayData
+          ? [
+              {
+                label: overlayLabel,
+                data: overlayValues,
+                borderColor: "#2c3e50",
+                borderWidth: 1.4,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.15,
+                yAxisID: "yPrice",
+              },
+            ]
+          : []),
       ],
     }),
-    [title, labels, values, color],
+    [title, labels, values, color, showOverlay, hasOverlayData, overlayLabel, overlayValues],
   );
 
   return (
@@ -65,9 +82,18 @@ function TrendChart({ title, labels, values, yBounds, color }) {
                 ticks: { color: "#5a5c66" },
                 grid: { color: "#e7e9ee" },
               },
+              yPrice: {
+                display: showOverlay && hasOverlayData,
+                position: "right",
+                type: overlayLogScale ? "logarithmic" : "linear",
+                ticks: { color: "#2c3e50" },
+                grid: {
+                  drawOnChartArea: false,
+                },
+              },
             },
             plugins: {
-              legend: { display: false },
+              legend: { display: showOverlay && hasOverlayData },
             },
           }}
         />
@@ -76,54 +102,97 @@ function TrendChart({ title, labels, values, yBounds, color }) {
   );
 }
 
-function BreakdownPanel({ title, payload, accent }) {
+function BreakdownPanel({
+  title,
+  payload,
+  accent,
+  overlayPayload,
+  overlayColumn,
+  overlayLabel,
+  overlayLogScale = false,
+}) {
   const columns = useMemo(() => listColumns(payload), [payload]);
   const preferred = useMemo(
     () => columns.find((name) => name.endsWith("_heat_contribution")) || columns[0] || "",
     [columns],
   );
   const [selectedColumn, setSelectedColumn] = useState(preferred);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   useEffect(() => {
     setSelectedColumn(preferred);
   }, [preferred]);
 
-  const series = useMemo(() => chartData(payload, selectedColumn), [payload, selectedColumn]);
+  const series = useMemo(
+    () =>
+      chartData(payload, selectedColumn, {
+        overlayPayload,
+        overlayColumn,
+      }),
+    [payload, selectedColumn, overlayPayload, overlayColumn],
+  );
   const latestContributions = useMemo(() => pickLatestContributions(payload), [payload]);
+  const hasOverlayData = series.overlayValues.some((value) => value !== null);
+  const datasets = [
+    {
+      label: selectedColumn,
+      data: series.values,
+      borderColor: accent,
+      borderWidth: 1.8,
+      pointRadius: 0,
+      fill: true,
+      backgroundColor: `${accent}22`,
+      tension: 0.2,
+      yAxisID: "y",
+    },
+  ];
+
+  if (showOverlay && hasOverlayData) {
+    datasets.push({
+      label: overlayLabel,
+      data: series.overlayValues,
+      borderColor: "#2c3e50",
+      borderWidth: 1.5,
+      pointRadius: 0,
+      fill: false,
+      tension: 0.15,
+      yAxisID: "yPrice",
+    });
+  }
 
   return (
     <section className="panel">
       <div className="panel__header-row">
         <h3>{title}</h3>
-        <select
-          aria-label={`${title} metric selector`}
-          value={selectedColumn}
-          onChange={(event) => setSelectedColumn(event.target.value)}
-        >
-          {columns.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+        <div className="panel__controls">
+          <label className="panel__overlay-toggle">
+            <input
+              type="checkbox"
+              checked={showOverlay}
+              onChange={(event) => setShowOverlay(event.target.checked)}
+              disabled={!hasOverlayData}
+            />
+            {`Overlay ${overlayLabel}`}
+          </label>
+          <select
+            aria-label={`${title} metric selector`}
+            value={selectedColumn}
+            onChange={(event) => setSelectedColumn(event.target.value)}
+          >
+            {columns.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="chart-wrap">
         <Line
           data={{
             labels: series.labels,
-            datasets: [
-              {
-                label: selectedColumn,
-                data: series.values,
-                borderColor: accent,
-                borderWidth: 1.8,
-                pointRadius: 0,
-                fill: true,
-                backgroundColor: `${accent}22`,
-                tension: 0.2,
-              },
-            ],
+            datasets,
           }}
           options={{
             animation: false,
@@ -138,9 +207,18 @@ function BreakdownPanel({ title, payload, accent }) {
                 ticks: { color: "#5a5c66" },
                 grid: { color: "#e7e9ee" },
               },
+              yPrice: {
+                display: showOverlay && hasOverlayData,
+                position: "right",
+                type: overlayLogScale ? "logarithmic" : "linear",
+                ticks: { color: "#2c3e50" },
+                grid: {
+                  drawOnChartArea: false,
+                },
+              },
             },
             plugins: {
-              legend: { display: false },
+              legend: { display: showOverlay && hasOverlayData },
             },
           }}
         />
@@ -259,6 +337,7 @@ export default function App() {
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState("");
   const [payload, setPayload] = useState(null);
+  const [showHeadlineOverlay, setShowHeadlineOverlay] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -302,9 +381,18 @@ export default function App() {
   const latest = payload.latestSnapshot;
   const degraded = payload.degraded;
 
-  const heatSeries = chartData(payload.historyCore, "headline_direction");
-  const attentionSeries = chartData(payload.historyCore, "headline_attention");
-  const confidenceSeries = chartData(payload.historyCore, "confidence_score");
+  const heatSeries = chartData(payload.historyCore, "headline_direction", {
+    overlayPayload: payload.historyCore,
+    overlayColumn: "btc_price",
+  });
+  const attentionSeries = chartData(payload.historyCore, "headline_attention", {
+    overlayPayload: payload.historyCore,
+    overlayColumn: "btc_price",
+  });
+  const confidenceSeries = chartData(payload.historyCore, "confidence_score", {
+    overlayPayload: payload.historyCore,
+    overlayColumn: "btc_price",
+  });
 
   return (
     <main className="page">
@@ -345,12 +433,26 @@ export default function App() {
       </section>
 
       <section className="grid grid--charts" aria-label="Core charts">
+        <div className="section-controls">
+          <label className="panel__overlay-toggle">
+            <input
+              type="checkbox"
+              checked={showHeadlineOverlay}
+              onChange={(event) => setShowHeadlineOverlay(event.target.checked)}
+            />
+            Overlay BTC Price (log)
+          </label>
+        </div>
         <TrendChart
           title="Headline Direction (Full History)"
           labels={heatSeries.labels}
           values={heatSeries.values}
           yBounds={[-1, 1]}
           color="#d0474f"
+          showOverlay={showHeadlineOverlay}
+          overlayValues={heatSeries.overlayValues}
+          overlayLabel="BTC Price"
+          overlayLogScale={true}
         />
         <TrendChart
           title="Headline Attention (Full History)"
@@ -358,6 +460,10 @@ export default function App() {
           values={attentionSeries.values}
           yBounds={[0, 1]}
           color="#0a8b9f"
+          showOverlay={showHeadlineOverlay}
+          overlayValues={attentionSeries.overlayValues}
+          overlayLabel="BTC Price"
+          overlayLogScale={true}
         />
         <TrendChart
           title="Confidence Score (Full History)"
@@ -365,21 +471,47 @@ export default function App() {
           values={confidenceSeries.values}
           yBounds={[0, 1]}
           color="#1d6fd8"
+          showOverlay={showHeadlineOverlay}
+          overlayValues={confidenceSeries.overlayValues}
+          overlayLabel="BTC Price"
+          overlayLogScale={true}
         />
       </section>
 
       <section className="grid grid--breakdowns" aria-label="Category and metric breakdowns">
-        <BreakdownPanel title="Category Breakdown - BTC" payload={payload.categoryBtc} accent="#c14953" />
+        <BreakdownPanel
+          title="Category Breakdown - BTC"
+          payload={payload.categoryBtc}
+          accent="#c14953"
+          overlayPayload={payload.historyCore}
+          overlayColumn="btc_price"
+          overlayLabel="BTC Price"
+          overlayLogScale={true}
+        />
         <BreakdownPanel
           title="Category Breakdown - Total Market"
           payload={payload.categoryTotal}
           accent="#6a6a44"
+          overlayPayload={payload.historyCore}
+          overlayColumn="total_market_cap"
+          overlayLabel="Total Market Cap"
         />
-        <BreakdownPanel title="Metric Breakdown - BTC" payload={payload.metricBtc} accent="#5e44b2" />
+        <BreakdownPanel
+          title="Metric Breakdown - BTC"
+          payload={payload.metricBtc}
+          accent="#5e44b2"
+          overlayPayload={payload.historyCore}
+          overlayColumn="btc_price"
+          overlayLabel="BTC Price"
+          overlayLogScale={true}
+        />
         <BreakdownPanel
           title="Metric Breakdown - Total Market"
           payload={payload.metricTotal}
           accent="#2f7f59"
+          overlayPayload={payload.historyCore}
+          overlayColumn="total_market_cap"
+          overlayLabel="Total Market Cap"
         />
       </section>
 
