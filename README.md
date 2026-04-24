@@ -99,19 +99,19 @@ python backfill.py
 ### 3) Refresh total market cap local store only
 
 ```bash
-python backfill_total_marketcap.py
+python backfill.py --target total-market
 ```
 
 ### 4) Refresh social local stores only
 
 ```bash
-python backfill_social.py
+python backfill.py --target social
 ```
 
 ### 5) Refresh on-chain local store only
 
 ```bash
-python backfill_onchain.py
+python backfill.py --target onchain
 ```
 
 ### 6) Validate output health
