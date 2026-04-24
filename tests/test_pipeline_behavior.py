@@ -170,6 +170,80 @@ class PipelineBehaviorTests(unittest.TestCase):
 
         self.assertLess(degraded, baseline)
 
+    @patch("risk_engine.pipeline.load_social_metrics")
+    @patch("risk_engine.pipeline.load_fear_greed_index")
+    @patch("risk_engine.pipeline.load_onchain_metrics")
+    @patch("risk_engine.pipeline.load_total_market_cap")
+    @patch("risk_engine.pipeline.load_btc_price")
+    def test_total_market_fallback_proxies_disabled_when_total_market_coverage_good(
+        self,
+        mocked_btc,
+        mocked_total,
+        mocked_onchain,
+        mocked_fear,
+        mocked_social,
+    ) -> None:
+        mocked_btc.return_value = self.btc_price
+        mocked_total.return_value = self.total_market
+        mocked_onchain.return_value = self.onchain
+        mocked_fear.return_value = self.fear_greed
+        mocked_social.return_value = self.social
+
+        result = run_pipeline(self.cfg)
+        metric_health = result.metric_health
+        proxy_rows = metric_health[
+            (metric_health["category"] == "price_structure")
+            & (metric_health["target"] == "total_market")
+            & (
+                metric_health["metric"].isin(
+                    [
+                        "btc_trend_extension_50d_350d",
+                        "btc_running_roi_1y",
+                        "btc_log_reg_deviation",
+                    ]
+                )
+            )
+        ]
+        self.assertTrue(proxy_rows.empty)
+
+    @patch("risk_engine.pipeline.load_social_metrics")
+    @patch("risk_engine.pipeline.load_fear_greed_index")
+    @patch("risk_engine.pipeline.load_onchain_metrics")
+    @patch("risk_engine.pipeline.load_total_market_cap")
+    @patch("risk_engine.pipeline.load_btc_price")
+    def test_total_market_fallback_proxies_enabled_when_total_market_sparse(
+        self,
+        mocked_btc,
+        mocked_total,
+        mocked_onchain,
+        mocked_fear,
+        mocked_social,
+    ) -> None:
+        mocked_btc.return_value = self.btc_price
+        sparse_total = pd.Series(np.nan, index=self.index, name="total_market_cap")
+        sparse_total.iloc[-20:] = self.total_market.iloc[-20:]
+        mocked_total.return_value = sparse_total
+        mocked_onchain.return_value = self.onchain
+        mocked_fear.return_value = self.fear_greed
+        mocked_social.return_value = self.social
+
+        result = run_pipeline(self.cfg)
+        metric_health = result.metric_health
+        proxy_rows = metric_health[
+            (metric_health["category"] == "price_structure")
+            & (metric_health["target"] == "total_market")
+            & (
+                metric_health["metric"].isin(
+                    [
+                        "btc_trend_extension_50d_350d",
+                        "btc_running_roi_1y",
+                        "btc_log_reg_deviation",
+                    ]
+                )
+            )
+        ]
+        self.assertFalse(proxy_rows.empty)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -20,7 +20,7 @@ from .sources import (
 from .types import FeatureBundle, RiskOutput
 
 
-def _metric_specs(cfg: RuntimeConfig) -> List[MetricSpec]:
+def _metric_specs(cfg: RuntimeConfig, include_total_market_fallback_proxies: bool) -> List[MetricSpec]:
     specs = [
         MetricSpec("btc_trend_extension_50d_350d", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
         MetricSpec("btc_running_roi_1y", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
@@ -28,10 +28,6 @@ def _metric_specs(cfg: RuntimeConfig) -> List[MetricSpec]:
         MetricSpec("total_trend_extension_50d_350d", "price_structure", "total_market", base_reliability=0.90, max_carry_days=7),
         MetricSpec("total_running_roi_1y", "price_structure", "total_market", base_reliability=0.90, max_carry_days=7),
         MetricSpec("total_log_reg_deviation", "price_structure", "total_market", base_reliability=0.90, max_carry_days=7),
-        # Explicit fallback proxies when total market-cap history is unavailable.
-        MetricSpec("btc_trend_extension_50d_350d", "price_structure", "total_market", base_reliability=0.35, max_carry_days=7),
-        MetricSpec("btc_running_roi_1y", "price_structure", "total_market", base_reliability=0.35, max_carry_days=7),
-        MetricSpec("btc_log_reg_deviation", "price_structure", "total_market", base_reliability=0.35, max_carry_days=7),
         MetricSpec("total_trend_extension_50d_350d", "total_market_context", "btc", base_reliability=0.85, max_carry_days=7),
         MetricSpec("total_log_reg_deviation", "total_market_context", "btc", base_reliability=0.85, max_carry_days=7),
         MetricSpec("btc_dominance_proxy", "total_market_context", "both", base_reliability=0.60, max_carry_days=14),
@@ -52,10 +48,49 @@ def _metric_specs(cfg: RuntimeConfig) -> List[MetricSpec]:
         MetricSpec("fear_greed_index", "fear_greed", "both", base_reliability=0.60, max_carry_days=7),
     ]
 
+    if include_total_market_fallback_proxies:
+        specs.extend(
+            [
+                # Explicit fallback proxies only when total market-cap history is insufficient.
+                MetricSpec(
+                    "btc_trend_extension_50d_350d",
+                    "price_structure",
+                    "total_market",
+                    base_reliability=0.35,
+                    max_carry_days=7,
+                ),
+                MetricSpec(
+                    "btc_running_roi_1y",
+                    "price_structure",
+                    "total_market",
+                    base_reliability=0.35,
+                    max_carry_days=7,
+                ),
+                MetricSpec(
+                    "btc_log_reg_deviation",
+                    "price_structure",
+                    "total_market",
+                    base_reliability=0.35,
+                    max_carry_days=7,
+                ),
+            ]
+        )
+
     if not cfg.enable_coinbase_app_rank:
         specs = [spec for spec in specs if spec.name != "coinbase_app_rank_proxy"]
 
     return specs
+
+
+def _should_use_total_market_fallback_proxies(total_market_cap: pd.Series) -> bool:
+    aligned = total_market_cap.astype(float)
+    if aligned.empty:
+        return True
+
+    total_points = int(aligned.notna().sum())
+    recent = aligned.tail(90)
+    recent_coverage = float(recent.notna().mean()) if len(recent) else 0.0
+    return bool(total_points < 365 or recent_coverage < 0.8)
 
 
 def _source_mode_multiplier(mode: str) -> float:
@@ -140,12 +175,13 @@ def _build_feature_bundles(
 
 def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     runtime = cfg or load_runtime_config()
-    metric_specs = _metric_specs(runtime)
 
     btc_price = load_btc_price(runtime)
     index = btc_price.index
 
     total_market_cap = load_total_market_cap(runtime, index=index)
+    use_total_market_fallback_proxies = _should_use_total_market_fallback_proxies(total_market_cap)
+    metric_specs = _metric_specs(runtime, include_total_market_fallback_proxies=use_total_market_fallback_proxies)
     onchain_frame = load_onchain_metrics(runtime, index=index)
     fear_greed = load_fear_greed_index(runtime, index=index)
     social_frame = load_social_metrics(runtime, index=index)
