@@ -137,6 +137,36 @@ class PipelineBehaviorTests(unittest.TestCase):
 
         self.assertLess(degraded, baseline)
 
+    @patch("risk_engine.pipeline.load_social_metrics")
+    @patch("risk_engine.pipeline.load_fear_greed_index")
+    @patch("risk_engine.pipeline.load_onchain_metrics")
+    @patch("risk_engine.pipeline.load_total_market_cap")
+    @patch("risk_engine.pipeline.load_btc_price")
+    def test_confidence_drops_when_total_market_uses_local_cache_mode(
+        self,
+        mocked_btc,
+        mocked_total,
+        mocked_onchain,
+        mocked_fear,
+        mocked_social,
+    ) -> None:
+        mocked_btc.return_value = self.btc_price
+        mocked_onchain.return_value = self.onchain
+        mocked_fear.return_value = self.fear_greed
+        mocked_social.return_value = self.social
+
+        total_api = self.total_market.copy()
+        total_api.attrs["source_mode"] = "cmc_api"
+        mocked_total.return_value = total_api
+        baseline = run_pipeline(self.cfg).series["confidence_score"].iloc[-1]
+
+        total_cached = self.total_market.copy()
+        total_cached.attrs["source_mode"] = "local_cache"
+        mocked_total.return_value = total_cached
+        degraded = run_pipeline(self.cfg).series["confidence_score"].iloc[-1]
+
+        self.assertLess(degraded, baseline)
+
 
 if __name__ == "__main__":
     unittest.main()

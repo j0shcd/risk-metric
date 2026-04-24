@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 import pandas as pd
 
@@ -58,15 +58,67 @@ def _metric_specs(cfg: RuntimeConfig) -> List[MetricSpec]:
     return specs
 
 
-def _build_feature_bundles(raw_features: pd.DataFrame, metric_specs: List[MetricSpec]) -> List[FeatureBundle]:
+def _source_mode_multiplier(mode: str) -> float:
+    if mode in {"cmc_api", "coingecko_pro", "glassnode_api", "youtube_api", "google_trends_api", "alternative_me_api"}:
+        return 1.0
+    if mode == "coinmetrics_community":
+        return 0.90
+    if mode in {"apple_rss_top_free"}:
+        return 0.80
+    if mode in {"local_cache"}:
+        return 0.75
+    if mode in {"coingecko_global_latest"}:
+        return 0.65
+    if mode in {"local_csv"}:
+        return 1.0
+    if mode in {"unknown"}:
+        return 0.80
+    if mode in {"unavailable", "disabled"}:
+        return 0.0
+    return 0.80
+
+
+def _metric_reliability_adjustments(source_modes: Dict[str, str]) -> Dict[str, float]:
+    total_mode = source_modes.get("total_market_cap", "unknown")
+    onchain_supply_mode = source_modes.get("onchain::supply_in_profit", "unknown")
+
+    metric_mode_map = {
+        "btc_trend_extension_50d_350d": source_modes.get("btc_price", "unknown"),
+        "btc_running_roi_1y": source_modes.get("btc_price", "unknown"),
+        "btc_log_reg_deviation": source_modes.get("btc_price", "unknown"),
+        "total_trend_extension_50d_350d": total_mode,
+        "total_running_roi_1y": total_mode,
+        "total_log_reg_deviation": total_mode,
+        "btc_dominance_proxy": total_mode,
+        "mvrv_z_score": source_modes.get("onchain::mvrv_z_score", "unknown"),
+        "puell_multiple": source_modes.get("onchain::puell_multiple", "unknown"),
+        "supply_in_profit": onchain_supply_mode,
+        "supply_in_loss": onchain_supply_mode,
+        "youtube_interest": source_modes.get("social::youtube_interest", "unknown"),
+        "google_trends_interest": source_modes.get("social::google_trends_interest", "unknown"),
+        "coinbase_app_rank_proxy": source_modes.get("social::coinbase_app_rank_proxy", "unknown"),
+        "fear_greed_index": source_modes.get("fear_greed_index", "unknown"),
+    }
+
+    return {metric: _source_mode_multiplier(mode) for metric, mode in metric_mode_map.items()}
+
+
+def _build_feature_bundles(
+    raw_features: pd.DataFrame,
+    metric_specs: List[MetricSpec],
+    reliability_adjustments: Dict[str, float],
+) -> List[FeatureBundle]:
     bundles: List[FeatureBundle] = []
     for spec in metric_specs:
         if spec.name not in raw_features.columns:
             continue
+        adjustment = reliability_adjustments.get(spec.name, 1.0)
+        adjusted_base_reliability = float((spec.base_reliability * adjustment))
+        adjusted_base_reliability = min(1.0, max(0.0, adjusted_base_reliability))
 
         frame = build_feature_frame(
             raw_series=raw_features[spec.name],
-            base_reliability=spec.base_reliability,
+            base_reliability=adjusted_base_reliability,
             max_carry_days=spec.max_carry_days,
             direction=spec.direction,
         )
@@ -96,13 +148,30 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     fear_greed = load_fear_greed_index(runtime, index=index)
     social_frame = load_social_metrics(runtime, index=index)
 
+    source_modes = {
+        "btc_price": "local_csv",
+        "total_market_cap": str(total_market_cap.attrs.get("source_mode", "unknown")),
+        "fear_greed_index": str(fear_greed.attrs.get("source_mode", "unknown")),
+    }
+    onchain_modes = onchain_frame.attrs.get("source_modes", {})
+    for column in onchain_frame.columns:
+        source_modes[f"onchain::{column}"] = str(onchain_modes.get(column, "unknown"))
+    social_modes = social_frame.attrs.get("source_modes", {})
+    for column in social_frame.columns:
+        source_modes[f"social::{column}"] = str(social_modes.get(column, "unknown"))
+
     market_features = build_market_features(btc_price=btc_price, total_market_cap=total_market_cap)
     onchain_features = build_onchain_features(onchain_frame)
     social_features = build_social_sentiment_features(fear_greed=fear_greed, social_frame=social_frame)
 
     raw_features = pd.concat([market_features, onchain_features, social_features], axis=1)
+    reliability_adjustments = _metric_reliability_adjustments(source_modes=source_modes)
 
-    bundles = _build_feature_bundles(raw_features=raw_features, metric_specs=metric_specs)
+    bundles = _build_feature_bundles(
+        raw_features=raw_features,
+        metric_specs=metric_specs,
+        reliability_adjustments=reliability_adjustments,
+    )
 
     btc_score = score_target(
         index=index,
@@ -150,21 +219,10 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         "total_market_cap": total_market_cap,
         "fear_greed_index": fear_greed,
     }
-    source_modes = {
-        "btc_price": "local_csv",
-        "total_market_cap": str(total_market_cap.attrs.get("source_mode", "unknown")),
-        "fear_greed_index": str(fear_greed.attrs.get("source_mode", "unknown")),
-    }
     for column in onchain_frame.columns:
         source_map[f"onchain::{column}"] = onchain_frame[column]
-    onchain_modes = onchain_frame.attrs.get("source_modes", {})
-    for column in onchain_frame.columns:
-        source_modes[f"onchain::{column}"] = str(onchain_modes.get(column, "unknown"))
     for column in social_frame.columns:
         source_map[f"social::{column}"] = social_frame[column]
-    social_modes = social_frame.attrs.get("source_modes", {})
-    for column in social_frame.columns:
-        source_modes[f"social::{column}"] = str(social_modes.get(column, "unknown"))
 
     metric_health = build_metric_health(
         metric_specs=metric_specs,

@@ -73,6 +73,7 @@ Missing metric behavior:
 - Reweight within category among available metrics.
 - If category coverage drops below `50%`, category contribution is damped.
 - Confidence combines coverage and reliability.
+- Reliability is further adjusted by adapter provenance (`api` > `fallback cache` > `snapshot fallback` > `unavailable`).
 
 ## Running
 
