@@ -1,0 +1,248 @@
+:root {
+  --bg: #f1efe9;
+  --card: #fffdf8;
+  --ink: #1e1f26;
+  --muted: #5f626f;
+  --line: #e7e4dc;
+  --heat: #c14953;
+  --attention: #147a8a;
+  --confidence: #1d6fd8;
+  --warning: #b56a15;
+  --degraded: #9f1f2e;
+  --stable: #294f8c;
+  --ok: #2a7440;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 15% 10%, #f8d8c0 0%, transparent 42%),
+    radial-gradient(circle at 90% 0%, #c8e5ef 0%, transparent 36%),
+    linear-gradient(165deg, #f6f3ed 0%, #ede8de 100%);
+}
+
+.page {
+  margin: 0 auto;
+  padding: 1.2rem;
+  max-width: 1500px;
+}
+
+.hero {
+  background: linear-gradient(130deg, #fefcf6 0%, #f8f4ed 55%, #f1efe7 100%);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 14px 32px #2d2b250f;
+  padding: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 0.35rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  letter-spacing: 0.02em;
+}
+
+.subtext {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+}
+
+.badges {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  border: 1px solid transparent;
+  background: #ebe9e1;
+}
+
+.badge--degraded {
+  color: #fff;
+  background: var(--degraded);
+}
+
+.badge--warning {
+  color: #6b3906;
+  background: #f9dfbe;
+  border-color: #ecb16e;
+}
+
+.badge--stable {
+  color: #203c6f;
+  background: #d6e2f7;
+}
+
+.badge--ok {
+  color: #124f26;
+  background: #d9edd8;
+}
+
+.cards {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+}
+
+.stat-card__label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.stat-card__value {
+  margin: 0.45rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.stat-card--heat .stat-card__value {
+  color: var(--heat);
+}
+
+.stat-card--attention .stat-card__value {
+  color: var(--attention);
+}
+
+.stat-card--confidence .stat-card__value {
+  color: var(--confidence);
+}
+
+.grid {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.grid--charts {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid--breakdowns {
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.9rem;
+}
+
+.panel h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.panel__header-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.panel select {
+  max-width: 360px;
+  border: 1px solid #d8d3ca;
+  border-radius: 8px;
+  padding: 0.35rem 0.4rem;
+  background: #fff;
+}
+
+.chart-wrap {
+  height: 230px;
+}
+
+.table-grid {
+  margin-top: 0.8rem;
+}
+
+.table-grid h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+}
+
+.table-grid table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.table-grid th,
+.table-grid td {
+  text-align: left;
+  padding: 0.3rem 0.35rem;
+  border-top: 1px solid var(--line);
+}
+
+.table-grid th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.diagnostics ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.status {
+  max-width: 900px;
+  margin: 5rem auto;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  padding: 1rem;
+}
+
+.status--error {
+  border-color: #f1b4b5;
+  background: #fff3f2;
+}
+
+@media (max-width: 800px) {
+  .grid--breakdowns {
+    grid-template-columns: 1fr;
+  }
+
+  .panel__header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .panel select {
+    max-width: 100%;
+    width: 100%;
+  }
+}
