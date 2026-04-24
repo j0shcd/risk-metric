@@ -157,6 +157,7 @@ Important env vars:
 - `output/category_breakdowns/{btc,total_market}.csv`
 - `output/metric_breakdowns/{btc,total_market}.csv`
 - `output/metric_health.csv`
+  - includes `source_mode`, `reliability_mode_multiplier`, and `adjusted_base_reliability`
 - `output/source_health.csv`
 - `output/source_modes.csv`
 - `output/sanity_report.csv`

@@ -78,11 +78,11 @@ def _source_mode_multiplier(mode: str) -> float:
     return 0.80
 
 
-def _metric_reliability_adjustments(source_modes: Dict[str, str]) -> Dict[str, float]:
+def _metric_source_modes(source_modes: Dict[str, str]) -> Dict[str, str]:
     total_mode = source_modes.get("total_market_cap", "unknown")
     onchain_supply_mode = source_modes.get("onchain::supply_in_profit", "unknown")
 
-    metric_mode_map = {
+    return {
         "btc_trend_extension_50d_350d": source_modes.get("btc_price", "unknown"),
         "btc_running_roi_1y": source_modes.get("btc_price", "unknown"),
         "btc_log_reg_deviation": source_modes.get("btc_price", "unknown"),
@@ -100,7 +100,9 @@ def _metric_reliability_adjustments(source_modes: Dict[str, str]) -> Dict[str, f
         "fear_greed_index": source_modes.get("fear_greed_index", "unknown"),
     }
 
-    return {metric: _source_mode_multiplier(mode) for metric, mode in metric_mode_map.items()}
+
+def _metric_reliability_adjustments(metric_source_modes: Dict[str, str]) -> Dict[str, float]:
+    return {metric: _source_mode_multiplier(mode) for metric, mode in metric_source_modes.items()}
 
 
 def _build_feature_bundles(
@@ -165,7 +167,8 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     social_features = build_social_sentiment_features(fear_greed=fear_greed, social_frame=social_frame)
 
     raw_features = pd.concat([market_features, onchain_features, social_features], axis=1)
-    reliability_adjustments = _metric_reliability_adjustments(source_modes=source_modes)
+    metric_source_modes = _metric_source_modes(source_modes=source_modes)
+    reliability_adjustments = _metric_reliability_adjustments(metric_source_modes=metric_source_modes)
 
     bundles = _build_feature_bundles(
         raw_features=raw_features,
@@ -229,6 +232,8 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         feature_bundles=bundles,
         as_of=as_of,
         lookback_days=30,
+        metric_source_modes=metric_source_modes,
+        reliability_adjustments=reliability_adjustments,
     )
     source_health = build_source_health(source_map=source_map, as_of=as_of, lookback_days=30)
 

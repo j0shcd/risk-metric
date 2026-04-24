@@ -118,13 +118,20 @@ def build_metric_health(
     feature_bundles: Iterable[FeatureBundle],
     as_of: pd.Timestamp,
     lookback_days: int = 30,
+    metric_source_modes: Dict[str, str] | None = None,
+    reliability_adjustments: Dict[str, float] | None = None,
 ) -> pd.DataFrame:
     bundle_map = {bundle.name: bundle for bundle in feature_bundles}
+    metric_source_modes = metric_source_modes or {}
+    reliability_adjustments = reliability_adjustments or {}
 
     rows: List[dict] = []
     for spec in metric_specs:
         bundle_name = f"{spec.name}__{spec.target}__{spec.category}"
         bundle = bundle_map.get(bundle_name)
+        source_mode = str(metric_source_modes.get(spec.name, "unknown"))
+        mode_multiplier = float(reliability_adjustments.get(spec.name, 1.0))
+        adjusted_base = float(np.clip(spec.base_reliability * mode_multiplier, 0.0, 1.0))
 
         if bundle is None:
             rows.append(
@@ -135,6 +142,9 @@ def build_metric_health(
                     "target": spec.target,
                     "experimental": spec.experimental,
                     "base_reliability": spec.base_reliability,
+                    "source_mode": source_mode,
+                    "reliability_mode_multiplier": mode_multiplier,
+                    "adjusted_base_reliability": adjusted_base,
                     "available": False,
                     "latest_timestamp": pd.NaT,
                     "staleness_days": np.nan,
@@ -158,6 +168,9 @@ def build_metric_health(
                     "target": spec.target,
                     "experimental": spec.experimental,
                     "base_reliability": spec.base_reliability,
+                    "source_mode": source_mode,
+                    "reliability_mode_multiplier": mode_multiplier,
+                    "adjusted_base_reliability": adjusted_base,
                     "available": False,
                     "latest_timestamp": pd.NaT,
                     "staleness_days": np.nan,
@@ -179,6 +192,9 @@ def build_metric_health(
                 "target": spec.target,
                 "experimental": spec.experimental,
                 "base_reliability": spec.base_reliability,
+                "source_mode": source_mode,
+                "reliability_mode_multiplier": mode_multiplier,
+                "adjusted_base_reliability": adjusted_base,
                 "available": True,
                 "latest_timestamp": clean.index.max(),
                 "staleness_days": _safe_float(series_staleness_days(clean, as_of=as_of)),
