@@ -47,6 +47,7 @@ Validation includes:
   - Total market cap running `1Y ROI`
   - Total market cap log-regression deviation
   - BTC dominance proxy
+  - BTC price-structure fallback proxies are only enabled when total-market coverage is insufficient
   - Local `total_marketcap.csv` is maintained over time (historical APIs when available, otherwise daily free global snapshot append)
 - On-chain:
   - MVRV Z-score
