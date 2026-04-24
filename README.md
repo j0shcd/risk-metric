@@ -32,6 +32,7 @@ Validation includes:
 - recent-signal presence checks
 - staleness checks on key output columns
 - source health and metric health availability checks
+- source mode provenance checks (API vs fallback cache vs unavailable)
 - source contract checks (duplicates, monotonic timestamps, numeric validity, source-specific staleness thresholds)
 - walk-forward sanity checks (tops, bottoms, sideways, forward-return relationship)
 

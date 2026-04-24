@@ -136,6 +136,42 @@ def _check_noncritical_source_contract_warnings(result: RiskOutput, warnings: Li
         warnings.append(f"Non-critical source contract failed: {row.source} ({row.contract_issues})")
 
 
+def _check_source_modes(result: RiskOutput, warnings: List[str]) -> None:
+    if not result.source_modes:
+        warnings.append("Source mode report missing; adapter provenance unavailable.")
+        return
+
+    modes = result.source_modes
+    excluded_prefixes = ("onchain::supply_in_loss",)
+    tracked = {k: v for k, v in modes.items() if not any(k.startswith(prefix) for prefix in excluded_prefixes)}
+
+    api_like = 0
+    fallback_like = 0
+    unavailable = 0
+
+    fallback_modes = {"local_cache", "coingecko_global_latest"}
+    unavailable_modes = {"unavailable", "disabled", "unknown"}
+
+    for mode in tracked.values():
+        mode_str = str(mode)
+        if mode_str in unavailable_modes:
+            unavailable += 1
+        elif mode_str in fallback_modes:
+            fallback_like += 1
+        else:
+            api_like += 1
+
+    warnings.append(
+        f"Source modes: api={api_like}, fallback={fallback_like}, unavailable={unavailable}."
+    )
+
+    if unavailable > 0:
+        unavailable_sources = sorted([source for source, mode in tracked.items() if str(mode) in unavailable_modes])
+        preview = ", ".join(unavailable_sources[:3])
+        suffix = "..." if len(unavailable_sources) > 3 else ""
+        warnings.append(f"Some sources are unavailable ({preview}{suffix}); confidence may be reduced.")
+
+
 def _check_metric_health(result: RiskOutput, errors: List[str]) -> None:
     if result.metric_health.empty:
         errors.append("Missing metric health report.")
@@ -302,6 +338,7 @@ def validate_output(result: RiskOutput) -> ValidationResult:
     )
     _check_source_health(result, errors)
     _check_noncritical_source_contract_warnings(result, warnings)
+    _check_source_modes(result, warnings)
     _check_metric_health(result, errors)
 
     sanity_report = build_walkforward_sanity_report(result.series)

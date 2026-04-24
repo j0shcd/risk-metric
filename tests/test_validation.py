@@ -41,6 +41,10 @@ class ValidationTests(unittest.TestCase):
                     "available": [True],
                 }
             ),
+            source_modes={
+                "btc_price": "local_csv",
+                "total_market_cap": "local_cache",
+            },
         )
 
         validation = validate_output(result)
@@ -67,11 +71,16 @@ class ValidationTests(unittest.TestCase):
                     "available": [True],
                 }
             ),
+            source_modes={
+                "btc_price": "local_csv",
+                "total_market_cap": "local_cache",
+            },
         )
 
         validation = validate_output(result)
         self.assertTrue(validation.passed)
         self.assertTrue(any("informational only" in msg for msg in validation.warnings))
+        self.assertTrue(any("Source modes:" in msg for msg in validation.warnings))
 
     def test_walkforward_sanity_report_has_expected_checks(self) -> None:
         index = pd.date_range("2020-01-01", periods=800, freq="D")
@@ -118,6 +127,9 @@ class ValidationTests(unittest.TestCase):
                     "contract_issues": ["stale:100d>3d"],
                 }
             ),
+            source_modes={
+                "btc_price": "local_csv",
+            },
         )
 
         validation = validate_output(result)
@@ -146,11 +158,42 @@ class ValidationTests(unittest.TestCase):
                     "contract_issues": ["", "stale:40d>21d"],
                 }
             ),
+            source_modes={
+                "btc_price": "local_csv",
+                "social::youtube_interest": "unavailable",
+            },
         )
 
         validation = validate_output(result)
         self.assertTrue(validation.passed)
         self.assertTrue(any("Non-critical source contract failed" in msg for msg in validation.warnings))
+        self.assertTrue(any("Some sources are unavailable" in msg for msg in validation.warnings))
+
+    def test_validation_warns_when_source_modes_missing(self) -> None:
+        today = pd.Timestamp.utcnow().tz_localize(None).normalize()
+        index = pd.date_range(end=today, periods=90, freq="D")
+        series = _base_series(index)
+
+        result = RiskOutput(
+            series=series,
+            feature_frames={"x": pd.DataFrame({"reliability": [0.5]}, index=[index[-1]])},
+            metric_health=pd.DataFrame(
+                {
+                    "target": ["btc", "total_market"],
+                    "available": [True, True],
+                }
+            ),
+            source_health=pd.DataFrame(
+                {
+                    "source": ["btc_price"],
+                    "available": [True],
+                }
+            ),
+        )
+
+        validation = validate_output(result)
+        self.assertTrue(validation.passed)
+        self.assertTrue(any("Source mode report missing" in msg for msg in validation.warnings))
 
 
 if __name__ == "__main__":
