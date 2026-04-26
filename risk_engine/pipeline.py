@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List
 
+import numpy as np
 import pandas as pd
 
 from .config import RuntimeConfig, load_runtime_config
@@ -25,9 +26,27 @@ def _metric_specs(cfg: RuntimeConfig, include_total_market_fallback_proxies: boo
         MetricSpec("btc_trend_extension_50d_350d", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
         MetricSpec("btc_running_roi_1y", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
         MetricSpec("btc_log_reg_deviation", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
+        MetricSpec("btc_drawdown_from_ath", "price_structure", "btc", base_reliability=0.90, max_carry_days=3),
+        MetricSpec(
+            "btc_realized_vol_30d",
+            "price_structure",
+            "btc",
+            base_reliability=0.85,
+            max_carry_days=3,
+            direction=-1.0,
+        ),
         MetricSpec("total_trend_extension_50d_350d", "price_structure", "total_market", base_reliability=0.90, max_carry_days=7),
         MetricSpec("total_running_roi_1y", "price_structure", "total_market", base_reliability=0.90, max_carry_days=7),
         MetricSpec("total_log_reg_deviation", "price_structure", "total_market", base_reliability=0.90, max_carry_days=7),
+        MetricSpec("total_drawdown_from_ath", "price_structure", "total_market", base_reliability=0.85, max_carry_days=3),
+        MetricSpec(
+            "total_realized_vol_30d",
+            "price_structure",
+            "total_market",
+            base_reliability=0.80,
+            max_carry_days=3,
+            direction=-1.0,
+        ),
         MetricSpec("total_trend_extension_50d_350d", "total_market_context", "btc", base_reliability=0.85, max_carry_days=7),
         MetricSpec("total_log_reg_deviation", "total_market_context", "btc", base_reliability=0.85, max_carry_days=7),
         MetricSpec("btc_dominance_proxy", "total_market_context", "both", base_reliability=0.60, max_carry_days=14),
@@ -121,9 +140,13 @@ def _metric_source_modes(source_modes: Dict[str, str]) -> Dict[str, str]:
         "btc_trend_extension_50d_350d": source_modes.get("btc_price", "unknown"),
         "btc_running_roi_1y": source_modes.get("btc_price", "unknown"),
         "btc_log_reg_deviation": source_modes.get("btc_price", "unknown"),
+        "btc_drawdown_from_ath": source_modes.get("btc_price", "unknown"),
+        "btc_realized_vol_30d": source_modes.get("btc_price", "unknown"),
         "total_trend_extension_50d_350d": total_mode,
         "total_running_roi_1y": total_mode,
         "total_log_reg_deviation": total_mode,
+        "total_drawdown_from_ath": total_mode,
+        "total_realized_vol_30d": total_mode,
         "btc_dominance_proxy": total_mode,
         "mvrv_z_score": source_modes.get("onchain::mvrv_z_score", "unknown"),
         "puell_multiple": source_modes.get("onchain::puell_multiple", "unknown"),
@@ -236,17 +259,25 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     output["total_market_risk_confidence"] = total_score.confidence
     output["total_market_risk_coverage"] = total_score.coverage
 
+    btc_headline_weight = (0.7 * output["btc_risk_confidence"]).clip(lower=0.0)
+    total_headline_weight = (0.3 * output["total_market_risk_confidence"]).clip(lower=0.0)
+    weight_sum = (btc_headline_weight + total_headline_weight).replace({0.0: np.nan})
+    btc_headline_mix = (btc_headline_weight / weight_sum).fillna(0.7).clip(0.0, 1.0)
+    total_headline_mix = (total_headline_weight / weight_sum).fillna(0.3).clip(0.0, 1.0)
+
     output["headline_attention"] = (
-        0.7 * output["btc_risk_attention"] + 0.3 * output["total_market_risk_attention"]
+        btc_headline_mix * output["btc_risk_attention"] + total_headline_mix * output["total_market_risk_attention"]
     ).clip(0.0, 1.0)
 
     output["headline_heat"] = (
-        0.7 * output["btc_risk_heat"] + 0.3 * output["total_market_risk_heat"]
+        btc_headline_mix * output["btc_risk_heat"] + total_headline_mix * output["total_market_risk_heat"]
     ).clip(0.0, 1.0)
 
     output["confidence_score"] = (
         0.7 * output["btc_risk_confidence"] + 0.3 * output["total_market_risk_confidence"]
     ).clip(0.0, 1.0)
+    output["headline_btc_mix_weight"] = btc_headline_mix
+    output["headline_total_market_mix_weight"] = total_headline_mix
 
     output["btc_price"] = btc_price
     output["total_market_cap"] = total_market_cap
