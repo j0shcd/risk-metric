@@ -38,7 +38,7 @@ CORE_HISTORY_COLUMNS = [
     "total_market_risk_confidence",
     "total_market_risk_coverage",
     "headline_attention",
-    "headline_direction",
+    "headline_heat",
     "confidence_score",
     "btc_price",
     "total_market_cap",
@@ -155,7 +155,7 @@ def _latest_snapshot(series: pd.DataFrame) -> Dict[str, Any]:
                 "coverage": None,
             },
             "headline_attention": None,
-            "headline_direction": None,
+            "headline_heat": None,
             "confidence_score": None,
         }
 
@@ -176,7 +176,7 @@ def _latest_snapshot(series: pd.DataFrame) -> Dict[str, Any]:
             "coverage": _coerce_json_scalar(row.get("total_market_risk_coverage")),
         },
         "headline_attention": _coerce_json_scalar(row.get("headline_attention")),
-        "headline_direction": _coerce_json_scalar(row.get("headline_direction")),
+        "headline_heat": _coerce_json_scalar(row.get("headline_heat")),
         "confidence_score": _coerce_json_scalar(row.get("confidence_score")),
     }
 

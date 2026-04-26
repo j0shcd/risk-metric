@@ -19,12 +19,12 @@ class WebExportTests(unittest.TestCase):
                 "btc_risk_attention": [0.4, 0.5, 0.6],
                 "btc_risk_confidence": [0.7, 0.8, 0.9],
                 "btc_risk_coverage": [0.5, 0.6, 0.7],
-                "total_market_risk_heat": [-0.1, -0.2, -0.3],
+                "total_market_risk_heat": [0.1, 0.2, 0.3],
                 "total_market_risk_attention": [0.2, 0.3, 0.4],
                 "total_market_risk_confidence": [0.6, 0.7, 0.8],
                 "total_market_risk_coverage": [0.4, 0.5, 0.6],
                 "headline_attention": [0.34, 0.41, 0.48],
-                "headline_direction": [0.04, 0.08, 0.12],
+                "headline_heat": [0.04, 0.08, 0.12],
                 "confidence_score": [0.67, 0.74, 0.82],
                 "btc_price": [70000.0, 71000.0, 72000.0],
                 "total_market_cap": [2.5e12, 2.55e12, 2.6e12],
@@ -125,7 +125,7 @@ class WebExportTests(unittest.TestCase):
 
             history = json.loads((export_result.root / "history_core.json").read_text(encoding="utf-8"))
             self.assertEqual(history["index"], ["2026-04-22", "2026-04-23", "2026-04-24"])
-            self.assertIn("headline_direction", history["columns"])
+            self.assertIn("headline_heat", history["columns"])
             self.assertIn("total_market_cap", history["columns"])
 
             diagnostics = json.loads((export_result.root / "diagnostics.json").read_text(encoding="utf-8"))

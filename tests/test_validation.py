@@ -14,7 +14,7 @@ def _base_series(index: pd.DatetimeIndex) -> pd.DataFrame:
             "total_market_risk_heat": 0.1,
             "total_market_risk_attention": 0.2,
             "headline_attention": 0.2,
-            "headline_direction": 0.1,
+            "headline_heat": 0.1,
             "confidence_score": 0.7,
         },
         index=index,
@@ -88,7 +88,7 @@ class ValidationTests(unittest.TestCase):
             100.0 + (index.dayofyear.to_numpy() / 3.0) + 10.0 * pd.Series(range(len(index))).rolling(15, min_periods=1).mean().to_numpy(),
             index=index,
         )
-        heat = pd.Series((price.rank(pct=True) - 0.5) * 1.6, index=index).clip(-1.0, 1.0)
+        heat = pd.Series(price.rank(pct=True), index=index).clip(0.0, 1.0)
         attention = heat.abs()
         frame = pd.DataFrame(
             {

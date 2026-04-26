@@ -26,12 +26,12 @@ def _check_index(series: pd.DataFrame, errors: List[str]) -> None:
 
 def _check_bounds(series: pd.DataFrame, errors: List[str]) -> None:
     bounded_columns = {
-        "btc_risk_heat": (-1.0, 1.0),
+        "btc_risk_heat": (0.0, 1.0),
         "btc_risk_attention": (0.0, 1.0),
-        "total_market_risk_heat": (-1.0, 1.0),
+        "total_market_risk_heat": (0.0, 1.0),
         "total_market_risk_attention": (0.0, 1.0),
         "headline_attention": (0.0, 1.0),
-        "headline_direction": (-1.0, 1.0),
+        "headline_heat": (0.0, 1.0),
         "confidence_score": (0.0, 1.0),
     }
 
@@ -55,7 +55,7 @@ def _check_recent_signal_presence(series: pd.DataFrame, errors: List[str], lookb
         "btc_risk_heat",
         "btc_risk_attention",
         "headline_attention",
-        "headline_direction",
+        "headline_heat",
         "confidence_score",
     ]
     for column in required_columns:
@@ -332,7 +332,7 @@ def validate_output(result: RiskOutput) -> ValidationResult:
             "total_market_risk_heat",
             "total_market_risk_attention",
             "headline_attention",
-            "headline_direction",
+            "headline_heat",
             "confidence_score",
         ],
     )

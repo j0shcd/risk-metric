@@ -11,10 +11,10 @@ The pipeline produces:
 1. `btc_risk` (`heat`, `attention`, `confidence`, `coverage`)
 2. `total_market_risk` (`heat`, `attention`, `confidence`, `coverage`)
 3. `headline_attention = 0.7 * btc_attention + 0.3 * total_attention`
-4. `headline_direction = 0.7 * btc_heat + 0.3 * total_heat`
+4. `headline_heat = 0.7 * btc_heat + 0.3 * total_heat`
 5. `confidence_score`
 
-Heat is bounded to `[-1, 1]`, attention to `[0, 1]`.
+Heat and attention are bounded to `[0, 1]`.
 
 ## Design
 
@@ -199,9 +199,9 @@ Canonical web artifacts are versioned under `data/web/v1`:
 Contract guarantees:
 
 - Stable score and confidence keys.
+- Current headline aggregate key is `headline_heat` (hard-cut replacement of `headline_direction`).
 - Stable ISO date/timestamp formats.
 - Explicit degraded-source metadata (mode + availability/staleness) is exported, never inferred.
-- Additive-only changes within `v1`; breaking changes require `v2`.
 
 ## Cloud Deployment (Cloudflare Pages + GitHub Actions)
 

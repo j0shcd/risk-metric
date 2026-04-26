@@ -29,7 +29,7 @@ class WebPublishTests(unittest.TestCase):
                 "total_market_risk_heat": [0.1, 0.2],
                 "total_market_risk_attention": [0.3, 0.4],
                 "headline_attention": [0.36, 0.43],
-                "headline_direction": [0.17, 0.24],
+                "headline_heat": [0.17, 0.24],
                 "confidence_score": [0.65, 0.7],
                 "btc_risk_confidence": [0.7, 0.8],
                 "total_market_risk_confidence": [0.55, 0.6],

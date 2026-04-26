@@ -85,11 +85,23 @@ class PipelineBehaviorTests(unittest.TestCase):
             "total_market_risk_heat",
             "total_market_risk_attention",
             "headline_attention",
-            "headline_direction",
+            "headline_heat",
             "confidence_score",
         ]:
             self.assertIn(column, output.columns)
             self.assertFalse(output[column].dropna().empty)
+
+        for bounded_column in [
+            "btc_risk_heat",
+            "btc_risk_attention",
+            "total_market_risk_heat",
+            "total_market_risk_attention",
+            "headline_attention",
+            "headline_heat",
+            "confidence_score",
+        ]:
+            values = output[bounded_column].dropna()
+            self.assertTrue(((values >= 0.0) & (values <= 1.0)).all())
 
         self.assertFalse(result.metric_health.empty)
         self.assertFalse(result.source_health.empty)

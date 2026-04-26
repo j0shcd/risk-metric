@@ -226,12 +226,12 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     )
 
     output = pd.DataFrame(index=index)
-    output["btc_risk_heat"] = btc_score.heat
+    output["btc_risk_heat"] = ((btc_score.heat + 1.0) / 2.0).clip(0.0, 1.0)
     output["btc_risk_attention"] = btc_score.attention
     output["btc_risk_confidence"] = btc_score.confidence
     output["btc_risk_coverage"] = btc_score.coverage
 
-    output["total_market_risk_heat"] = total_score.heat
+    output["total_market_risk_heat"] = ((total_score.heat + 1.0) / 2.0).clip(0.0, 1.0)
     output["total_market_risk_attention"] = total_score.attention
     output["total_market_risk_confidence"] = total_score.confidence
     output["total_market_risk_coverage"] = total_score.coverage
@@ -240,9 +240,9 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         0.7 * output["btc_risk_attention"] + 0.3 * output["total_market_risk_attention"]
     ).clip(0.0, 1.0)
 
-    output["headline_direction"] = (
+    output["headline_heat"] = (
         0.7 * output["btc_risk_heat"] + 0.3 * output["total_market_risk_heat"]
-    ).clip(-1.0, 1.0)
+    ).clip(0.0, 1.0)
 
     output["confidence_score"] = (
         0.7 * output["btc_risk_confidence"] + 0.3 * output["total_market_risk_confidence"]
