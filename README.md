@@ -10,8 +10,8 @@ The pipeline produces:
 
 1. `btc_risk` (`heat`, `attention`, `confidence`, `coverage`)
 2. `total_market_risk` (`heat`, `attention`, `confidence`, `coverage`)
-3. `headline_attention = 0.7 * btc_attention + 0.3 * total_attention`
-4. `headline_heat = 0.7 * btc_heat + 0.3 * total_heat`
+3. `headline_attention` (confidence-aware blend of BTC and total-market attention, anchored to `70/30`)
+4. `headline_heat` (confidence-aware blend of BTC and total-market heat, anchored to `70/30`)
 5. `confidence_score`
 
 Heat and attention are bounded to `[0, 1]`.
@@ -22,8 +22,8 @@ Pipeline layers:
 
 - `sources` -> data retrieval and fallback handling
 - `features` -> raw indicator construction
-- `normalization` -> rolling winsorized robust-z to bounded signal + 7D smoothing
-- `scoring` -> weighted category aggregation with availability and reliability controls
+- `normalization` -> rolling winsorized robust-z + regime-vol scaling + surprise channel + 7D smoothing
+- `scoring` -> weighted category aggregation with availability, reliability, crowding, and disagreement controls
 - `outputs` -> CSV exports and validation checks
 
 Validation includes:
@@ -42,10 +42,14 @@ Validation includes:
   - BTC `50d/350d` trend extension
   - BTC running `1Y ROI`
   - BTC log-regression deviation
+  - BTC drawdown from ATH
+  - BTC 30-day realized volatility (inverse-direction risk pressure)
 - Total market context:
   - Total market cap trend extension
   - Total market cap running `1Y ROI`
   - Total market cap log-regression deviation
+  - Total market drawdown from ATH
+  - Total market 30-day realized volatility (inverse-direction risk pressure)
   - BTC dominance proxy
   - BTC price-structure fallback proxies are only enabled when total-market coverage is insufficient
   - Local `total_marketcap.csv` is maintained over time (historical APIs when available, otherwise daily free global snapshot append)
@@ -73,8 +77,16 @@ Missing metric behavior:
 
 - Reweight within category among available metrics.
 - If category coverage drops below `50%`, category contribution is damped.
+- Category effective weights are reliability-adjusted (`base_weight * gate * f(reliability)`).
+- Category heat is crowding-damped when all metrics align in one direction.
+- Category attention is boosted by both crowding and cross-metric disagreement.
 - Confidence combines coverage and reliability.
 - Reliability is further adjusted by adapter provenance (`api` > `fallback cache` > `snapshot fallback` > `unavailable`).
+
+Headline blend behavior:
+
+- Headline BTC/total-market mix is confidence-aware per day.
+- Default anchor remains `70/30`, but each side scales by current target confidence before normalization.
 
 ## Running
 
