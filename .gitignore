@@ -14,3 +14,8 @@ viz
 *.docx
 *.log
 internal/
+.agents/
+.claude/
+/package-lock.json
+/skills-lock.json
+web/src/themes/
