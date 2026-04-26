@@ -1,254 +1,513 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CategoryScale,
   Chart as ChartJS,
   Filler,
   Legend,
-  LogarithmicScale,
   LinearScale,
   LineElement,
+  LogarithmicScale,
   PointElement,
   Tooltip,
 } from "chart.js";
+import zoomPlugin from "chartjs-plugin-zoom";
 import { Line } from "react-chartjs-2";
 
-import { chartData, listColumns, loadDashboardData, pickLatestContributions, valueLabel } from "./data";
+import { chartData, loadDashboardData, valueLabel } from "./data";
+import { useBreakdown } from "./useBreakdown";
 
-ChartJS.register(CategoryScale, LineElement, LinearScale, LogarithmicScale, PointElement, Tooltip, Legend, Filler);
+ChartJS.register(
+  CategoryScale,
+  LineElement,
+  LinearScale,
+  LogarithmicScale,
+  PointElement,
+  Tooltip,
+  Legend,
+  Filler,
+  zoomPlugin,
+);
 
-function StatCard({ label, value, tone = "neutral" }) {
+const COLORS = {
+  bg: "#0a0a0a",
+  panel: "#111111",
+  panelHeader: "#0b0b0b",
+  border: "#232323",
+  borderDim: "#191919",
+  text: "#cbc3ab",
+  muted: "#726b5d",
+  amber: "#f0a500",
+  red: "#ee3333",
+  green: "#22cc55",
+  blue: "#5ca2ff",
+};
+
+const FONT = "'IBM Plex Mono', 'Courier New', monospace";
+const PRICE_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
+const hoverGuidePlugin = {
+  id: "hoverGuide",
+  afterDatasetsDraw(chart) {
+    const activeElements = chart.tooltip?.getActiveElements?.() ?? [];
+    if (!activeElements.length) {
+      return;
+    }
+
+    const x = activeElements[0]?.element?.x;
+    const { top, bottom } = chart.chartArea || {};
+    if (!Number.isFinite(x) || !Number.isFinite(top) || !Number.isFinite(bottom)) {
+      return;
+    }
+
+    const { ctx } = chart;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#f0a50088";
+    ctx.stroke();
+    ctx.restore();
+  },
+};
+
+function alignSeries(primary, secondary) {
+  const secondaryMap = new Map();
+  secondary.labels.forEach((label, idx) => {
+    secondaryMap.set(label, secondary.values[idx] ?? null);
+  });
+
+  const labels = [];
+  const primaryValues = [];
+  const secondaryValues = [];
+
+  primary.labels.forEach((label, idx) => {
+    if (!secondaryMap.has(label)) {
+      return;
+    }
+    labels.push(label);
+    primaryValues.push(primary.values[idx] ?? null);
+    secondaryValues.push(secondaryMap.get(label) ?? null);
+  });
+
+  return {
+    labels,
+    primaryValues,
+    secondaryValues,
+  };
+}
+
+function alignOverlayValues(labels, overlaySeries) {
+  const overlayMap = new Map();
+  overlaySeries.labels.forEach((label, idx) => {
+    overlayMap.set(label, overlaySeries.values[idx] ?? null);
+  });
+  return labels.map((label) => overlayMap.get(label) ?? null);
+}
+
+function formatPrice(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? PRICE_FORMAT.format(num) : "n/a";
+}
+
+function snapshotCards(latestSnapshot) {
+  return [
+    { label: "Headline Heat", value: latestSnapshot.headline_heat, tone: "red" },
+    { label: "Headline Attention", value: latestSnapshot.headline_attention, tone: "amber" },
+    { label: "BTC Risk Heat", value: latestSnapshot.btc_risk?.heat, tone: "red" },
+    { label: "BTC Risk Attention", value: latestSnapshot.btc_risk?.attention, tone: "amber" },
+    { label: "Total Market Heat", value: latestSnapshot.total_market_risk?.heat, tone: "red" },
+    { label: "Total Market Attention", value: latestSnapshot.total_market_risk?.attention, tone: "amber" },
+    { label: "Confidence Score", value: latestSnapshot.confidence_score, tone: "blue" },
+  ];
+}
+
+function StatusTicker({ manifest }) {
   return (
-    <article className={`stat-card stat-card--${tone}`}>
-      <p className="stat-card__label">{label}</p>
-      <p className="stat-card__value">{value}</p>
+    <header className="bb-topbar">
+      <span className="bb-brand">RISK METRIC</span>
+      <div className="bb-topbar__spacer" />
+      <span className="bb-meta">LAST PRINT {manifest.generated_at}</span>
+    </header>
+  );
+}
+
+function MetricCard({ label, value, tone = "amber", highlight = false }) {
+  return (
+    <article className={`bb-card${highlight ? " bb-card--highlight" : ""}`}>
+      <p className="bb-card__label">{label}</p>
+      <p className={`bb-card__value bb-card__value--${tone}`}>{valueLabel(value)}</p>
     </article>
   );
 }
 
-function TrendChart({ title, labels, values, yBounds, color, showOverlay, overlayValues, overlayLabel, overlayLogScale }) {
-  const hasOverlayData = Array.isArray(overlayValues) && overlayValues.some((value) => value !== null);
-  const dataset = useMemo(
-    () => ({
-      labels,
+function FocusPanel({ heatSeries, attentionSeries, btcSeries }) {
+  const chartRef = useRef(null);
+  const [btcScaleType, setBtcScaleType] = useState("logarithmic");
+
+  const merged = useMemo(() => alignSeries(heatSeries, attentionSeries), [heatSeries, attentionSeries]);
+  const btcOverlayValues = useMemo(
+    () => alignOverlayValues(merged.labels, btcSeries),
+    [merged.labels, btcSeries],
+  );
+  const hasBtcOverlay = btcOverlayValues.some((value) => value !== null);
+  const hasData = merged.labels.length > 0;
+
+  const chartDataPayload = useMemo(() => {
+    if (!hasData) {
+      return { labels: [], datasets: [] };
+    }
+    return {
+      labels: merged.labels,
       datasets: [
         {
-          label: title,
-          data: values,
-          borderColor: color,
-          borderWidth: 2,
+          label: "Headline Heat",
+          data: merged.primaryValues,
+          borderColor: COLORS.red,
+          borderWidth: 1.9,
           pointRadius: 0,
           fill: true,
-          backgroundColor: `${color}33`,
-          tension: 0.2,
-          yAxisID: "y",
+          backgroundColor: "#ee33331f",
+          tension: 0.16,
         },
-        ...(showOverlay && hasOverlayData
+        {
+          label: "Headline Attention",
+          data: merged.secondaryValues,
+          borderColor: COLORS.amber,
+          borderWidth: 1.9,
+          pointRadius: 0,
+          fill: true,
+          backgroundColor: "#f0a50019",
+          tension: 0.16,
+        },
+        ...(hasBtcOverlay
           ? [
               {
-                label: overlayLabel,
-                data: overlayValues,
-                borderColor: "#2c3e50",
-                borderWidth: 1.4,
+                label: "BTC Price",
+                data: btcOverlayValues,
+                borderColor: "#8b8473",
+                borderWidth: 1.3,
                 pointRadius: 0,
                 fill: false,
-                tension: 0.15,
+                tension: 0.12,
                 yAxisID: "yPrice",
               },
             ]
           : []),
       ],
+    };
+  }, [hasData, merged, hasBtcOverlay, btcOverlayValues]);
+
+  const chartOptions = useMemo(
+    () => ({
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false,
+      },
+      scales: {
+        x: {
+          ticks: {
+            maxTicksLimit: 8,
+            color: COLORS.muted,
+            font: { family: FONT, size: 10 },
+          },
+          grid: { color: COLORS.borderDim },
+          border: { color: COLORS.border },
+        },
+        y: {
+          min: 0,
+          max: 1,
+          ticks: {
+            color: COLORS.muted,
+            font: { family: FONT, size: 10 },
+          },
+          grid: { color: COLORS.borderDim },
+          border: { color: COLORS.border },
+        },
+        yPrice: {
+          display: hasBtcOverlay,
+          position: "right",
+          type: btcScaleType,
+          ticks: {
+            callback: (tickValue) => formatPrice(tickValue),
+            color: "#8f8b80",
+            font: { family: FONT, size: 10 },
+          },
+          grid: { drawOnChartArea: false },
+          border: { color: COLORS.border },
+        },
+      },
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: COLORS.text,
+            font: { family: FONT, size: 11 },
+            boxWidth: 10,
+          },
+        },
+        tooltip: {
+          backgroundColor: "#090909f0",
+          borderColor: COLORS.border,
+          borderWidth: 1,
+          titleColor: COLORS.text,
+          bodyColor: COLORS.text,
+          titleFont: { family: FONT, size: 11, weight: "600" },
+          bodyFont: { family: FONT, size: 11 },
+          callbacks: {
+            title: (items) => (items.length ? `Date: ${items[0].label}` : ""),
+            label: (item) => (
+              item.dataset.yAxisID === "yPrice"
+                ? `${item.dataset.label}: ${formatPrice(item.parsed.y)}`
+                : `${item.dataset.label}: ${valueLabel(item.parsed.y, 4)}`
+            ),
+          },
+        },
+        zoom: {
+          limits: {
+            x: {
+              min: 0,
+              max: Math.max(0, merged.labels.length - 1),
+            },
+          },
+          pan: {
+            enabled: true,
+            mode: "x",
+          },
+          zoom: {
+            mode: "x",
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            drag: {
+              enabled: true,
+              backgroundColor: "#f0a5001f",
+              borderColor: COLORS.amber,
+              borderWidth: 1,
+            },
+          },
+        },
+      },
     }),
-    [title, labels, values, color, showOverlay, hasOverlayData, overlayLabel, overlayValues],
+    [merged.labels.length, hasBtcOverlay, btcScaleType],
   );
 
   return (
-    <section className="panel">
-      <h3>{title}</h3>
-      <div className="chart-wrap">
-        <Line
-          data={dataset}
-          options={{
-            animation: false,
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: {
-                ticks: { maxTicksLimit: 8, color: "#5a5c66" },
-                grid: { color: "#e7e9ee" },
-              },
-              y: {
-                suggestedMin: yBounds?.[0],
-                suggestedMax: yBounds?.[1],
-                ticks: { color: "#5a5c66" },
-                grid: { color: "#e7e9ee" },
-              },
-              yPrice: {
-                display: showOverlay && hasOverlayData,
-                position: "right",
-                type: overlayLogScale ? "logarithmic" : "linear",
-                ticks: { color: "#2c3e50" },
-                grid: {
-                  drawOnChartArea: false,
-                },
-              },
-            },
-            plugins: {
-              legend: { display: showOverlay && hasOverlayData },
-            },
-          }}
-        />
+    <section className="bb-panel bb-panel--focus">
+      <div className="bb-panel__head">
+        <div>
+          <p className="bb-panel__eyebrow">Focus</p>
+          <h2 className="bb-panel__title">Headline Heat + Headline Attention</h2>
+        </div>
+        <div className="bb-panel__actions">
+          <label className="bb-checkbox">
+            BTC SCALE
+            <select className="bb-select bb-select--compact" value={btcScaleType} onChange={(event) => setBtcScaleType(event.target.value)}>
+              <option value="logarithmic">LOG</option>
+              <option value="linear">LINEAR</option>
+            </select>
+          </label>
+          <button type="button" className="bb-button" onClick={() => chartRef.current?.resetZoom?.()}>
+            Reset Zoom
+          </button>
+        </div>
       </div>
+      <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="focus-chart">
+        {hasData ? (
+          <Line ref={chartRef} data={chartDataPayload} options={chartOptions} plugins={[hoverGuidePlugin]} />
+        ) : (
+          <p className="bb-empty">No focus-series data available.</p>
+        )}
+      </div>
+      <p className="bb-hint">Scroll to zoom, drag to zoom a range, drag horizontally to pan, and hover to inspect values at each date.</p>
     </section>
   );
+}
+
+function chartOptions(showOverlay, hasOverlayData, overlayScaleType = "linear") {
+  return {
+    animation: false,
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
+    scales: {
+      x: {
+        ticks: {
+          maxTicksLimit: 7,
+          color: COLORS.muted,
+          font: { family: FONT, size: 10 },
+        },
+        grid: { color: COLORS.borderDim },
+        border: { color: COLORS.border },
+      },
+      y: {
+        ticks: {
+          color: COLORS.muted,
+          font: { family: FONT, size: 10 },
+        },
+        grid: { color: COLORS.borderDim },
+        border: { color: COLORS.border },
+      },
+      yOverlay: {
+        display: showOverlay && hasOverlayData,
+        position: "right",
+        type: overlayScaleType,
+        ticks: {
+          callback: (tickValue) => formatPrice(tickValue),
+          color: "#8f8b80",
+          font: { family: FONT, size: 10 },
+        },
+        grid: { drawOnChartArea: false },
+        border: { color: COLORS.border },
+      },
+    },
+    plugins: {
+      legend: {
+        display: showOverlay && hasOverlayData,
+        labels: {
+          color: COLORS.text,
+          font: { family: FONT, size: 10 },
+        },
+      },
+      tooltip: {
+        backgroundColor: "#090909f0",
+        borderColor: COLORS.border,
+        borderWidth: 1,
+        titleColor: COLORS.text,
+        bodyColor: COLORS.text,
+        titleFont: { family: FONT, size: 11, weight: "600" },
+        bodyFont: { family: FONT, size: 11 },
+        callbacks: {
+          label: (item) => (
+            item.dataset.yAxisID === "yOverlay"
+              ? `${item.dataset.label}: ${formatPrice(item.parsed.y)}`
+              : `${item.dataset.label}: ${valueLabel(item.parsed.y, 4)}`
+          ),
+        },
+      },
+    },
+  };
 }
 
 function BreakdownPanel({
   title,
   payload,
-  accent,
+  color,
   overlayPayload,
   overlayColumn,
   overlayLabel,
-  overlayLogScale = false,
+  defaultOverlayScale = "linear",
+  overlayScaleToggle = false,
 }) {
-  const columns = useMemo(() => listColumns(payload), [payload]);
-  const preferred = useMemo(
-    () => columns.find((name) => name.endsWith("_heat_contribution")) || columns[0] || "",
-    [columns],
-  );
-  const [selectedColumn, setSelectedColumn] = useState(preferred);
-  const [showOverlay, setShowOverlay] = useState(false);
+  const {
+    columns,
+    selectedColumn,
+    setSelectedColumn,
+    showOverlay,
+    setShowOverlay,
+    series,
+    latestContributions,
+    hasOverlayData,
+  } = useBreakdown(payload, overlayPayload, overlayColumn);
+  const [overlayScaleType, setOverlayScaleType] = useState(defaultOverlayScale);
 
   useEffect(() => {
-    setSelectedColumn(preferred);
-  }, [preferred]);
+    setOverlayScaleType(defaultOverlayScale);
+  }, [defaultOverlayScale]);
 
-  const series = useMemo(
-    () =>
-      chartData(payload, selectedColumn, {
-        overlayPayload,
-        overlayColumn,
-      }),
-    [payload, selectedColumn, overlayPayload, overlayColumn],
-  );
-  const latestContributions = useMemo(() => pickLatestContributions(payload), [payload]);
-  const hasOverlayData = series.overlayValues.some((value) => value !== null);
   const datasets = [
     {
       label: selectedColumn,
       data: series.values,
-      borderColor: accent,
-      borderWidth: 1.8,
+      borderColor: color,
+      borderWidth: 1.7,
       pointRadius: 0,
       fill: true,
-      backgroundColor: `${accent}22`,
-      tension: 0.2,
+      backgroundColor: `${color}1d`,
+      tension: 0.18,
       yAxisID: "y",
     },
+    ...(showOverlay && hasOverlayData
+      ? [
+          {
+            label: overlayLabel,
+            data: series.overlayValues,
+            borderColor: "#7d7666",
+            borderWidth: 1.1,
+            pointRadius: 0,
+            fill: false,
+            tension: 0.14,
+            yAxisID: "yOverlay",
+          },
+        ]
+      : []),
   ];
 
-  if (showOverlay && hasOverlayData) {
-    datasets.push({
-      label: overlayLabel,
-      data: series.overlayValues,
-      borderColor: "#2c3e50",
-      borderWidth: 1.5,
-      pointRadius: 0,
-      fill: false,
-      tension: 0.15,
-      yAxisID: "yPrice",
-    });
-  }
-
   return (
-    <section className="panel">
-      <div className="panel__header-row">
-        <h3>{title}</h3>
-        <div className="panel__controls">
-          <label className="panel__overlay-toggle">
+    <section className="bb-panel">
+      <div className="bb-panel__head bb-panel__head--tight">
+        <h3 className="bb-panel__title bb-panel__title--small">{title}</h3>
+        <div className="bb-controls">
+          <label className="bb-checkbox">
             <input
               type="checkbox"
               checked={showOverlay}
               onChange={(event) => setShowOverlay(event.target.checked)}
               disabled={!hasOverlayData}
             />
-            {`Overlay ${overlayLabel}`}
+            + {overlayLabel}
           </label>
-          <select
-            aria-label={`${title} metric selector`}
-            value={selectedColumn}
-            onChange={(event) => setSelectedColumn(event.target.value)}
-          >
+          {overlayScaleToggle && hasOverlayData && (
+            <label className="bb-checkbox">
+              BTC SCALE
+              <select
+                className="bb-select bb-select--compact"
+                value={overlayScaleType}
+                onChange={(event) => setOverlayScaleType(event.target.value)}
+                disabled={!showOverlay}
+              >
+                <option value="logarithmic">LOG</option>
+                <option value="linear">LINEAR</option>
+              </select>
+            </label>
+          )}
+          <select className="bb-select" value={selectedColumn} onChange={(event) => setSelectedColumn(event.target.value)}>
             {columns.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
+              <option key={name} value={name}>{name}</option>
             ))}
           </select>
         </div>
       </div>
-
-      <div className="chart-wrap">
+      <div className="bb-chart-wrap bb-chart-wrap--debug">
         <Line
-          data={{
-            labels: series.labels,
-            datasets,
-          }}
-          options={{
-            animation: false,
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: {
-                ticks: { maxTicksLimit: 8, color: "#5a5c66" },
-                grid: { color: "#e7e9ee" },
-              },
-              y: {
-                ticks: { color: "#5a5c66" },
-                grid: { color: "#e7e9ee" },
-              },
-              yPrice: {
-                display: showOverlay && hasOverlayData,
-                position: "right",
-                type: overlayLogScale ? "logarithmic" : "linear",
-                ticks: { color: "#2c3e50" },
-                grid: {
-                  drawOnChartArea: false,
-                },
-              },
-            },
-            plugins: {
-              legend: { display: showOverlay && hasOverlayData },
-            },
-          }}
+          data={{ labels: series.labels, datasets }}
+          options={chartOptions(showOverlay, hasOverlayData, overlayScaleType)}
+          plugins={[hoverGuidePlugin]}
         />
       </div>
-
-      <div className="table-grid">
-        <h4>Latest Top Heat Contributions</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Signal</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {latestContributions.length === 0 ? (
-              <tr>
-                <td colSpan={2}>No contribution data available.</td>
+      <p className="bb-table-title">Top Heat Contributions</p>
+      <table className="bb-table">
+        <thead>
+          <tr>
+            <th>Signal</th>
+            <th style={{ textAlign: "right" }}>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {latestContributions.length === 0
+            ? (
+              <tr><td colSpan={2}>No data</td></tr>
+            )
+            : latestContributions.map((item) => (
+              <tr key={item.name}>
+                <td>{item.name}</td>
+                <td>{valueLabel(item.value, 4)}</td>
               </tr>
-            ) : (
-              latestContributions.map((item) => (
-                <tr key={item.name}>
-                  <td>{item.name}</td>
-                  <td>{valueLabel(item.value, 4)}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            ))}
+        </tbody>
+      </table>
     </section>
   );
 }
@@ -262,72 +521,73 @@ function DiagnosticsPanel({ diagnostics }) {
   }, [diagnostics]);
 
   const sourceHealth = Array.isArray(diagnostics?.source_health) ? diagnostics.source_health : [];
-  const sanityReport = Array.isArray(diagnostics?.sanity_report) ? diagnostics.sanity_report : [];
+  const sanity = Array.isArray(diagnostics?.sanity_report) ? diagnostics.sanity_report : [];
   const warnings = Array.isArray(diagnostics?.validation?.warnings) ? diagnostics.validation.warnings : [];
 
   return (
-    <section className="panel diagnostics" aria-label="Diagnostics panel">
-      <h3>Diagnostics</h3>
-
-      <div className="diagnostics__warnings">
-        <h4>Validation Warnings</h4>
-        {warnings.length === 0 ? (
-          <p>No validation warnings.</p>
-        ) : (
-          <ul>
-            {warnings.map((warning) => (
-              <li key={warning}>{warning}</li>
-            ))}
-          </ul>
-        )}
+    <section className="bb-panel">
+      <div className="bb-panel__head bb-panel__head--tight">
+        <h3 className="bb-panel__title bb-panel__title--small">System Diagnostics</h3>
       </div>
-
-      <div className="table-grid">
-        <h4>Source Availability / Mode</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Source</th>
-              <th>Available</th>
-              <th>Mode</th>
-              <th>Staleness (days)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sourceHealth.map((row) => (
-              <tr key={row.source}>
-                <td>{row.source}</td>
-                <td>{row.available ? "yes" : "no"}</td>
-                <td>{sourceModes.get(row.source) || "unknown"}</td>
-                <td>{row.staleness_days ?? "n/a"}</td>
+      <div className="bb-diag-grid">
+        <div>
+          <p className="bb-table-title">Source Availability</p>
+          <table className="bb-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Avail</th>
+                <th>Mode</th>
+                <th style={{ textAlign: "right" }}>Stale (d)</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {sourceHealth.map((row) => (
+                <tr key={row.source}>
+                  <td>{row.source}</td>
+                  <td style={{ color: row.available ? COLORS.green : COLORS.red }}>{row.available ? "YES" : "NO"}</td>
+                  <td>{sourceModes.get(row.source) || "unknown"}</td>
+                  <td>{row.staleness_days ?? "n/a"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      <div className="table-grid">
-        <h4>Sanity Report</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Check</th>
-              <th>Passed</th>
-              <th>Value</th>
-              <th>Threshold</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sanityReport.map((row) => (
-              <tr key={row.check}>
-                <td>{row.check}</td>
-                <td>{row.passed ? "yes" : "no"}</td>
-                <td>{row.value ?? "n/a"}</td>
-                <td>{row.threshold ?? "n/a"}</td>
+        <div>
+          <p className="bb-table-title">Sanity Report</p>
+          <table className="bb-table">
+            <thead>
+              <tr>
+                <th>Check</th>
+                <th>Pass</th>
+                <th>Value</th>
+                <th style={{ textAlign: "right" }}>Threshold</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sanity.map((row) => (
+                <tr key={row.check}>
+                  <td>{row.check}</td>
+                  <td style={{ color: row.passed ? COLORS.green : COLORS.red }}>{row.passed ? "YES" : "NO"}</td>
+                  <td>{row.value ?? "n/a"}</td>
+                  <td>{row.threshold ?? "n/a"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {warnings.length > 0 && (
+            <div className="bb-warnings">
+              <p className="bb-table-title">Validation Warnings</p>
+              <ul>
+                {warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -335,31 +595,28 @@ function DiagnosticsPanel({ diagnostics }) {
 
 export default function App() {
   const [status, setStatus] = useState("loading");
-  const [error, setError] = useState("");
   const [payload, setPayload] = useState(null);
-  const [showHeadlineOverlay, setShowHeadlineOverlay] = useState(false);
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("focus");
 
   useEffect(() => {
     let active = true;
 
-    async function run() {
-      try {
-        const data = await loadDashboardData();
+    loadDashboardData()
+      .then((data) => {
         if (!active) {
           return;
         }
         setPayload(data);
         setStatus("ready");
-      } catch (err) {
+      })
+      .catch((err) => {
         if (!active) {
           return;
         }
         setError(err instanceof Error ? err.message : "Unknown data load error");
         setStatus("error");
-      }
-    }
-
-    run();
+      });
 
     return () => {
       active = false;
@@ -367,155 +624,129 @@ export default function App() {
   }, []);
 
   if (status === "loading") {
-    return <main className="page"><p className="status">Loading dashboard artifacts...</p></main>;
+    return <div className="bb-app"><p className="bb-status">LOADING DASHBOARD<span className="bb-blink">_</span></p></div>;
   }
 
   if (status === "error") {
-    return (
-      <main className="page">
-        <p className="status status--error">Failed to load dashboard data: {error}</p>
-      </main>
-    );
+    return <div className="bb-app"><p className="bb-status bb-status--error">ERROR: {error}</p></div>;
   }
 
-  const latest = payload.latestSnapshot;
-  const degraded = payload.degraded;
+  const {
+    latestSnapshot,
+    historyCore,
+    categoryBtc,
+    categoryTotal,
+    metricBtc,
+    metricTotal,
+    diagnostics,
+    manifest,
+  } = payload;
 
-  const heatSeries = chartData(payload.historyCore, "headline_direction", {
-    overlayPayload: payload.historyCore,
-    overlayColumn: "btc_price",
-  });
-  const attentionSeries = chartData(payload.historyCore, "headline_attention", {
-    overlayPayload: payload.historyCore,
-    overlayColumn: "btc_price",
-  });
-  const confidenceSeries = chartData(payload.historyCore, "confidence_score", {
-    overlayPayload: payload.historyCore,
-    overlayColumn: "btc_price",
-  });
+  const heatSeries = chartData(historyCore, "headline_heat");
+  const attentionSeries = chartData(historyCore, "headline_attention");
+  const btcSeries = chartData(historyCore, "btc_price");
+
+  const cards = snapshotCards(latestSnapshot);
 
   return (
-    <main className="page">
-      <header className="hero">
-        <div>
-          <p className="eyebrow">Risk Metric v1</p>
-          <h1>Crypto Risk & Attention Dashboard</h1>
-          <p className="subtext">Generated {payload.manifest.generated_at} from static contract artifacts.</p>
+    <div className="bb-app">
+      <StatusTicker manifest={manifest} />
+
+      <main className="bb-main">
+        <div className="bb-tabs" role="tablist" aria-label="Dashboard Views">
+          <button
+            type="button"
+            className={`bb-tab${activeTab === "focus" ? " bb-tab--active" : ""}`}
+            onClick={() => setActiveTab("focus")}
+            role="tab"
+            aria-selected={activeTab === "focus"}
+          >
+            Focus
+          </button>
+          <button
+            type="button"
+            className={`bb-tab${activeTab === "debug" ? " bb-tab--active" : ""}`}
+            onClick={() => setActiveTab("debug")}
+            role="tab"
+            aria-selected={activeTab === "debug"}
+          >
+            Debug
+          </button>
         </div>
 
-        <div className="badges" aria-label="Degraded indicators">
-          <span className="badge badge--stable">Schema {payload.manifest.schema_version}</span>
-          {degraded.isDegraded ? (
-            <>
-              <span className="badge badge--degraded" data-testid="degraded-badge">
-                Degraded data
-              </span>
-              {degraded.reasons.map((reason) => (
-                <span key={reason} className="badge badge--warning">
-                  {reason}
-                </span>
+        {activeTab === "focus" ? (
+          <section aria-label="Focus view">
+            <div className="bb-card-grid bb-card-grid--focus">
+              <MetricCard label="Headline Heat" value={latestSnapshot.headline_heat} tone="red" highlight />
+              <MetricCard label="Headline Attention" value={latestSnapshot.headline_attention} tone="amber" highlight />
+              <MetricCard label="Confidence Score" value={latestSnapshot.confidence_score} tone="blue" />
+            </div>
+            <FocusPanel heatSeries={heatSeries} attentionSeries={attentionSeries} btcSeries={btcSeries} />
+          </section>
+        ) : (
+          <section aria-label="Debug view">
+            <p className="bb-section-title">Current Snapshot</p>
+            <div className="bb-card-grid">
+              {cards.map((card) => (
+                <MetricCard
+                  key={card.label}
+                  label={card.label}
+                  value={card.value}
+                  tone={card.tone}
+                  highlight={card.label === "Headline Heat" || card.label === "Headline Attention"}
+                />
               ))}
-            </>
-          ) : (
-            <span className="badge badge--ok">No degraded-source flags</span>
-          )}
-        </div>
-      </header>
+            </div>
 
-      <section className="cards" aria-label="Latest cards">
-        <StatCard label="BTC Risk Heat" value={valueLabel(latest.btc_risk?.heat)} tone="heat" />
-        <StatCard label="BTC Risk Attention" value={valueLabel(latest.btc_risk?.attention)} tone="attention" />
-        <StatCard label="Total Market Heat" value={valueLabel(latest.total_market_risk?.heat)} tone="heat" />
-        <StatCard label="Total Market Attention" value={valueLabel(latest.total_market_risk?.attention)} tone="attention" />
-        <StatCard label="Headline Attention" value={valueLabel(latest.headline_attention)} tone="attention" />
-        <StatCard label="Headline Direction" value={valueLabel(latest.headline_direction)} tone="heat" />
-        <StatCard label="Confidence Score" value={valueLabel(latest.confidence_score)} tone="confidence" />
-      </section>
+            <p className="bb-section-title">Category Breakdowns</p>
+            <div className="bb-panel-grid bb-panel-grid--two">
+              <BreakdownPanel
+                title="Category — BTC"
+                payload={categoryBtc}
+                color={COLORS.red}
+                overlayPayload={historyCore}
+                overlayColumn="btc_price"
+                overlayLabel="BTC Price"
+                defaultOverlayScale="logarithmic"
+                overlayScaleToggle
+              />
+              <BreakdownPanel
+                title="Category — Total Market"
+                payload={categoryTotal}
+                color={COLORS.amber}
+                overlayPayload={historyCore}
+                overlayColumn="total_market_cap"
+                overlayLabel="Market Cap"
+              />
+            </div>
 
-      <section className="grid grid--charts" aria-label="Core charts">
-        <div className="section-controls">
-          <label className="panel__overlay-toggle">
-            <input
-              type="checkbox"
-              checked={showHeadlineOverlay}
-              onChange={(event) => setShowHeadlineOverlay(event.target.checked)}
-            />
-            Overlay BTC Price (log)
-          </label>
-        </div>
-        <TrendChart
-          title="Headline Direction (Full History)"
-          labels={heatSeries.labels}
-          values={heatSeries.values}
-          yBounds={[-1, 1]}
-          color="#d0474f"
-          showOverlay={showHeadlineOverlay}
-          overlayValues={heatSeries.overlayValues}
-          overlayLabel="BTC Price"
-          overlayLogScale={true}
-        />
-        <TrendChart
-          title="Headline Attention (Full History)"
-          labels={attentionSeries.labels}
-          values={attentionSeries.values}
-          yBounds={[0, 1]}
-          color="#0a8b9f"
-          showOverlay={showHeadlineOverlay}
-          overlayValues={attentionSeries.overlayValues}
-          overlayLabel="BTC Price"
-          overlayLogScale={true}
-        />
-        <TrendChart
-          title="Confidence Score (Full History)"
-          labels={confidenceSeries.labels}
-          values={confidenceSeries.values}
-          yBounds={[0, 1]}
-          color="#1d6fd8"
-          showOverlay={showHeadlineOverlay}
-          overlayValues={confidenceSeries.overlayValues}
-          overlayLabel="BTC Price"
-          overlayLogScale={true}
-        />
-      </section>
+            <p className="bb-section-title">Metric Breakdowns</p>
+            <div className="bb-panel-grid bb-panel-grid--two">
+              <BreakdownPanel
+                title="Metric — BTC"
+                payload={metricBtc}
+                color={COLORS.green}
+                overlayPayload={historyCore}
+                overlayColumn="btc_price"
+                overlayLabel="BTC Price"
+                defaultOverlayScale="logarithmic"
+                overlayScaleToggle
+              />
+              <BreakdownPanel
+                title="Metric — Total Market"
+                payload={metricTotal}
+                color={COLORS.blue}
+                overlayPayload={historyCore}
+                overlayColumn="total_market_cap"
+                overlayLabel="Market Cap"
+              />
+            </div>
 
-      <section className="grid grid--breakdowns" aria-label="Category and metric breakdowns">
-        <BreakdownPanel
-          title="Category Breakdown - BTC"
-          payload={payload.categoryBtc}
-          accent="#c14953"
-          overlayPayload={payload.historyCore}
-          overlayColumn="btc_price"
-          overlayLabel="BTC Price"
-          overlayLogScale={true}
-        />
-        <BreakdownPanel
-          title="Category Breakdown - Total Market"
-          payload={payload.categoryTotal}
-          accent="#6a6a44"
-          overlayPayload={payload.historyCore}
-          overlayColumn="total_market_cap"
-          overlayLabel="Total Market Cap"
-        />
-        <BreakdownPanel
-          title="Metric Breakdown - BTC"
-          payload={payload.metricBtc}
-          accent="#5e44b2"
-          overlayPayload={payload.historyCore}
-          overlayColumn="btc_price"
-          overlayLabel="BTC Price"
-          overlayLogScale={true}
-        />
-        <BreakdownPanel
-          title="Metric Breakdown - Total Market"
-          payload={payload.metricTotal}
-          accent="#2f7f59"
-          overlayPayload={payload.historyCore}
-          overlayColumn="total_market_cap"
-          overlayLabel="Total Market Cap"
-        />
-      </section>
-
-      <DiagnosticsPanel diagnostics={payload.diagnostics} />
-    </main>
+            <p className="bb-section-title">Diagnostics</p>
+            <DiagnosticsPanel diagnostics={diagnostics} />
+          </section>
+        )}
+      </main>
+    </div>
   );
 }
