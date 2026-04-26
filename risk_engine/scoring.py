@@ -62,6 +62,11 @@ def score_target(
     category_reliability = {}
     category_coverage = {}
     category_gate = {}
+    category_crowding_consensus = {}
+    category_crowding_heat_penalty = {}
+    category_crowding_attention_boost = {}
+    category_disagreement = {}
+    category_disagreement_attention_boost = {}
 
     category_metric_heat = {}
     category_metric_attention = {}
@@ -92,11 +97,29 @@ def score_target(
         attention = (weighted_att_num / weighted_den).clip(0.0, 1.0)
         reliability = (weighted_den / valid_count.replace({0.0: np.nan})).clip(0.0, 1.0)
 
+        sign_consensus_num = (np.sign(stacked_heat) * stacked_reliability).sum(axis=1, min_count=1)
+        sign_consensus_den = stacked_reliability.where(stacked_heat.notna()).sum(axis=1, min_count=1)
+        consensus = (sign_consensus_num.abs() / sign_consensus_den.replace({0.0: np.nan})).clip(0.0, 1.0)
+        crowding_heat_penalty = (1.0 - 0.25 * consensus).clip(0.70, 1.0)
+        crowding_attention_boost = (1.0 + 0.20 * consensus).clip(1.0, 1.25)
+
+        dispersion = stacked_heat.std(axis=1, ddof=0).fillna(0.0).clip(lower=0.0)
+        disagreement = (dispersion / 0.50).clip(0.0, 1.0)
+        disagreement_attention_boost = (1.0 + 0.15 * disagreement).clip(1.0, 1.15)
+
+        heat = (heat * crowding_heat_penalty).clip(-1.0, 1.0)
+        attention = (attention * crowding_attention_boost * disagreement_attention_boost).clip(0.0, 1.0)
+
         category_heat[category] = heat
         category_attention[category] = attention
         category_reliability[category] = reliability
         category_coverage[category] = coverage.clip(0.0, 1.0)
         category_gate[category] = gate
+        category_crowding_consensus[category] = consensus
+        category_crowding_heat_penalty[category] = crowding_heat_penalty
+        category_crowding_attention_boost[category] = crowding_attention_boost
+        category_disagreement[category] = disagreement
+        category_disagreement_attention_boost[category] = disagreement_attention_boost
         category_metric_heat[category] = stacked_heat
         category_metric_attention[category] = stacked_attention
         category_metric_reliability[category] = stacked_reliability
@@ -119,11 +142,12 @@ def score_target(
             continue
 
         gate = category_gate[category]
-        effective_weight = (base_weight * gate).fillna(0.0)
+        rel_values = category_reliability[category]
+        reliability_influence = (0.70 + 0.30 * rel_values.fillna(0.0)).clip(0.70, 1.0)
+        effective_weight = (base_weight * gate * reliability_influence).fillna(0.0)
 
         heat_values = category_heat[category]
         att_values = category_attention[category]
-        rel_values = category_reliability[category]
         cov_values = category_coverage[category]
 
         heat_mask = heat_values.notna()
@@ -137,8 +161,8 @@ def score_target(
         weighted_att_num += effective_weight * att_values.fillna(0.0)
         weighted_att_den += effective_weight.where(att_mask, 0.0)
 
-        weighted_cov_num += base_weight * cov_values.fillna(0.0)
-        weighted_cov_den += base_weight
+        weighted_cov_num += effective_weight * cov_values.fillna(0.0)
+        weighted_cov_den += effective_weight
 
         weighted_rel_num += effective_weight * rel_values.fillna(0.0)
         weighted_rel_den += effective_weight.where(rel_mask, 0.0)
@@ -168,6 +192,11 @@ def score_target(
         breakdown_columns[f"{prefix}_attention"] = category_attention[category]
         breakdown_columns[f"{prefix}_coverage"] = category_coverage[category]
         breakdown_columns[f"{prefix}_reliability"] = category_reliability[category]
+        breakdown_columns[f"{prefix}_crowding_consensus"] = category_crowding_consensus[category]
+        breakdown_columns[f"{prefix}_crowding_heat_penalty"] = category_crowding_heat_penalty[category]
+        breakdown_columns[f"{prefix}_crowding_attention_boost"] = category_crowding_attention_boost[category]
+        breakdown_columns[f"{prefix}_disagreement"] = category_disagreement[category]
+        breakdown_columns[f"{prefix}_disagreement_attention_boost"] = category_disagreement_attention_boost[category]
         breakdown_columns[f"{prefix}_heat_contribution"] = norm * category_heat[category]
         breakdown_columns[f"{prefix}_attention_contribution"] = norm * category_attention[category]
 
