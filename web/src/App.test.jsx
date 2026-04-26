@@ -1,10 +1,13 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { forwardRef } from "react";
 import { vi } from "vitest";
 
 import App from "./App";
 
 vi.mock("react-chartjs-2", () => ({
-  Line: ({ data }) => <div data-testid="chart">{data?.datasets?.[0]?.label || "chart"}</div>,
+  Line: forwardRef(({ data }, ref) => (
+    <div ref={ref} data-testid="chart">{data?.datasets?.[0]?.label || "chart"}</div>
+  )),
 }));
 
 const baseColumnar = {
@@ -40,9 +43,9 @@ const fixtures = {
     version: "v1",
     date: "2026-04-24",
     btc_risk: { heat: 0.21, attention: 0.44, confidence: 0.62, coverage: 0.55 },
-    total_market_risk: { heat: -0.16, attention: 0.39, confidence: 0.54, coverage: 0.48 },
+    total_market_risk: { heat: 0.16, attention: 0.39, confidence: 0.54, coverage: 0.48 },
     headline_attention: 0.42,
-    headline_direction: 0.09,
+    headline_heat: 0.09,
     confidence_score: 0.58,
   },
   "history_core.json": {
@@ -52,9 +55,11 @@ const fixtures = {
     index_name: "date",
     index: ["2026-04-22", "2026-04-23", "2026-04-24"],
     columns: {
-      headline_direction: [0.03, 0.07, 0.09],
+      headline_heat: [0.03, 0.07, 0.09],
       headline_attention: [0.34, 0.39, 0.42],
       confidence_score: [0.6, 0.59, 0.58],
+      btc_price: [62000, 63500, 64000],
+      total_market_cap: [2.1e12, 2.12e12, 2.15e12],
     },
   },
   "category_breakdowns_btc.json": baseColumnar,
@@ -114,18 +119,20 @@ describe("App", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders cards, charts, and degraded badges from static artifacts", async () => {
+  it("renders Focus by default and shows Debug content when switched", async () => {
     render(<App />);
 
-    expect(await screen.findByText("Crypto Risk & Attention Dashboard")).toBeInTheDocument();
-    expect(await screen.findByText("BTC Risk Heat")).toBeInTheDocument();
-    expect(await screen.findByText("Confidence Score")).toBeInTheDocument();
-
+    expect(await screen.findByText("RISK METRIC")).toBeInTheDocument();
+    expect(await screen.findByText("Headline Heat + Headline Attention")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reset Zoom" })).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByTestId("degraded-badge")).toBeInTheDocument();
+      expect(screen.getByText(/LAST PRINT/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Diagnostics")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Debug" }));
+
+    expect(await screen.findByText("System Diagnostics")).toBeInTheDocument();
+    expect(screen.getByText("Category — BTC")).toBeInTheDocument();
     expect(screen.getAllByTestId("chart").length).toBeGreaterThan(0);
   });
 });
