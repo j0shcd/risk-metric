@@ -20,6 +20,34 @@ def _safe_scale(window_values: pd.Series, median: float) -> float:
     return float("nan")
 
 
+def _adaptive_regime_scales(
+    bounded_signal: pd.Series,
+    short_window: int = 30,
+    long_window: int = 252,
+) -> tuple[pd.Series, pd.Series, pd.Series]:
+    """Estimate volatility-regime-aware scaling for heat and attention."""
+    # Use first differences of bounded signal as a scale-free realized-vol proxy.
+    realized_vol = bounded_signal.diff().abs().rolling(
+        short_window,
+        min_periods=max(5, short_window // 3),
+    ).mean()
+    baseline_vol = realized_vol.rolling(
+        long_window,
+        min_periods=max(20, long_window // 6),
+    ).median()
+
+    vol_ratio = (
+        realized_vol
+        / baseline_vol.replace({0.0: np.nan})
+    ).replace([np.inf, -np.inf], np.nan)
+    vol_ratio = vol_ratio.fillna(1.0).clip(lower=0.25, upper=4.0)
+
+    # In high-vol regimes, reduce directional confidence and elevate attention.
+    heat_scale = vol_ratio.pow(-0.35).clip(lower=0.70, upper=1.35)
+    attention_scale = vol_ratio.pow(0.35).clip(lower=0.70, upper=1.45)
+    return heat_scale, attention_scale, vol_ratio
+
+
 def robust_bounded_signal(
     series: pd.Series,
     window: int = 365,
@@ -82,8 +110,22 @@ def build_feature_frame(
         carried.loc[age_days > float(max_carry_days)] = np.nan
 
     bounded = robust_bounded_signal(carried)
-    signed_heat = (direction * bounded).clip(lower=-1.0, upper=1.0)
-    attention = signed_heat.abs().clip(upper=1.0)
+    heat_regime_scale, attention_regime_scale, volatility_ratio = _adaptive_regime_scales(bounded)
+
+    base_heat = direction * bounded
+    signed_heat = (base_heat * heat_regime_scale).clip(lower=-1.0, upper=1.0)
+
+    # Surprise captures short-horizon acceleration beyond level-only extremeness.
+    level_impulse = np.tanh(base_heat.diff(5).abs() / 0.35)
+    relative_raw_impulse = (
+        (carried - carried.shift(1)).abs() / (carried.shift(1).abs() + EPSILON)
+    ).replace([np.inf, -np.inf], np.nan)
+    raw_impulse = np.tanh(relative_raw_impulse / 0.20)
+    surprise = np.maximum(level_impulse.fillna(0.0), raw_impulse.fillna(0.0)).clip(0.0, 1.0)
+    attention_level = base_heat.abs().clip(0.0, 1.0)
+    attention = (
+        (0.65 * attention_level + 0.35 * surprise) * attention_regime_scale
+    ).clip(0.0, 1.0)
 
     availability = carried.notna().astype(float)
     if max_carry_days <= 0:
@@ -103,6 +145,10 @@ def build_feature_frame(
             "age_days": age_days,
             "raw": observed_raw,
             "raw_carried": carried,
+            "surprise": surprise.rolling(smooth_window, min_periods=1).mean().clip(0.0, 1.0),
+            "regime_volatility_ratio": volatility_ratio.rolling(smooth_window, min_periods=1).mean().clip(0.25, 4.0),
+            "heat_regime_scale": heat_regime_scale.rolling(smooth_window, min_periods=1).mean().clip(0.70, 1.35),
+            "attention_regime_scale": attention_regime_scale.rolling(smooth_window, min_periods=1).mean().clip(0.70, 1.45),
         },
         index=observed_raw.index,
     )

@@ -53,6 +53,46 @@ class NormalizationTests(unittest.TestCase):
         self.assertAlmostEqual(float(frame["freshness"].iloc[4]), 0.0)
         self.assertAlmostEqual(float(frame["freshness"].iloc[-1]), 1.0)
 
+    def test_feature_frame_exposes_regime_and_surprise_channels(self) -> None:
+        index = pd.date_range("2022-01-01", periods=500, freq="D")
+        calm = np.linspace(100.0, 150.0, 250)
+        turbulent = 150.0 + 15.0 * np.sin(np.arange(250) / 2.0)
+        values = pd.Series(np.concatenate([calm, turbulent]), index=index)
+
+        frame = build_feature_frame(values, base_reliability=1.0, smooth_window=1)
+
+        for column in [
+            "surprise",
+            "regime_volatility_ratio",
+            "heat_regime_scale",
+            "attention_regime_scale",
+        ]:
+            self.assertIn(column, frame.columns)
+            self.assertFalse(frame[column].dropna().empty)
+
+        calm_heat_scale = frame["heat_regime_scale"].iloc[200:240].mean()
+        turbulent_heat_scale = frame["heat_regime_scale"].iloc[420:460].mean()
+        calm_attention_scale = frame["attention_regime_scale"].iloc[200:240].mean()
+        turbulent_attention_scale = frame["attention_regime_scale"].iloc[420:460].mean()
+
+        self.assertGreater(calm_heat_scale, turbulent_heat_scale)
+        self.assertLess(calm_attention_scale, turbulent_attention_scale)
+
+    def test_surprise_channel_lifts_attention_on_impulse(self) -> None:
+        index = pd.date_range("2023-01-01", periods=420, freq="D")
+        values = pd.Series(100.0 + np.sin(np.arange(420) / 25.0), index=index)
+        values.iloc[360] = values.iloc[359] * 1.35
+
+        frame = build_feature_frame(values, base_reliability=1.0, smooth_window=1)
+
+        impulse_day = frame.index[360]
+        surprise = float(frame.loc[impulse_day, "surprise"])
+        attention = float(frame.loc[impulse_day, "attention"])
+        level_only = abs(float(frame.loc[impulse_day, "signed_heat"]))
+
+        self.assertGreater(surprise, 0.2)
+        self.assertGreaterEqual(attention, level_only)
+
 
 if __name__ == "__main__":
     unittest.main()
