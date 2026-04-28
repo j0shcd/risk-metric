@@ -48,6 +48,33 @@ class PipelineBehaviorTests(unittest.TestCase):
             },
             index=self.index,
         )
+        self.cycle_context = pd.DataFrame(
+            {
+                "btc_price": self.btc_price,
+                "btc_volume_usd": 2.0e10 + 5.0e9 * np.sin(np.arange(len(self.index)) / 35.0),
+                "google_trends_interest": self.social["google_trends_interest"],
+                "wikipedia_pageviews": 2.0e5 + 1.5e4 * np.sin(np.arange(len(self.index)) / 15.0),
+                "reddit_post_volume": 1800.0 + 220.0 * np.sin(np.arange(len(self.index)) / 20.0),
+                "dxy": 100.0 + 2.0 * np.sin(np.arange(len(self.index)) / 40.0),
+                "real_yield_10y": 1.0 + 0.3 * np.sin(np.arange(len(self.index)) / 55.0),
+                "fed_balance_sheet": 8.0e12 + 2.0e11 * np.sin(np.arange(len(self.index)) / 80.0),
+                "reverse_repo_balance": 1.5e12 + 1.0e11 * np.sin(np.arange(len(self.index)) / 70.0),
+                "net_liquidity": 6.5e12 + 2.5e11 * np.sin(np.arange(len(self.index)) / 60.0),
+            },
+            index=self.index,
+        )
+        self.cycle_context.attrs["source_modes"] = {
+            "cycle::btc_price": "local_csv",
+            "cycle::btc_volume_usd": "local_cache",
+            "cycle::google_trends_interest": "local_cache",
+            "cycle::wikipedia_pageviews": "local_cache",
+            "cycle::reddit_post_volume": "local_cache",
+            "cycle::dxy": "local_cache",
+            "cycle::real_yield_10y": "local_cache",
+            "cycle::fed_balance_sheet": "local_cache",
+            "cycle::reverse_repo_balance": "local_cache",
+            "cycle::net_liquidity": "derived_from_local_cache",
+        }
 
         cwd = Path.cwd()
         self.cfg = RuntimeConfig(
@@ -57,6 +84,7 @@ class PipelineBehaviorTests(unittest.TestCase):
             cache_dir=cwd / "data",
         )
 
+    @patch("risk_engine.pipeline.load_cycle_market_context")
     @patch("risk_engine.pipeline.load_social_metrics")
     @patch("risk_engine.pipeline.load_fear_greed_index")
     @patch("risk_engine.pipeline.load_onchain_metrics")
@@ -69,12 +97,14 @@ class PipelineBehaviorTests(unittest.TestCase):
         mocked_onchain,
         mocked_fear,
         mocked_social,
+        mocked_cycle,
     ) -> None:
         mocked_btc.return_value = self.btc_price
         mocked_total.return_value = self.total_market
         mocked_onchain.return_value = self.onchain
         mocked_fear.return_value = self.fear_greed
         mocked_social.return_value = self.social
+        mocked_cycle.return_value = self.cycle_context
 
         result = run_pipeline(self.cfg)
         output = result.series
@@ -87,6 +117,11 @@ class PipelineBehaviorTests(unittest.TestCase):
             "headline_attention",
             "headline_heat",
             "confidence_score",
+            "cycle_heat_score",
+            "cycle_cold_score",
+            "cycle_p_frenzy",
+            "cycle_p_accumulation",
+            "cycle_confidence",
         ]:
             self.assertIn(column, output.columns)
             self.assertFalse(output[column].dropna().empty)
@@ -99,6 +134,11 @@ class PipelineBehaviorTests(unittest.TestCase):
             "headline_attention",
             "headline_heat",
             "confidence_score",
+            "cycle_heat_score",
+            "cycle_cold_score",
+            "cycle_p_frenzy",
+            "cycle_p_accumulation",
+            "cycle_confidence",
         ]:
             values = output[bounded_column].dropna()
             self.assertTrue(((values >= 0.0) & (values <= 1.0)).all())
@@ -122,7 +162,15 @@ class PipelineBehaviorTests(unittest.TestCase):
         self.assertIn("total_market_cap", result.source_modes)
         self.assertIn("onchain::mvrv_z_score", result.source_modes)
         self.assertIn("social::youtube_interest", result.source_modes)
+        self.assertIn("cycle::btc_volume_usd", result.source_modes)
+        self.assertFalse(result.cycle_feature_snapshots.empty)
+        self.assertFalse(result.cycle_regime_scores.empty)
+        self.assertFalse(result.cycle_signal_decisions.empty)
+        self.assertFalse(result.cycle_backtest_report.empty)
+        self.assertFalse(result.cycle_metric_audit.empty)
+        self.assertTrue(bool(result.cycle_migration_plan))
 
+    @patch("risk_engine.pipeline.load_cycle_market_context")
     @patch("risk_engine.pipeline.load_social_metrics")
     @patch("risk_engine.pipeline.load_fear_greed_index")
     @patch("risk_engine.pipeline.load_onchain_metrics")
@@ -135,11 +183,13 @@ class PipelineBehaviorTests(unittest.TestCase):
         mocked_onchain,
         mocked_fear,
         mocked_social,
+        mocked_cycle,
     ) -> None:
         mocked_btc.return_value = self.btc_price
         mocked_total.return_value = self.total_market
         mocked_fear.return_value = self.fear_greed
         mocked_social.return_value = self.social
+        mocked_cycle.return_value = self.cycle_context
 
         mocked_onchain.return_value = self.onchain
         baseline = run_pipeline(self.cfg).series["confidence_score"].iloc[-1]
@@ -152,6 +202,7 @@ class PipelineBehaviorTests(unittest.TestCase):
 
         self.assertLess(degraded, baseline)
 
+    @patch("risk_engine.pipeline.load_cycle_market_context")
     @patch("risk_engine.pipeline.load_social_metrics")
     @patch("risk_engine.pipeline.load_fear_greed_index")
     @patch("risk_engine.pipeline.load_onchain_metrics")
@@ -164,11 +215,13 @@ class PipelineBehaviorTests(unittest.TestCase):
         mocked_onchain,
         mocked_fear,
         mocked_social,
+        mocked_cycle,
     ) -> None:
         mocked_btc.return_value = self.btc_price
         mocked_onchain.return_value = self.onchain
         mocked_fear.return_value = self.fear_greed
         mocked_social.return_value = self.social
+        mocked_cycle.return_value = self.cycle_context
 
         total_api = self.total_market.copy()
         total_api.attrs["source_mode"] = "cmc_api"
@@ -182,6 +235,7 @@ class PipelineBehaviorTests(unittest.TestCase):
 
         self.assertLess(degraded, baseline)
 
+    @patch("risk_engine.pipeline.load_cycle_market_context")
     @patch("risk_engine.pipeline.load_social_metrics")
     @patch("risk_engine.pipeline.load_fear_greed_index")
     @patch("risk_engine.pipeline.load_onchain_metrics")
@@ -194,12 +248,14 @@ class PipelineBehaviorTests(unittest.TestCase):
         mocked_onchain,
         mocked_fear,
         mocked_social,
+        mocked_cycle,
     ) -> None:
         mocked_btc.return_value = self.btc_price
         mocked_total.return_value = self.total_market
         mocked_onchain.return_value = self.onchain
         mocked_fear.return_value = self.fear_greed
         mocked_social.return_value = self.social
+        mocked_cycle.return_value = self.cycle_context
 
         result = run_pipeline(self.cfg)
         metric_health = result.metric_health
@@ -218,6 +274,7 @@ class PipelineBehaviorTests(unittest.TestCase):
         ]
         self.assertTrue(proxy_rows.empty)
 
+    @patch("risk_engine.pipeline.load_cycle_market_context")
     @patch("risk_engine.pipeline.load_social_metrics")
     @patch("risk_engine.pipeline.load_fear_greed_index")
     @patch("risk_engine.pipeline.load_onchain_metrics")
@@ -230,6 +287,7 @@ class PipelineBehaviorTests(unittest.TestCase):
         mocked_onchain,
         mocked_fear,
         mocked_social,
+        mocked_cycle,
     ) -> None:
         mocked_btc.return_value = self.btc_price
         sparse_total = pd.Series(np.nan, index=self.index, name="total_market_cap")
@@ -238,6 +296,7 @@ class PipelineBehaviorTests(unittest.TestCase):
         mocked_onchain.return_value = self.onchain
         mocked_fear.return_value = self.fear_greed
         mocked_social.return_value = self.social
+        mocked_cycle.return_value = self.cycle_context
 
         result = run_pipeline(self.cfg)
         metric_health = result.metric_health

@@ -26,6 +26,13 @@ class WebExportTests(unittest.TestCase):
                 "headline_attention": [0.34, 0.41, 0.48],
                 "headline_heat": [0.04, 0.08, 0.12],
                 "confidence_score": [0.67, 0.74, 0.82],
+                "cycle_heat_score": [0.22, 0.24, 0.27],
+                "cycle_cold_score": [0.71, 0.68, 0.65],
+                "cycle_p_frenzy": [0.33, 0.35, 0.38],
+                "cycle_p_accumulation": [0.79, 0.76, 0.72],
+                "cycle_confidence": [0.8, 0.81, 0.82],
+                "cycle_position": [1.0, 1.0, 1.0],
+                "cycle_signal_regime": ["HOLD", "HOLD", "HOLD"],
                 "btc_price": [70000.0, 71000.0, 72000.0],
                 "total_market_cap": [2.5e12, 2.55e12, 2.6e12],
             },
@@ -122,6 +129,8 @@ class WebExportTests(unittest.TestCase):
             self.assertIn("btc_risk", latest)
             self.assertIn("total_market_risk", latest)
             self.assertIn("confidence_score", latest)
+            self.assertIn("cycle_model", latest)
+            self.assertIn("p_frenzy", latest["cycle_model"])
 
             history = json.loads((export_result.root / "history_core.json").read_text(encoding="utf-8"))
             self.assertEqual(history["index"], ["2026-04-22", "2026-04-23", "2026-04-24"])
