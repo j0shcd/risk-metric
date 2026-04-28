@@ -7,12 +7,14 @@ import numpy as np
 import pandas as pd
 
 from .config import RuntimeConfig, load_runtime_config
+from .cycle_model import build_cycle_model
 from .diagnostics import build_metric_health, build_source_health
 from .features import build_market_features, build_onchain_features, build_social_sentiment_features
 from .normalization import build_feature_frame
 from .scoring import MetricSpec, score_target
 from .sources import (
     load_btc_price,
+    load_cycle_market_context,
     load_fear_greed_index,
     load_onchain_metrics,
     load_social_metrics,
@@ -113,7 +115,18 @@ def _should_use_total_market_fallback_proxies(total_market_cap: pd.Series) -> bo
 
 
 def _source_mode_multiplier(mode: str) -> float:
-    if mode in {"cmc_api", "coingecko_pro", "glassnode_api", "youtube_api", "google_trends_api", "alternative_me_api"}:
+    if mode in {
+        "cmc_api",
+        "coingecko_pro",
+        "glassnode_api",
+        "youtube_api",
+        "google_trends_api",
+        "alternative_me_api",
+        "coingecko_free_api",
+        "fred_graph_csv",
+        "wikimedia_api",
+        "pushshift_api",
+    }:
         return 1.0
     if mode == "coinmetrics_community":
         return 0.90
@@ -208,6 +221,12 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     onchain_frame = load_onchain_metrics(runtime, index=index)
     fear_greed = load_fear_greed_index(runtime, index=index)
     social_frame = load_social_metrics(runtime, index=index)
+    cycle_context = load_cycle_market_context(
+        runtime,
+        index=index,
+        btc_price=btc_price,
+        social_frame=social_frame,
+    )
 
     source_modes = {
         "btc_price": "local_csv",
@@ -220,6 +239,9 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     social_modes = social_frame.attrs.get("source_modes", {})
     for column in social_frame.columns:
         source_modes[f"social::{column}"] = str(social_modes.get(column, "unknown"))
+    cycle_modes = cycle_context.attrs.get("source_modes", {})
+    for column in cycle_context.columns:
+        source_modes[f"cycle::{column}"] = str(cycle_modes.get(f"cycle::{column}", "unknown"))
 
     market_features = build_market_features(btc_price=btc_price, total_market_cap=total_market_cap)
     onchain_features = build_onchain_features(onchain_frame)
@@ -282,6 +304,15 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     output["btc_price"] = btc_price
     output["total_market_cap"] = total_market_cap
 
+    cycle = build_cycle_model(
+        cfg=runtime,
+        btc_price=btc_price,
+        onchain_frame=onchain_frame,
+        context_frame=cycle_context,
+        daily_index=index,
+    )
+    output = pd.concat([output, cycle.daily_projection], axis=1)
+
     as_of = pd.Timestamp.utcnow().tz_localize(None).normalize()
 
     source_map = {
@@ -293,6 +324,8 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         source_map[f"onchain::{column}"] = onchain_frame[column]
     for column in social_frame.columns:
         source_map[f"social::{column}"] = social_frame[column]
+    for column in cycle_context.columns:
+        source_map[f"cycle::{column}"] = cycle_context[column]
 
     metric_health = build_metric_health(
         metric_specs=metric_specs,
@@ -318,6 +351,12 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
             "btc": btc_score.metric_breakdown,
             "total_market": total_score.metric_breakdown,
         },
+        cycle_feature_snapshots=cycle.feature_snapshots,
+        cycle_regime_scores=cycle.regime_scores,
+        cycle_signal_decisions=cycle.signal_decisions,
+        cycle_backtest_report=cycle.backtest_report,
+        cycle_metric_audit=cycle.metric_audit,
+        cycle_migration_plan=cycle.migration_plan,
     )
 
 
@@ -370,3 +409,16 @@ def write_outputs(result: RiskOutput, output_dir: Path) -> None:
             existing.unlink()
         for target, frame in result.metric_breakdowns.items():
             frame.to_csv(metric_dir / f"{target}.csv")
+
+    if not result.cycle_feature_snapshots.empty:
+        result.cycle_feature_snapshots.to_csv(output_dir / "cycle_feature_snapshots_monthly.csv")
+    if not result.cycle_regime_scores.empty:
+        result.cycle_regime_scores.to_csv(output_dir / "cycle_regime_scores_monthly.csv")
+    if not result.cycle_signal_decisions.empty:
+        result.cycle_signal_decisions.to_csv(output_dir / "cycle_signal_decisions_monthly.csv")
+    if not result.cycle_backtest_report.empty:
+        result.cycle_backtest_report.to_csv(output_dir / "cycle_backtest_report.csv", index=False)
+    if not result.cycle_metric_audit.empty:
+        result.cycle_metric_audit.to_csv(output_dir / "cycle_metric_audit.csv", index=False)
+    if result.cycle_migration_plan:
+        (output_dir / "cycle_migration_plan.md").write_text(result.cycle_migration_plan + "\n", encoding="utf-8")

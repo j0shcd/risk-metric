@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, List
 
 import pandas as pd
 
@@ -24,3 +24,46 @@ class RiskOutput:
     source_modes: Dict[str, str] = field(default_factory=dict)
     category_breakdowns: Dict[str, pd.DataFrame] = field(default_factory=dict)
     metric_breakdowns: Dict[str, pd.DataFrame] = field(default_factory=dict)
+    cycle_feature_snapshots: pd.DataFrame = field(default_factory=pd.DataFrame)
+    cycle_regime_scores: pd.DataFrame = field(default_factory=pd.DataFrame)
+    cycle_signal_decisions: pd.DataFrame = field(default_factory=pd.DataFrame)
+    cycle_backtest_report: pd.DataFrame = field(default_factory=pd.DataFrame)
+    cycle_metric_audit: pd.DataFrame = field(default_factory=pd.DataFrame)
+    cycle_migration_plan: str = ""
+
+
+@dataclass(frozen=True)
+class FeatureSnapshot:
+    date: pd.Timestamp
+    valuation_features: Dict[str, float]
+    speculation_features: Dict[str, float]
+    attention_features: Dict[str, float]
+    macro_features: Dict[str, float]
+
+
+@dataclass(frozen=True)
+class RegimeScores:
+    date: pd.Timestamp
+    heat_score: float
+    cold_score: float
+    p_frenzy: float
+    p_accumulation: float
+    confidence: float
+
+
+@dataclass(frozen=True)
+class SignalDecision:
+    date: pd.Timestamp
+    regime: str
+    trigger_features: List[str]
+    cooldown_state: int
+
+
+@dataclass(frozen=True)
+class BacktestReport:
+    window: str
+    trades: int
+    cycle_capture: float
+    max_drawdown: float
+    turnover: float
+    benchmark_comparison: Dict[str, float]

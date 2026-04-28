@@ -25,7 +25,7 @@ def _check_index(series: pd.DataFrame, errors: List[str]) -> None:
 
 
 def _check_bounds(series: pd.DataFrame, errors: List[str]) -> None:
-    bounded_columns = {
+    required_bounded_columns = {
         "btc_risk_heat": (0.0, 1.0),
         "btc_risk_attention": (0.0, 1.0),
         "total_market_risk_heat": (0.0, 1.0),
@@ -34,8 +34,15 @@ def _check_bounds(series: pd.DataFrame, errors: List[str]) -> None:
         "headline_heat": (0.0, 1.0),
         "confidence_score": (0.0, 1.0),
     }
+    optional_bounded_columns = {
+        "cycle_heat_score": (0.0, 1.0),
+        "cycle_cold_score": (0.0, 1.0),
+        "cycle_p_frenzy": (0.0, 1.0),
+        "cycle_p_accumulation": (0.0, 1.0),
+        "cycle_confidence": (0.0, 1.0),
+    }
 
-    for column, (low, high) in bounded_columns.items():
+    for column, (low, high) in required_bounded_columns.items():
         if column not in series.columns:
             errors.append(f"Missing output column: {column}")
             continue
@@ -43,6 +50,17 @@ def _check_bounds(series: pd.DataFrame, errors: List[str]) -> None:
         values = series[column].dropna()
         if values.empty:
             errors.append(f"Column has no usable values: {column}")
+            continue
+
+        if (values < low).any() or (values > high).any():
+            errors.append(f"Column out of bounds [{low}, {high}]: {column}")
+
+    for column, (low, high) in optional_bounded_columns.items():
+        if column not in series.columns:
+            continue
+
+        values = series[column].dropna()
+        if values.empty:
             continue
 
         if (values < low).any() or (values > high).any():

@@ -13,6 +13,14 @@
   "youtube_fallback_csv": null,
   "google_trends_csv": null,
   "coinbase_rank_csv": null,
+  "coingecko_btc_market_csv": "data/btc_market_coingecko.csv",
+  "wikipedia_pageviews_csv": "data/wikipedia_pageviews_btc.csv",
+  "reddit_posts_csv": "data/reddit_post_volume.csv",
+  "fred_dxy_csv": "data/fred_dxy.csv",
+  "fred_real_yield_csv": "data/fred_real_yield_10y.csv",
+  "fred_walcl_csv": "data/fred_walcl.csv",
+  "fred_rrp_csv": "data/fred_rrpontsyd.csv",
+  "reddit_subreddits": "Bitcoin,CryptoCurrency",
   "apple_app_store_country": "us",
   "coinbase_ios_app_id": "886427730",
   "enable_coinbase_app_rank": true,
@@ -23,5 +31,16 @@
     "total_market_context": 0.2,
     "social": 0.15,
     "fear_greed": 0.05
-  }
+  },
+  "cycle_category_weights": {
+    "valuation": 0.35,
+    "speculation": 0.25,
+    "attention": 0.25,
+    "macro": 0.15
+  },
+  "cycle_confirmation_months": 2,
+  "cycle_cooldown_months": 3,
+  "cycle_buy_threshold": 0.75,
+  "cycle_sell_threshold": 0.75,
+  "cycle_min_history_months": 24
 }

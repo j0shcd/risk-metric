@@ -15,6 +15,13 @@ DEFAULT_CATEGORY_WEIGHTS = {
     "fear_greed": 0.05,
 }
 
+DEFAULT_CYCLE_CATEGORY_WEIGHTS = {
+    "valuation": 0.35,
+    "speculation": 0.25,
+    "attention": 0.25,
+    "macro": 0.15,
+}
+
 
 @dataclass(frozen=True)
 class RuntimeConfig:
@@ -41,14 +48,28 @@ class RuntimeConfig:
     youtube_fallback_csv: Optional[Path] = None
     google_trends_csv: Optional[Path] = None
     coinbase_rank_csv: Optional[Path] = None
+    coingecko_btc_market_csv: Optional[Path] = None
+    wikipedia_pageviews_csv: Optional[Path] = None
+    reddit_posts_csv: Optional[Path] = None
+    fred_dxy_csv: Optional[Path] = None
+    fred_real_yield_csv: Optional[Path] = None
+    fred_walcl_csv: Optional[Path] = None
+    fred_rrp_csv: Optional[Path] = None
     apple_app_store_country: str = "us"
     coinbase_ios_app_id: str = "886427730"
+    reddit_subreddits: List[str] = field(default_factory=lambda: ["Bitcoin", "CryptoCurrency"])
 
     enable_coinbase_app_rank: bool = True
 
     request_timeout_seconds: int = 20
 
     category_weights: Dict[str, float] = field(default_factory=lambda: dict(DEFAULT_CATEGORY_WEIGHTS))
+    cycle_category_weights: Dict[str, float] = field(default_factory=lambda: dict(DEFAULT_CYCLE_CATEGORY_WEIGHTS))
+    cycle_confirmation_months: int = 2
+    cycle_cooldown_months: int = 3
+    cycle_buy_threshold: float = 0.75
+    cycle_sell_threshold: float = 0.75
+    cycle_min_history_months: int = 24
 
 
 def _parse_bool(value: Optional[str], default: bool) -> bool:
@@ -99,6 +120,8 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
 
     category_weights = dict(DEFAULT_CATEGORY_WEIGHTS)
     category_weights.update(file_cfg.get("category_weights", {}))
+    cycle_category_weights = dict(DEFAULT_CYCLE_CATEGORY_WEIGHTS)
+    cycle_category_weights.update(file_cfg.get("cycle_category_weights", {}))
 
     cfg = RuntimeConfig(
         project_root=resolved_root,
@@ -121,14 +144,55 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
         youtube_fallback_csv=_path_or_none(resolved_root, env.get("YOUTUBE_FALLBACK_CSV", file_cfg.get("youtube_fallback_csv"))),
         google_trends_csv=_path_or_none(resolved_root, env.get("GOOGLE_TRENDS_CSV", file_cfg.get("google_trends_csv"))),
         coinbase_rank_csv=_path_or_none(resolved_root, env.get("COINBASE_RANK_CSV", file_cfg.get("coinbase_rank_csv"))),
+        coingecko_btc_market_csv=_path_or_none(
+            resolved_root,
+            env.get("COINGECKO_BTC_MARKET_CSV", file_cfg.get("coingecko_btc_market_csv")),
+        ),
+        wikipedia_pageviews_csv=_path_or_none(
+            resolved_root,
+            env.get("WIKIPEDIA_PAGEVIEWS_CSV", file_cfg.get("wikipedia_pageviews_csv")),
+        ),
+        reddit_posts_csv=_path_or_none(
+            resolved_root,
+            env.get("REDDIT_POSTS_CSV", file_cfg.get("reddit_posts_csv")),
+        ),
+        fred_dxy_csv=_path_or_none(
+            resolved_root,
+            env.get("FRED_DXY_CSV", file_cfg.get("fred_dxy_csv")),
+        ),
+        fred_real_yield_csv=_path_or_none(
+            resolved_root,
+            env.get("FRED_REAL_YIELD_CSV", file_cfg.get("fred_real_yield_csv")),
+        ),
+        fred_walcl_csv=_path_or_none(
+            resolved_root,
+            env.get("FRED_WALCL_CSV", file_cfg.get("fred_walcl_csv")),
+        ),
+        fred_rrp_csv=_path_or_none(
+            resolved_root,
+            env.get("FRED_RRP_CSV", file_cfg.get("fred_rrp_csv")),
+        ),
         apple_app_store_country=str(env.get("APPLE_APP_STORE_COUNTRY", file_cfg.get("apple_app_store_country", "us"))).lower(),
         coinbase_ios_app_id=str(env.get("COINBASE_IOS_APP_ID", file_cfg.get("coinbase_ios_app_id", "886427730"))),
+        reddit_subreddits=_split_csv(env.get("REDDIT_SUBREDDITS", file_cfg.get("reddit_subreddits", "Bitcoin,CryptoCurrency"))),
         enable_coinbase_app_rank=_parse_bool(
             env.get("ENABLE_COINBASE_APP_RANK"),
             file_cfg.get("enable_coinbase_app_rank", True),
         ),
         request_timeout_seconds=int(env.get("REQUEST_TIMEOUT_SECONDS", file_cfg.get("request_timeout_seconds", 20))),
         category_weights=category_weights,
+        cycle_category_weights=cycle_category_weights,
+        cycle_confirmation_months=int(
+            env.get("CYCLE_CONFIRMATION_MONTHS", file_cfg.get("cycle_confirmation_months", 2))
+        ),
+        cycle_cooldown_months=int(
+            env.get("CYCLE_COOLDOWN_MONTHS", file_cfg.get("cycle_cooldown_months", 3))
+        ),
+        cycle_buy_threshold=float(env.get("CYCLE_BUY_THRESHOLD", file_cfg.get("cycle_buy_threshold", 0.75))),
+        cycle_sell_threshold=float(env.get("CYCLE_SELL_THRESHOLD", file_cfg.get("cycle_sell_threshold", 0.75))),
+        cycle_min_history_months=int(
+            env.get("CYCLE_MIN_HISTORY_MONTHS", file_cfg.get("cycle_min_history_months", 24))
+        ),
     )
 
     cfg.data_dir.mkdir(parents=True, exist_ok=True)

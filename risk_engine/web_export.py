@@ -40,6 +40,12 @@ CORE_HISTORY_COLUMNS = [
     "headline_attention",
     "headline_heat",
     "confidence_score",
+    "cycle_heat_score",
+    "cycle_cold_score",
+    "cycle_p_frenzy",
+    "cycle_p_accumulation",
+    "cycle_confidence",
+    "cycle_position",
     "btc_price",
     "total_market_cap",
 ]
@@ -157,6 +163,15 @@ def _latest_snapshot(series: pd.DataFrame) -> Dict[str, Any]:
             "headline_attention": None,
             "headline_heat": None,
             "confidence_score": None,
+            "cycle_model": {
+                "heat_score": None,
+                "cold_score": None,
+                "p_frenzy": None,
+                "p_accumulation": None,
+                "confidence": None,
+                "position": None,
+                "signal_regime": None,
+            },
         }
 
     date = latest_row.index[-1]
@@ -178,6 +193,15 @@ def _latest_snapshot(series: pd.DataFrame) -> Dict[str, Any]:
         "headline_attention": _coerce_json_scalar(row.get("headline_attention")),
         "headline_heat": _coerce_json_scalar(row.get("headline_heat")),
         "confidence_score": _coerce_json_scalar(row.get("confidence_score")),
+        "cycle_model": {
+            "heat_score": _coerce_json_scalar(row.get("cycle_heat_score")),
+            "cold_score": _coerce_json_scalar(row.get("cycle_cold_score")),
+            "p_frenzy": _coerce_json_scalar(row.get("cycle_p_frenzy")),
+            "p_accumulation": _coerce_json_scalar(row.get("cycle_p_accumulation")),
+            "confidence": _coerce_json_scalar(row.get("cycle_confidence")),
+            "position": _coerce_json_scalar(row.get("cycle_position")),
+            "signal_regime": _coerce_json_scalar(row.get("cycle_signal_regime")),
+        },
     }
 
 

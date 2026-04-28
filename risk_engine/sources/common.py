@@ -16,6 +16,20 @@ def safe_get_json(url: str, timeout_seconds: int, headers: Optional[dict] = None
         return None
 
 
+def safe_get_text(
+    url: str,
+    timeout_seconds: int,
+    headers: Optional[dict] = None,
+    params: Optional[dict] = None,
+) -> Optional[str]:
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=timeout_seconds)
+        response.raise_for_status()
+        return response.text
+    except Exception:
+        return None
+
+
 def sanitize_series(series: pd.Series) -> pd.Series:
     parsed_index = pd.to_datetime(series.index, utc=True, errors="coerce").tz_convert(None)
     clean = pd.Series(series.values, index=parsed_index, name=series.name)

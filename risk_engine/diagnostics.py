@@ -19,6 +19,8 @@ def _safe_float(value: float | int | np.floating | None) -> float:
 def _source_staleness_threshold_days(source_name: str) -> int:
     if source_name == "btc_price":
         return 3
+    if source_name.startswith("cycle::"):
+        return 45
     if source_name == "total_market_cap":
         return 14
     if source_name.startswith("onchain::"):
