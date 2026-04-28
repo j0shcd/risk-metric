@@ -110,10 +110,26 @@ function formatPrice(value) {
   return Number.isFinite(num) ? PRICE_FORMAT.format(num) : "n/a";
 }
 
+function cycleRegimeLabel(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) {
+    return "n/a";
+  }
+  if (num >= 0.7) {
+    return "Historically Hot";
+  }
+  if (num <= 0.3) {
+    return "Historically Cold";
+  }
+  return "Neutral Band";
+}
+
 function snapshotCards(latestSnapshot) {
   return [
     { label: "Headline Heat", value: latestSnapshot.headline_heat, tone: "red" },
     { label: "Headline Attention", value: latestSnapshot.headline_attention, tone: "amber" },
+    { label: "Cycle Regime Index", value: latestSnapshot.cycle_model?.heat_score, tone: "red" },
+    { label: "Cycle Confidence", value: latestSnapshot.cycle_model?.confidence, tone: "blue" },
     { label: "BTC Risk Heat", value: latestSnapshot.btc_risk?.heat, tone: "red" },
     { label: "BTC Risk Attention", value: latestSnapshot.btc_risk?.attention, tone: "amber" },
     { label: "Total Market Heat", value: latestSnapshot.total_market_risk?.heat, tone: "red" },
@@ -141,8 +157,17 @@ function MetricCard({ label, value, tone = "amber", highlight = false }) {
   );
 }
 
-function FocusPanel({ heatSeries, attentionSeries, btcSeries }) {
+function FocusPanel({
+  heatSeries,
+  attentionSeries,
+  btcSeries,
+  cycleSeries,
+  cycleConfidenceSeries,
+  latestCycleValue,
+  latestCycleConfidence,
+}) {
   const chartRef = useRef(null);
+  const cycleChartRef = useRef(null);
   const [btcScaleType, setBtcScaleType] = useState("logarithmic");
 
   const merged = useMemo(() => alignSeries(heatSeries, attentionSeries), [heatSeries, attentionSeries]);
@@ -152,6 +177,16 @@ function FocusPanel({ heatSeries, attentionSeries, btcSeries }) {
   );
   const hasBtcOverlay = btcOverlayValues.some((value) => value !== null);
   const hasData = merged.labels.length > 0;
+  const cycleConfidenceValues = useMemo(
+    () => alignOverlayValues(cycleSeries.labels, cycleConfidenceSeries),
+    [cycleSeries.labels, cycleConfidenceSeries],
+  );
+  const cycleBtcOverlayValues = useMemo(
+    () => alignOverlayValues(cycleSeries.labels, btcSeries),
+    [cycleSeries.labels, btcSeries],
+  );
+  const hasCycleData = cycleSeries.labels.length > 0;
+  const hasCycleBtcOverlay = cycleBtcOverlayValues.some((value) => value !== null);
 
   const chartDataPayload = useMemo(() => {
     if (!hasData) {
@@ -294,6 +329,147 @@ function FocusPanel({ heatSeries, attentionSeries, btcSeries }) {
     [merged.labels.length, hasBtcOverlay, btcScaleType],
   );
 
+  const cycleChartDataPayload = useMemo(() => {
+    if (!hasCycleData) {
+      return { labels: [], datasets: [] };
+    }
+    return {
+      labels: cycleSeries.labels,
+      datasets: [
+        {
+          label: "Cycle Regime Index (0=cold, 1=hot)",
+          data: cycleSeries.values,
+          borderColor: COLORS.red,
+          borderWidth: 1.9,
+          pointRadius: 0,
+          fill: true,
+          backgroundColor: "#ee333324",
+          tension: 0.14,
+        },
+        {
+          label: "Cycle Confidence",
+          data: cycleConfidenceValues,
+          borderColor: COLORS.blue,
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.14,
+        },
+        ...(hasCycleBtcOverlay
+          ? [
+              {
+                label: "BTC Price",
+                data: cycleBtcOverlayValues,
+                borderColor: "#8b8473",
+                borderWidth: 1.2,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.1,
+                yAxisID: "yPrice",
+              },
+            ]
+          : []),
+      ],
+    };
+  }, [hasCycleData, cycleSeries, cycleConfidenceValues, hasCycleBtcOverlay, cycleBtcOverlayValues]);
+
+  const cycleChartOptions = useMemo(
+    () => ({
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false,
+      },
+      scales: {
+        x: {
+          ticks: {
+            maxTicksLimit: 8,
+            color: COLORS.muted,
+            font: { family: FONT, size: 10 },
+          },
+          grid: { color: COLORS.borderDim },
+          border: { color: COLORS.border },
+        },
+        y: {
+          min: 0,
+          max: 1,
+          ticks: {
+            color: COLORS.muted,
+            font: { family: FONT, size: 10 },
+          },
+          grid: { color: COLORS.borderDim },
+          border: { color: COLORS.border },
+        },
+        yPrice: {
+          display: hasCycleBtcOverlay,
+          position: "right",
+          type: btcScaleType,
+          ticks: {
+            callback: (tickValue) => formatPrice(tickValue),
+            color: "#8f8b80",
+            font: { family: FONT, size: 10 },
+          },
+          grid: { drawOnChartArea: false },
+          border: { color: COLORS.border },
+        },
+      },
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: COLORS.text,
+            font: { family: FONT, size: 11 },
+            boxWidth: 10,
+          },
+        },
+        tooltip: {
+          backgroundColor: "#090909f0",
+          borderColor: COLORS.border,
+          borderWidth: 1,
+          titleColor: COLORS.text,
+          bodyColor: COLORS.text,
+          titleFont: { family: FONT, size: 11, weight: "600" },
+          bodyFont: { family: FONT, size: 11 },
+          callbacks: {
+            title: (items) => (items.length ? `Date: ${items[0].label}` : ""),
+            label: (item) => (
+              item.dataset.yAxisID === "yPrice"
+                ? `${item.dataset.label}: ${formatPrice(item.parsed.y)}`
+                : `${item.dataset.label}: ${valueLabel(item.parsed.y, 4)}`
+            ),
+          },
+        },
+        zoom: {
+          limits: {
+            x: {
+              min: 0,
+              max: Math.max(0, cycleSeries.labels.length - 1),
+            },
+          },
+          pan: {
+            enabled: true,
+            mode: "x",
+          },
+          zoom: {
+            mode: "x",
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            drag: {
+              enabled: true,
+              backgroundColor: "#5ca2ff1f",
+              borderColor: COLORS.blue,
+              borderWidth: 1,
+            },
+          },
+        },
+      },
+    }),
+    [cycleSeries.labels.length, hasCycleBtcOverlay, btcScaleType],
+  );
+
   return (
     <section className="bb-panel bb-panel--focus">
       <div className="bb-panel__head">
@@ -312,7 +488,16 @@ function FocusPanel({ heatSeries, attentionSeries, btcSeries }) {
           <button type="button" className="bb-button" onClick={() => chartRef.current?.resetZoom?.()}>
             Reset Zoom
           </button>
+          <button type="button" className="bb-button" onClick={() => cycleChartRef.current?.resetZoom?.()}>
+            Reset Cycle Zoom
+          </button>
         </div>
+      </div>
+      <div className="bb-cycle-strip">
+        <p className="bb-cycle-strip__title">Cycle Regime Index (CRI)</p>
+        <p className="bb-cycle-strip__value">{valueLabel(latestCycleValue, 3)}</p>
+        <p className="bb-cycle-strip__state">{cycleRegimeLabel(latestCycleValue)}</p>
+        <p className="bb-cycle-strip__meta">Confidence {valueLabel(latestCycleConfidence, 3)}</p>
       </div>
       <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="focus-chart">
         {hasData ? (
@@ -321,7 +506,17 @@ function FocusPanel({ heatSeries, attentionSeries, btcSeries }) {
           <p className="bb-empty">No focus-series data available.</p>
         )}
       </div>
+      <div className="bb-chart-wrap bb-chart-wrap--cycle" data-testid="cycle-chart">
+        {hasCycleData ? (
+          <Line ref={cycleChartRef} data={cycleChartDataPayload} options={cycleChartOptions} plugins={[hoverGuidePlugin]} />
+        ) : (
+          <p className="bb-empty">No cycle-series data available.</p>
+        )}
+      </div>
       <p className="bb-hint">Scroll to zoom, drag to zoom a range, drag horizontally to pan, and hover to inspect values at each date.</p>
+      <p className="bb-hint">
+        CRI is a normalized 0-1 multi-year regime estimate: lower values imply historically cheaper conditions, higher values imply historically hotter conditions.
+      </p>
     </section>
   );
 }
@@ -645,6 +840,8 @@ export default function App() {
   const heatSeries = chartData(historyCore, "headline_heat");
   const attentionSeries = chartData(historyCore, "headline_attention");
   const btcSeries = chartData(historyCore, "btc_price");
+  const cycleSeries = chartData(historyCore, "cycle_heat_score");
+  const cycleConfidenceSeries = chartData(historyCore, "cycle_confidence");
 
   const cards = snapshotCards(latestSnapshot);
 
@@ -679,9 +876,25 @@ export default function App() {
             <div className="bb-card-grid bb-card-grid--focus">
               <MetricCard label="Headline Heat" value={latestSnapshot.headline_heat} tone="red" highlight />
               <MetricCard label="Headline Attention" value={latestSnapshot.headline_attention} tone="amber" highlight />
+              <MetricCard label="Cycle Regime Index" value={latestSnapshot.cycle_model?.heat_score} tone="red" highlight />
+              <MetricCard label="Cycle Confidence" value={latestSnapshot.cycle_model?.confidence} tone="blue" />
               <MetricCard label="Confidence Score" value={latestSnapshot.confidence_score} tone="blue" />
             </div>
-            <FocusPanel heatSeries={heatSeries} attentionSeries={attentionSeries} btcSeries={btcSeries} />
+            <div className="bb-note-panel">
+              <p className="bb-note-panel__title">New Multi-Year Cycle Baseline</p>
+              <p className="bb-note-panel__text">
+                Added a monthly cycle model from free data (valuation, speculation, attention, macro), projected daily as CRI in normalized 0-1 form for broad historical expensiveness vs cheapness context.
+              </p>
+            </div>
+            <FocusPanel
+              heatSeries={heatSeries}
+              attentionSeries={attentionSeries}
+              btcSeries={btcSeries}
+              cycleSeries={cycleSeries}
+              cycleConfidenceSeries={cycleConfidenceSeries}
+              latestCycleValue={latestSnapshot.cycle_model?.heat_score}
+              latestCycleConfidence={latestSnapshot.cycle_model?.confidence}
+            />
           </section>
         ) : (
           <section aria-label="Debug view">

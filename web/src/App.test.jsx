@@ -47,6 +47,15 @@ const fixtures = {
     headline_attention: 0.42,
     headline_heat: 0.09,
     confidence_score: 0.58,
+    cycle_model: {
+      heat_score: 0.68,
+      cold_score: 0.32,
+      p_frenzy: 0.61,
+      p_accumulation: 0.38,
+      confidence: 0.74,
+      position: 1,
+      signal_regime: "HOLD",
+    },
   },
   "history_core.json": {
     generated_at: "2026-04-24T06:00:00Z",
@@ -58,6 +67,8 @@ const fixtures = {
       headline_heat: [0.03, 0.07, 0.09],
       headline_attention: [0.34, 0.39, 0.42],
       confidence_score: [0.6, 0.59, 0.58],
+      cycle_heat_score: [0.58, 0.63, 0.68],
+      cycle_confidence: [0.72, 0.73, 0.74],
       btc_price: [62000, 63500, 64000],
       total_market_cap: [2.1e12, 2.12e12, 2.15e12],
     },
@@ -124,7 +135,9 @@ describe("App", () => {
 
     expect(await screen.findByText("RISK METRIC")).toBeInTheDocument();
     expect(await screen.findByText("Headline Heat + Headline Attention")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Reset Zoom" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Reset Zoom$/ })).toBeInTheDocument();
+    expect(screen.getByText("New Multi-Year Cycle Baseline")).toBeInTheDocument();
+    expect(screen.getByText("Cycle Regime Index")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText(/LAST PRINT/i)).toBeInTheDocument();
     });
