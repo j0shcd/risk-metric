@@ -19,3 +19,4 @@ internal/
 /package-lock.json
 /skills-lock.json
 web/src/themes/
+/output/

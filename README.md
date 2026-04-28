@@ -2,7 +2,11 @@
 
 Modernized crypto risk engine focused on market heat and attention monitoring.
 
-This project does **not** attempt to generate buy/sell signals. It produces directional heat and attention metrics that highlight unusual market conditions.
+The pipeline now includes a monthly BTC cycle baseline that emits:
+
+- `P(Frenzy)` for potential multi-year sell-risk regimes
+- `P(Accumulation)` for potential multi-year buy regimes
+- confirmed `BUY/HOLD/SELL` decisions with cooldown/hysteresis
 
 ## Outputs
 
@@ -13,6 +17,7 @@ The pipeline produces:
 3. `headline_attention` (confidence-aware blend of BTC and total-market attention, anchored to `70/30`)
 4. `headline_heat` (confidence-aware blend of BTC and total-market heat, anchored to `70/30`)
 5. `confidence_score`
+6. Cycle model (`cycle_heat_score`, `cycle_cold_score`, `cycle_p_frenzy`, `cycle_p_accumulation`, `cycle_confidence`, `cycle_position`, `cycle_signal_regime`)
 
 Heat and attention are bounded to `[0, 1]`.
 
@@ -24,6 +29,7 @@ Pipeline layers:
 - `features` -> raw indicator construction
 - `normalization` -> rolling winsorized robust-z + regime-vol scaling + surprise channel + 7D smoothing
 - `scoring` -> weighted category aggregation with availability, reliability, crowding, and disagreement controls
+- `cycle_model` -> monthly valuation/speculation/attention/macro composites with probability mapping and confirmed regime decisions
 - `outputs` -> CSV exports and validation checks
 
 Validation includes:
@@ -62,6 +68,20 @@ Validation includes:
   - YouTube activity basket
   - Google Trends (official API adapter when configured, fallback local history CSV otherwise)
   - Coinbase app-rank proxy (experimental, kill-switch enabled)
+
+## Monthly Cycle Baseline (Free Data)
+
+- Cadence: monthly-confirmed signals with `2`-month confirmation and cooldown controls
+- Objective: downside-protective cycle handling (multi-year swings, not daily timing)
+- Inputs:
+  - BTC price + volume (CoinGecko free market chart, local cache fallback)
+  - On-chain valuation/activity anchors (MVRV, Puell, supply in profit)
+  - Attention (Google Trends, Wikipedia pageviews, Reddit post volume)
+  - Macro/liquidity proxies (FRED DXY, real yields, WALCL, reverse repo, net liquidity)
+- Outputs:
+  - `cycle_p_frenzy`, `cycle_p_accumulation`
+  - `cycle_signal_regime` (`BUY|HOLD|SELL`)
+  - monthly backtest report vs buy-and-hold, fixed DCA, naive halving heuristic
 
 ## Weighting
 
@@ -181,6 +201,19 @@ Important env vars:
 - `GOOGLE_TRENDS_CSV` (fallback path)
 - `COINBASE_RANK_CSV` (fallback path)
 - `ENABLE_COINBASE_APP_RANK` (`true`/`false`)
+- `COINGECKO_BTC_MARKET_CSV`
+- `WIKIPEDIA_PAGEVIEWS_CSV`
+- `REDDIT_POSTS_CSV`
+- `REDDIT_SUBREDDITS` (comma-separated, default: `Bitcoin,CryptoCurrency`)
+- `FRED_DXY_CSV`
+- `FRED_REAL_YIELD_CSV`
+- `FRED_WALCL_CSV`
+- `FRED_RRP_CSV`
+- `CYCLE_CONFIRMATION_MONTHS`
+- `CYCLE_COOLDOWN_MONTHS`
+- `CYCLE_BUY_THRESHOLD`
+- `CYCLE_SELL_THRESHOLD`
+- `CYCLE_MIN_HISTORY_MONTHS`
 
 ## Output Files
 
@@ -194,6 +227,12 @@ Important env vars:
 - `output/source_health.csv`
 - `output/source_modes.csv`
 - `output/sanity_report.csv`
+- `output/cycle_feature_snapshots_monthly.csv`
+- `output/cycle_regime_scores_monthly.csv`
+- `output/cycle_signal_decisions_monthly.csv`
+- `output/cycle_backtest_report.csv`
+- `output/cycle_metric_audit.csv`
+- `output/cycle_migration_plan.md`
 
 ## Web Contract (`data/web/v1`)
 
