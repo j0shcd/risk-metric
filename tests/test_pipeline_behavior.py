@@ -127,6 +127,12 @@ class PipelineBehaviorTests(unittest.TestCase):
             "cycle_p_frenzy",
             "cycle_p_accumulation",
             "cycle_confidence",
+            "top_alert_operational",
+            "bottom_alert_operational",
+            "top_alert_threshold_operational",
+            "bottom_alert_threshold_operational",
+            "top_alert_cooldown_state_operational",
+            "bottom_alert_cooldown_state_operational",
         ]:
             self.assertIn(column, output.columns)
             self.assertFalse(output[column].dropna().empty)
@@ -148,6 +154,8 @@ class PipelineBehaviorTests(unittest.TestCase):
             "cycle_p_frenzy",
             "cycle_p_accumulation",
             "cycle_confidence",
+            "top_alert_operational",
+            "bottom_alert_operational",
         ]:
             values = output[bounded_column].dropna()
             self.assertTrue(((values >= 0.0) & (values <= 1.0)).all())
@@ -183,6 +191,13 @@ class PipelineBehaviorTests(unittest.TestCase):
         self.assertFalse(result.benchmark_by_signal.empty)
         self.assertFalse(result.benchmark_window_stats.empty)
         self.assertIn("alert_rate", result.benchmark_config)
+        self.assertIn("event_weight_pivot", result.benchmark_config)
+        self.assertIn("aggregation_method", result.benchmark_config)
+        self.assertIn("summary", result.benchmark_deltas)
+        self.assertIn("by_signal", result.benchmark_deltas)
+        self.assertIn("window_stats", result.benchmark_deltas)
+        self.assertIn("top_alert_rate", result.operational_alert_policy)
+        self.assertIn("benchmark_alert_rate", result.operational_alert_policy)
         self.assertTrue("calibration_applied" in result.calibration_metadata)
 
     @patch("risk_engine.pipeline.load_cycle_market_context")

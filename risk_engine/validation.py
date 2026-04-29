@@ -248,6 +248,8 @@ def _check_benchmark_quality(result: RiskOutput, warnings: List[str]) -> None:
 
     for item in result.benchmark_warnings:
         warnings.append(f"Benchmark note: {item}")
+    for item in result.benchmark_regression_warnings:
+        warnings.append(f"Benchmark regression warning: {item}")
 
 
 def build_walkforward_sanity_report(

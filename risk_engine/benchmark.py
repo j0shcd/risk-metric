@@ -201,6 +201,42 @@ def _window_view(
     return out
 
 
+def _weighted_mean(values: pd.Series, weights: pd.Series) -> float:
+    frame = pd.DataFrame({"value": values, "weight": weights}).replace([np.inf, -np.inf], np.nan).dropna()
+    if frame.empty:
+        return float("nan")
+    w = frame["weight"].astype(float).clip(lower=0.0)
+    if float(w.sum()) <= 0.0:
+        return float("nan")
+    return float(np.average(frame["value"].astype(float), weights=w))
+
+
+def _aggregate_group(group: pd.DataFrame, metrics: List[str]) -> Dict[str, Any]:
+    out: Dict[str, Any] = {}
+    weights = group["event_weight"].astype(float).clip(lower=0.0) if "event_weight" in group.columns else pd.Series(
+        1.0,
+        index=group.index,
+        dtype=float,
+    )
+    for metric in metrics:
+        out[metric] = _weighted_mean(group[metric], weights)
+
+    primary = pd.DataFrame(
+        {
+            "value": group.get("lead_recall_at_alert_rate", pd.Series(dtype=float)),
+            "weight": weights,
+        }
+    ).replace([np.inf, -np.inf], np.nan)
+    primary = primary.dropna()
+    effective_weight_sum = float(primary["weight"].sum()) if not primary.empty else 0.0
+    effective_label_count = int((primary["weight"] > 0.0).sum()) if not primary.empty else 0
+
+    out["effective_weight_sum"] = effective_weight_sum
+    out["effective_label_count"] = effective_label_count
+    out["aggregation_method"] = "soft_event_weighted_v1"
+    return out
+
+
 def _build_labels(cfg: RuntimeConfig, monthly_price: pd.Series) -> List[Dict[str, Any]]:
     labels: List[Dict[str, Any]] = []
 
@@ -426,27 +462,29 @@ def evaluate_benchmark(
         "f1",
     ]
 
-    by_signal = (
-        by_label.groupby(["window", "signal"], as_index=False)[aggregate_cols]
-        .mean(numeric_only=True)
-        .sort_values(["window", "signal"])
-        .reset_index(drop=True)
-    )
+    event_weight_pivot = float(max(int(getattr(cfg, "benchmark_event_weight_pivot", 5)), 1))
+    by_label["event_weight"] = (by_label["n_events"].fillna(0.0).astype(float) / event_weight_pivot).clip(0.0, 1.0)
 
-    window_stats = (
-        by_label.groupby(["window", "side"], as_index=False)[
-            [
-                "lead_recall_at_alert_rate",
-                "auc",
-                "pr_auc",
-                "false_alarm_rate",
-                "event_coverage",
-            ]
-        ]
-        .mean(numeric_only=True)
-        .sort_values(["window", "side"])
-        .reset_index(drop=True)
-    )
+    by_signal_rows: List[Dict[str, Any]] = []
+    for (window, signal), group in by_label.groupby(["window", "signal"], dropna=False):
+        row: Dict[str, Any] = {"window": window, "signal": signal}
+        row.update(_aggregate_group(group, aggregate_cols))
+        by_signal_rows.append(row)
+    by_signal = pd.DataFrame(by_signal_rows).sort_values(["window", "signal"]).reset_index(drop=True)
+
+    window_stat_cols = [
+        "lead_recall_at_alert_rate",
+        "auc",
+        "pr_auc",
+        "false_alarm_rate",
+        "event_coverage",
+    ]
+    window_stats_rows: List[Dict[str, Any]] = []
+    for (window, side), group in by_label.groupby(["window", "side"], dropna=False):
+        row: Dict[str, Any] = {"window": window, "side": side}
+        row.update(_aggregate_group(group, window_stat_cols))
+        window_stats_rows.append(row)
+    window_stats = pd.DataFrame(window_stats_rows).sort_values(["window", "side"]).reset_index(drop=True)
 
     summary_rows: List[Dict[str, Any]] = []
     for side, signal in (("top", "top_reversal_risk"), ("bottom", "bottom_reversal_risk")):
@@ -461,8 +499,20 @@ def evaluate_benchmark(
             & (by_label["signal"] == signal)
         ]
 
-        exp_value = float(expanding["lead_recall_at_alert_rate"].mean()) if not expanding.empty else float("nan")
-        rec_value = float(recent["lead_recall_at_alert_rate"].mean()) if not recent.empty else float("nan")
+        exp_value = (
+            _weighted_mean(expanding["lead_recall_at_alert_rate"], expanding["event_weight"])
+            if not expanding.empty
+            else float("nan")
+        )
+        rec_value = (
+            _weighted_mean(recent["lead_recall_at_alert_rate"], recent["event_weight"])
+            if not recent.empty
+            else float("nan")
+        )
+        exp_weight = float(expanding["event_weight"].fillna(0.0).sum()) if not expanding.empty else 0.0
+        rec_weight = float(recent["event_weight"].fillna(0.0).sum()) if not recent.empty else 0.0
+        exp_labels = int((expanding["event_weight"].fillna(0.0) > 0.0).sum()) if not expanding.empty else 0
+        rec_labels = int((recent["event_weight"].fillna(0.0) > 0.0).sum()) if not recent.empty else 0
         summary_rows.append(
             {
                 "kpi": f"lead_recall_{side}",
@@ -473,6 +523,11 @@ def evaluate_benchmark(
                 if np.isfinite(rec_value) and np.isfinite(exp_value)
                 else np.nan,
                 "alert_rate": float(cfg.benchmark_alert_rate),
+                "expanding_effective_weight_sum": exp_weight,
+                "recent_effective_weight_sum": rec_weight,
+                "expanding_effective_label_count": exp_labels,
+                "recent_effective_label_count": rec_labels,
+                "aggregation_method": "soft_event_weighted_v1",
             }
         )
 
@@ -490,6 +545,10 @@ def evaluate_benchmark(
         warnings.append(
             f"benchmark_low_event_count:{int(low_event_rows.shape[0])}_rows_have_fewer_than_3_events"
         )
+        total_eff_weight = float(by_label["event_weight"].fillna(0.0).sum())
+        warnings.append(
+            f"benchmark_weighted_effective_size:event_weight_sum={total_eff_weight:.3f},pivot={event_weight_pivot:.1f}"
+        )
 
     if calibration_metadata:
         calibration_time = calibration_metadata.get("walkforward_last_train_end")
@@ -506,6 +565,8 @@ def evaluate_benchmark(
         "bottom_rally_thresholds": [float(x) for x in cfg.benchmark_bottom_rally_thresholds],
         "local_extrema_lookbacks": [int(x) for x in cfg.benchmark_local_extrema_lookbacks],
         "local_extrema_forwards": [int(x) for x in cfg.benchmark_local_extrema_forwards],
+        "event_weight_pivot": int(event_weight_pivot),
+        "aggregation_method": "soft_event_weighted_v1",
     }
 
     return BenchmarkResult(

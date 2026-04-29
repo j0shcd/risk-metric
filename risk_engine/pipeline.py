@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -233,6 +234,125 @@ def _build_feature_bundles(
     return bundles
 
 
+def _expanding_quantile_thresholds(
+    series: pd.Series,
+    *,
+    quantile: float,
+    min_history: int,
+) -> pd.Series:
+    values = series.astype(float)
+    out = pd.Series(index=values.index, dtype=float)
+    for i, idx in enumerate(values.index):
+        history = values.iloc[: i + 1].dropna()
+        if len(history) < max(int(min_history), 1):
+            out.loc[idx] = np.nan
+            continue
+        out.loc[idx] = float(history.quantile(float(quantile)))
+    return out
+
+
+def _build_operational_alert_policy(
+    scores: pd.Series,
+    *,
+    alert_rate: float,
+    cooldown_months: int,
+    min_history_months: int,
+) -> pd.DataFrame:
+    quantile = max(0.0, min(1.0, 1.0 - float(alert_rate)))
+    threshold = _expanding_quantile_thresholds(scores, quantile=quantile, min_history=min_history_months)
+    raw_alert = (scores >= threshold).fillna(False)
+
+    alerted = pd.Series(False, index=scores.index, dtype=bool)
+    cooldown_state = pd.Series(0, index=scores.index, dtype=int)
+
+    cooldown = 0
+    for idx in scores.index:
+        if cooldown > 0:
+            cooldown -= 1
+            cooldown_state.loc[idx] = cooldown
+            continue
+        if bool(raw_alert.loc[idx]):
+            alerted.loc[idx] = True
+            cooldown = max(int(cooldown_months), 0)
+            cooldown_state.loc[idx] = cooldown
+        else:
+            cooldown_state.loc[idx] = cooldown
+
+    return pd.DataFrame(
+        {
+            "threshold": threshold.astype(float),
+            "alert": alerted.astype(float),
+            "cooldown_state": cooldown_state.astype(float),
+        },
+        index=scores.index,
+    )
+
+
+def _benchmark_snapshot(result_summary: pd.DataFrame, by_signal: pd.DataFrame, window_stats: pd.DataFrame) -> Dict[str, Any]:
+    return {
+        "summary": result_summary.to_dict(orient="records") if not result_summary.empty else [],
+        "by_signal": by_signal.to_dict(orient="records") if not by_signal.empty else [],
+        "window_stats": window_stats.to_dict(orient="records") if not window_stats.empty else [],
+    }
+
+
+def _load_benchmark_baseline(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def _frame_from_records(records: Any) -> pd.DataFrame:
+    if not isinstance(records, list):
+        return pd.DataFrame()
+    return pd.DataFrame(records)
+
+
+def _delta_records(
+    current: pd.DataFrame,
+    baseline: pd.DataFrame,
+    *,
+    key_cols: List[str],
+    metric_cols: List[str],
+) -> List[Dict[str, Any]]:
+    if current.empty:
+        return []
+    cur = current.copy()
+    base = baseline.copy() if not baseline.empty else pd.DataFrame(columns=key_cols + metric_cols)
+    for key in key_cols:
+        if key not in base.columns:
+            base[key] = np.nan
+    merged = cur.merge(
+        base[key_cols + [c for c in metric_cols if c in base.columns]],
+        on=key_cols,
+        how="left",
+        suffixes=("_current", "_baseline"),
+    )
+    rows: List[Dict[str, Any]] = []
+    for _, row in merged.iterrows():
+        item: Dict[str, Any] = {k: row.get(k) for k in key_cols}
+        for metric in metric_cols:
+            cur_value = row.get(f"{metric}_current")
+            base_value = row.get(f"{metric}_baseline")
+            item[f"{metric}_current"] = float(cur_value) if pd.notna(cur_value) else np.nan
+            item[f"{metric}_baseline"] = float(base_value) if pd.notna(base_value) else np.nan
+            item[f"{metric}_delta"] = (
+                float(cur_value - base_value)
+                if pd.notna(cur_value) and pd.notna(base_value)
+                else np.nan
+            )
+        rows.append(item)
+    return rows
+
+
+def _write_benchmark_baseline(path: Path, result: RiskOutput) -> None:
+    payload = _benchmark_snapshot(result.benchmark_summary, result.benchmark_by_signal, result.benchmark_window_stats)
+    path.write_text(json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+
+
 def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     runtime = cfg or load_runtime_config()
 
@@ -357,6 +477,32 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         + output["headline_total_market_mix_weight"] * output["total_market_risk_heat"]
     ).clip(0.0, 1.0)
 
+    fallback_monthly_heat = output["btc_risk_heat"].astype(float).resample("M").last()
+    top_monthly = output["top_reversal_risk"].astype(float).resample("M").last().fillna(fallback_monthly_heat)
+    bottom_monthly = output["bottom_reversal_risk"].astype(float).resample("M").last().fillna(1.0 - fallback_monthly_heat)
+    top_operational = _build_operational_alert_policy(
+        top_monthly,
+        alert_rate=float(runtime.operational_top_alert_rate),
+        cooldown_months=int(runtime.operational_top_cooldown_months),
+        min_history_months=int(runtime.operational_alert_min_history_months),
+    )
+    bottom_operational = _build_operational_alert_policy(
+        bottom_monthly,
+        alert_rate=float(runtime.operational_bottom_alert_rate),
+        cooldown_months=int(runtime.operational_bottom_cooldown_months),
+        min_history_months=int(runtime.operational_alert_min_history_months),
+    )
+    output["top_alert_operational"] = top_operational["alert"].reindex(output.index, method="ffill").fillna(0.0)
+    output["bottom_alert_operational"] = bottom_operational["alert"].reindex(output.index, method="ffill").fillna(0.0)
+    output["top_alert_threshold_operational"] = top_operational["threshold"].reindex(output.index, method="ffill")
+    output["bottom_alert_threshold_operational"] = bottom_operational["threshold"].reindex(output.index, method="ffill")
+    output["top_alert_cooldown_state_operational"] = (
+        top_operational["cooldown_state"].reindex(output.index, method="ffill").fillna(0.0)
+    )
+    output["bottom_alert_cooldown_state_operational"] = (
+        bottom_operational["cooldown_state"].reindex(output.index, method="ffill").fillna(0.0)
+    )
+
     benchmark_result = evaluate_benchmark(
         runtime,
         monthly_price=output["btc_price"].astype(float).resample("M").last(),
@@ -368,6 +514,63 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         },
         calibration_metadata=calibrated.metadata,
     )
+
+    baseline_path = runtime.output_dir / "benchmark_baseline.json"
+    benchmark_baseline = _load_benchmark_baseline(baseline_path)
+    baseline_summary = _frame_from_records(benchmark_baseline.get("summary"))
+    baseline_by_signal = _frame_from_records(benchmark_baseline.get("by_signal"))
+    baseline_window_stats = _frame_from_records(benchmark_baseline.get("window_stats"))
+
+    benchmark_deltas = {
+        "summary": _delta_records(
+            benchmark_result.summary,
+            baseline_summary,
+            key_cols=["kpi", "signal"],
+            metric_cols=["expanding", "recent", "delta_recent_minus_expanding"],
+        ),
+        "by_signal": _delta_records(
+            benchmark_result.by_signal,
+            baseline_by_signal,
+            key_cols=["window", "signal"],
+            metric_cols=["auc", "pr_auc", "lead_recall_at_alert_rate", "false_alarm_rate"],
+        ),
+        "window_stats": _delta_records(
+            benchmark_result.window_stats,
+            baseline_window_stats,
+            key_cols=["window", "side"],
+            metric_cols=["auc", "pr_auc", "lead_recall_at_alert_rate", "false_alarm_rate", "event_coverage"],
+        ),
+    }
+
+    regression_warnings: List[str] = []
+    by_signal_deltas = pd.DataFrame(benchmark_deltas.get("by_signal", []))
+    if {"window", "signal"}.issubset(set(by_signal_deltas.columns)):
+        top_recent = by_signal_deltas[
+            (by_signal_deltas["window"].astype(str) == "recent")
+            & (by_signal_deltas["signal"].astype(str) == "top_reversal_risk")
+        ]
+    else:
+        top_recent = pd.DataFrame()
+    if not top_recent.empty:
+        row = top_recent.iloc[0]
+        recall_delta = row.get("lead_recall_at_alert_rate_delta")
+        pr_delta = row.get("pr_auc_delta")
+        far_delta = row.get("false_alarm_rate_delta")
+
+        if pd.notna(recall_delta) and float(recall_delta) < float(runtime.benchmark_delta_warn_top_recall):
+            regression_warnings.append(
+                f"benchmark_top_recall_regression:{float(recall_delta):.4f}<{float(runtime.benchmark_delta_warn_top_recall):.4f}"
+            )
+        if pd.notna(pr_delta) and float(pr_delta) < float(runtime.benchmark_delta_warn_top_pr_auc):
+            regression_warnings.append(
+                f"benchmark_top_pr_auc_regression:{float(pr_delta):.4f}<{float(runtime.benchmark_delta_warn_top_pr_auc):.4f}"
+            )
+        if pd.notna(far_delta) and float(far_delta) > float(runtime.benchmark_delta_warn_top_false_alarm):
+            regression_warnings.append(
+                f"benchmark_top_false_alarm_regression:{float(far_delta):.4f}>{float(runtime.benchmark_delta_warn_top_false_alarm):.4f}"
+            )
+
+    combined_benchmark_warnings = list(benchmark_result.warnings) + list(regression_warnings)
 
     as_of = pd.Timestamp.utcnow().tz_localize(None).normalize()
 
@@ -418,7 +621,18 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         benchmark_by_signal=benchmark_result.by_signal,
         benchmark_window_stats=benchmark_result.window_stats,
         benchmark_config=benchmark_result.config,
-        benchmark_warnings=benchmark_result.warnings,
+        benchmark_warnings=combined_benchmark_warnings,
+        benchmark_baseline=benchmark_baseline,
+        benchmark_deltas=benchmark_deltas,
+        benchmark_regression_warnings=regression_warnings,
+        operational_alert_policy={
+            "top_alert_rate": float(runtime.operational_top_alert_rate),
+            "bottom_alert_rate": float(runtime.operational_bottom_alert_rate),
+            "top_cooldown_months": int(runtime.operational_top_cooldown_months),
+            "bottom_cooldown_months": int(runtime.operational_bottom_cooldown_months),
+            "min_history_months": int(runtime.operational_alert_min_history_months),
+            "benchmark_alert_rate": float(runtime.benchmark_alert_rate),
+        },
         calibration_metadata=calibrated.metadata,
     )
 
@@ -493,3 +707,4 @@ def write_outputs(result: RiskOutput, output_dir: Path) -> None:
         result.benchmark_by_signal.to_csv(output_dir / "benchmark_by_signal.csv", index=False)
     if not result.benchmark_window_stats.empty:
         result.benchmark_window_stats.to_csv(output_dir / "benchmark_window_stats.csv", index=False)
+    _write_benchmark_baseline(output_dir / "benchmark_baseline.json", result)

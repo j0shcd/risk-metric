@@ -133,6 +133,10 @@ class WebExportTests(unittest.TestCase):
             ),
             benchmark_config={"alert_rate": 0.2, "label_families": ["threshold", "quantile"]},
             benchmark_warnings=["benchmark_note"],
+            benchmark_baseline={"summary": []},
+            benchmark_deltas={"summary": []},
+            benchmark_regression_warnings=["benchmark_top_recall_regression:-0.03<-0.02"],
+            operational_alert_policy={"top_alert_rate": 0.15, "bottom_alert_rate": 0.25},
             calibration_metadata={"walkforward_last_train_end": "2026-04-01"},
         )
 
@@ -194,6 +198,10 @@ class WebExportTests(unittest.TestCase):
             self.assertIn("benchmark_window_stats", diagnostics)
             self.assertIn("benchmark_config", diagnostics)
             self.assertIn("benchmark_warnings", diagnostics)
+            self.assertIn("benchmark_baseline", diagnostics)
+            self.assertIn("benchmark_deltas", diagnostics)
+            self.assertIn("benchmark_regression_warnings", diagnostics)
+            self.assertIn("operational_alert_policy", diagnostics)
             self.assertIn("calibration_metadata", diagnostics)
             self.assertEqual(diagnostics["benchmark_config"]["alert_rate"], 0.2)
             self.assertTrue(any(row["mode"] == "unavailable" for row in diagnostics["source_modes"]))

@@ -50,6 +50,10 @@ class BenchmarkTests(unittest.TestCase):
         self.assertIn("median_lead_months", result.by_label.columns)
         self.assertIn("false_alarm_rate", result.by_label.columns)
         self.assertIn("event_coverage", result.by_label.columns)
+        self.assertIn("event_weight", result.by_label.columns)
+        self.assertIn("aggregation_method", result.by_signal.columns)
+        self.assertIn("effective_weight_sum", result.by_signal.columns)
+        self.assertIn("effective_label_count", result.by_signal.columns)
 
     def test_benchmark_respects_recent_window_config(self) -> None:
         index = pd.date_range("2016-01-31", periods=120, freq="M")
@@ -81,6 +85,32 @@ class BenchmarkTests(unittest.TestCase):
         windows = set(result.by_label["window"].astype(str).unique().tolist())
         self.assertIn("expanding", windows)
         self.assertIn("recent", windows)
+
+    def test_event_weight_is_soft_capped(self) -> None:
+        index = pd.date_range("2017-01-31", periods=120, freq="M")
+        price = pd.Series(np.linspace(1000.0, 6000.0, len(index)), index=index)
+        signal = pd.Series(np.linspace(0.1, 0.9, len(index)), index=index)
+
+        cwd = Path.cwd()
+        cfg = RuntimeConfig(
+            project_root=cwd,
+            data_dir=cwd / "data",
+            output_dir=cwd / "output",
+            cache_dir=cwd / "data",
+            benchmark_event_weight_pivot=5,
+        )
+        result = evaluate_benchmark(
+            cfg,
+            monthly_price=price,
+            signals={
+                "trend_heat": signal,
+                "top_reversal_risk": signal,
+                "bottom_reversal_risk": 1.0 - signal,
+                "attention_score": signal,
+            },
+        )
+        weights = result.by_label["event_weight"].dropna()
+        self.assertTrue(((weights >= 0.0) & (weights <= 1.0)).all())
 
 
 if __name__ == "__main__":

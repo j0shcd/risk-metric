@@ -57,9 +57,21 @@
   "benchmark_horizons_months": [3, 6, 12],
   "benchmark_recent_window_months": 48,
   "benchmark_alert_rate": 0.2,
+  "benchmark_event_weight_pivot": 5,
   "benchmark_label_families": ["threshold", "quantile", "local_extrema"],
   "benchmark_top_drawdown_thresholds": [0.3, 0.4, 0.5],
   "benchmark_bottom_rally_thresholds": [0.5, 0.8, 1.2],
   "benchmark_local_extrema_lookbacks": [6, 12],
-  "benchmark_local_extrema_forwards": [6, 12]
+  "benchmark_local_extrema_forwards": [6, 12],
+  "operational_top_alert_rate": 0.15,
+  "operational_bottom_alert_rate": 0.25,
+  "operational_top_cooldown_months": 4,
+  "operational_bottom_cooldown_months": 2,
+  "operational_alert_min_history_months": 24,
+  "benchmark_delta_warn_top_recall": -0.02,
+  "benchmark_delta_warn_top_pr_auc": -0.01,
+  "benchmark_delta_warn_top_false_alarm": 0.03,
+  "benchmark_foundation_min_top_recall_delta": 0.0,
+  "benchmark_foundation_min_top_pr_auc_delta": 0.0,
+  "benchmark_foundation_max_top_false_alarm_delta": 0.05
 }

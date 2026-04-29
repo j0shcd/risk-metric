@@ -36,6 +36,10 @@ class RiskOutput:
     benchmark_window_stats: pd.DataFrame = field(default_factory=pd.DataFrame)
     benchmark_config: Dict[str, object] = field(default_factory=dict)
     benchmark_warnings: List[str] = field(default_factory=list)
+    benchmark_baseline: Dict[str, object] = field(default_factory=dict)
+    benchmark_deltas: Dict[str, object] = field(default_factory=dict)
+    benchmark_regression_warnings: List[str] = field(default_factory=list)
+    operational_alert_policy: Dict[str, object] = field(default_factory=dict)
     calibration_metadata: Dict[str, object] = field(default_factory=dict)
 
 

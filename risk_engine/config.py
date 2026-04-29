@@ -95,6 +95,18 @@ class RuntimeConfig:
     )
     benchmark_local_extrema_lookbacks: List[int] = field(default_factory=lambda: [6, 12])
     benchmark_local_extrema_forwards: List[int] = field(default_factory=lambda: [6, 12])
+    benchmark_event_weight_pivot: int = 5
+    operational_top_alert_rate: float = 0.15
+    operational_bottom_alert_rate: float = 0.25
+    operational_top_cooldown_months: int = 4
+    operational_bottom_cooldown_months: int = 2
+    operational_alert_min_history_months: int = 24
+    benchmark_delta_warn_top_recall: float = -0.02
+    benchmark_delta_warn_top_pr_auc: float = -0.01
+    benchmark_delta_warn_top_false_alarm: float = 0.03
+    benchmark_foundation_min_top_recall_delta: float = 0.0
+    benchmark_foundation_min_top_pr_auc_delta: float = 0.0
+    benchmark_foundation_max_top_false_alarm_delta: float = 0.05
 
 
 def _parse_bool(value: Optional[str], default: bool) -> bool:
@@ -363,6 +375,69 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
                 file_cfg.get("benchmark_local_extrema_forwards"),
             ),
             [6, 12],
+        ),
+        benchmark_event_weight_pivot=int(
+            env.get("BENCHMARK_EVENT_WEIGHT_PIVOT", file_cfg.get("benchmark_event_weight_pivot", 5))
+        ),
+        operational_top_alert_rate=float(
+            env.get("OPERATIONAL_TOP_ALERT_RATE", file_cfg.get("operational_top_alert_rate", 0.15))
+        ),
+        operational_bottom_alert_rate=float(
+            env.get("OPERATIONAL_BOTTOM_ALERT_RATE", file_cfg.get("operational_bottom_alert_rate", 0.25))
+        ),
+        operational_top_cooldown_months=int(
+            env.get(
+                "OPERATIONAL_TOP_COOLDOWN_MONTHS",
+                file_cfg.get("operational_top_cooldown_months", 4),
+            )
+        ),
+        operational_bottom_cooldown_months=int(
+            env.get(
+                "OPERATIONAL_BOTTOM_COOLDOWN_MONTHS",
+                file_cfg.get("operational_bottom_cooldown_months", 2),
+            )
+        ),
+        operational_alert_min_history_months=int(
+            env.get(
+                "OPERATIONAL_ALERT_MIN_HISTORY_MONTHS",
+                file_cfg.get("operational_alert_min_history_months", 24),
+            )
+        ),
+        benchmark_delta_warn_top_recall=float(
+            env.get(
+                "BENCHMARK_DELTA_WARN_TOP_RECALL",
+                file_cfg.get("benchmark_delta_warn_top_recall", -0.02),
+            )
+        ),
+        benchmark_delta_warn_top_pr_auc=float(
+            env.get(
+                "BENCHMARK_DELTA_WARN_TOP_PR_AUC",
+                file_cfg.get("benchmark_delta_warn_top_pr_auc", -0.01),
+            )
+        ),
+        benchmark_delta_warn_top_false_alarm=float(
+            env.get(
+                "BENCHMARK_DELTA_WARN_TOP_FALSE_ALARM",
+                file_cfg.get("benchmark_delta_warn_top_false_alarm", 0.03),
+            )
+        ),
+        benchmark_foundation_min_top_recall_delta=float(
+            env.get(
+                "BENCHMARK_FOUNDATION_MIN_TOP_RECALL_DELTA",
+                file_cfg.get("benchmark_foundation_min_top_recall_delta", 0.0),
+            )
+        ),
+        benchmark_foundation_min_top_pr_auc_delta=float(
+            env.get(
+                "BENCHMARK_FOUNDATION_MIN_TOP_PR_AUC_DELTA",
+                file_cfg.get("benchmark_foundation_min_top_pr_auc_delta", 0.0),
+            )
+        ),
+        benchmark_foundation_max_top_false_alarm_delta=float(
+            env.get(
+                "BENCHMARK_FOUNDATION_MAX_TOP_FALSE_ALARM_DELTA",
+                file_cfg.get("benchmark_foundation_max_top_false_alarm_delta", 0.05),
+            )
         ),
     )
 

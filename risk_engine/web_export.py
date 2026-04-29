@@ -261,6 +261,10 @@ def export_web_v1(
         "benchmark_window_stats": _records_payload(result.benchmark_window_stats),
         "benchmark_config": {str(key): _coerce_json_scalar(value) for key, value in result.benchmark_config.items()},
         "benchmark_warnings": [str(item) for item in result.benchmark_warnings],
+        "benchmark_baseline": _coerce_json_scalar(result.benchmark_baseline),
+        "benchmark_deltas": _coerce_json_scalar(result.benchmark_deltas),
+        "benchmark_regression_warnings": [str(item) for item in result.benchmark_regression_warnings],
+        "operational_alert_policy": _coerce_json_scalar(result.operational_alert_policy),
         "calibration_metadata": {
             str(key): _coerce_json_scalar(value) for key, value in result.calibration_metadata.items()
         },

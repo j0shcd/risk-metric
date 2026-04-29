@@ -136,10 +136,25 @@ def _build_feature_snapshot(monthly: pd.DataFrame, cfg: RuntimeConfig) -> pd.Dat
     monthly_returns = frame["btc_price"].pct_change(fill_method=None)
     frame["abs_monthly_return"] = monthly_returns.abs()
     frame["realized_vol_6m"] = np.log(frame["btc_price"]).diff().rolling(6, min_periods=3).std(ddof=0) * np.sqrt(12.0)
+    frame["realized_vol_3m"] = np.log(frame["btc_price"]).diff().rolling(3, min_periods=2).std(ddof=0) * np.sqrt(12.0)
+    frame["realized_vol_12m"] = np.log(frame["btc_price"]).diff().rolling(12, min_periods=6).std(ddof=0) * np.sqrt(12.0)
+
+    # Blow-off / capitulation channels from free-market observables.
+    frame["vol_spread_3m_12m"] = frame["realized_vol_3m"] - frame["realized_vol_12m"]
+    frame["return_convexity_1_3"] = monthly_returns - (frame["btc_price"].pct_change(3, fill_method=None) / 3.0)
+    frame["volume_accel_log_1_12"] = (
+        np.log1p(frame["btc_volume_usd"].clip(lower=0.0))
+        - np.log1p(frame["btc_volume_usd"].rolling(12, min_periods=6).mean().clip(lower=0.0))
+    )
 
     frame["wiki_yoy_growth"] = frame["wikipedia_pageviews"] / frame["wikipedia_pageviews"].shift(12) - 1.0
     frame["reddit_yoy_growth"] = frame["reddit_post_volume"] / frame["reddit_post_volume"].shift(12) - 1.0
     frame["google_trends_3m"] = frame["google_trends_interest"].rolling(3, min_periods=2).mean()
+    frame["attention_1m"] = _category_mean(frame, ["google_trends_interest", "wikipedia_pageviews", "reddit_post_volume"])
+    attention_mean = frame["attention_1m"].rolling(12, min_periods=6).mean()
+    attention_std = frame["attention_1m"].rolling(12, min_periods=6).std(ddof=0).replace({0.0: np.nan})
+    frame["attention_z_spike_12m"] = (frame["attention_1m"] - attention_mean) / attention_std
+    frame["drawdown_velocity_3m"] = frame["drawdown_from_ath"].diff(3) / 3.0
 
     frame["net_liquidity_yoy"] = frame["net_liquidity"] / frame["net_liquidity"].shift(12) - 1.0
     frame["dxy_inverted"] = -1.0 * frame["dxy"]
@@ -154,6 +169,11 @@ def _build_feature_snapshot(monthly: pd.DataFrame, cfg: RuntimeConfig) -> pd.Dat
         "pct_abs_monthly_return": "abs_monthly_return",
         "pct_realized_vol_6m": "realized_vol_6m",
         "pct_supply_in_profit": "supply_in_profit",
+        "pct_vol_spread_3m_12m": "vol_spread_3m_12m",
+        "pct_return_convexity_1_3": "return_convexity_1_3",
+        "pct_volume_accel_log_1_12": "volume_accel_log_1_12",
+        "pct_attention_z_spike_12m": "attention_z_spike_12m",
+        "pct_drawdown_velocity_3m": "drawdown_velocity_3m",
         "pct_google_trends_3m": "google_trends_3m",
         "pct_wiki_yoy_growth": "wiki_yoy_growth",
         "pct_reddit_yoy_growth": "reddit_yoy_growth",
@@ -185,6 +205,16 @@ def _build_feature_snapshot(monthly: pd.DataFrame, cfg: RuntimeConfig) -> pd.Dat
     frame["speculation_cold"] = 1.0 - frame["speculation_hot"]
     frame["attention_cold"] = 1.0 - frame["attention_hot"]
     frame["macro_cold"] = 1.0 - frame["macro_hot"]
+
+    frame["price_extremity_pct"] = frame["pct_price_to_48m_trend"]
+    frame["momentum_exhaustion_pct"] = _category_mean(
+        frame,
+        ["pct_vol_spread_3m_12m", "pct_return_convexity_1_3", "pct_volume_accel_log_1_12"],
+    ).clip(0.0, 1.0)
+    frame["attention_blowoff_pct"] = _category_mean(
+        frame,
+        ["pct_attention_z_spike_12m", "pct_google_trends_3m"],
+    ).clip(0.0, 1.0)
     return frame
 
 
@@ -465,6 +495,15 @@ def build_cycle_model(
     daily_projection["cycle_position"] = signal_decisions["position"].reindex(daily_index, method="ffill")
     daily_projection["cycle_signal_regime"] = signal_decisions["regime"].reindex(daily_index, method="ffill")
     daily_projection["cycle_signal_cooldown_state"] = signal_decisions["cooldown_state"].reindex(daily_index, method="ffill")
+    daily_projection["price_extremity_pct"] = feature_snapshots["price_extremity_pct"].reindex(daily_index, method="ffill")
+    daily_projection["momentum_exhaustion_pct"] = feature_snapshots["momentum_exhaustion_pct"].reindex(
+        daily_index,
+        method="ffill",
+    )
+    daily_projection["attention_blowoff_pct"] = feature_snapshots["attention_blowoff_pct"].reindex(
+        daily_index,
+        method="ffill",
+    )
 
     return CycleModelOutput(
         feature_snapshots=feature_snapshots,
