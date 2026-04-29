@@ -203,6 +203,53 @@ def _check_metric_health(result: RiskOutput, errors: List[str]) -> None:
         errors.append(f"No available metrics for targets: {', '.join(missing_targets)}")
 
 
+def _check_benchmark_quality(result: RiskOutput, warnings: List[str]) -> None:
+    if result.benchmark_summary.empty:
+        warnings.append("Benchmark summary unavailable; performance benchmarking skipped.")
+        return
+
+    if result.benchmark_by_label.empty:
+        warnings.append("Benchmark label diagnostics unavailable; label-level benchmarking skipped.")
+        return
+
+    expected_families = set()
+    config_families = result.benchmark_config.get("label_families") if result.benchmark_config else None
+    if isinstance(config_families, list):
+        expected_families = {str(item).strip().lower() for item in config_families if str(item).strip()}
+
+    observed_families = set(
+        result.benchmark_by_label.get("family", pd.Series(dtype=str)).astype(str).str.lower().tolist()
+    )
+    if expected_families:
+        missing = sorted(expected_families - observed_families)
+        if missing:
+            warnings.append(f"Benchmark missing expected label families: {', '.join(missing)}")
+
+    if "n_events" in result.benchmark_by_label.columns:
+        low = result.benchmark_by_label["n_events"].fillna(0) < 3
+        if bool(low.any()):
+            warnings.append(
+                f"Benchmark low-event rows: {int(low.sum())} label/signal windows have fewer than 3 events."
+            )
+
+    if {"kpi", "expanding", "recent"}.issubset(set(result.benchmark_summary.columns)):
+        for row in result.benchmark_summary.itertuples(index=False):
+            try:
+                kpi = str(getattr(row, "kpi"))
+                expanding = float(getattr(row, "expanding"))
+                recent = float(getattr(row, "recent"))
+            except (TypeError, ValueError):
+                continue
+
+            if np.isfinite(expanding) and np.isfinite(recent) and recent + 0.05 < expanding:
+                warnings.append(
+                    f"Benchmark degradation detected for {kpi}: recent ({recent:.3f}) is below expanding ({expanding:.3f})."
+                )
+
+    for item in result.benchmark_warnings:
+        warnings.append(f"Benchmark note: {item}")
+
+
 def build_walkforward_sanity_report(
     series: pd.DataFrame,
     price_column: str = "btc_price",
@@ -358,6 +405,7 @@ def validate_output(result: RiskOutput) -> ValidationResult:
     _check_noncritical_source_contract_warnings(result, warnings)
     _check_source_modes(result, warnings)
     _check_metric_health(result, errors)
+    _check_benchmark_quality(result, warnings)
 
     sanity_report = build_walkforward_sanity_report(result.series)
     if _sanity_is_actionable(result.series):

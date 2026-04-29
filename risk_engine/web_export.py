@@ -46,6 +46,10 @@ CORE_HISTORY_COLUMNS = [
     "cycle_p_accumulation",
     "cycle_confidence",
     "cycle_position",
+    "trend_heat",
+    "top_reversal_risk",
+    "bottom_reversal_risk",
+    "attention_score",
     "btc_price",
     "total_market_cap",
 ]
@@ -93,6 +97,10 @@ def _coerce_json_scalar(value: Any) -> Any:
         return int(value)
     if isinstance(value, (np.bool_, bool)):
         return bool(value)
+    if isinstance(value, list):
+        return [_coerce_json_scalar(item) for item in value]
+    if isinstance(value, dict):
+        return {str(key): _coerce_json_scalar(item) for key, item in value.items()}
     if pd.isna(value):
         return None
     return value
@@ -247,6 +255,15 @@ def export_web_v1(
             else result.metric_health
         ),
         "sanity_report": _records_payload(sanity_report),
+        "benchmark_summary": _records_payload(result.benchmark_summary),
+        "benchmark_by_label": _records_payload(result.benchmark_by_label),
+        "benchmark_by_signal": _records_payload(result.benchmark_by_signal),
+        "benchmark_window_stats": _records_payload(result.benchmark_window_stats),
+        "benchmark_config": {str(key): _coerce_json_scalar(value) for key, value in result.benchmark_config.items()},
+        "benchmark_warnings": [str(item) for item in result.benchmark_warnings],
+        "calibration_metadata": {
+            str(key): _coerce_json_scalar(value) for key, value in result.calibration_metadata.items()
+        },
     }
 
     latest_snapshot_payload = _latest_snapshot(series)
