@@ -160,7 +160,7 @@ def _check_source_modes(result: RiskOutput, warnings: List[str]) -> None:
         return
 
     modes = result.source_modes
-    excluded_prefixes = ("onchain::supply_in_loss",)
+    excluded_prefixes = ("onchain::supply_in_loss", "profile::")
     tracked = {k: v for k, v in modes.items() if not any(k.startswith(prefix) for prefix in excluded_prefixes)}
 
     api_like = 0

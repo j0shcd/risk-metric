@@ -82,6 +82,7 @@ class PipelineBehaviorTests(unittest.TestCase):
             data_dir=cwd / "data",
             output_dir=cwd / "output",
             cache_dir=cwd / "data",
+            data_profile="extended",
         )
 
     @patch("risk_engine.pipeline.load_cycle_market_context")

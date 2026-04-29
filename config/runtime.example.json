@@ -4,6 +4,9 @@
   "cache_dir": "data",
   "start_date": "2012-01-01",
   "end_date": null,
+  "data_profile": "free_stable",
+  "enable_paid_sources": false,
+  "enable_optional_social_sources": false,
   "youtube_channel_ids": "",
   "google_trends_terms": "bitcoin",
   "google_trends_api_key": null,
@@ -23,7 +26,7 @@
   "reddit_subreddits": "Bitcoin,CryptoCurrency",
   "apple_app_store_country": "us",
   "coinbase_ios_app_id": "886427730",
-  "enable_coinbase_app_rank": true,
+  "enable_coinbase_app_rank": false,
   "request_timeout_seconds": 20,
   "category_weights": {
     "onchain": 0.3,

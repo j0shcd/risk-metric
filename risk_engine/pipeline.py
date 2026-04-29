@@ -23,7 +23,7 @@ from .sources import (
 from .types import FeatureBundle, RiskOutput
 
 
-def _metric_specs(cfg: RuntimeConfig, include_total_market_fallback_proxies: bool) -> List[MetricSpec]:
+def _metric_specs_free_stable(include_total_market_fallback_proxies: bool) -> List[MetricSpec]:
     specs = [
         MetricSpec("btc_trend_extension_50d_350d", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
         MetricSpec("btc_running_roi_1y", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
@@ -52,20 +52,6 @@ def _metric_specs(cfg: RuntimeConfig, include_total_market_fallback_proxies: boo
         MetricSpec("total_trend_extension_50d_350d", "total_market_context", "btc", base_reliability=0.85, max_carry_days=7),
         MetricSpec("total_log_reg_deviation", "total_market_context", "btc", base_reliability=0.85, max_carry_days=7),
         MetricSpec("btc_dominance_proxy", "total_market_context", "both", base_reliability=0.60, max_carry_days=14),
-        MetricSpec("mvrv_z_score", "onchain", "both", base_reliability=0.85, max_carry_days=5),
-        MetricSpec("puell_multiple", "onchain", "both", base_reliability=0.85, max_carry_days=5),
-        MetricSpec("supply_in_profit", "onchain", "both", base_reliability=0.80, max_carry_days=5),
-        MetricSpec("supply_in_loss", "onchain", "both", base_reliability=0.80, max_carry_days=5, direction=-1.0),
-        MetricSpec("youtube_interest", "social", "both", base_reliability=0.60, max_carry_days=14),
-        MetricSpec("google_trends_interest", "social", "both", base_reliability=0.50, max_carry_days=21),
-        MetricSpec(
-            "coinbase_app_rank_proxy",
-            "social",
-            "both",
-            base_reliability=0.35,
-            max_carry_days=14,
-            experimental=True,
-        ),
         MetricSpec("fear_greed_index", "fear_greed", "both", base_reliability=0.60, max_carry_days=7),
     ]
 
@@ -97,10 +83,40 @@ def _metric_specs(cfg: RuntimeConfig, include_total_market_fallback_proxies: boo
             ]
         )
 
+    return specs
+
+
+def _metric_specs_extended(cfg: RuntimeConfig, include_total_market_fallback_proxies: bool) -> List[MetricSpec]:
+    specs = _metric_specs_free_stable(include_total_market_fallback_proxies=include_total_market_fallback_proxies)
+    specs.extend(
+        [
+            MetricSpec("mvrv_z_score", "onchain", "both", base_reliability=0.85, max_carry_days=5),
+            MetricSpec("puell_multiple", "onchain", "both", base_reliability=0.85, max_carry_days=5),
+            MetricSpec("supply_in_profit", "onchain", "both", base_reliability=0.80, max_carry_days=5),
+            MetricSpec("supply_in_loss", "onchain", "both", base_reliability=0.80, max_carry_days=5, direction=-1.0),
+            MetricSpec("youtube_interest", "social", "both", base_reliability=0.60, max_carry_days=14),
+            MetricSpec("google_trends_interest", "social", "both", base_reliability=0.50, max_carry_days=21),
+            MetricSpec(
+                "coinbase_app_rank_proxy",
+                "social",
+                "both",
+                base_reliability=0.35,
+                max_carry_days=14,
+                experimental=True,
+            ),
+        ]
+    )
+
     if not cfg.enable_coinbase_app_rank:
         specs = [spec for spec in specs if spec.name != "coinbase_app_rank_proxy"]
 
     return specs
+
+
+def _metric_specs(cfg: RuntimeConfig, include_total_market_fallback_proxies: bool) -> List[MetricSpec]:
+    if cfg.data_profile == "extended":
+        return _metric_specs_extended(cfg, include_total_market_fallback_proxies=include_total_market_fallback_proxies)
+    return _metric_specs_free_stable(include_total_market_fallback_proxies=include_total_market_fallback_proxies)
 
 
 def _should_use_total_market_fallback_proxies(total_market_cap: pd.Series) -> bool:
@@ -218,9 +234,17 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     total_market_cap = load_total_market_cap(runtime, index=index)
     use_total_market_fallback_proxies = _should_use_total_market_fallback_proxies(total_market_cap)
     metric_specs = _metric_specs(runtime, include_total_market_fallback_proxies=use_total_market_fallback_proxies)
-    onchain_frame = load_onchain_metrics(runtime, index=index)
+    if runtime.data_profile == "extended":
+        onchain_frame = load_onchain_metrics(runtime, index=index)
+    else:
+        onchain_frame = pd.DataFrame(index=index)
+        onchain_frame.attrs["source_modes"] = {}
     fear_greed = load_fear_greed_index(runtime, index=index)
-    social_frame = load_social_metrics(runtime, index=index)
+    if runtime.data_profile == "extended":
+        social_frame = load_social_metrics(runtime, index=index)
+    else:
+        social_frame = pd.DataFrame(index=index)
+        social_frame.attrs["source_modes"] = {}
     cycle_context = load_cycle_market_context(
         runtime,
         index=index,

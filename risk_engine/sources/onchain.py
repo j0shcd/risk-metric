@@ -34,6 +34,8 @@ def _parse_glassnode_series(payload: dict) -> Optional[pd.Series]:
 
 
 def _fetch_glassnode_metric(cfg: RuntimeConfig, endpoint: str) -> Optional[pd.Series]:
+    if not cfg.enable_paid_sources:
+        return None
     if not cfg.glassnode_api_key:
         return None
 

@@ -20,3 +20,8 @@ internal/
 /skills-lock.json
 web/src/themes/
 /output/
+/config/runtime.json
+.env
+.env.local
+.env.*
+!.env.example

@@ -18,6 +18,7 @@ class OnchainSourceTests(unittest.TestCase):
             cache_dir=root / "data",
             onchain_fallback_csv=root / "data" / "onchain_metrics.csv",
             glassnode_api_key="test-key",
+            enable_paid_sources=True,
         )
 
     @patch("risk_engine.sources.onchain.safe_get_json")

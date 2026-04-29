@@ -31,6 +31,7 @@ class SocialSourceTests(unittest.TestCase):
             coinbase_rank_csv=root / "data" / "coinbase_app_rank.csv",
             apple_app_store_country="us",
             coinbase_ios_app_id="886427730",
+            enable_optional_social_sources=True,
             enable_coinbase_app_rank=True,
         )
 

@@ -92,26 +92,33 @@ def _build_monthly_inputs(
     onchain_frame: pd.DataFrame,
     context_frame: pd.DataFrame,
 ) -> pd.DataFrame:
+    base_index = btc_price.index
+
+    def _indexed_series(frame: pd.DataFrame, column: str) -> pd.Series:
+        if column in frame.columns:
+            return frame[column]
+        return pd.Series(index=base_index, dtype=float)
+
     monthly = pd.DataFrame(index=_monthly_last(btc_price).index)
     monthly["btc_price"] = _monthly_last(btc_price)
-    monthly["btc_volume_usd"] = _monthly_sum(context_frame.get("btc_volume_usd", pd.Series(dtype=float)))
-    monthly["mvrv_z_score"] = _monthly_last(onchain_frame.get("mvrv_z_score", pd.Series(dtype=float)))
-    monthly["puell_multiple"] = _monthly_last(onchain_frame.get("puell_multiple", pd.Series(dtype=float)))
-    monthly["supply_in_profit"] = _monthly_last(onchain_frame.get("supply_in_profit", pd.Series(dtype=float)))
+    monthly["btc_volume_usd"] = _monthly_sum(_indexed_series(context_frame, "btc_volume_usd"))
+    monthly["mvrv_z_score"] = _monthly_last(_indexed_series(onchain_frame, "mvrv_z_score"))
+    monthly["puell_multiple"] = _monthly_last(_indexed_series(onchain_frame, "puell_multiple"))
+    monthly["supply_in_profit"] = _monthly_last(_indexed_series(onchain_frame, "supply_in_profit"))
 
     monthly["google_trends_interest"] = _monthly_mean(
-        context_frame.get("google_trends_interest", pd.Series(dtype=float))
+        _indexed_series(context_frame, "google_trends_interest")
     )
     monthly["wikipedia_pageviews"] = _monthly_sum(
-        context_frame.get("wikipedia_pageviews", pd.Series(dtype=float))
+        _indexed_series(context_frame, "wikipedia_pageviews")
     )
     monthly["reddit_post_volume"] = _monthly_sum(
-        context_frame.get("reddit_post_volume", pd.Series(dtype=float))
+        _indexed_series(context_frame, "reddit_post_volume")
     )
 
-    monthly["dxy"] = _monthly_last(context_frame.get("dxy", pd.Series(dtype=float)).ffill())
-    monthly["real_yield_10y"] = _monthly_last(context_frame.get("real_yield_10y", pd.Series(dtype=float)).ffill())
-    monthly["net_liquidity"] = _monthly_last(context_frame.get("net_liquidity", pd.Series(dtype=float)).ffill())
+    monthly["dxy"] = _monthly_last(_indexed_series(context_frame, "dxy").ffill())
+    monthly["real_yield_10y"] = _monthly_last(_indexed_series(context_frame, "real_yield_10y").ffill())
+    monthly["net_liquidity"] = _monthly_last(_indexed_series(context_frame, "net_liquidity").ffill())
     return monthly
 
 

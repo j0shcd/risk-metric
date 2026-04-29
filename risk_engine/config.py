@@ -31,6 +31,9 @@ class RuntimeConfig:
     cache_dir: Path
     start_date: str = "2012-01-01"
     end_date: Optional[str] = None
+    data_profile: str = "free_stable"
+    enable_paid_sources: bool = False
+    enable_optional_social_sources: bool = False
 
     glassnode_api_key: Optional[str] = None
     youtube_api_key: Optional[str] = None
@@ -102,13 +105,50 @@ def _path_or_none(project_root: Path, raw_value: Optional[str]) -> Optional[Path
     return project_root / candidate
 
 
+def _read_dotenv_file(path: Path) -> Dict[str, str]:
+    if not path.exists():
+        return {}
+
+    values: Dict[str, str] = {}
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            raw = line.strip()
+            if not raw or raw.startswith("#"):
+                continue
+
+            if raw.startswith("export "):
+                raw = raw[len("export ") :].strip()
+            if "=" not in raw:
+                continue
+
+            key, value = raw.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+
+            if len(value) >= 2 and ((value[0] == value[-1] == '"') or (value[0] == value[-1] == "'")):
+                value = value[1:-1]
+
+            if key:
+                values[key] = value
+    return values
+
+
+def _load_env(resolved_root: Path) -> Dict[str, str]:
+    # Precedence: runtime.json < .env < .env.local < process environment.
+    env: Dict[str, str] = {}
+    env.update(_read_dotenv_file(resolved_root / ".env"))
+    env.update(_read_dotenv_file(resolved_root / ".env.local"))
+    env.update(dict(os.environ))
+    return env
+
+
 def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
     resolved_root = (project_root or Path.cwd()).resolve()
 
     file_config_path = resolved_root / "config" / "runtime.json"
     file_cfg = _read_json_file(file_config_path)
 
-    env = os.environ
+    env = _load_env(resolved_root)
 
     data_dir = (resolved_root / file_cfg.get("data_dir", "data")).resolve()
     output_dir = (resolved_root / file_cfg.get("output_dir", "output")).resolve()
@@ -130,6 +170,15 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
         cache_dir=cache_dir,
         start_date=env.get("RISK_START_DATE", file_cfg.get("start_date", "2012-01-01")),
         end_date=env.get("RISK_END_DATE", file_cfg.get("end_date")),
+        data_profile=str(env.get("DATA_PROFILE", file_cfg.get("data_profile", "free_stable"))).strip().lower(),
+        enable_paid_sources=_parse_bool(
+            env.get("ENABLE_PAID_SOURCES"),
+            file_cfg.get("enable_paid_sources", False),
+        ),
+        enable_optional_social_sources=_parse_bool(
+            env.get("ENABLE_OPTIONAL_SOCIAL_SOURCES"),
+            file_cfg.get("enable_optional_social_sources", False),
+        ),
         glassnode_api_key=env.get("GLASSNODE_API_KEY", file_cfg.get("glassnode_api_key")),
         youtube_api_key=env.get("YOUTUBE_API_KEY", file_cfg.get("youtube_api_key")),
         google_trends_api_key=env.get("GOOGLE_TRENDS_API_KEY", file_cfg.get("google_trends_api_key")),

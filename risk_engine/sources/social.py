@@ -53,6 +53,8 @@ def _update_history_with_snapshot(
 
 
 def _fetch_youtube_interest(cfg: RuntimeConfig) -> pd.Series:
+    if not cfg.enable_optional_social_sources:
+        return pd.Series(dtype=float)
     if not cfg.youtube_api_key or not cfg.youtube_channel_ids:
         return pd.Series(dtype=float)
 
@@ -172,6 +174,8 @@ def _parse_google_trends_series(payload: Any) -> pd.Series:
 
 
 def _fetch_google_trends_interest(cfg: RuntimeConfig) -> pd.Series:
+    if not cfg.enable_optional_social_sources:
+        return pd.Series(dtype=float)
     if not cfg.google_trends_api_key or not cfg.google_trends_api_url:
         return pd.Series(dtype=float)
 
@@ -243,7 +247,7 @@ def _fetch_coinbase_rank_snapshot(cfg: RuntimeConfig) -> pd.Series:
 
 
 def _load_coinbase_app_rank(cfg: RuntimeConfig) -> Tuple[pd.Series, str]:
-    if not cfg.enable_coinbase_app_rank:
+    if (not cfg.enable_optional_social_sources) or (not cfg.enable_coinbase_app_rank):
         return pd.Series(dtype=float), "disabled"
 
     path = _history_path(cfg, "coinbase_app_rank")
