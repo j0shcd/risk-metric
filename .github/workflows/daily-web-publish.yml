@@ -11,6 +11,17 @@ permissions:
 jobs:
   publish-web-data:
     runs-on: ubuntu-latest
+    env:
+      DATA_PROFILE: extended
+      ENABLE_OPTIONAL_SOCIAL_SOURCES: "true"
+      ENABLE_GOOGLE_TRENDS_SOURCE: "false"
+      ENABLE_PAID_SOURCES: "false"
+      YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      YOUTUBE_CHANNEL_IDS: ${{ secrets.YOUTUBE_CHANNEL_IDS }}
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      FRED_API: ${{ secrets.FRED_API_KEY }}
+      WIKIMEDIA_API_TOKEN: ${{ secrets.WIKIMEDIA_API_TOKEN }}
+      WIKIMEDIA_API_USER_AGENT: ${{ secrets.WIKIMEDIA_API_USER_AGENT }}
 
     steps:
       - name: Checkout
@@ -26,25 +37,48 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Run pipeline + validation + web export
+      - name: Refresh caches from APIs + publish web export
+        env:
+          REFRESH_API_SOURCES: "true"
         run: python publish_web_v1.py
 
-      - name: Detect artifact changes
+      - name: Verify cache-only execution
+        env:
+          REFRESH_API_SOURCES: "false"
+        run: python publish_web_v1.py
+
+      - name: Stage web artifacts and cache files
         id: detect_changes
         run: |
-          if git diff --quiet -- data/web/v1; then
+          git add -f data/web/v1 || true
+          git add -f \
+            data/total_marketcap.csv \
+            data/onchain_metrics.csv \
+            data/fear_greed_index.csv \
+            data/youtube_interest.csv \
+            data/youtube_channel_ids.csv \
+            data/google_trends_interest.csv \
+            data/coinbase_app_rank.csv \
+            data/fred_dxy.csv \
+            data/fred_real_yield_10y.csv \
+            data/fred_walcl.csv \
+            data/fred_rrpontsyd.csv \
+            data/btc_market_coingecko.csv \
+            data/wikipedia_pageviews_btc.csv \
+            data/reddit_post_volume.csv || true
+
+          if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Commit updated web artifacts
+      - name: Commit updated web artifacts and caches
         if: steps.detect_changes.outputs.changed == 'true'
         run: |
           git config user.name "risk-metric-bot"
           git config user.email "risk-metric-bot@users.noreply.github.com"
-          git add -f data/web/v1
-          git commit -m "chore(data): refresh web v1 artifacts"
+          git commit -m "chore(data): refresh caches + web v1 artifacts"
           git push origin HEAD:main
 
       - name: No artifact changes
