@@ -1,0 +1,75 @@
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+import pandas as pd
+
+from risk_engine.config import RuntimeConfig
+from risk_engine.sources.btc_price_backfill import refresh_btc_daily_from_binance
+
+
+def _kline(open_time_ms: int, open_px: float, high_px: float, low_px: float, close_px: float, volume: float) -> list:
+    return [
+        open_time_ms,
+        f"{open_px}",
+        f"{high_px}",
+        f"{low_px}",
+        f"{close_px}",
+        f"{volume}",
+        open_time_ms + 1,
+        "0",
+        0,
+        "0",
+        "0",
+        "0",
+    ]
+
+
+class BtcPriceBackfillTests(unittest.TestCase):
+    def _cfg(self, root: Path) -> RuntimeConfig:
+        return RuntimeConfig(
+            project_root=root,
+            data_dir=root / "data",
+            output_dir=root / "output",
+            cache_dir=root / "data",
+        )
+
+    @patch("risk_engine.sources.btc_price_backfill._fetch_binance_klines_page")
+    def test_refresh_appends_missing_daily_rows(self, mocked_fetch) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            (root / "data").mkdir(parents=True, exist_ok=True)
+
+            csv_path = root / "data" / "btc_daily.csv"
+            pd.DataFrame(
+                {
+                    "Date": ["2024-01-01", "2024-01-02"],
+                    "Open": [42000.0, 42100.0],
+                    "High": [43000.0, 43200.0],
+                    "Low": [41000.0, 42000.0],
+                    "Price": [42500.0, 42900.0],
+                    "Vol.": [1000000.0, 1100000.0],
+                    "Change %": [1.19, 1.90],
+                }
+            ).to_csv(csv_path, index=False)
+
+            mocked_fetch.side_effect = [
+                [
+                    _kline(1704240000000, 43000.0, 44000.0, 42500.0, 43800.0, 1200000.0),  # 2024-01-03
+                    _kline(1704326400000, 43800.0, 44500.0, 43500.0, 44200.0, 1300000.0),  # 2024-01-04
+                ],
+                [],
+            ]
+
+            stats = refresh_btc_daily_from_binance(self._cfg(root))
+
+            updated = pd.read_csv(csv_path)
+            self.assertEqual(len(updated), 4)
+            self.assertIn("2024-01-03", updated["Date"].tolist())
+            self.assertIn("2024-01-04", updated["Date"].tolist())
+            self.assertEqual(stats["rows_added"], 2)
+
+
+if __name__ == "__main__":
+    unittest.main()
