@@ -173,6 +173,14 @@ function formatPrice(value) {
   return Number.isFinite(num) ? PRICE_FORMAT.format(num) : "n/a";
 }
 
+function formatPct(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) {
+    return "n/a";
+  }
+  return `${(num * 100).toFixed(1)}%`;
+}
+
 function snapshotCards(latestSnapshot) {
   return [
     { label: "Headline Heat", value: latestSnapshot.headline_heat, tone: "red" },
@@ -783,6 +791,14 @@ function DiagnosticsPanel({ diagnostics }) {
   const sourceHealth = Array.isArray(diagnostics?.source_health) ? diagnostics.source_health : [];
   const sanity = Array.isArray(diagnostics?.sanity_report) ? diagnostics.sanity_report : [];
   const warnings = Array.isArray(diagnostics?.validation?.warnings) ? diagnostics.validation.warnings : [];
+  const benchmarkSummary = Array.isArray(diagnostics?.benchmark_summary) ? diagnostics.benchmark_summary : [];
+  const benchmarkByLabel = Array.isArray(diagnostics?.benchmark_by_label) ? diagnostics.benchmark_by_label : [];
+  const benchmarkBySignal = Array.isArray(diagnostics?.benchmark_by_signal) ? diagnostics.benchmark_by_signal : [];
+  const benchmarkConfig = diagnostics?.benchmark_config ?? {};
+  const calibrationMetadata = diagnostics?.calibration_metadata ?? {};
+
+  const topKpi = benchmarkSummary.find((row) => row.kpi === "lead_recall_top");
+  const bottomKpi = benchmarkSummary.find((row) => row.kpi === "lead_recall_bottom");
 
   return (
     <section className="bb-panel">
@@ -849,6 +865,104 @@ function DiagnosticsPanel({ diagnostics }) {
           )}
         </div>
       </div>
+
+      <div className="bb-diag-grid" style={{ marginTop: "1.2rem" }}>
+        <div>
+          <p className="bb-table-title">Benchmark KPIs</p>
+          <table className="bb-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Expanding</th>
+                <th>Recent</th>
+                <th>Delta</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Top Lead Recall @ Alert Budget</td>
+                <td>{formatPct(topKpi?.expanding)}</td>
+                <td>{formatPct(topKpi?.recent)}</td>
+                <td>{formatPct(topKpi?.delta_recent_minus_expanding)}</td>
+              </tr>
+              <tr>
+                <td>Bottom Lead Recall @ Alert Budget</td>
+                <td>{formatPct(bottomKpi?.expanding)}</td>
+                <td>{formatPct(bottomKpi?.recent)}</td>
+                <td>{formatPct(bottomKpi?.delta_recent_minus_expanding)}</td>
+              </tr>
+              <tr>
+                <td>Alert Budget</td>
+                <td colSpan={3}>{formatPct(benchmarkConfig.alert_rate)}</td>
+              </tr>
+              <tr>
+                <td>Calibration Reference</td>
+                <td colSpan={3}>{calibrationMetadata.walkforward_last_train_end || "n/a"}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <p className="bb-table-title">Label Comparison (Recent)</p>
+          <table className="bb-table">
+            <thead>
+              <tr>
+                <th>Label</th>
+                <th>Signal</th>
+                <th style={{ textAlign: "right" }}>Lead Recall</th>
+                <th style={{ textAlign: "right" }}>AUC</th>
+              </tr>
+            </thead>
+            <tbody>
+              {benchmarkByLabel
+                .filter((row) => row.window === "recent")
+                .slice(0, 12)
+                .map((row) => (
+                  <tr key={`${row.label_id}-${row.signal}-${row.window}`}>
+                    <td>{row.label_id}</td>
+                    <td>{row.signal}</td>
+                    <td style={{ textAlign: "right" }}>{formatPct(row.lead_recall_at_alert_rate)}</td>
+                    <td style={{ textAlign: "right" }}>{valueLabel(row.auc, 3)}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={{ marginTop: "1rem" }}>
+        <p className="bb-table-title">Signal Performance (Window Averages)</p>
+        <table className="bb-table">
+          <thead>
+            <tr>
+              <th>Window</th>
+              <th>Signal</th>
+              <th style={{ textAlign: "right" }}>Lead Recall</th>
+              <th style={{ textAlign: "right" }}>PR-AUC</th>
+              <th style={{ textAlign: "right" }}>False Alarm</th>
+            </tr>
+          </thead>
+          <tbody>
+            {benchmarkBySignal.map((row) => (
+              <tr key={`${row.window}-${row.signal}`}>
+                <td>{row.window}</td>
+                <td>{row.signal}</td>
+                <td style={{ textAlign: "right" }}>{formatPct(row.lead_recall_at_alert_rate)}</td>
+                <td style={{ textAlign: "right" }}>{valueLabel(row.pr_auc, 3)}</td>
+                <td style={{ textAlign: "right" }}>{formatPct(row.false_alarm_rate)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="bb-hint" style={{ marginTop: "1rem" }}>
+        Benchmarks are transparency metrics, not trade advice. Crypto cycle behavior is asymmetric: bull markets often rise fast and retrace slowly, while bear shocks can fall quickly and recover over months.
+      </p>
+      <p className="bb-hint">
+        Paid on-chain and social datasets may be unavailable, so this benchmark framework is designed to run on currently available free/stable data and track quality over time.
+      </p>
     </section>
   );
 }

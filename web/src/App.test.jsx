@@ -108,6 +108,45 @@ const fixtures = {
     ],
     metric_health: [],
     sanity_report: [{ check: "example", passed: true, value: 1.0, threshold: 0.0 }],
+    benchmark_summary: [
+      {
+        kpi: "lead_recall_top",
+        signal: "top_reversal_risk",
+        expanding: 0.45,
+        recent: 0.4,
+        delta_recent_minus_expanding: -0.05,
+        alert_rate: 0.2,
+      },
+      {
+        kpi: "lead_recall_bottom",
+        signal: "bottom_reversal_risk",
+        expanding: 0.5,
+        recent: 0.55,
+        delta_recent_minus_expanding: 0.05,
+        alert_rate: 0.2,
+      },
+    ],
+    benchmark_by_label: [
+      {
+        window: "recent",
+        signal: "top_reversal_risk",
+        label_id: "threshold_top_dd40_h12",
+        lead_recall_at_alert_rate: 0.44,
+        auc: 0.63,
+      },
+    ],
+    benchmark_by_signal: [
+      {
+        window: "recent",
+        signal: "top_reversal_risk",
+        lead_recall_at_alert_rate: 0.44,
+        pr_auc: 0.35,
+        false_alarm_rate: 0.2,
+      },
+    ],
+    benchmark_window_stats: [{ window: "expanding", side: "top", lead_recall_at_alert_rate: 0.45 }],
+    benchmark_config: { alert_rate: 0.2 },
+    calibration_metadata: { walkforward_last_train_end: "2026-03-31" },
   },
 };
 
@@ -144,7 +183,45 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Debug" }));
 
     expect(await screen.findByText("System Diagnostics")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark KPIs")).toBeInTheDocument();
+    expect(screen.getByText("Label Comparison (Recent)")).toBeInTheDocument();
     expect(screen.getByText("Category — BTC")).toBeInTheDocument();
     expect(screen.getAllByTestId("chart").length).toBeGreaterThan(0);
+  });
+
+  it("renders diagnostics even when benchmark payload is missing", async () => {
+    global.fetch = vi.fn(async (url) => {
+      const key = String(url).split("/").pop();
+      if (!key || !(key in fixtures)) {
+        return { ok: false, status: 404, json: async () => ({}) };
+      }
+      if (key === "diagnostics.json") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            generated_at: "2026-04-24T06:00:00Z",
+            schema_version: "1.0.0",
+            version: "v1",
+            validation: { passed: true, errors: [], warnings: [] },
+            source_modes: [],
+            source_health: [],
+            metric_health: [],
+            sanity_report: [],
+          }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => fixtures[key],
+      };
+    });
+
+    render(<App />);
+    fireEvent.click(await screen.findByRole("tab", { name: "Debug" }));
+
+    expect(await screen.findByText("System Diagnostics")).toBeInTheDocument();
+    expect(screen.getByText("Benchmark KPIs")).toBeInTheDocument();
   });
 });
