@@ -45,6 +45,69 @@ const COLORS = {
 const FONT = "'IBM Plex Mono', 'Courier New', monospace";
 const PRICE_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
+const DAILY_METRIC_ROWS = [
+  {
+    metric: "btc_trend_extension_50d_350d",
+    calc: "SMA_50(BTC close) / SMA_350(BTC close)",
+  },
+  {
+    metric: "btc_running_roi_1y",
+    calc: "(BTC_t / BTC_t-365) - 1",
+  },
+  {
+    metric: "btc_log_reg_deviation",
+    calc: "BTC close / exp(polyfit(log(time), log(BTC close)))",
+  },
+  {
+    metric: "btc_drawdown_from_ath",
+    calc: "(BTC close / cummax(BTC close)) - 1",
+  },
+  {
+    metric: "btc_realized_vol_30d",
+    calc: "std(log returns, 30d) * sqrt(365), direction inverted for risk pressure",
+  },
+  {
+    metric: "total_* price-structure metrics",
+    calc: "Same formulas as BTC metrics, applied to total market cap",
+  },
+  {
+    metric: "btc_dominance_proxy",
+    calc: "(BTC close / max(BTC close)) / (total market cap / max(total market cap))",
+  },
+  {
+    metric: "fear_greed_index",
+    calc: "Daily value from alternative.me, normalized in scoring pipeline",
+  },
+];
+
+const SCORE_ROWS = [
+  "Each metric is transformed with rolling robust normalization and a bounded signed heat signal.",
+  "Per-category heat and attention are reliability-weighted means of available metrics.",
+  "Category weights are then reliability-adjusted and re-normalized each day.",
+  "headline_heat = confidence-aware blend of BTC heat and total-market heat (70/30 anchor).",
+  "headline_attention = confidence-aware blend of BTC attention and total-market attention (70/30 anchor).",
+  "confidence_score = 0.7 * btc_confidence + 0.3 * total_market_confidence.",
+];
+
+const CYCLE_ROWS = [
+  {
+    metric: "cycle_heat_score",
+    calc: "Weighted monthly composite of valuation/speculation/attention/macro hot percentiles",
+  },
+  {
+    metric: "cycle_cold_score",
+    calc: "1 - category hot scores, aggregated with same category weights",
+  },
+  {
+    metric: "cycle_p_frenzy / cycle_p_accumulation",
+    calc: "Logistic mapping of cycle_heat_score / cycle_cold_score with confidence shrinkage",
+  },
+  {
+    metric: "cycle_signal_regime",
+    calc: "BUY/HOLD/SELL from threshold + confirmation-months + cooldown rules",
+  },
+];
+
 const hoverGuidePlugin = {
   id: "hoverGuide",
   afterDatasetsDraw(chart) {
@@ -788,11 +851,66 @@ function DiagnosticsPanel({ diagnostics }) {
   );
 }
 
+function MethodologyPanel() {
+  return (
+    <section className="bb-panel bb-panel--methodology" aria-label="Methodology panel">
+      <div className="bb-panel__head bb-panel__head--tight">
+        <h3 className="bb-panel__title bb-panel__title--small">Technical Methodology</h3>
+      </div>
+      <div className="bb-method">
+        <p className="bb-method__title">Daily Metrics (Current Core)</p>
+        <table className="bb-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Calculation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DAILY_METRIC_ROWS.map((row) => (
+              <tr key={row.metric}>
+                <td>{row.metric}</td>
+                <td>{row.calc}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <p className="bb-method__title">Scoring</p>
+        <ul className="bb-method__list">
+          {SCORE_ROWS.map((row) => (
+            <li key={row}>{row}</li>
+          ))}
+        </ul>
+
+        <p className="bb-method__title">Cycle Model Outputs</p>
+        <table className="bb-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Calculation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {CYCLE_ROWS.map((row) => (
+              <tr key={row.metric}>
+                <td>{row.metric}</td>
+                <td>{row.calc}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 export default function App() {
   const [status, setStatus] = useState("loading");
   const [payload, setPayload] = useState(null);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("focus");
+  const [showMethodology, setShowMethodology] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -869,7 +987,22 @@ export default function App() {
           >
             Debug
           </button>
+          <button
+            type="button"
+            className={`bb-tab${showMethodology ? " bb-tab--active" : ""}`}
+            onClick={() => setShowMethodology((prev) => !prev)}
+            aria-expanded={showMethodology}
+            aria-controls="bb-methodology"
+          >
+            Info
+          </button>
         </div>
+
+        {showMethodology && (
+          <div id="bb-methodology">
+            <MethodologyPanel />
+          </div>
+        )}
 
         {activeTab === "focus" ? (
           <section aria-label="Focus view">
