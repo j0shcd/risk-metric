@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from typing import Any, Iterable, Optional, Tuple
+from urllib.parse import urlparse
 
 import numpy as np
 import pandas as pd
@@ -14,6 +15,7 @@ from .common import load_optional_csv, safe_get_json, save_series_csv
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/channels"
 YOUTUBE_CHANNEL_ID_RE = re.compile(r"^UC[a-zA-Z0-9_-]{22}$")
 YOUTUBE_HANDLE_RE = re.compile(r"^@?[A-Za-z0-9._-]{3,30}$")
+GOOGLE_TRENDS_ALLOWED_HOSTS = ("googleapis.com",)
 
 
 def _merge_history(existing: Optional[pd.Series], snapshot: pd.Series) -> pd.Series:
@@ -342,6 +344,24 @@ def _parse_google_trends_series(payload: Any) -> pd.Series:
     return frame.set_index("Date")["google_trends_interest"]
 
 
+def _is_allowed_google_trends_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url.strip())
+    except Exception:
+        return False
+
+    if parsed.scheme.lower() != "https":
+        return False
+    if not parsed.netloc:
+        return False
+
+    host = parsed.hostname.lower() if parsed.hostname else ""
+    if not host:
+        return False
+
+    return any(host == allowed or host.endswith(f".{allowed}") for allowed in GOOGLE_TRENDS_ALLOWED_HOSTS)
+
+
 def _fetch_google_trends_interest(cfg: RuntimeConfig) -> pd.Series:
     if not cfg.refresh_api_sources:
         return pd.Series(dtype=float)
@@ -351,10 +371,12 @@ def _fetch_google_trends_interest(cfg: RuntimeConfig) -> pd.Series:
         return pd.Series(dtype=float)
     if not cfg.google_trends_api_key or not cfg.google_trends_api_url:
         return pd.Series(dtype=float)
+    if not _is_allowed_google_trends_url(cfg.google_trends_api_url):
+        return pd.Series(dtype=float)
 
     terms = cfg.google_trends_terms or ["bitcoin"]
     payload = safe_get_json(
-        url=cfg.google_trends_api_url,
+        url=cfg.google_trends_api_url.strip(),
         timeout_seconds=cfg.request_timeout_seconds,
         headers={"X-Goog-Api-Key": cfg.google_trends_api_key},
         params={

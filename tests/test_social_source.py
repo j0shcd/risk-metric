@@ -25,7 +25,7 @@ class SocialSourceTests(unittest.TestCase):
             youtube_api_key=youtube_key,
             youtube_channel_ids=["UC1234567890123456789012"] if youtube_key else [],
             google_trends_api_key=trends_key,
-            google_trends_api_url="https://example.com/google-trends" if trends_key else None,
+            google_trends_api_url="https://trends.googleapis.com/google-trends" if trends_key else None,
             google_trends_terms=["bitcoin"] if trends_key else [],
             enable_google_trends_source=bool(trends_key),
             youtube_fallback_csv=root / "data" / "youtube_interest.csv",
@@ -191,6 +191,20 @@ class SocialSourceTests(unittest.TestCase):
 
             stored = pd.read_csv(root / "data" / "google_trends_interest.csv")
             self.assertGreaterEqual(len(stored), 3)
+
+    @patch("risk_engine.sources.social.safe_get_json")
+    def test_google_trends_disallowed_url_skips_fetch(self, mocked_get) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            (root / "data").mkdir(parents=True, exist_ok=True)
+
+            cfg = self._cfg(root, youtube_key=None, trends_key="gt-key")
+            cfg = replace(cfg, google_trends_api_url="https://example.com/google-trends", enable_coinbase_app_rank=False)
+            index = pd.date_range("2026-04-20", periods=5, freq="D")
+            social = load_social_metrics(cfg, index=index)
+
+            self.assertTrue(social["google_trends_interest"].isna().all())
+            mocked_get.assert_not_called()
 
     @patch("risk_engine.sources.social.safe_get_json")
     def test_coinbase_rank_fetch_persists_and_returns_negative_proxy(self, mocked_get) -> None:
