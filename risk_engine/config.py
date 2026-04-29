@@ -80,6 +80,21 @@ class RuntimeConfig:
     cycle_buy_threshold: float = 0.75
     cycle_sell_threshold: float = 0.75
     cycle_min_history_months: int = 24
+    benchmark_enabled: bool = True
+    benchmark_horizons_months: List[int] = field(default_factory=lambda: [3, 6, 12])
+    benchmark_recent_window_months: int = 48
+    benchmark_alert_rate: float = 0.20
+    benchmark_label_families: List[str] = field(
+        default_factory=lambda: ["threshold", "quantile", "local_extrema"]
+    )
+    benchmark_top_drawdown_thresholds: List[float] = field(
+        default_factory=lambda: [0.30, 0.40, 0.50]
+    )
+    benchmark_bottom_rally_thresholds: List[float] = field(
+        default_factory=lambda: [0.50, 0.80, 1.20]
+    )
+    benchmark_local_extrema_lookbacks: List[int] = field(default_factory=lambda: [6, 12])
+    benchmark_local_extrema_forwards: List[int] = field(default_factory=lambda: [6, 12])
 
 
 def _parse_bool(value: Optional[str], default: bool) -> bool:
@@ -94,6 +109,30 @@ def _split_csv(raw: Optional[str] | List[str]) -> List[str]:
     if isinstance(raw, list):
         return [str(item).strip() for item in raw if str(item).strip()]
     return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+def _parse_int_list(raw: Optional[str] | List[int], default: List[int]) -> List[int]:
+    if raw is None:
+        return list(default)
+    if isinstance(raw, list):
+        parsed = [int(item) for item in raw]
+        return parsed if parsed else list(default)
+    items = [part.strip() for part in str(raw).split(",") if part.strip()]
+    if not items:
+        return list(default)
+    return [int(item) for item in items]
+
+
+def _parse_float_list(raw: Optional[str] | List[float], default: List[float]) -> List[float]:
+    if raw is None:
+        return list(default)
+    if isinstance(raw, list):
+        parsed = [float(item) for item in raw]
+        return parsed if parsed else list(default)
+    items = [part.strip() for part in str(raw).split(",") if part.strip()]
+    if not items:
+        return list(default)
+    return [float(item) for item in items]
 
 
 def _read_json_file(path: Path) -> dict:
@@ -273,6 +312,57 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
         cycle_sell_threshold=float(env.get("CYCLE_SELL_THRESHOLD", file_cfg.get("cycle_sell_threshold", 0.75))),
         cycle_min_history_months=int(
             env.get("CYCLE_MIN_HISTORY_MONTHS", file_cfg.get("cycle_min_history_months", 24))
+        ),
+        benchmark_enabled=_parse_bool(
+            env.get("BENCHMARK_ENABLED"),
+            file_cfg.get("benchmark_enabled", True),
+        ),
+        benchmark_horizons_months=_parse_int_list(
+            env.get("BENCHMARK_HORIZONS_MONTHS", file_cfg.get("benchmark_horizons_months")),
+            [3, 6, 12],
+        ),
+        benchmark_recent_window_months=int(
+            env.get(
+                "BENCHMARK_RECENT_WINDOW_MONTHS",
+                file_cfg.get("benchmark_recent_window_months", 48),
+            )
+        ),
+        benchmark_alert_rate=float(
+            env.get("BENCHMARK_ALERT_RATE", file_cfg.get("benchmark_alert_rate", 0.20))
+        ),
+        benchmark_label_families=_split_csv(
+            env.get(
+                "BENCHMARK_LABEL_FAMILIES",
+                file_cfg.get("benchmark_label_families", "threshold,quantile,local_extrema"),
+            )
+        ),
+        benchmark_top_drawdown_thresholds=_parse_float_list(
+            env.get(
+                "BENCHMARK_TOP_DRAWDOWN_THRESHOLDS",
+                file_cfg.get("benchmark_top_drawdown_thresholds"),
+            ),
+            [0.30, 0.40, 0.50],
+        ),
+        benchmark_bottom_rally_thresholds=_parse_float_list(
+            env.get(
+                "BENCHMARK_BOTTOM_RALLY_THRESHOLDS",
+                file_cfg.get("benchmark_bottom_rally_thresholds"),
+            ),
+            [0.50, 0.80, 1.20],
+        ),
+        benchmark_local_extrema_lookbacks=_parse_int_list(
+            env.get(
+                "BENCHMARK_LOCAL_EXTREMA_LOOKBACKS",
+                file_cfg.get("benchmark_local_extrema_lookbacks"),
+            ),
+            [6, 12],
+        ),
+        benchmark_local_extrema_forwards=_parse_int_list(
+            env.get(
+                "BENCHMARK_LOCAL_EXTREMA_FORWARDS",
+                file_cfg.get("benchmark_local_extrema_forwards"),
+            ),
+            [6, 12],
         ),
     )
 

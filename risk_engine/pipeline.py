@@ -6,6 +6,8 @@ from typing import Dict, List
 import numpy as np
 import pandas as pd
 
+from .calibration import calibrate_primary_outputs
+from .benchmark import evaluate_benchmark
 from .config import RuntimeConfig, load_runtime_config
 from .cycle_model import build_cycle_model
 from .diagnostics import build_metric_health, build_source_health
@@ -343,6 +345,30 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     )
     output = pd.concat([output, cycle.daily_projection], axis=1)
 
+    output["trend_heat"] = output["headline_heat"].clip(0.0, 1.0)
+    output["top_reversal_risk"] = output.get("cycle_p_frenzy", output["btc_risk_heat"]).clip(0.0, 1.0)
+    output["bottom_reversal_risk"] = output.get("cycle_p_accumulation", (1.0 - output["btc_risk_heat"])).clip(0.0, 1.0)
+    output["attention_score"] = output["headline_attention"].clip(0.0, 1.0)
+
+    calibrated = calibrate_primary_outputs(output)
+    output = calibrated.series
+    output["headline_heat"] = (
+        output["headline_btc_mix_weight"] * output["btc_risk_heat"]
+        + output["headline_total_market_mix_weight"] * output["total_market_risk_heat"]
+    ).clip(0.0, 1.0)
+
+    benchmark_result = evaluate_benchmark(
+        runtime,
+        monthly_price=output["btc_price"].astype(float).resample("M").last(),
+        signals={
+            "trend_heat": output["trend_heat"].astype(float).resample("M").last(),
+            "top_reversal_risk": output["top_reversal_risk"].astype(float).resample("M").last(),
+            "bottom_reversal_risk": output["bottom_reversal_risk"].astype(float).resample("M").last(),
+            "attention_score": output["attention_score"].astype(float).resample("M").last(),
+        },
+        calibration_metadata=calibrated.metadata,
+    )
+
     as_of = pd.Timestamp.utcnow().tz_localize(None).normalize()
 
     source_map = {
@@ -387,6 +413,13 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         cycle_backtest_report=cycle.backtest_report,
         cycle_metric_audit=cycle.metric_audit,
         cycle_migration_plan=cycle.migration_plan,
+        benchmark_summary=benchmark_result.summary,
+        benchmark_by_label=benchmark_result.by_label,
+        benchmark_by_signal=benchmark_result.by_signal,
+        benchmark_window_stats=benchmark_result.window_stats,
+        benchmark_config=benchmark_result.config,
+        benchmark_warnings=benchmark_result.warnings,
+        calibration_metadata=calibrated.metadata,
     )
 
 
@@ -452,3 +485,11 @@ def write_outputs(result: RiskOutput, output_dir: Path) -> None:
         result.cycle_metric_audit.to_csv(output_dir / "cycle_metric_audit.csv", index=False)
     if result.cycle_migration_plan:
         (output_dir / "cycle_migration_plan.md").write_text(result.cycle_migration_plan + "\n", encoding="utf-8")
+    if not result.benchmark_summary.empty:
+        result.benchmark_summary.to_csv(output_dir / "benchmark_summary.csv", index=False)
+    if not result.benchmark_by_label.empty:
+        result.benchmark_by_label.to_csv(output_dir / "benchmark_by_label.csv", index=False)
+    if not result.benchmark_by_signal.empty:
+        result.benchmark_by_signal.to_csv(output_dir / "benchmark_by_signal.csv", index=False)
+    if not result.benchmark_window_stats.empty:
+        result.benchmark_window_stats.to_csv(output_dir / "benchmark_window_stats.csv", index=False)

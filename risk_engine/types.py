@@ -30,6 +30,13 @@ class RiskOutput:
     cycle_backtest_report: pd.DataFrame = field(default_factory=pd.DataFrame)
     cycle_metric_audit: pd.DataFrame = field(default_factory=pd.DataFrame)
     cycle_migration_plan: str = ""
+    benchmark_summary: pd.DataFrame = field(default_factory=pd.DataFrame)
+    benchmark_by_label: pd.DataFrame = field(default_factory=pd.DataFrame)
+    benchmark_by_signal: pd.DataFrame = field(default_factory=pd.DataFrame)
+    benchmark_window_stats: pd.DataFrame = field(default_factory=pd.DataFrame)
+    benchmark_config: Dict[str, object] = field(default_factory=dict)
+    benchmark_warnings: List[str] = field(default_factory=list)
+    calibration_metadata: Dict[str, object] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
