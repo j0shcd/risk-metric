@@ -6,6 +6,7 @@ Data/
 *.jpg
 *.jpeg
 *.html
+!web/index.html
 *.txt
 !requirements.txt
 __pycache__/
