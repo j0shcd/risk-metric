@@ -88,6 +88,52 @@ class WebExportTests(unittest.TestCase):
                 "btc": metrics,
                 "total_market": metrics,
             },
+            benchmark_summary=pd.DataFrame(
+                [
+                    {
+                        "kpi": "lead_recall_top",
+                        "signal": "top_reversal_risk",
+                        "expanding": 0.5,
+                        "recent": 0.4,
+                        "delta_recent_minus_expanding": -0.1,
+                        "alert_rate": 0.2,
+                    }
+                ]
+            ),
+            benchmark_by_label=pd.DataFrame(
+                [
+                    {
+                        "window": "recent",
+                        "signal": "top_reversal_risk",
+                        "label_id": "threshold_top_dd40_h12",
+                        "family": "threshold",
+                        "side": "top",
+                        "lead_recall_at_alert_rate": 0.45,
+                    }
+                ]
+            ),
+            benchmark_by_signal=pd.DataFrame(
+                [
+                    {
+                        "window": "recent",
+                        "signal": "top_reversal_risk",
+                        "auc": 0.61,
+                        "pr_auc": 0.42,
+                    }
+                ]
+            ),
+            benchmark_window_stats=pd.DataFrame(
+                [
+                    {
+                        "window": "expanding",
+                        "side": "top",
+                        "lead_recall_at_alert_rate": 0.52,
+                    }
+                ]
+            ),
+            benchmark_config={"alert_rate": 0.2, "label_families": ["threshold", "quantile"]},
+            benchmark_warnings=["benchmark_note"],
+            calibration_metadata={"walkforward_last_train_end": "2026-04-01"},
         )
 
     def test_export_writes_required_artifacts_and_manifest(self) -> None:
@@ -142,6 +188,14 @@ class WebExportTests(unittest.TestCase):
             self.assertIn("metric_health", diagnostics)
             self.assertIn("source_modes", diagnostics)
             self.assertIn("sanity_report", diagnostics)
+            self.assertIn("benchmark_summary", diagnostics)
+            self.assertIn("benchmark_by_label", diagnostics)
+            self.assertIn("benchmark_by_signal", diagnostics)
+            self.assertIn("benchmark_window_stats", diagnostics)
+            self.assertIn("benchmark_config", diagnostics)
+            self.assertIn("benchmark_warnings", diagnostics)
+            self.assertIn("calibration_metadata", diagnostics)
+            self.assertEqual(diagnostics["benchmark_config"]["alert_rate"], 0.2)
             self.assertTrue(any(row["mode"] == "unavailable" for row in diagnostics["source_modes"]))
 
 

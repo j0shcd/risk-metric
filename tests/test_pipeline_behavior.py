@@ -117,6 +117,10 @@ class PipelineBehaviorTests(unittest.TestCase):
             "total_market_risk_attention",
             "headline_attention",
             "headline_heat",
+            "trend_heat",
+            "top_reversal_risk",
+            "bottom_reversal_risk",
+            "attention_score",
             "confidence_score",
             "cycle_heat_score",
             "cycle_cold_score",
@@ -134,6 +138,10 @@ class PipelineBehaviorTests(unittest.TestCase):
             "total_market_risk_attention",
             "headline_attention",
             "headline_heat",
+            "trend_heat",
+            "top_reversal_risk",
+            "bottom_reversal_risk",
+            "attention_score",
             "confidence_score",
             "cycle_heat_score",
             "cycle_cold_score",
@@ -170,6 +178,12 @@ class PipelineBehaviorTests(unittest.TestCase):
         self.assertFalse(result.cycle_backtest_report.empty)
         self.assertFalse(result.cycle_metric_audit.empty)
         self.assertTrue(bool(result.cycle_migration_plan))
+        self.assertFalse(result.benchmark_summary.empty)
+        self.assertFalse(result.benchmark_by_label.empty)
+        self.assertFalse(result.benchmark_by_signal.empty)
+        self.assertFalse(result.benchmark_window_stats.empty)
+        self.assertIn("alert_rate", result.benchmark_config)
+        self.assertTrue("calibration_applied" in result.calibration_metadata)
 
     @patch("risk_engine.pipeline.load_cycle_market_context")
     @patch("risk_engine.pipeline.load_social_metrics")
