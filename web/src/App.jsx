@@ -173,20 +173,6 @@ function formatPrice(value) {
   return Number.isFinite(num) ? PRICE_FORMAT.format(num) : "n/a";
 }
 
-function cycleRegimeLabel(value) {
-  const num = Number(value);
-  if (!Number.isFinite(num)) {
-    return "n/a";
-  }
-  if (num >= 0.7) {
-    return "Historically Hot";
-  }
-  if (num <= 0.3) {
-    return "Historically Cold";
-  }
-  return "Neutral Band";
-}
-
 function snapshotCards(latestSnapshot) {
   return [
     { label: "Headline Heat", value: latestSnapshot.headline_heat, tone: "red" },
@@ -226,12 +212,11 @@ function FocusPanel({
   btcSeries,
   cycleSeries,
   cycleConfidenceSeries,
-  latestCycleValue,
-  latestCycleConfidence,
 }) {
   const chartRef = useRef(null);
   const cycleChartRef = useRef(null);
   const [btcScaleType, setBtcScaleType] = useState("logarithmic");
+  const [cycleBtcScaleType, setCycleBtcScaleType] = useState("logarithmic");
 
   const merged = useMemo(() => alignSeries(heatSeries, attentionSeries), [heatSeries, attentionSeries]);
   const btcOverlayValues = useMemo(
@@ -469,7 +454,7 @@ function FocusPanel({
         yPrice: {
           display: hasCycleBtcOverlay,
           position: "right",
-          type: btcScaleType,
+          type: cycleBtcScaleType,
           ticks: {
             callback: (tickValue) => formatPrice(tickValue),
             color: "#8f8b80",
@@ -530,52 +515,69 @@ function FocusPanel({
         },
       },
     }),
-    [cycleSeries.labels.length, hasCycleBtcOverlay, btcScaleType],
+    [cycleSeries.labels.length, hasCycleBtcOverlay, cycleBtcScaleType],
   );
 
   return (
     <section className="bb-panel bb-panel--focus">
-      <div className="bb-panel__head">
-        <div>
-          <p className="bb-panel__eyebrow">Focus</p>
-          <h2 className="bb-panel__title">Headline Heat + Headline Attention</h2>
+      <div className="bb-chart-block">
+        <div className="bb-panel__head">
+          <div>
+            <h2 className="bb-panel__title bb-panel__title--solo">Headline Heat + Headline Attention</h2>
+          </div>
+          <div className="bb-panel__actions">
+            <label className="bb-checkbox">
+              BTC SCALE
+              <select className="bb-select bb-select--compact" value={btcScaleType} onChange={(event) => setBtcScaleType(event.target.value)}>
+                <option value="logarithmic">LOG</option>
+                <option value="linear">LINEAR</option>
+              </select>
+            </label>
+            <button type="button" className="bb-button" onClick={() => chartRef.current?.resetZoom?.()}>
+              Reset Zoom
+            </button>
+          </div>
         </div>
-        <div className="bb-panel__actions">
-          <label className="bb-checkbox">
-            BTC SCALE
-            <select className="bb-select bb-select--compact" value={btcScaleType} onChange={(event) => setBtcScaleType(event.target.value)}>
+        <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="focus-chart">
+          {hasData ? (
+            <Line ref={chartRef} data={chartDataPayload} options={chartOptions} plugins={[hoverGuidePlugin]} />
+          ) : (
+            <p className="bb-empty">No focus-series data available.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="bb-chart-block bb-chart-block--spaced">
+        <div className="bb-panel__head">
+          <div>
+            <h2 className="bb-panel__title bb-panel__title--solo">Cycle Regime Index</h2>
+          </div>
+          <div className="bb-panel__actions">
+            <label className="bb-checkbox">
+              BTC SCALE
+              <select
+                className="bb-select bb-select--compact"
+                value={cycleBtcScaleType}
+                onChange={(event) => setCycleBtcScaleType(event.target.value)}
+              >
               <option value="logarithmic">LOG</option>
               <option value="linear">LINEAR</option>
             </select>
-          </label>
-          <button type="button" className="bb-button" onClick={() => chartRef.current?.resetZoom?.()}>
-            Reset Zoom
-          </button>
-          <button type="button" className="bb-button" onClick={() => cycleChartRef.current?.resetZoom?.()}>
-            Reset Cycle Zoom
-          </button>
+            </label>
+            <button type="button" className="bb-button" onClick={() => cycleChartRef.current?.resetZoom?.()}>
+              Reset Zoom
+            </button>
+          </div>
+        </div>
+        <div className="bb-chart-wrap bb-chart-wrap--cycle" data-testid="cycle-chart">
+          {hasCycleData ? (
+            <Line ref={cycleChartRef} data={cycleChartDataPayload} options={cycleChartOptions} plugins={[hoverGuidePlugin]} />
+          ) : (
+            <p className="bb-empty">No cycle-series data available.</p>
+          )}
         </div>
       </div>
-      <div className="bb-cycle-strip">
-        <p className="bb-cycle-strip__title">Cycle Regime Index (CRI)</p>
-        <p className="bb-cycle-strip__value">{valueLabel(latestCycleValue, 3)}</p>
-        <p className="bb-cycle-strip__state">{cycleRegimeLabel(latestCycleValue)}</p>
-        <p className="bb-cycle-strip__meta">Confidence {valueLabel(latestCycleConfidence, 3)}</p>
-      </div>
-      <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="focus-chart">
-        {hasData ? (
-          <Line ref={chartRef} data={chartDataPayload} options={chartOptions} plugins={[hoverGuidePlugin]} />
-        ) : (
-          <p className="bb-empty">No focus-series data available.</p>
-        )}
-      </div>
-      <div className="bb-chart-wrap bb-chart-wrap--cycle" data-testid="cycle-chart">
-        {hasCycleData ? (
-          <Line ref={cycleChartRef} data={cycleChartDataPayload} options={cycleChartOptions} plugins={[hoverGuidePlugin]} />
-        ) : (
-          <p className="bb-empty">No cycle-series data available.</p>
-        )}
-      </div>
+
       <p className="bb-hint">Scroll to zoom, drag to zoom a range, drag horizontally to pan, and hover to inspect values at each date.</p>
       <p className="bb-hint">
         CRI is a normalized 0-1 multi-year regime estimate: lower values imply historically cheaper conditions, higher values imply historically hotter conditions.
@@ -1013,20 +1015,12 @@ export default function App() {
               <MetricCard label="Cycle Confidence" value={latestSnapshot.cycle_model?.confidence} tone="blue" />
               <MetricCard label="Confidence Score" value={latestSnapshot.confidence_score} tone="blue" />
             </div>
-            <div className="bb-note-panel">
-              <p className="bb-note-panel__title">New Multi-Year Cycle Baseline</p>
-              <p className="bb-note-panel__text">
-                Added a monthly cycle model from free data (valuation, speculation, attention, macro), projected daily as CRI in normalized 0-1 form for broad historical expensiveness vs cheapness context.
-              </p>
-            </div>
             <FocusPanel
               heatSeries={heatSeries}
               attentionSeries={attentionSeries}
               btcSeries={btcSeries}
               cycleSeries={cycleSeries}
               cycleConfidenceSeries={cycleConfidenceSeries}
-              latestCycleValue={latestSnapshot.cycle_model?.heat_score}
-              latestCycleConfidence={latestSnapshot.cycle_model?.confidence}
             />
           </section>
         ) : (
