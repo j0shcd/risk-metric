@@ -7,7 +7,13 @@ const FALLBACK_MODES = new Set([
   "apple_rss_top_free",
 ]);
 
-const UNAVAILABLE_MODES = new Set(["unavailable", "disabled", "unknown"]);
+const UNAVAILABLE_MODES = new Set([
+  "unavailable",
+  "disabled",
+  "unknown",
+  "future_upgrade",
+  "future_upgrade_local_cache",
+]);
 
 async function fetchArtifact(name) {
   const response = await fetch(`${ARTIFACT_ROOT}/${name}`);

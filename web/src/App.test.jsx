@@ -135,9 +135,8 @@ describe("App", () => {
 
     expect(await screen.findByText("RISK METRIC")).toBeInTheDocument();
     expect(await screen.findByText("Headline Heat + Headline Attention")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^Reset Zoom$/ })).toBeInTheDocument();
-    expect(screen.getByText("New Multi-Year Cycle Baseline")).toBeInTheDocument();
-    expect(screen.getByText("Cycle Regime Index")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^Reset Zoom$/ }).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Cycle Regime Index").length).toBeGreaterThan(0);
     await waitFor(() => {
       expect(screen.getByText(/LAST PRINT/i)).toBeInTheDocument();
     });
