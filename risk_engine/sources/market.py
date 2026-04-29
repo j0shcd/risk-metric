@@ -53,6 +53,8 @@ def _parse_cmc_global_market_cap(payload: dict) -> Optional[pd.Series]:
 
 
 def _fetch_cmc_total_market_cap(cfg: RuntimeConfig, start: pd.Timestamp, end: pd.Timestamp) -> Optional[pd.Series]:
+    if not cfg.refresh_api_sources:
+        return None
     if not cfg.enable_paid_sources:
         return None
     if not cfg.cmc_api_key:
@@ -77,6 +79,8 @@ def _fetch_cmc_total_market_cap(cfg: RuntimeConfig, start: pd.Timestamp, end: pd
 
 
 def _fetch_coingecko_total_market_cap(cfg: RuntimeConfig) -> Optional[pd.Series]:
+    if not cfg.refresh_api_sources:
+        return None
     if not cfg.enable_paid_sources:
         return None
     if not cfg.coingecko_api_key:
@@ -110,6 +114,8 @@ def _fetch_coingecko_total_market_cap(cfg: RuntimeConfig) -> Optional[pd.Series]
 
 
 def _fetch_coingecko_global_latest(cfg: RuntimeConfig) -> Optional[pd.Series]:
+    if not cfg.refresh_api_sources:
+        return None
     payload = safe_get_json(
         url="https://api.coingecko.com/api/v3/global",
         timeout_seconds=cfg.request_timeout_seconds,

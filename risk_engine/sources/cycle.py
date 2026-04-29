@@ -136,13 +136,14 @@ def load_cycle_market_context(
 
     fetched_price = pd.Series(dtype=float, name="btc_price_usd")
     fetched_volume = pd.Series(dtype=float, name="btc_volume_usd")
-    payload = safe_get_json(
-        url="https://api.coingecko.com/api/v3/coins/bitcoin/market_chart",
-        timeout_seconds=cfg.request_timeout_seconds,
-        params={"vs_currency": "usd", "days": "max"},
-    )
-    if payload is not None:
-        fetched_price, fetched_volume = _parse_coingecko_market_chart(payload)
+    if cfg.refresh_api_sources:
+        payload = safe_get_json(
+            url="https://api.coingecko.com/api/v3/coins/bitcoin/market_chart",
+            timeout_seconds=cfg.request_timeout_seconds,
+            params={"vs_currency": "usd", "days": "max"},
+        )
+        if payload is not None:
+            fetched_price, fetched_volume = _parse_coingecko_market_chart(payload)
 
     merged_price = _merge_series(local_price, fetched_price, "btc_price_usd")
     merged_volume = _merge_series(local_volume, fetched_volume, "btc_volume_usd")
@@ -216,13 +217,22 @@ def load_cycle_market_context(
 
 
 def _fetch_wikipedia_pageviews(cfg: RuntimeConfig, start: pd.Timestamp, end: pd.Timestamp) -> pd.Series:
+    if not cfg.refresh_api_sources:
+        return pd.Series(dtype=float, name="wikipedia_pageviews")
     start_token = start.strftime("%Y%m%d00")
     end_token = end.strftime("%Y%m%d00")
     url = (
         "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/"
         f"en.wikipedia/all-access/all-agents/Bitcoin/daily/{start_token}/{end_token}"
     )
-    payload = safe_get_json(url=url, timeout_seconds=cfg.request_timeout_seconds)
+    headers = {
+        "User-Agent": cfg.wikimedia_api_user_agent,
+        "Api-User-Agent": cfg.wikimedia_api_user_agent,
+    }
+    if cfg.wikimedia_api_token:
+        headers["Authorization"] = f"Bearer {cfg.wikimedia_api_token}"
+
+    payload = safe_get_json(url=url, timeout_seconds=cfg.request_timeout_seconds, headers=headers)
     if payload is None:
         return pd.Series(dtype=float, name="wikipedia_pageviews")
 
@@ -266,6 +276,8 @@ def _parse_reddit_agg(payload: dict) -> pd.Series:
 
 
 def _fetch_reddit_post_volume(cfg: RuntimeConfig, start: pd.Timestamp, end: pd.Timestamp) -> pd.Series:
+    if not cfg.refresh_api_sources:
+        return pd.Series(dtype=float, name="reddit_post_volume")
     if start > end:
         return pd.Series(dtype=float, name="reddit_post_volume")
 
@@ -299,6 +311,44 @@ def _fetch_reddit_post_volume(cfg: RuntimeConfig, start: pd.Timestamp, end: pd.T
 
 
 def _fetch_fred_series(cfg: RuntimeConfig, series_id: str, start: pd.Timestamp, end: pd.Timestamp) -> pd.Series:
+    if not cfg.refresh_api_sources:
+        return pd.Series(dtype=float, name=series_id)
+    if cfg.fred_api_key:
+        payload = safe_get_json(
+            url="https://api.stlouisfed.org/fred/series/observations",
+            timeout_seconds=cfg.request_timeout_seconds,
+            params={
+                "series_id": series_id,
+                "api_key": cfg.fred_api_key,
+                "file_type": "json",
+                "observation_start": start.strftime("%Y-%m-%d"),
+                "observation_end": end.strftime("%Y-%m-%d"),
+            },
+        )
+        if payload is not None:
+            observations = payload.get("observations", [])
+            rows = []
+            for obs in observations:
+                date_raw = obs.get("date")
+                value_raw = obs.get("value")
+                if date_raw is None or value_raw is None:
+                    continue
+                value_text = str(value_raw).strip()
+                if value_text in {"", "."}:
+                    continue
+                date = pd.to_datetime(date_raw, errors="coerce")
+                value = pd.to_numeric(value_text, errors="coerce")
+                if pd.isna(date) or pd.isna(value):
+                    continue
+                rows.append((date.tz_localize(None), float(value)))
+
+            if rows:
+                frame = pd.DataFrame(rows, columns=["DATE", series_id]).drop_duplicates(subset=["DATE"], keep="last")
+                frame = frame.sort_values("DATE")
+                series = pd.Series(frame[series_id].values, index=frame["DATE"], name=series_id)
+                series.attrs["source_mode"] = "fred_api_json"
+                return series
+
     text = safe_get_text(
         url="https://fred.stlouisfed.org/graph/fredgraph.csv",
         timeout_seconds=cfg.request_timeout_seconds,
@@ -325,7 +375,9 @@ def _fetch_fred_series(cfg: RuntimeConfig, series_id: str, start: pd.Timestamp, 
     frame = frame.drop_duplicates(subset=["DATE"], keep="last")
     if frame.empty:
         return pd.Series(dtype=float, name=series_id)
-    return pd.Series(frame[series_id].values, index=frame["DATE"], name=series_id)
+    series = pd.Series(frame[series_id].values, index=frame["DATE"], name=series_id)
+    series.attrs["source_mode"] = "fred_graph_csv"
+    return series
 
 
 def _load_macro_series(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> Tuple[pd.DataFrame, Dict[str, str]]:
@@ -353,7 +405,7 @@ def _load_macro_series(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> Tuple[pd.
             save_series_csv(path, merged, value_column=name)
         series_store[name] = merged
         if not fetched.empty:
-            mode_map[f"cycle::{name}"] = "fred_graph_csv"
+            mode_map[f"cycle::{name}"] = str(fetched.attrs.get("source_mode", "fred_graph_csv"))
         elif local is not None and not local.empty:
             mode_map[f"cycle::{name}"] = "local_cache"
         else:
@@ -367,10 +419,19 @@ def _load_macro_series(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> Tuple[pd.
     out["net_liquidity"] = out["fed_balance_sheet"] - out["reverse_repo_balance"]
     components_available = out[["fed_balance_sheet", "reverse_repo_balance"]].notna().all(axis=1)
     out.loc[~components_available, "net_liquidity"] = np.nan
-    if (mode_map.get("cycle::fed_balance_sheet") == "fred_graph_csv") or (
-        mode_map.get("cycle::reverse_repo_balance") == "fred_graph_csv"
+    fred_modes = {
+        "fred_graph_csv",
+        "fred_api_json",
+    }
+    if (mode_map.get("cycle::fed_balance_sheet") in fred_modes) or (
+        mode_map.get("cycle::reverse_repo_balance") in fred_modes
     ):
-        mode_map["cycle::net_liquidity"] = "derived_from_fred_graph_csv"
+        if (mode_map.get("cycle::fed_balance_sheet") == "fred_api_json") or (
+            mode_map.get("cycle::reverse_repo_balance") == "fred_api_json"
+        ):
+            mode_map["cycle::net_liquidity"] = "derived_from_fred_api_json"
+        else:
+            mode_map["cycle::net_liquidity"] = "derived_from_fred_graph_csv"
     elif (mode_map.get("cycle::fed_balance_sheet") == "local_cache") and (
         mode_map.get("cycle::reverse_repo_balance") == "local_cache"
     ):

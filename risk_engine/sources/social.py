@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any, Iterable, Optional, Tuple
 
@@ -11,6 +12,8 @@ from .common import load_optional_csv, safe_get_json, save_series_csv
 
 
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/channels"
+YOUTUBE_CHANNEL_ID_RE = re.compile(r"^UC[a-zA-Z0-9_-]{22}$")
+YOUTUBE_HANDLE_RE = re.compile(r"^@?[A-Za-z0-9._-]{3,30}$")
 
 
 def _merge_history(existing: Optional[pd.Series], snapshot: pd.Series) -> pd.Series:
@@ -52,10 +55,176 @@ def _update_history_with_snapshot(
     return merged
 
 
-def _fetch_youtube_interest(cfg: RuntimeConfig) -> pd.Series:
+def _youtube_id_cache_path(cfg: RuntimeConfig) -> Path:
+    return cfg.cache_dir / "youtube_channel_ids.csv"
+
+
+def _normalize_youtube_identifier(raw: str) -> str:
+    value = str(raw).strip()
+    if not value:
+        return ""
+    value = value.split("?", 1)[0].split("#", 1)[0].strip().rstrip("/")
+    lowered = value.lower().strip("/")
+    if "youtube.com/" in lowered:
+        path_match = re.search(r"youtube\.com/([^?\s#]+)", value, flags=re.IGNORECASE)
+        if path_match:
+            path = path_match.group(1).strip("/")
+            if path.startswith("@"):
+                return f"@{path[1:].split('/', 1)[0].strip()}"
+            if path.lower().startswith("channel/"):
+                return path.split("/", 1)[1].strip()
+            if path.lower().startswith("user/"):
+                return f"user:{path.split('/', 1)[1].strip()}"
+            if path.lower().startswith("c/"):
+                return f"@{path.split('/', 1)[1].strip()}"
+    if lowered.startswith("channel/"):
+        return value.split("/", 1)[1].strip()
+    if lowered.startswith("user/"):
+        return f"user:{value.split('/', 1)[1].strip()}"
+    if lowered.startswith("c/"):
+        return f"@{value.split('/', 1)[1].strip()}"
+    if lowered.startswith("@"):
+        return f"@{value[1:].strip()}"
+    return value
+
+
+def _load_youtube_id_cache(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    frame = pd.read_csv(path)
+    required = {"identifier", "channel_id"}
+    if not required.issubset(set(frame.columns)):
+        return {}
+    subset = frame.dropna(subset=["identifier", "channel_id"]).copy()
+    if subset.empty:
+        return {}
+    subset["identifier"] = subset["identifier"].astype(str).str.strip()
+    subset["channel_id"] = subset["channel_id"].astype(str).str.strip()
+    subset = subset[(subset["identifier"] != "") & (subset["channel_id"] != "")]
+    return dict(zip(subset["identifier"], subset["channel_id"]))
+
+
+def _save_youtube_id_cache(path: Path, mapping: dict[str, str]) -> None:
+    if not mapping:
+        return
+    export = (
+        pd.DataFrame(
+            [{"identifier": key, "channel_id": value} for key, value in sorted(mapping.items(), key=lambda row: row[0])]
+        )
+        .drop_duplicates(subset=["identifier"], keep="last")
+        .sort_values("identifier")
+        .reset_index(drop=True)
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    export.to_csv(path, index=False)
+
+
+def _resolve_youtube_channel_id(cfg: RuntimeConfig, identifier: str) -> Optional[str]:
+    normalized = _normalize_youtube_identifier(identifier)
+    if not normalized:
+        return None
+    if YOUTUBE_CHANNEL_ID_RE.fullmatch(normalized):
+        return normalized
+
+    params: dict[str, str] = {
+        "part": "id",
+        "maxResults": "1",
+        "key": cfg.youtube_api_key or "",
+    }
+    if normalized.lower().startswith("user:"):
+        username = normalized.split(":", 1)[1].strip()
+        if not username:
+            return None
+        params["forUsername"] = username
+    else:
+        handle = normalized.lstrip("@")
+        if not YOUTUBE_HANDLE_RE.fullmatch(handle):
+            return None
+        params["forHandle"] = f"@{handle}"
+
+    payload = safe_get_json(
+        url=YOUTUBE_API_URL,
+        timeout_seconds=cfg.request_timeout_seconds,
+        params=params,
+    )
+    if payload is None:
+        return None
+    items = payload.get("items", [])
+    if not items:
+        return None
+    channel_id = str(items[0].get("id", "")).strip()
+    if not YOUTUBE_CHANNEL_ID_RE.fullmatch(channel_id):
+        return None
+    return channel_id
+
+
+def _resolve_youtube_channel_ids(cfg: RuntimeConfig) -> list[str]:
+    normalized_inputs = []
+    for raw in cfg.youtube_channel_ids:
+        normalized = _normalize_youtube_identifier(raw)
+        if normalized and normalized not in normalized_inputs:
+            normalized_inputs.append(normalized)
+
+    if not normalized_inputs:
+        return []
+
+    cache_path = _youtube_id_cache_path(cfg)
+    cached_map = _load_youtube_id_cache(cache_path)
+    resolved_ids: list[str] = []
+    updated_cache = dict(cached_map)
+    unresolved: list[str] = []
+
+    for identifier in normalized_inputs:
+        if YOUTUBE_CHANNEL_ID_RE.fullmatch(identifier):
+            resolved_ids.append(identifier)
+            continue
+        cached_id = cached_map.get(identifier)
+        if cached_id and YOUTUBE_CHANNEL_ID_RE.fullmatch(cached_id):
+            resolved_ids.append(cached_id)
+        else:
+            unresolved.append(identifier)
+
+    resolve_budget = max(0, int(cfg.youtube_max_handle_resolutions_per_run))
+    for identifier in unresolved[:resolve_budget]:
+        resolved = _resolve_youtube_channel_id(cfg, identifier)
+        if not resolved:
+            continue
+        resolved_ids.append(resolved)
+        updated_cache[identifier] = resolved
+
+    if updated_cache != cached_map:
+        _save_youtube_id_cache(cache_path, updated_cache)
+
+    deduped: list[str] = []
+    for channel_id in resolved_ids:
+        if channel_id not in deduped:
+            deduped.append(channel_id)
+    return deduped
+
+
+def _should_fetch_youtube_snapshot(existing: Optional[pd.Series], interval_hours: int) -> bool:
+    if existing is None or existing.empty:
+        return True
+    latest = pd.to_datetime(existing.index.max(), utc=True, errors="coerce")
+    if pd.isna(latest):
+        return True
+    now = pd.Timestamp.utcnow()
+    elapsed_hours = float((now - latest).total_seconds() / 3600.0)
+    return elapsed_hours >= float(max(1, interval_hours))
+
+
+def _fetch_youtube_interest(cfg: RuntimeConfig, existing: Optional[pd.Series]) -> pd.Series:
+    if not cfg.refresh_api_sources:
+        return pd.Series(dtype=float)
     if not cfg.enable_optional_social_sources:
         return pd.Series(dtype=float)
     if not cfg.youtube_api_key or not cfg.youtube_channel_ids:
+        return pd.Series(dtype=float)
+    if not _should_fetch_youtube_snapshot(existing, cfg.youtube_min_fetch_interval_hours):
+        return pd.Series(dtype=float)
+
+    channel_ids = _resolve_youtube_channel_ids(cfg)
+    if not channel_ids:
         return pd.Series(dtype=float)
 
     payload = safe_get_json(
@@ -63,7 +232,7 @@ def _fetch_youtube_interest(cfg: RuntimeConfig) -> pd.Series:
         timeout_seconds=cfg.request_timeout_seconds,
         params={
             "part": "statistics",
-            "id": ",".join(cfg.youtube_channel_ids),
+            "id": ",".join(channel_ids),
             "key": cfg.youtube_api_key,
             "maxResults": 50,
         },
@@ -91,7 +260,7 @@ def _fetch_youtube_interest(cfg: RuntimeConfig) -> pd.Series:
 def _load_youtube_interest(cfg: RuntimeConfig) -> Tuple[pd.Series, str]:
     path = _history_path(cfg, "youtube_interest")
     existing = load_optional_csv(path, value_column="youtube_interest")
-    snapshot = _fetch_youtube_interest(cfg)
+    snapshot = _fetch_youtube_interest(cfg, existing=existing)
     merged = _update_history_with_snapshot(path=path, value_column="youtube_interest", snapshot=snapshot)
     if not snapshot.empty:
         return merged, "youtube_api"
@@ -174,6 +343,10 @@ def _parse_google_trends_series(payload: Any) -> pd.Series:
 
 
 def _fetch_google_trends_interest(cfg: RuntimeConfig) -> pd.Series:
+    if not cfg.refresh_api_sources:
+        return pd.Series(dtype=float)
+    if not cfg.enable_google_trends_source:
+        return pd.Series(dtype=float)
     if not cfg.enable_optional_social_sources:
         return pd.Series(dtype=float)
     if not cfg.google_trends_api_key or not cfg.google_trends_api_url:
@@ -198,6 +371,11 @@ def _fetch_google_trends_interest(cfg: RuntimeConfig) -> pd.Series:
 def _load_google_trends_interest(cfg: RuntimeConfig) -> Tuple[pd.Series, str]:
     path = _history_path(cfg, "google_trends_interest")
     existing = load_optional_csv(path, value_column="google_trends_interest")
+    if not cfg.enable_google_trends_source:
+        if existing is not None and not existing.empty:
+            return existing, "future_upgrade_local_cache"
+        return pd.Series(dtype=float), "future_upgrade"
+
     snapshot = _fetch_google_trends_interest(cfg)
     merged = _update_history_with_snapshot(
         path=path,
@@ -212,6 +390,8 @@ def _load_google_trends_interest(cfg: RuntimeConfig) -> Tuple[pd.Series, str]:
 
 
 def _fetch_coinbase_rank_snapshot(cfg: RuntimeConfig) -> pd.Series:
+    if not cfg.refresh_api_sources:
+        return pd.Series(dtype=float)
     if not cfg.enable_coinbase_app_rank:
         return pd.Series(dtype=float)
 

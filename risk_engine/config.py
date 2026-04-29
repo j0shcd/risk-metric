@@ -34,9 +34,13 @@ class RuntimeConfig:
     data_profile: str = "free_stable"
     enable_paid_sources: bool = False
     enable_optional_social_sources: bool = False
+    refresh_api_sources: bool = True
+    enable_google_trends_source: bool = False
 
     glassnode_api_key: Optional[str] = None
     youtube_api_key: Optional[str] = None
+    fred_api_key: Optional[str] = None
+    wikimedia_api_token: Optional[str] = None
     google_trends_api_key: Optional[str] = None
     google_trends_api_url: Optional[str] = None
     cmc_api_key: Optional[str] = None
@@ -60,9 +64,12 @@ class RuntimeConfig:
     fred_rrp_csv: Optional[Path] = None
     apple_app_store_country: str = "us"
     coinbase_ios_app_id: str = "886427730"
+    wikimedia_api_user_agent: str = "risk-metric/0.1 (github.com/risk-metric)"
     reddit_subreddits: List[str] = field(default_factory=lambda: ["Bitcoin", "CryptoCurrency"])
 
     enable_coinbase_app_rank: bool = True
+    youtube_min_fetch_interval_hours: int = 24
+    youtube_max_handle_resolutions_per_run: int = 2
 
     request_timeout_seconds: int = 20
 
@@ -179,8 +186,18 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
             env.get("ENABLE_OPTIONAL_SOCIAL_SOURCES"),
             file_cfg.get("enable_optional_social_sources", False),
         ),
+        refresh_api_sources=_parse_bool(
+            env.get("REFRESH_API_SOURCES"),
+            file_cfg.get("refresh_api_sources", True),
+        ),
+        enable_google_trends_source=_parse_bool(
+            env.get("ENABLE_GOOGLE_TRENDS_SOURCE"),
+            file_cfg.get("enable_google_trends_source", False),
+        ),
         glassnode_api_key=env.get("GLASSNODE_API_KEY", file_cfg.get("glassnode_api_key")),
         youtube_api_key=env.get("YOUTUBE_API_KEY", file_cfg.get("youtube_api_key")),
+        fred_api_key=env.get("FRED_API_KEY", env.get("FRED_API", file_cfg.get("fred_api_key"))),
+        wikimedia_api_token=env.get("WIKIMEDIA_API_TOKEN", env.get("WIKIMEDIA_ACCESS_TOKEN", file_cfg.get("wikimedia_api_token"))),
         google_trends_api_key=env.get("GOOGLE_TRENDS_API_KEY", file_cfg.get("google_trends_api_key")),
         google_trends_api_url=env.get("GOOGLE_TRENDS_API_URL", file_cfg.get("google_trends_api_url")),
         cmc_api_key=env.get("CMC_API_KEY", file_cfg.get("cmc_api_key")),
@@ -223,10 +240,25 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
         ),
         apple_app_store_country=str(env.get("APPLE_APP_STORE_COUNTRY", file_cfg.get("apple_app_store_country", "us"))).lower(),
         coinbase_ios_app_id=str(env.get("COINBASE_IOS_APP_ID", file_cfg.get("coinbase_ios_app_id", "886427730"))),
+        wikimedia_api_user_agent=str(
+            env.get(
+                "WIKIMEDIA_API_USER_AGENT",
+                file_cfg.get("wikimedia_api_user_agent", "risk-metric/0.1 (github.com/risk-metric)"),
+            )
+        ),
         reddit_subreddits=_split_csv(env.get("REDDIT_SUBREDDITS", file_cfg.get("reddit_subreddits", "Bitcoin,CryptoCurrency"))),
         enable_coinbase_app_rank=_parse_bool(
             env.get("ENABLE_COINBASE_APP_RANK"),
             file_cfg.get("enable_coinbase_app_rank", True),
+        ),
+        youtube_min_fetch_interval_hours=int(
+            env.get("YOUTUBE_MIN_FETCH_INTERVAL_HOURS", file_cfg.get("youtube_min_fetch_interval_hours", 24))
+        ),
+        youtube_max_handle_resolutions_per_run=int(
+            env.get(
+                "YOUTUBE_MAX_HANDLE_RESOLUTIONS_PER_RUN",
+                file_cfg.get("youtube_max_handle_resolutions_per_run", 2),
+            )
         ),
         request_timeout_seconds=int(env.get("REQUEST_TIMEOUT_SECONDS", file_cfg.get("request_timeout_seconds", 20))),
         category_weights=category_weights,

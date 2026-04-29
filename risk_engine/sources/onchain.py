@@ -34,6 +34,8 @@ def _parse_glassnode_series(payload: dict) -> Optional[pd.Series]:
 
 
 def _fetch_glassnode_metric(cfg: RuntimeConfig, endpoint: str) -> Optional[pd.Series]:
+    if not cfg.refresh_api_sources:
+        return None
     if not cfg.enable_paid_sources:
         return None
     if not cfg.glassnode_api_key:
@@ -57,6 +59,8 @@ def _fetch_glassnode_metric(cfg: RuntimeConfig, endpoint: str) -> Optional[pd.Se
 
 
 def _fetch_coinmetrics_mvrv_fallback(cfg: RuntimeConfig) -> Optional[pd.Series]:
+    if not cfg.refresh_api_sources:
+        return None
     # Community endpoint does not require a key for many metrics.
     payload = safe_get_json(
         url="https://community-api.coinmetrics.io/v4/timeseries/asset-metrics",

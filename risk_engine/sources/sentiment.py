@@ -7,6 +7,8 @@ from .common import load_optional_csv, safe_get_json, save_series_csv
 
 
 def _fetch_alternative_fear_greed(cfg: RuntimeConfig) -> pd.Series:
+    if not cfg.refresh_api_sources:
+        return pd.Series(dtype=float)
     payload = safe_get_json(
         url="https://api.alternative.me/fng/",
         timeout_seconds=cfg.request_timeout_seconds,

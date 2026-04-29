@@ -95,7 +95,6 @@ def _metric_specs_extended(cfg: RuntimeConfig, include_total_market_fallback_pro
             MetricSpec("supply_in_profit", "onchain", "both", base_reliability=0.80, max_carry_days=5),
             MetricSpec("supply_in_loss", "onchain", "both", base_reliability=0.80, max_carry_days=5, direction=-1.0),
             MetricSpec("youtube_interest", "social", "both", base_reliability=0.60, max_carry_days=14),
-            MetricSpec("google_trends_interest", "social", "both", base_reliability=0.50, max_carry_days=21),
             MetricSpec(
                 "coinbase_app_rank_proxy",
                 "social",
@@ -106,6 +105,8 @@ def _metric_specs_extended(cfg: RuntimeConfig, include_total_market_fallback_pro
             ),
         ]
     )
+    if cfg.enable_google_trends_source:
+        specs.append(MetricSpec("google_trends_interest", "social", "both", base_reliability=0.50, max_carry_days=21))
 
     if not cfg.enable_coinbase_app_rank:
         specs = [spec for spec in specs if spec.name != "coinbase_app_rank_proxy"]
@@ -140,9 +141,12 @@ def _source_mode_multiplier(mode: str) -> float:
         "alternative_me_api",
         "coingecko_free_api",
         "fred_graph_csv",
+        "fred_api_json",
         "wikimedia_api",
         "pushshift_api",
     }:
+        return 1.0
+    if mode in {"derived_from_fred_api_json", "derived_from_fred_graph_csv"}:
         return 1.0
     if mode == "coinmetrics_community":
         return 0.90
@@ -157,6 +161,8 @@ def _source_mode_multiplier(mode: str) -> float:
     if mode in {"unknown"}:
         return 0.80
     if mode in {"unavailable", "disabled"}:
+        return 0.0
+    if mode in {"future_upgrade", "future_upgrade_local_cache"}:
         return 0.0
     return 0.80
 

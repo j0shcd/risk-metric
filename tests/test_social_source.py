@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -22,10 +23,11 @@ class SocialSourceTests(unittest.TestCase):
             output_dir=root / "output",
             cache_dir=root / "data",
             youtube_api_key=youtube_key,
-            youtube_channel_ids=["ch1"] if youtube_key else [],
+            youtube_channel_ids=["UC1234567890123456789012"] if youtube_key else [],
             google_trends_api_key=trends_key,
             google_trends_api_url="https://example.com/google-trends" if trends_key else None,
             google_trends_terms=["bitcoin"] if trends_key else [],
+            enable_google_trends_source=bool(trends_key),
             youtube_fallback_csv=root / "data" / "youtube_interest.csv",
             google_trends_csv=root / "data" / "google_trends_interest.csv",
             coinbase_rank_csv=root / "data" / "coinbase_app_rank.csv",
@@ -33,6 +35,8 @@ class SocialSourceTests(unittest.TestCase):
             coinbase_ios_app_id="886427730",
             enable_optional_social_sources=True,
             enable_coinbase_app_rank=True,
+            youtube_min_fetch_interval_hours=24,
+            youtube_max_handle_resolutions_per_run=2,
         )
 
     @patch("risk_engine.sources.social.safe_get_json")
@@ -72,6 +76,87 @@ class SocialSourceTests(unittest.TestCase):
 
             stored = pd.read_csv(root / "data" / "youtube_interest.csv")
             self.assertGreaterEqual(len(stored), 2)
+
+    @patch("risk_engine.sources.social.safe_get_json")
+    def test_youtube_handle_resolution_uses_forhandle(self, mocked_get) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            (root / "data").mkdir(parents=True, exist_ok=True)
+
+            def side_effect(url, timeout_seconds, headers=None, params=None):
+                if "googleapis" not in url:
+                    return None
+                if params and "forHandle" in params:
+                    return {"items": [{"id": "UCabcdefghijABCDEFGHIJ12"}]}
+                if params and "id" in params and params.get("part") == "statistics":
+                    return {
+                        "items": [
+                            {
+                                "statistics": {
+                                    "subscriberCount": "1000",
+                                    "viewCount": "50000",
+                                }
+                            }
+                        ]
+                    }
+                return None
+
+            mocked_get.side_effect = side_effect
+
+            cfg = self._cfg(root, youtube_key="abc")
+            cfg = replace(cfg, youtube_channel_ids=["@intothecryptoverse"], enable_coinbase_app_rank=False)
+            index = pd.date_range("2026-04-01", periods=10, freq="D")
+            social = load_social_metrics(cfg, index=index)
+
+            self.assertEqual(social.attrs.get("source_modes", {}).get("youtube_interest"), "youtube_api")
+            stored = pd.read_csv(root / "data" / "youtube_interest.csv")
+            self.assertGreaterEqual(len(stored), 1)
+
+            calls = mocked_get.call_args_list
+            self.assertTrue(any("forHandle" in (call.kwargs.get("params") or {}) for call in calls))
+
+    @patch("risk_engine.sources.social.safe_get_json")
+    def test_youtube_skips_fetch_with_fresh_snapshot(self, mocked_get) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            (root / "data").mkdir(parents=True, exist_ok=True)
+
+            today = pd.Timestamp.utcnow().normalize().strftime("%Y-%m-%d")
+            pd.DataFrame(
+                {
+                    "Date": [today],
+                    "youtube_interest": [12.0],
+                }
+            ).to_csv(root / "data" / "youtube_interest.csv", index=False)
+
+            cfg = self._cfg(root, youtube_key="abc")
+            cfg = replace(cfg, enable_coinbase_app_rank=False)
+            index = pd.date_range("2026-04-20", periods=15, freq="D")
+            social = load_social_metrics(cfg, index=index)
+
+            self.assertEqual(float(social["youtube_interest"].dropna().iloc[-1]), 12.0)
+            mocked_get.assert_not_called()
+
+    @patch("risk_engine.sources.social.safe_get_json")
+    def test_social_cache_only_mode_skips_api_calls(self, mocked_get) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            (root / "data").mkdir(parents=True, exist_ok=True)
+
+            pd.DataFrame(
+                {
+                    "Date": ["2026-04-20"],
+                    "youtube_interest": [10.0],
+                }
+            ).to_csv(root / "data" / "youtube_interest.csv", index=False)
+
+            cfg = self._cfg(root, youtube_key="abc")
+            cfg = replace(cfg, refresh_api_sources=False, enable_coinbase_app_rank=False)
+            index = pd.date_range("2026-04-20", periods=3, freq="D")
+            social = load_social_metrics(cfg, index=index)
+
+            self.assertEqual(float(social.loc[pd.Timestamp("2026-04-20"), "youtube_interest"]), 10.0)
+            mocked_get.assert_not_called()
 
     @patch("risk_engine.sources.social.safe_get_json")
     def test_google_trends_fetch_persists_history(self, mocked_get) -> None:
