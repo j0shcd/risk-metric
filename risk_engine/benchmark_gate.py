@@ -26,10 +26,10 @@ def _load_baseline(path: Path) -> Dict[str, object]:
         return json.load(handle)
 
 
-def _extract_recent_top_signal(frame: pd.DataFrame) -> Dict[str, float]:
+def _extract_recent_signal(frame: pd.DataFrame, signal_name: str) -> Dict[str, float]:
     if frame.empty:
         return {}
-    sel = frame[(frame["window"].astype(str) == "recent") & (frame["signal"].astype(str) == "top_reversal_risk")]
+    sel = frame[(frame["window"].astype(str) == "recent") & (frame["signal"].astype(str) == signal_name)]
     if sel.empty:
         return {}
     row = sel.iloc[0]
@@ -40,15 +40,17 @@ def _extract_recent_top_signal(frame: pd.DataFrame) -> Dict[str, float]:
     return out
 
 
-def _extract_summary_top(frame: pd.DataFrame) -> Dict[str, float]:
+def _extract_financial_strategy(frame: pd.DataFrame, strategy: str) -> Dict[str, float]:
     if frame.empty:
         return {}
-    sel = frame[(frame["kpi"].astype(str) == "lead_recall_top") & (frame["signal"].astype(str) == "top_reversal_risk")]
+    if "strategy" not in frame.columns:
+        return {}
+    sel = frame[frame["strategy"].astype(str) == strategy]
     if sel.empty:
         return {}
     row = sel.iloc[0]
     out: Dict[str, float] = {}
-    for key in ["expanding", "recent", "delta_recent_minus_expanding"]:
+    for key in ["cagr", "calmar", "max_drawdown", "total_return"]:
         value = row.get(key)
         out[key] = float(value) if pd.notna(value) else float("nan")
     return out
@@ -69,99 +71,144 @@ def evaluate_benchmark_gate(
     sota = _load_baseline(sota_path)
     foundation = _load_baseline(foundation_path)
     sota_by_signal = pd.DataFrame(sota.get("by_signal", []))
-    sota_summary = pd.DataFrame(sota.get("summary", []))
     foundation_by_signal = pd.DataFrame(foundation.get("by_signal", []))
-    foundation_summary = pd.DataFrame(foundation.get("summary", []))
+    sota_financial = pd.DataFrame(sota.get("financial_summary", []))
+    foundation_financial = pd.DataFrame(foundation.get("financial_summary", []))
 
     result = run_pipeline(cfg)
     current_by_signal = result.benchmark_by_signal.copy()
-    current_summary = result.benchmark_summary.copy()
-
-    cur_signal = _extract_recent_top_signal(current_by_signal)
-    sota_signal = _extract_recent_top_signal(sota_by_signal)
-    foundation_signal = _extract_recent_top_signal(foundation_by_signal)
-    cur_summary = _extract_summary_top(current_summary)
-    sota_top_summary = _extract_summary_top(sota_summary)
-    foundation_top_summary = _extract_summary_top(foundation_summary)
+    current_financial = result.financial_benchmark_summary.copy()
 
     lines: List[str] = []
-    lines.append("Benchmark gate: recent `top_reversal_risk` vs SOTA and foundation baselines")
+    lines.append("Benchmark gate: long-cycle top/bottom labels + dynamic DCA financial KPIs")
 
-    sota_deltas: Dict[str, float] = {}
-    foundation_deltas: Dict[str, float] = {}
-    for metric in ["auc", "pr_auc", "lead_recall_at_alert_rate", "false_alarm_rate"]:
-        cur = cur_signal.get(metric, float("nan"))
-        sota_base = sota_signal.get(metric, float("nan"))
-        foundation_base = foundation_signal.get(metric, float("nan"))
+    failures: List[str] = []
+    signal_specs = [
+        (
+            "top_reversal_risk",
+            "top",
+            float(cfg.benchmark_delta_warn_top_recall),
+            float(cfg.benchmark_delta_warn_top_pr_auc),
+            float(cfg.benchmark_delta_warn_top_false_alarm),
+            float(cfg.benchmark_foundation_min_top_recall_delta),
+            float(cfg.benchmark_foundation_min_top_pr_auc_delta),
+            float(cfg.benchmark_foundation_max_top_false_alarm_delta),
+        ),
+        (
+            "bottom_reversal_risk",
+            "bottom",
+            float(cfg.benchmark_delta_warn_bottom_recall),
+            float(cfg.benchmark_delta_warn_bottom_pr_auc),
+            float(cfg.benchmark_delta_warn_bottom_false_alarm),
+            float(cfg.benchmark_foundation_min_bottom_recall_delta),
+            float(cfg.benchmark_foundation_min_bottom_pr_auc_delta),
+            float(cfg.benchmark_foundation_max_bottom_false_alarm_delta),
+        ),
+    ]
+    for signal_name, label, warn_recall, warn_pr, warn_far, min_foundation_recall, min_foundation_pr, max_foundation_far in signal_specs:
+        cur_signal = _extract_recent_signal(current_by_signal, signal_name)
+        sota_signal = _extract_recent_signal(sota_by_signal, signal_name)
+        foundation_signal = _extract_recent_signal(foundation_by_signal, signal_name)
+
+        for metric in ["auc", "pr_auc", "lead_recall_at_alert_rate", "false_alarm_rate"]:
+            cur = cur_signal.get(metric, float("nan"))
+            sota_base = sota_signal.get(metric, float("nan"))
+            foundation_base = foundation_signal.get(metric, float("nan"))
+            d_sota = _delta(cur, sota_base)
+            d_foundation = _delta(cur, foundation_base)
+            lines.append(
+                f" - {signal_name}.{metric}: current={cur:.6f} sota={sota_base:.6f} delta_vs_sota={d_sota:.6f} "
+                f"foundation={foundation_base:.6f} delta_vs_foundation={d_foundation:.6f}"
+            )
+
+        recall_delta_sota = _delta(
+            cur_signal.get("lead_recall_at_alert_rate", float("nan")),
+            sota_signal.get("lead_recall_at_alert_rate", float("nan")),
+        )
+        pr_delta_sota = _delta(cur_signal.get("pr_auc", float("nan")), sota_signal.get("pr_auc", float("nan")))
+        far_delta_sota = _delta(
+            cur_signal.get("false_alarm_rate", float("nan")),
+            sota_signal.get("false_alarm_rate", float("nan")),
+        )
+        if np.isfinite(recall_delta_sota) and recall_delta_sota < warn_recall:
+            failures.append(f"[vs SOTA] {label} recall delta {recall_delta_sota:.6f} is below threshold {warn_recall:.6f}")
+        if np.isfinite(pr_delta_sota) and pr_delta_sota < warn_pr:
+            failures.append(f"[vs SOTA] {label} PR-AUC delta {pr_delta_sota:.6f} is below threshold {warn_pr:.6f}")
+        if np.isfinite(far_delta_sota) and far_delta_sota > warn_far:
+            failures.append(f"[vs SOTA] {label} false-alarm delta {far_delta_sota:.6f} is above threshold {warn_far:.6f}")
+
+        recall_delta_foundation = _delta(
+            cur_signal.get("lead_recall_at_alert_rate", float("nan")),
+            foundation_signal.get("lead_recall_at_alert_rate", float("nan")),
+        )
+        pr_delta_foundation = _delta(
+            cur_signal.get("pr_auc", float("nan")),
+            foundation_signal.get("pr_auc", float("nan")),
+        )
+        far_delta_foundation = _delta(
+            cur_signal.get("false_alarm_rate", float("nan")),
+            foundation_signal.get("false_alarm_rate", float("nan")),
+        )
+        if np.isfinite(recall_delta_foundation) and recall_delta_foundation < min_foundation_recall:
+            failures.append(
+                f"[vs foundation] {label} recall delta {recall_delta_foundation:.6f} is below minimum {min_foundation_recall:.6f}"
+            )
+        if np.isfinite(pr_delta_foundation) and pr_delta_foundation < min_foundation_pr:
+            failures.append(
+                f"[vs foundation] {label} PR-AUC delta {pr_delta_foundation:.6f} is below minimum {min_foundation_pr:.6f}"
+            )
+        if np.isfinite(far_delta_foundation) and far_delta_foundation > max_foundation_far:
+            failures.append(
+                f"[vs foundation] {label} false-alarm delta {far_delta_foundation:.6f} is above maximum {max_foundation_far:.6f}"
+            )
+
+    cur_dynamic = _extract_financial_strategy(current_financial, "dynamic_dca")
+    sota_dynamic = _extract_financial_strategy(sota_financial, "dynamic_dca")
+    foundation_dynamic = _extract_financial_strategy(foundation_financial, "dynamic_dca")
+    for metric in ["cagr", "calmar", "max_drawdown", "total_return"]:
+        cur = cur_dynamic.get(metric, float("nan"))
+        sota_base = sota_dynamic.get(metric, float("nan"))
+        foundation_base = foundation_dynamic.get(metric, float("nan"))
         d_sota = _delta(cur, sota_base)
         d_foundation = _delta(cur, foundation_base)
-        sota_deltas[metric] = d_sota
-        foundation_deltas[metric] = d_foundation
         lines.append(
-            f" - {metric}: current={cur:.6f} sota={sota_base:.6f} delta_vs_sota={d_sota:.6f} "
+            f" - dynamic_dca.{metric}: current={cur:.6f} sota={sota_base:.6f} delta_vs_sota={d_sota:.6f} "
             f"foundation={foundation_base:.6f} delta_vs_foundation={d_foundation:.6f}"
         )
 
-    if cur_summary and sota_top_summary:
-        for metric in ["expanding", "recent", "delta_recent_minus_expanding"]:
-            cur = cur_summary.get(metric, float("nan"))
-            sota_base = sota_top_summary.get(metric, float("nan"))
-            d = _delta(cur, sota_base)
-            lines.append(f" - summary.{metric}: current={cur:.6f} sota={sota_base:.6f} delta_vs_sota={d:.6f}")
-    if cur_summary and foundation_top_summary:
-        for metric in ["expanding", "recent", "delta_recent_minus_expanding"]:
-            cur = cur_summary.get(metric, float("nan"))
-            foundation_base = foundation_top_summary.get(metric, float("nan"))
-            d = _delta(cur, foundation_base)
-            lines.append(
-                f" - summary.{metric}: current={cur:.6f} foundation={foundation_base:.6f} "
-                f"delta_vs_foundation={d:.6f}"
-            )
-
-    failures: List[str] = []
-    recall_delta_sota = sota_deltas.get("lead_recall_at_alert_rate", float("nan"))
-    pr_delta_sota = sota_deltas.get("pr_auc", float("nan"))
-    far_delta_sota = sota_deltas.get("false_alarm_rate", float("nan"))
-
-    if np.isfinite(recall_delta_sota) and recall_delta_sota < float(cfg.benchmark_delta_warn_top_recall):
+    cagr_delta_sota = _delta(cur_dynamic.get("cagr", float("nan")), sota_dynamic.get("cagr", float("nan")))
+    calmar_delta_sota = _delta(cur_dynamic.get("calmar", float("nan")), sota_dynamic.get("calmar", float("nan")))
+    max_dd_delta_sota = _delta(cur_dynamic.get("max_drawdown", float("nan")), sota_dynamic.get("max_drawdown", float("nan")))
+    if np.isfinite(cagr_delta_sota) and cagr_delta_sota < float(cfg.benchmark_delta_warn_dynamic_dca_cagr):
         failures.append(
-            f"[vs SOTA] top recall delta {recall_delta_sota:.6f} is below threshold "
-            f"{float(cfg.benchmark_delta_warn_top_recall):.6f}"
+            f"[vs SOTA] dynamic DCA CAGR delta {cagr_delta_sota:.6f} is below threshold {float(cfg.benchmark_delta_warn_dynamic_dca_cagr):.6f}"
         )
-    if np.isfinite(pr_delta_sota) and pr_delta_sota < float(cfg.benchmark_delta_warn_top_pr_auc):
+    if np.isfinite(calmar_delta_sota) and calmar_delta_sota < float(cfg.benchmark_delta_warn_dynamic_dca_calmar):
         failures.append(
-            f"[vs SOTA] top PR-AUC delta {pr_delta_sota:.6f} is below threshold "
-            f"{float(cfg.benchmark_delta_warn_top_pr_auc):.6f}"
+            f"[vs SOTA] dynamic DCA Calmar delta {calmar_delta_sota:.6f} is below threshold {float(cfg.benchmark_delta_warn_dynamic_dca_calmar):.6f}"
         )
-    if np.isfinite(far_delta_sota) and far_delta_sota > float(cfg.benchmark_delta_warn_top_false_alarm):
+    if np.isfinite(max_dd_delta_sota) and max_dd_delta_sota > float(cfg.benchmark_delta_warn_dynamic_dca_max_drawdown):
         failures.append(
-            f"[vs SOTA] top false-alarm delta {far_delta_sota:.6f} is above threshold "
-            f"{float(cfg.benchmark_delta_warn_top_false_alarm):.6f}"
+            f"[vs SOTA] dynamic DCA max-drawdown delta {max_dd_delta_sota:.6f} is above threshold {float(cfg.benchmark_delta_warn_dynamic_dca_max_drawdown):.6f}"
         )
 
-    recall_delta_foundation = foundation_deltas.get("lead_recall_at_alert_rate", float("nan"))
-    pr_delta_foundation = foundation_deltas.get("pr_auc", float("nan"))
-    far_delta_foundation = foundation_deltas.get("false_alarm_rate", float("nan"))
-    if (
-        np.isfinite(recall_delta_foundation)
-        and recall_delta_foundation < float(cfg.benchmark_foundation_min_top_recall_delta)
-    ):
+    cagr_delta_foundation = _delta(cur_dynamic.get("cagr", float("nan")), foundation_dynamic.get("cagr", float("nan")))
+    calmar_delta_foundation = _delta(cur_dynamic.get("calmar", float("nan")), foundation_dynamic.get("calmar", float("nan")))
+    max_dd_delta_foundation = _delta(
+        cur_dynamic.get("max_drawdown", float("nan")),
+        foundation_dynamic.get("max_drawdown", float("nan")),
+    )
+    if np.isfinite(cagr_delta_foundation) and cagr_delta_foundation < float(cfg.benchmark_foundation_min_dynamic_dca_cagr_delta):
         failures.append(
-            f"[vs foundation] top recall delta {recall_delta_foundation:.6f} is below minimum "
-            f"{float(cfg.benchmark_foundation_min_top_recall_delta):.6f}"
+            f"[vs foundation] dynamic DCA CAGR delta {cagr_delta_foundation:.6f} is below minimum {float(cfg.benchmark_foundation_min_dynamic_dca_cagr_delta):.6f}"
         )
-    if np.isfinite(pr_delta_foundation) and pr_delta_foundation < float(cfg.benchmark_foundation_min_top_pr_auc_delta):
+    if np.isfinite(calmar_delta_foundation) and calmar_delta_foundation < float(cfg.benchmark_foundation_min_dynamic_dca_calmar_delta):
         failures.append(
-            f"[vs foundation] top PR-AUC delta {pr_delta_foundation:.6f} is below minimum "
-            f"{float(cfg.benchmark_foundation_min_top_pr_auc_delta):.6f}"
+            f"[vs foundation] dynamic DCA Calmar delta {calmar_delta_foundation:.6f} is below minimum {float(cfg.benchmark_foundation_min_dynamic_dca_calmar_delta):.6f}"
         )
-    if (
-        np.isfinite(far_delta_foundation)
-        and far_delta_foundation > float(cfg.benchmark_foundation_max_top_false_alarm_delta)
-    ):
+    if np.isfinite(max_dd_delta_foundation) and max_dd_delta_foundation > float(cfg.benchmark_foundation_max_dynamic_dca_max_drawdown_delta):
         failures.append(
-            f"[vs foundation] top false-alarm delta {far_delta_foundation:.6f} is above maximum "
-            f"{float(cfg.benchmark_foundation_max_top_false_alarm_delta):.6f}"
+            f"[vs foundation] dynamic DCA max-drawdown delta {max_dd_delta_foundation:.6f} is above maximum {float(cfg.benchmark_foundation_max_dynamic_dca_max_drawdown_delta):.6f}"
         )
 
     if failures:
