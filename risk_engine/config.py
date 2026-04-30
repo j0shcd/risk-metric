@@ -80,21 +80,33 @@ class RuntimeConfig:
     cycle_buy_threshold: float = 0.75
     cycle_sell_threshold: float = 0.75
     cycle_min_history_months: int = 24
+    cycle_dynamic_dca_base_contribution: float = 1.0
+    cycle_dynamic_dca_max_buy_multiplier: float = 3.0
+    cycle_dynamic_dca_max_sell_fraction: float = 0.35
+    cycle_dynamic_dca_cash_buffer_ratio: float = 0.10
+    cycle_dynamic_dca_fee_rate: float = 0.001
+    cycle_dynamic_dca_slippage_rate: float = 0.001
+    cycle_dynamic_dca_buy_threshold: float = 0.75
+    cycle_dynamic_dca_sell_threshold: float = 0.75
+    cycle_financial_label_weight: float = 0.50
+    cycle_financial_kpi_weight: float = 0.50
+    cycle_calibration_horizons_months: List[int] = field(default_factory=lambda: [36, 48])
     benchmark_enabled: bool = True
-    benchmark_horizons_months: List[int] = field(default_factory=lambda: [3, 6, 12])
+    benchmark_horizons_months: List[int] = field(default_factory=lambda: [36, 48])
     benchmark_recent_window_months: int = 48
     benchmark_alert_rate: float = 0.20
     benchmark_label_families: List[str] = field(
         default_factory=lambda: ["threshold", "quantile", "local_extrema"]
     )
+    benchmark_quantile_levels: List[float] = field(default_factory=lambda: [0.15, 0.20, 0.25])
     benchmark_top_drawdown_thresholds: List[float] = field(
         default_factory=lambda: [0.30, 0.40, 0.50]
     )
     benchmark_bottom_rally_thresholds: List[float] = field(
         default_factory=lambda: [0.50, 0.80, 1.20]
     )
-    benchmark_local_extrema_lookbacks: List[int] = field(default_factory=lambda: [6, 12])
-    benchmark_local_extrema_forwards: List[int] = field(default_factory=lambda: [6, 12])
+    benchmark_local_extrema_lookbacks: List[int] = field(default_factory=lambda: [24, 36, 48])
+    benchmark_local_extrema_forwards: List[int] = field(default_factory=lambda: [36, 48])
     benchmark_event_weight_pivot: int = 5
     operational_top_alert_rate: float = 0.15
     operational_bottom_alert_rate: float = 0.25
@@ -104,9 +116,21 @@ class RuntimeConfig:
     benchmark_delta_warn_top_recall: float = -0.02
     benchmark_delta_warn_top_pr_auc: float = -0.01
     benchmark_delta_warn_top_false_alarm: float = 0.03
+    benchmark_delta_warn_bottom_recall: float = -0.02
+    benchmark_delta_warn_bottom_pr_auc: float = -0.01
+    benchmark_delta_warn_bottom_false_alarm: float = 0.03
+    benchmark_delta_warn_dynamic_dca_cagr: float = -0.02
+    benchmark_delta_warn_dynamic_dca_calmar: float = -0.10
+    benchmark_delta_warn_dynamic_dca_max_drawdown: float = 0.05
     benchmark_foundation_min_top_recall_delta: float = 0.0
     benchmark_foundation_min_top_pr_auc_delta: float = 0.0
     benchmark_foundation_max_top_false_alarm_delta: float = 0.05
+    benchmark_foundation_min_bottom_recall_delta: float = 0.0
+    benchmark_foundation_min_bottom_pr_auc_delta: float = 0.0
+    benchmark_foundation_max_bottom_false_alarm_delta: float = 0.05
+    benchmark_foundation_min_dynamic_dca_cagr_delta: float = 0.0
+    benchmark_foundation_min_dynamic_dca_calmar_delta: float = 0.0
+    benchmark_foundation_max_dynamic_dca_max_drawdown_delta: float = 0.05
 
 
 def _parse_bool(value: Optional[str], default: bool) -> bool:
@@ -325,13 +349,80 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
         cycle_min_history_months=int(
             env.get("CYCLE_MIN_HISTORY_MONTHS", file_cfg.get("cycle_min_history_months", 24))
         ),
+        cycle_dynamic_dca_base_contribution=float(
+            env.get(
+                "CYCLE_DYNAMIC_DCA_BASE_CONTRIBUTION",
+                file_cfg.get("cycle_dynamic_dca_base_contribution", 1.0),
+            )
+        ),
+        cycle_dynamic_dca_max_buy_multiplier=float(
+            env.get(
+                "CYCLE_DYNAMIC_DCA_MAX_BUY_MULTIPLIER",
+                file_cfg.get("cycle_dynamic_dca_max_buy_multiplier", 3.0),
+            )
+        ),
+        cycle_dynamic_dca_max_sell_fraction=float(
+            env.get(
+                "CYCLE_DYNAMIC_DCA_MAX_SELL_FRACTION",
+                file_cfg.get("cycle_dynamic_dca_max_sell_fraction", 0.35),
+            )
+        ),
+        cycle_dynamic_dca_cash_buffer_ratio=float(
+            env.get(
+                "CYCLE_DYNAMIC_DCA_CASH_BUFFER_RATIO",
+                file_cfg.get("cycle_dynamic_dca_cash_buffer_ratio", 0.10),
+            )
+        ),
+        cycle_dynamic_dca_fee_rate=float(
+            env.get(
+                "CYCLE_DYNAMIC_DCA_FEE_RATE",
+                file_cfg.get("cycle_dynamic_dca_fee_rate", 0.001),
+            )
+        ),
+        cycle_dynamic_dca_slippage_rate=float(
+            env.get(
+                "CYCLE_DYNAMIC_DCA_SLIPPAGE_RATE",
+                file_cfg.get("cycle_dynamic_dca_slippage_rate", 0.001),
+            )
+        ),
+        cycle_dynamic_dca_buy_threshold=float(
+            env.get(
+                "CYCLE_DYNAMIC_DCA_BUY_THRESHOLD",
+                file_cfg.get("cycle_dynamic_dca_buy_threshold", file_cfg.get("cycle_buy_threshold", 0.75)),
+            )
+        ),
+        cycle_dynamic_dca_sell_threshold=float(
+            env.get(
+                "CYCLE_DYNAMIC_DCA_SELL_THRESHOLD",
+                file_cfg.get("cycle_dynamic_dca_sell_threshold", file_cfg.get("cycle_sell_threshold", 0.75)),
+            )
+        ),
+        cycle_financial_label_weight=float(
+            env.get(
+                "CYCLE_FINANCIAL_LABEL_WEIGHT",
+                file_cfg.get("cycle_financial_label_weight", 0.50),
+            )
+        ),
+        cycle_financial_kpi_weight=float(
+            env.get(
+                "CYCLE_FINANCIAL_KPI_WEIGHT",
+                file_cfg.get("cycle_financial_kpi_weight", 0.50),
+            )
+        ),
+        cycle_calibration_horizons_months=_parse_int_list(
+            env.get(
+                "CYCLE_CALIBRATION_HORIZONS_MONTHS",
+                file_cfg.get("cycle_calibration_horizons_months"),
+            ),
+            [36, 48],
+        ),
         benchmark_enabled=_parse_bool(
             env.get("BENCHMARK_ENABLED"),
             file_cfg.get("benchmark_enabled", True),
         ),
         benchmark_horizons_months=_parse_int_list(
             env.get("BENCHMARK_HORIZONS_MONTHS", file_cfg.get("benchmark_horizons_months")),
-            [3, 6, 12],
+            [36, 48],
         ),
         benchmark_recent_window_months=int(
             env.get(
@@ -347,6 +438,13 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
                 "BENCHMARK_LABEL_FAMILIES",
                 file_cfg.get("benchmark_label_families", "threshold,quantile,local_extrema"),
             )
+        ),
+        benchmark_quantile_levels=_parse_float_list(
+            env.get(
+                "BENCHMARK_QUANTILE_LEVELS",
+                file_cfg.get("benchmark_quantile_levels"),
+            ),
+            [0.15, 0.20, 0.25],
         ),
         benchmark_top_drawdown_thresholds=_parse_float_list(
             env.get(
@@ -367,14 +465,14 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
                 "BENCHMARK_LOCAL_EXTREMA_LOOKBACKS",
                 file_cfg.get("benchmark_local_extrema_lookbacks"),
             ),
-            [6, 12],
+            [24, 36, 48],
         ),
         benchmark_local_extrema_forwards=_parse_int_list(
             env.get(
                 "BENCHMARK_LOCAL_EXTREMA_FORWARDS",
                 file_cfg.get("benchmark_local_extrema_forwards"),
             ),
-            [6, 12],
+            [36, 48],
         ),
         benchmark_event_weight_pivot=int(
             env.get("BENCHMARK_EVENT_WEIGHT_PIVOT", file_cfg.get("benchmark_event_weight_pivot", 5))
@@ -421,6 +519,42 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
                 file_cfg.get("benchmark_delta_warn_top_false_alarm", 0.03),
             )
         ),
+        benchmark_delta_warn_bottom_recall=float(
+            env.get(
+                "BENCHMARK_DELTA_WARN_BOTTOM_RECALL",
+                file_cfg.get("benchmark_delta_warn_bottom_recall", -0.02),
+            )
+        ),
+        benchmark_delta_warn_bottom_pr_auc=float(
+            env.get(
+                "BENCHMARK_DELTA_WARN_BOTTOM_PR_AUC",
+                file_cfg.get("benchmark_delta_warn_bottom_pr_auc", -0.01),
+            )
+        ),
+        benchmark_delta_warn_bottom_false_alarm=float(
+            env.get(
+                "BENCHMARK_DELTA_WARN_BOTTOM_FALSE_ALARM",
+                file_cfg.get("benchmark_delta_warn_bottom_false_alarm", 0.03),
+            )
+        ),
+        benchmark_delta_warn_dynamic_dca_cagr=float(
+            env.get(
+                "BENCHMARK_DELTA_WARN_DYNAMIC_DCA_CAGR",
+                file_cfg.get("benchmark_delta_warn_dynamic_dca_cagr", -0.02),
+            )
+        ),
+        benchmark_delta_warn_dynamic_dca_calmar=float(
+            env.get(
+                "BENCHMARK_DELTA_WARN_DYNAMIC_DCA_CALMAR",
+                file_cfg.get("benchmark_delta_warn_dynamic_dca_calmar", -0.10),
+            )
+        ),
+        benchmark_delta_warn_dynamic_dca_max_drawdown=float(
+            env.get(
+                "BENCHMARK_DELTA_WARN_DYNAMIC_DCA_MAX_DRAWDOWN",
+                file_cfg.get("benchmark_delta_warn_dynamic_dca_max_drawdown", 0.05),
+            )
+        ),
         benchmark_foundation_min_top_recall_delta=float(
             env.get(
                 "BENCHMARK_FOUNDATION_MIN_TOP_RECALL_DELTA",
@@ -437,6 +571,42 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
             env.get(
                 "BENCHMARK_FOUNDATION_MAX_TOP_FALSE_ALARM_DELTA",
                 file_cfg.get("benchmark_foundation_max_top_false_alarm_delta", 0.05),
+            )
+        ),
+        benchmark_foundation_min_bottom_recall_delta=float(
+            env.get(
+                "BENCHMARK_FOUNDATION_MIN_BOTTOM_RECALL_DELTA",
+                file_cfg.get("benchmark_foundation_min_bottom_recall_delta", 0.0),
+            )
+        ),
+        benchmark_foundation_min_bottom_pr_auc_delta=float(
+            env.get(
+                "BENCHMARK_FOUNDATION_MIN_BOTTOM_PR_AUC_DELTA",
+                file_cfg.get("benchmark_foundation_min_bottom_pr_auc_delta", 0.0),
+            )
+        ),
+        benchmark_foundation_max_bottom_false_alarm_delta=float(
+            env.get(
+                "BENCHMARK_FOUNDATION_MAX_BOTTOM_FALSE_ALARM_DELTA",
+                file_cfg.get("benchmark_foundation_max_bottom_false_alarm_delta", 0.05),
+            )
+        ),
+        benchmark_foundation_min_dynamic_dca_cagr_delta=float(
+            env.get(
+                "BENCHMARK_FOUNDATION_MIN_DYNAMIC_DCA_CAGR_DELTA",
+                file_cfg.get("benchmark_foundation_min_dynamic_dca_cagr_delta", 0.0),
+            )
+        ),
+        benchmark_foundation_min_dynamic_dca_calmar_delta=float(
+            env.get(
+                "BENCHMARK_FOUNDATION_MIN_DYNAMIC_DCA_CALMAR_DELTA",
+                file_cfg.get("benchmark_foundation_min_dynamic_dca_calmar_delta", 0.0),
+            )
+        ),
+        benchmark_foundation_max_dynamic_dca_max_drawdown_delta=float(
+            env.get(
+                "BENCHMARK_FOUNDATION_MAX_DYNAMIC_DCA_MAX_DRAWDOWN_DELTA",
+                file_cfg.get("benchmark_foundation_max_dynamic_dca_max_drawdown_delta", 0.05),
             )
         ),
     )
