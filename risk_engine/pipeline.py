@@ -288,11 +288,19 @@ def _build_operational_alert_policy(
     )
 
 
-def _benchmark_snapshot(result_summary: pd.DataFrame, by_signal: pd.DataFrame, window_stats: pd.DataFrame) -> Dict[str, Any]:
+def _benchmark_snapshot(
+    result_summary: pd.DataFrame,
+    by_signal: pd.DataFrame,
+    window_stats: pd.DataFrame,
+    financial_summary: pd.DataFrame | None = None,
+) -> Dict[str, Any]:
     return {
         "summary": result_summary.to_dict(orient="records") if not result_summary.empty else [],
         "by_signal": by_signal.to_dict(orient="records") if not by_signal.empty else [],
         "window_stats": window_stats.to_dict(orient="records") if not window_stats.empty else [],
+        "financial_summary": financial_summary.to_dict(orient="records")
+        if financial_summary is not None and not financial_summary.empty
+        else [],
     }
 
 
@@ -349,7 +357,12 @@ def _delta_records(
 
 
 def _write_benchmark_baseline(path: Path, result: RiskOutput) -> None:
-    payload = _benchmark_snapshot(result.benchmark_summary, result.benchmark_by_signal, result.benchmark_window_stats)
+    payload = _benchmark_snapshot(
+        result.benchmark_summary,
+        result.benchmark_by_signal,
+        result.benchmark_window_stats,
+        result.financial_benchmark_summary,
+    )
     path.write_text(json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
 
 
@@ -470,7 +483,7 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     output["bottom_reversal_risk"] = output.get("cycle_p_accumulation", (1.0 - output["btc_risk_heat"])).clip(0.0, 1.0)
     output["attention_score"] = output["headline_attention"].clip(0.0, 1.0)
 
-    calibrated = calibrate_primary_outputs(output)
+    calibrated = calibrate_primary_outputs(output, cfg=runtime)
     output = calibrated.series
     output["headline_heat"] = (
         output["headline_btc_mix_weight"] * output["btc_risk_heat"]
@@ -520,6 +533,7 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     baseline_summary = _frame_from_records(benchmark_baseline.get("summary"))
     baseline_by_signal = _frame_from_records(benchmark_baseline.get("by_signal"))
     baseline_window_stats = _frame_from_records(benchmark_baseline.get("window_stats"))
+    baseline_financial = _frame_from_records(benchmark_baseline.get("financial_summary"))
 
     benchmark_deltas = {
         "summary": _delta_records(
@@ -540,6 +554,12 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
             key_cols=["window", "side"],
             metric_cols=["auc", "pr_auc", "lead_recall_at_alert_rate", "false_alarm_rate", "event_coverage"],
         ),
+        "financial_summary": _delta_records(
+            cycle.financial_benchmark_summary,
+            baseline_financial,
+            key_cols=["strategy"],
+            metric_cols=["cagr", "calmar", "max_drawdown", "total_return"],
+        ),
     }
 
     regression_warnings: List[str] = []
@@ -549,8 +569,13 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
             (by_signal_deltas["window"].astype(str) == "recent")
             & (by_signal_deltas["signal"].astype(str) == "top_reversal_risk")
         ]
+        bottom_recent = by_signal_deltas[
+            (by_signal_deltas["window"].astype(str) == "recent")
+            & (by_signal_deltas["signal"].astype(str) == "bottom_reversal_risk")
+        ]
     else:
         top_recent = pd.DataFrame()
+        bottom_recent = pd.DataFrame()
     if not top_recent.empty:
         row = top_recent.iloc[0]
         recall_delta = row.get("lead_recall_at_alert_rate_delta")
@@ -568,6 +593,43 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         if pd.notna(far_delta) and float(far_delta) > float(runtime.benchmark_delta_warn_top_false_alarm):
             regression_warnings.append(
                 f"benchmark_top_false_alarm_regression:{float(far_delta):.4f}>{float(runtime.benchmark_delta_warn_top_false_alarm):.4f}"
+            )
+    if not bottom_recent.empty:
+        row = bottom_recent.iloc[0]
+        recall_delta = row.get("lead_recall_at_alert_rate_delta")
+        pr_delta = row.get("pr_auc_delta")
+        far_delta = row.get("false_alarm_rate_delta")
+        if pd.notna(recall_delta) and float(recall_delta) < float(runtime.benchmark_delta_warn_bottom_recall):
+            regression_warnings.append(
+                f"benchmark_bottom_recall_regression:{float(recall_delta):.4f}<{float(runtime.benchmark_delta_warn_bottom_recall):.4f}"
+            )
+        if pd.notna(pr_delta) and float(pr_delta) < float(runtime.benchmark_delta_warn_bottom_pr_auc):
+            regression_warnings.append(
+                f"benchmark_bottom_pr_auc_regression:{float(pr_delta):.4f}<{float(runtime.benchmark_delta_warn_bottom_pr_auc):.4f}"
+            )
+        if pd.notna(far_delta) and float(far_delta) > float(runtime.benchmark_delta_warn_bottom_false_alarm):
+            regression_warnings.append(
+                f"benchmark_bottom_false_alarm_regression:{float(far_delta):.4f}>{float(runtime.benchmark_delta_warn_bottom_false_alarm):.4f}"
+            )
+
+    fin_deltas = pd.DataFrame(benchmark_deltas.get("financial_summary", []))
+    dynamic = fin_deltas[fin_deltas["strategy"].astype(str) == "dynamic_dca"] if "strategy" in fin_deltas.columns else pd.DataFrame()
+    if not dynamic.empty:
+        row = dynamic.iloc[0]
+        cagr_delta = row.get("cagr_delta")
+        calmar_delta = row.get("calmar_delta")
+        max_dd_delta = row.get("max_drawdown_delta")
+        if pd.notna(cagr_delta) and float(cagr_delta) < float(runtime.benchmark_delta_warn_dynamic_dca_cagr):
+            regression_warnings.append(
+                f"benchmark_dynamic_dca_cagr_regression:{float(cagr_delta):.4f}<{float(runtime.benchmark_delta_warn_dynamic_dca_cagr):.4f}"
+            )
+        if pd.notna(calmar_delta) and float(calmar_delta) < float(runtime.benchmark_delta_warn_dynamic_dca_calmar):
+            regression_warnings.append(
+                f"benchmark_dynamic_dca_calmar_regression:{float(calmar_delta):.4f}<{float(runtime.benchmark_delta_warn_dynamic_dca_calmar):.4f}"
+            )
+        if pd.notna(max_dd_delta) and float(max_dd_delta) > float(runtime.benchmark_delta_warn_dynamic_dca_max_drawdown):
+            regression_warnings.append(
+                f"benchmark_dynamic_dca_max_drawdown_regression:{float(max_dd_delta):.4f}>{float(runtime.benchmark_delta_warn_dynamic_dca_max_drawdown):.4f}"
             )
 
     combined_benchmark_warnings = list(benchmark_result.warnings) + list(regression_warnings)
@@ -614,6 +676,8 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         cycle_regime_scores=cycle.regime_scores,
         cycle_signal_decisions=cycle.signal_decisions,
         cycle_backtest_report=cycle.backtest_report,
+        financial_benchmark_summary=cycle.financial_benchmark_summary,
+        financial_benchmark_curves=cycle.financial_benchmark_curves,
         cycle_metric_audit=cycle.metric_audit,
         cycle_migration_plan=cycle.migration_plan,
         benchmark_summary=benchmark_result.summary,
@@ -632,6 +696,8 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
             "bottom_cooldown_months": int(runtime.operational_bottom_cooldown_months),
             "min_history_months": int(runtime.operational_alert_min_history_months),
             "benchmark_alert_rate": float(runtime.benchmark_alert_rate),
+            "cycle_financial_label_weight": float(runtime.cycle_financial_label_weight),
+            "cycle_financial_kpi_weight": float(runtime.cycle_financial_kpi_weight),
         },
         calibration_metadata=calibrated.metadata,
     )
@@ -695,6 +761,10 @@ def write_outputs(result: RiskOutput, output_dir: Path) -> None:
         result.cycle_signal_decisions.to_csv(output_dir / "cycle_signal_decisions_monthly.csv")
     if not result.cycle_backtest_report.empty:
         result.cycle_backtest_report.to_csv(output_dir / "cycle_backtest_report.csv", index=False)
+    if not result.financial_benchmark_summary.empty:
+        result.financial_benchmark_summary.to_csv(output_dir / "financial_benchmark_summary.csv", index=False)
+    if not result.financial_benchmark_curves.empty:
+        result.financial_benchmark_curves.to_csv(output_dir / "financial_benchmark_curves_monthly.csv")
     if not result.cycle_metric_audit.empty:
         result.cycle_metric_audit.to_csv(output_dir / "cycle_metric_audit.csv", index=False)
     if result.cycle_migration_plan:

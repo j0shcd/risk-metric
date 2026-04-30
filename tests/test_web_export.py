@@ -201,6 +201,8 @@ class WebExportTests(unittest.TestCase):
             self.assertIn("benchmark_baseline", diagnostics)
             self.assertIn("benchmark_deltas", diagnostics)
             self.assertIn("benchmark_regression_warnings", diagnostics)
+            self.assertIn("financial_benchmark_summary", diagnostics)
+            self.assertIn("financial_benchmark_curves", diagnostics)
             self.assertIn("operational_alert_policy", diagnostics)
             self.assertIn("calibration_metadata", diagnostics)
             self.assertEqual(diagnostics["benchmark_config"]["alert_rate"], 0.2)

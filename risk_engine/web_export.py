@@ -264,6 +264,8 @@ def export_web_v1(
         "benchmark_baseline": _coerce_json_scalar(result.benchmark_baseline),
         "benchmark_deltas": _coerce_json_scalar(result.benchmark_deltas),
         "benchmark_regression_warnings": [str(item) for item in result.benchmark_regression_warnings],
+        "financial_benchmark_summary": _records_payload(result.financial_benchmark_summary),
+        "financial_benchmark_curves": _columnar_payload(result.financial_benchmark_curves),
         "operational_alert_policy": _coerce_json_scalar(result.operational_alert_policy),
         "calibration_metadata": {
             str(key): _coerce_json_scalar(value) for key, value in result.calibration_metadata.items()
