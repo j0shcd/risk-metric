@@ -66,11 +66,13 @@ class CalibrationTests(unittest.TestCase):
         self.assertIn("walkforward_last_train_end", meta)
         self.assertIn("top_mean_w_base", meta)
         self.assertIn("bottom_mean_w_base", meta)
-        self.assertEqual(meta.get("top_objective"), "recall20_then_prauc_then_far")
+        self.assertEqual(meta.get("top_objective"), "composite_long_cycle_label_and_financial")
         self.assertIn("top_mean_w_price_extremity", meta)
         self.assertIn("top_mean_w_momentum_exhaustion", meta)
         self.assertIn("top_mean_w_attention_blowoff", meta)
         self.assertIn("top_train_event_count_mean", meta)
+        self.assertIn("objective_label_weight", meta)
+        self.assertIn("objective_financial_weight", meta)
 
 
 if __name__ == "__main__":

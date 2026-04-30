@@ -7,6 +7,8 @@ from typing import Dict, Iterable, List, Tuple
 import numpy as np
 import pandas as pd
 
+from .config import RuntimeConfig
+
 
 @dataclass(frozen=True)
 class CalibrationResult:
@@ -46,6 +48,10 @@ def _future_max_return(price: pd.Series, horizon: int) -> pd.Series:
             continue
         out[i] = float(np.nanmax(future) / base - 1.0)
     return pd.Series(out, index=price.index, dtype=float)
+
+
+def _future_return(price: pd.Series, horizon: int) -> pd.Series:
+    return price.shift(-horizon) / price - 1.0
 
 
 def _expanding_percentile(series: pd.Series, min_history: int = 24) -> pd.Series:
@@ -146,6 +152,7 @@ def _candidate_grid_multi(
 
 
 def _select_best_walkforward(
+    price: pd.Series,
     base: pd.Series,
     feat_a: pd.Series,
     feat_b: pd.Series,
@@ -153,6 +160,9 @@ def _select_best_walkforward(
     *,
     min_train_months: int,
     resolution_horizon_months: int,
+    label_weight: float,
+    financial_weight: float,
+    buy_threshold: float,
 ) -> Tuple[pd.Series, Dict[str, float | str]]:
     out = pd.Series(index=base.index, dtype=float)
 
@@ -172,6 +182,7 @@ def _select_best_walkforward(
         train_index = base.index[:resolved_end_idx]
         train = pd.DataFrame(
             {
+                "price": price.reindex(train_index),
                 "base": base.reindex(train_index),
                 "a": feat_a.reindex(train_index),
                 "b": feat_b.reindex(train_index),
@@ -194,9 +205,12 @@ def _select_best_walkforward(
             candidate = (w_base * train["base"] + w_a * train["a"] + w_b * train["b"]).clip(0.0, 1.0)
             auc = _auc(candidate, train["y"])
             pr = _pr_auc(candidate, train["y"])
-            auc_term = float(auc) if np.isfinite(auc) else 0.0
-            pr_term = float(pr) if np.isfinite(pr) else 0.0
-            objective = auc_term + 0.25 * pr_term
+            auc_term = float(auc) if np.isfinite(auc) else -1.0
+            pr_term = float(pr) if np.isfinite(pr) else -1.0
+            label_objective = auc_term + 0.25 * pr_term
+            position = ((candidate - float(buy_threshold)) / max(1e-9, 1.0 - float(buy_threshold))).clip(0.0, 1.0)
+            fin_objective = _financial_quality_from_position(position, train["price"])
+            objective = float(label_weight) * label_objective + float(financial_weight) * fin_objective
             if objective > best_score:
                 best_score = objective
                 best_weights = (w_base, w_a, w_b)
@@ -270,7 +284,50 @@ def _lead_recall_false_alarm(
     return recall, false_alarm_rate
 
 
+def _max_drawdown(equity: pd.Series) -> float:
+    clean = equity.dropna()
+    if clean.empty:
+        return float("nan")
+    peak = clean.cummax()
+    drawdown = clean / peak.replace({0.0: np.nan}) - 1.0
+    return float(drawdown.min())
+
+
+def _cagr(equity: pd.Series, periods_per_year: float = 12.0) -> float:
+    clean = equity.dropna()
+    if clean.empty:
+        return float("nan")
+    years = max(len(clean) / max(float(periods_per_year), 1e-9), 1.0 / max(float(periods_per_year), 1e-9))
+    terminal = float(clean.iloc[-1])
+    if not np.isfinite(terminal) or terminal <= 0.0:
+        return float("nan")
+    return float(terminal ** (1.0 / years) - 1.0)
+
+
+def _calmar(cagr: float, max_drawdown: float) -> float:
+    if not np.isfinite(cagr) or not np.isfinite(max_drawdown) or max_drawdown >= 0.0:
+        return float("nan")
+    return float(cagr / max(abs(float(max_drawdown)), 1e-9))
+
+
+def _financial_quality_from_position(position: pd.Series, price: pd.Series) -> float:
+    aligned = pd.DataFrame({"pos": position.astype(float), "price": price.astype(float)}).dropna()
+    if len(aligned) < 12:
+        return float("-inf")
+    ret = aligned["price"].pct_change(fill_method=None).fillna(0.0)
+    strat_ret = aligned["pos"].shift(1).fillna(0.0) * ret
+    equity = (1.0 + strat_ret).cumprod()
+    cagr = _cagr(equity, periods_per_year=12.0)
+    mdd = _max_drawdown(equity)
+    calmar = _calmar(cagr, mdd)
+    cagr_term = float(cagr) if np.isfinite(cagr) else -1.0
+    calmar_term = float(calmar) if np.isfinite(calmar) else -1.0
+    mdd_term = 1.0 - min(abs(float(mdd)), 1.0) if np.isfinite(mdd) else -1.0
+    return float(cagr_term + 0.50 * calmar_term + 0.50 * mdd_term)
+
+
 def _select_best_walkforward_top_features(
+    price: pd.Series,
     base: pd.Series,
     feature_frame: pd.DataFrame,
     labels: pd.Series,
@@ -278,6 +335,9 @@ def _select_best_walkforward_top_features(
     min_train_months: int,
     resolution_horizon_months: int,
     alert_rate: float,
+    label_weight: float,
+    financial_weight: float,
+    sell_threshold: float,
 ) -> Tuple[pd.Series, Dict[str, float | str]]:
     out = pd.Series(index=base.index, dtype=float)
     feature_cols = list(feature_frame.columns)
@@ -297,7 +357,13 @@ def _select_best_walkforward_top_features(
             continue
 
         train_index = base.index[:resolved_end_idx]
-        train = pd.DataFrame({"base": base.reindex(train_index), "y": labels.reindex(train_index)})
+        train = pd.DataFrame(
+            {
+                "price": price.reindex(train_index),
+                "base": base.reindex(train_index),
+                "y": labels.reindex(train_index),
+            }
+        )
         for col in feature_cols:
             train[col] = feature_frame[col].reindex(train_index)
         train = train.dropna()
@@ -313,7 +379,7 @@ def _select_best_walkforward_top_features(
             continue
 
         train_event_counts.append(float(n_events))
-        best_key = (float("-inf"), float("-inf"), float("-inf"))
+        best_score = float("-inf")
         best_weights = (1.0, np.zeros(len(feature_cols), dtype=float))
 
         for w_base, w_feats, candidate in _candidate_grid_multi(
@@ -327,13 +393,17 @@ def _select_best_walkforward_top_features(
                 horizon_months=resolution_horizon_months,
             )
             pr = _pr_auc(candidate, train["y"])
-
-            recall_term = float(recall_alert) if np.isfinite(recall_alert) else float("-inf")
-            pr_term = float(pr) if np.isfinite(pr) else float("-inf")
-            far_term = float(false_alarm_rate) if np.isfinite(false_alarm_rate) else float("inf")
-            key = (recall_term, pr_term, -far_term)
-            if key > best_key:
-                best_key = key
+            recall_term = float(recall_alert) if np.isfinite(recall_alert) else -1.0
+            pr_term = float(pr) if np.isfinite(pr) else -1.0
+            far_term = float(false_alarm_rate) if np.isfinite(false_alarm_rate) else 1.0
+            label_objective = recall_term + 0.35 * pr_term - 0.40 * far_term
+            position = (
+                1.0 - ((candidate - float(sell_threshold)) / max(1e-9, 1.0 - float(sell_threshold))).clip(0.0, 1.0)
+            ).clip(0.0, 1.0)
+            fin_objective = _financial_quality_from_position(position, train["price"])
+            score = float(label_weight) * label_objective + float(financial_weight) * fin_objective
+            if score > best_score:
+                best_score = score
                 best_weights = (float(w_base), np.asarray(w_feats, dtype=float))
 
         w_base, w_feats = best_weights
@@ -370,12 +440,49 @@ def _select_best_walkforward_top_features(
     return out.clip(0.0, 1.0), metadata
 
 
+def _long_cycle_labels(
+    monthly_price: pd.Series,
+    *,
+    horizons_months: List[int],
+    lookback_months: int = 24,
+) -> Tuple[pd.Series, pd.Series]:
+    horizons = [int(h) for h in horizons_months if int(h) > 0]
+    if not horizons:
+        horizons = [36]
+    fwd_frame = pd.DataFrame(index=monthly_price.index)
+    for horizon in horizons:
+        fwd_frame[f"h{horizon}"] = _future_return(monthly_price, horizon)
+    fwd_mean = fwd_frame.mean(axis=1, skipna=True)
+    resolved = fwd_mean.dropna()
+    q_low = float(resolved.quantile(0.20)) if not resolved.empty else np.nan
+    q_high = float(resolved.quantile(0.80)) if not resolved.empty else np.nan
+
+    past_max = monthly_price.rolling(int(max(lookback_months, 1)), min_periods=int(max(lookback_months, 1))).max()
+    past_min = monthly_price.rolling(int(max(lookback_months, 1)), min_periods=int(max(lookback_months, 1))).min()
+    top_extreme = monthly_price >= past_max
+    bottom_extreme = monthly_price <= past_min
+
+    top = ((fwd_mean <= q_low) & top_extreme).astype(float).where(fwd_mean.notna() & past_max.notna(), np.nan)
+    bottom = ((fwd_mean >= q_high) & bottom_extreme).astype(float).where(fwd_mean.notna() & past_min.notna(), np.nan)
+
+    # Ensure enough events for walk-forward; if too sparse fallback to quantile-only labels.
+    top_events = int((top.dropna().astype(int) == 1).sum())
+    bottom_events = int((bottom.dropna().astype(int) == 1).sum())
+    if top_events < 3:
+        top = (fwd_mean <= q_low).astype(float).where(fwd_mean.notna(), np.nan)
+    if bottom_events < 3:
+        bottom = (fwd_mean >= q_high).astype(float).where(fwd_mean.notna(), np.nan)
+    return top, bottom
+
+
 def calibrate_primary_outputs(
     series: pd.DataFrame,
     *,
+    cfg: RuntimeConfig | None = None,
     min_train_months: int = 24,
-    resolution_horizon_months: int = 12,
+    resolution_horizon_months: int = 36,
 ) -> CalibrationResult:
+    runtime = cfg
     required = {"btc_price"}
     if not required.issubset(set(series.columns)):
         return CalibrationResult(series=series.copy(), metadata={"calibration_applied": 0.0})
@@ -415,11 +522,12 @@ def calibrate_primary_outputs(
     drawdown = monthly["price"] / monthly["price"].cummax().replace({0.0: np.nan}) - 1.0
     drawdown_depth = (-drawdown).clip(0.0, 0.90) / 0.90
 
-    top_label = (_future_min_return(monthly["price"], resolution_horizon_months) <= -0.40).astype(float)
-    top_label = top_label.where(_future_min_return(monthly["price"], resolution_horizon_months).notna(), np.nan)
-
-    bottom_label = (_future_max_return(monthly["price"], resolution_horizon_months) >= 0.80).astype(float)
-    bottom_label = bottom_label.where(_future_max_return(monthly["price"], resolution_horizon_months).notna(), np.nan)
+    horizons = (
+        [int(h) for h in runtime.cycle_calibration_horizons_months]
+        if runtime is not None and getattr(runtime, "cycle_calibration_horizons_months", None)
+        else [int(resolution_horizon_months)]
+    )
+    top_label, bottom_label = _long_cycle_labels(monthly["price"], horizons_months=horizons, lookback_months=24)
 
     monthly["price_extremity_pct"] = (
         output.get("price_extremity_pct", pd.Series(index=output.index, dtype=float))
@@ -450,21 +558,29 @@ def calibrate_primary_outputs(
     top_features = top_features.clip(0.0, 1.0)
 
     top_calibrated, top_meta = _select_best_walkforward_top_features(
+        price=monthly["price"],
         base=monthly["top"].clip(0.0, 1.0),
         feature_frame=top_features,
         labels=top_label,
         min_train_months=min_train_months,
-        resolution_horizon_months=resolution_horizon_months,
+        resolution_horizon_months=max(horizons),
         alert_rate=0.20,
+        label_weight=float(runtime.cycle_financial_label_weight if runtime is not None else 0.50),
+        financial_weight=float(runtime.cycle_financial_kpi_weight if runtime is not None else 0.50),
+        sell_threshold=float(runtime.cycle_dynamic_dca_sell_threshold if runtime is not None else 0.75),
     )
 
     bottom_calibrated, bottom_meta = _select_best_walkforward(
+        price=monthly["price"],
         base=monthly["bottom"].clip(0.0, 1.0),
         feat_a=drawdown_depth.clip(0.0, 1.0),
         feat_b=(1.0 - momentum_pct).clip(0.0, 1.0),
         labels=bottom_label,
         min_train_months=min_train_months,
-        resolution_horizon_months=resolution_horizon_months,
+        resolution_horizon_months=max(horizons),
+        label_weight=float(runtime.cycle_financial_label_weight if runtime is not None else 0.50),
+        financial_weight=float(runtime.cycle_financial_kpi_weight if runtime is not None else 0.50),
+        buy_threshold=float(runtime.cycle_dynamic_dca_buy_threshold if runtime is not None else 0.75),
     )
 
     attention_extremity = (2.0 * (top_calibrated - 0.5).abs()).clip(0.0, 1.0)
@@ -484,7 +600,10 @@ def calibrate_primary_outputs(
 
     metadata: Dict[str, float | str] = {
         "calibration_applied": 1.0,
-        "top_objective": "recall20_then_prauc_then_far",
+        "top_objective": "composite_long_cycle_label_and_financial",
+        "calibration_horizons_months": ",".join([str(h) for h in horizons]),
+        "objective_label_weight": float(runtime.cycle_financial_label_weight if runtime is not None else 0.50),
+        "objective_financial_weight": float(runtime.cycle_financial_kpi_weight if runtime is not None else 0.50),
         "top_mean_w_base": float(top_meta.get("mean_w_base", 1.0)),
         "top_mean_w_price_extremity": float(top_meta.get("mean_w_price_extremity_pct", 0.0)),
         "top_mean_w_momentum_exhaustion": float(top_meta.get("mean_w_momentum_exhaustion_pct", 0.0)),
