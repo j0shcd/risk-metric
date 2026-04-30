@@ -279,36 +279,38 @@ def _build_labels(cfg: RuntimeConfig, monthly_price: pd.Series) -> List[Dict[str
         for horizon in cfg.benchmark_horizons_months:
             fwd = _future_return(monthly_price, horizon)
             resolved = fwd.dropna()
-            if resolved.empty:
-                q_low = np.nan
-                q_high = np.nan
-            else:
-                q_low = float(resolved.quantile(0.20))
-                q_high = float(resolved.quantile(0.80))
+            for q in cfg.benchmark_quantile_levels:
+                qv = float(q)
+                if resolved.empty:
+                    q_low = np.nan
+                    q_high = np.nan
+                else:
+                    q_low = float(resolved.quantile(qv))
+                    q_high = float(resolved.quantile(1.0 - qv))
 
-            top = (fwd <= q_low).astype(float).where(fwd.notna(), np.nan)
-            bottom = (fwd >= q_high).astype(float).where(fwd.notna(), np.nan)
+                top = (fwd <= q_low).astype(float).where(fwd.notna(), np.nan)
+                bottom = (fwd >= q_high).astype(float).where(fwd.notna(), np.nan)
 
-            labels.append(
-                {
-                    "label_id": f"quantile_top_q20_h{horizon}",
-                    "family": "quantile",
-                    "side": "top",
-                    "horizon_months": int(horizon),
-                    "params": f"q=0.20,cut={q_low:.6f}" if np.isfinite(q_low) else "q=0.20,cut=nan",
-                    "series": top,
-                }
-            )
-            labels.append(
-                {
-                    "label_id": f"quantile_bottom_q80_h{horizon}",
-                    "family": "quantile",
-                    "side": "bottom",
-                    "horizon_months": int(horizon),
-                    "params": f"q=0.80,cut={q_high:.6f}" if np.isfinite(q_high) else "q=0.80,cut=nan",
-                    "series": bottom,
-                }
-            )
+                labels.append(
+                    {
+                        "label_id": f"quantile_top_q{int(round(qv * 100))}_h{horizon}",
+                        "family": "quantile",
+                        "side": "top",
+                        "horizon_months": int(horizon),
+                        "params": f"q={qv:.2f},cut={q_low:.6f}" if np.isfinite(q_low) else f"q={qv:.2f},cut=nan",
+                        "series": top,
+                    }
+                )
+                labels.append(
+                    {
+                        "label_id": f"quantile_bottom_q{int(round((1.0 - qv) * 100))}_h{horizon}",
+                        "family": "quantile",
+                        "side": "bottom",
+                        "horizon_months": int(horizon),
+                        "params": f"q={1.0 - qv:.2f},cut={q_high:.6f}" if np.isfinite(q_high) else f"q={1.0 - qv:.2f},cut=nan",
+                        "series": bottom,
+                    }
+                )
 
     if "local_extrema" in families:
         for lookback in cfg.benchmark_local_extrema_lookbacks:
@@ -530,6 +532,33 @@ def evaluate_benchmark(
                 "aggregation_method": "soft_event_weighted_v1",
             }
         )
+        exp_far = (
+            _weighted_mean(expanding["false_alarm_rate"], expanding["event_weight"])
+            if not expanding.empty
+            else float("nan")
+        )
+        rec_far = (
+            _weighted_mean(recent["false_alarm_rate"], recent["event_weight"])
+            if not recent.empty
+            else float("nan")
+        )
+        summary_rows.append(
+            {
+                "kpi": f"false_alarm_{side}",
+                "signal": signal,
+                "expanding": exp_far,
+                "recent": rec_far,
+                "delta_recent_minus_expanding": rec_far - exp_far
+                if np.isfinite(rec_far) and np.isfinite(exp_far)
+                else np.nan,
+                "alert_rate": float(cfg.benchmark_alert_rate),
+                "expanding_effective_weight_sum": exp_weight,
+                "recent_effective_weight_sum": rec_weight,
+                "expanding_effective_label_count": exp_labels,
+                "recent_effective_label_count": rec_labels,
+                "aggregation_method": "soft_event_weighted_v1",
+            }
+        )
 
     summary = pd.DataFrame(summary_rows)
 
@@ -561,6 +590,7 @@ def evaluate_benchmark(
         "recent_window_months": int(cfg.benchmark_recent_window_months),
         "alert_rate": float(cfg.benchmark_alert_rate),
         "label_families": [str(x) for x in cfg.benchmark_label_families],
+        "quantile_levels": [float(x) for x in cfg.benchmark_quantile_levels],
         "top_drawdown_thresholds": [float(x) for x in cfg.benchmark_top_drawdown_thresholds],
         "bottom_rally_thresholds": [float(x) for x in cfg.benchmark_bottom_rally_thresholds],
         "local_extrema_lookbacks": [int(x) for x in cfg.benchmark_local_extrema_lookbacks],
