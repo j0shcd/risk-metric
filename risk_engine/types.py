@@ -28,6 +28,8 @@ class RiskOutput:
     cycle_regime_scores: pd.DataFrame = field(default_factory=pd.DataFrame)
     cycle_signal_decisions: pd.DataFrame = field(default_factory=pd.DataFrame)
     cycle_backtest_report: pd.DataFrame = field(default_factory=pd.DataFrame)
+    financial_benchmark_summary: pd.DataFrame = field(default_factory=pd.DataFrame)
+    financial_benchmark_curves: pd.DataFrame = field(default_factory=pd.DataFrame)
     cycle_metric_audit: pd.DataFrame = field(default_factory=pd.DataFrame)
     cycle_migration_plan: str = ""
     benchmark_summary: pd.DataFrame = field(default_factory=pd.DataFrame)
