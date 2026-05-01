@@ -502,12 +502,12 @@ def calibrate_primary_outputs(
         output["bottom_reversal_risk"] = (1.0 - output[top_col].astype(float)).clip(0.0, 1.0)
         bottom_col = "bottom_reversal_risk"
 
-    monthly = pd.DataFrame(index=output.resample("M").last().index)
-    monthly["price"] = output["btc_price"].astype(float).resample("M").last()
-    monthly["top"] = output[top_col].astype(float).resample("M").last()
-    monthly["bottom"] = output[bottom_col].astype(float).resample("M").last()
-    monthly["trend"] = output[trend_col].astype(float).resample("M").last()
-    monthly["attention"] = output[attention_col].astype(float).resample("M").mean()
+    monthly = pd.DataFrame(index=output.resample(pd.offsets.MonthEnd()).last().index)
+    monthly["price"] = output["btc_price"].astype(float).resample(pd.offsets.MonthEnd()).last()
+    monthly["top"] = output[top_col].astype(float).resample(pd.offsets.MonthEnd()).last()
+    monthly["bottom"] = output[bottom_col].astype(float).resample(pd.offsets.MonthEnd()).last()
+    monthly["trend"] = output[trend_col].astype(float).resample(pd.offsets.MonthEnd()).last()
+    monthly["attention"] = output[attention_col].astype(float).resample(pd.offsets.MonthEnd()).mean()
 
     monthly = monthly.dropna(subset=["price"]) 
 
@@ -532,21 +532,21 @@ def calibrate_primary_outputs(
     monthly["price_extremity_pct"] = (
         output.get("price_extremity_pct", pd.Series(index=output.index, dtype=float))
         .astype(float)
-        .resample("M")
+        .resample(pd.offsets.MonthEnd())
         .last()
         .reindex(monthly.index)
     )
     monthly["momentum_exhaustion_pct"] = (
         output.get("momentum_exhaustion_pct", pd.Series(index=output.index, dtype=float))
         .astype(float)
-        .resample("M")
+        .resample(pd.offsets.MonthEnd())
         .last()
         .reindex(monthly.index)
     )
     monthly["attention_blowoff_pct"] = (
         output.get("attention_blowoff_pct", pd.Series(index=output.index, dtype=float))
         .astype(float)
-        .resample("M")
+        .resample(pd.offsets.MonthEnd())
         .last()
         .reindex(monthly.index)
     )

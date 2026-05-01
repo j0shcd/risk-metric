@@ -24,15 +24,15 @@ class CycleModelOutput:
 
 
 def _monthly_last(series: pd.Series) -> pd.Series:
-    return series.resample("M").last()
+    return series.resample(pd.offsets.MonthEnd()).last()
 
 
 def _monthly_mean(series: pd.Series) -> pd.Series:
-    return series.resample("M").mean()
+    return series.resample(pd.offsets.MonthEnd()).mean()
 
 
 def _monthly_sum(series: pd.Series) -> pd.Series:
-    return series.resample("M").sum(min_count=1)
+    return series.resample(pd.offsets.MonthEnd()).sum(min_count=1)
 
 
 def _expanding_percentile(series: pd.Series, min_history: int) -> pd.Series:
@@ -120,8 +120,8 @@ def _halving_heuristic_position(index: pd.DatetimeIndex, hold_months: int = 30) 
     ]
     position = pd.Series(0.0, index=index, dtype=float)
     for event in halving_dates:
-        start = event.to_period("M").to_timestamp("M")
-        end = (event + pd.DateOffset(months=hold_months)).to_period("M").to_timestamp("M")
+        start = (event + pd.offsets.MonthEnd(0)).normalize()
+        end = ((event + pd.DateOffset(months=hold_months)) + pd.offsets.MonthEnd(0)).normalize()
         mask = (index >= start) & (index <= end)
         position.loc[mask] = 1.0
     return position

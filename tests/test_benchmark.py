@@ -10,7 +10,7 @@ from risk_engine.config import RuntimeConfig
 
 class BenchmarkTests(unittest.TestCase):
     def test_benchmark_generates_multilabel_metrics(self) -> None:
-        index = pd.date_range("2013-01-31", periods=180, freq="M")
+        index = pd.date_range("2013-01-31", periods=180, freq=pd.offsets.MonthEnd())
         x = np.arange(len(index), dtype=float)
 
         price = pd.Series(
@@ -56,7 +56,7 @@ class BenchmarkTests(unittest.TestCase):
         self.assertIn("effective_label_count", result.by_signal.columns)
 
     def test_benchmark_respects_recent_window_config(self) -> None:
-        index = pd.date_range("2016-01-31", periods=120, freq="M")
+        index = pd.date_range("2016-01-31", periods=120, freq=pd.offsets.MonthEnd())
         x = np.arange(len(index), dtype=float)
 
         price = pd.Series(1000.0 + 80.0 * x + 1200.0 * np.sin(x / 5.0), index=index)
@@ -87,7 +87,7 @@ class BenchmarkTests(unittest.TestCase):
         self.assertIn("recent", windows)
 
     def test_event_weight_is_soft_capped(self) -> None:
-        index = pd.date_range("2017-01-31", periods=120, freq="M")
+        index = pd.date_range("2017-01-31", periods=120, freq=pd.offsets.MonthEnd())
         price = pd.Series(np.linspace(1000.0, 6000.0, len(index)), index=index)
         signal = pd.Series(np.linspace(0.1, 0.9, len(index)), index=index)
 

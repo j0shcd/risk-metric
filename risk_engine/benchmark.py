@@ -169,7 +169,7 @@ def _lead_time_metrics(
         if window.any():
             hit_count += 1
             first_alert = window[window].index[0]
-            lead = int((event_date.to_period("M") - first_alert.to_period("M")).n)
+            lead = int((event_date.year - first_alert.year) * 12 + (event_date.month - first_alert.month))
             lead_months.append(max(0, lead))
 
     recall = float(hit_count / n_events)
