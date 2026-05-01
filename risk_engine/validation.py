@@ -99,7 +99,7 @@ def _check_output_staleness(
     columns: List[str],
     max_staleness_days: int = 7,
 ) -> None:
-    now = pd.Timestamp.utcnow().tz_localize(None).normalize()
+    now = pd.Timestamp.now("UTC").tz_localize(None).normalize()
     for column in columns:
         values = series[column].dropna()
         if values.empty:

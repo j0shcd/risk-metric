@@ -45,7 +45,7 @@ def series_staleness_days(series: pd.Series, as_of: Optional[pd.Timestamp] = Non
     if clean.empty:
         return None
 
-    now = as_of or pd.Timestamp.utcnow().tz_localize(None).normalize()
+    now = as_of or pd.Timestamp.now("UTC").tz_localize(None).normalize()
     last_date = clean.index.max().normalize()
     return int((now - last_date).days)
 

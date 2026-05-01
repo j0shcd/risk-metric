@@ -52,7 +52,7 @@ class ValidationTests(unittest.TestCase):
         self.assertTrue(any("stale" in err for err in validation.errors))
 
     def test_validation_passes_on_fresh_data(self) -> None:
-        today = pd.Timestamp.utcnow().tz_localize(None).normalize()
+        today = pd.Timestamp.now("UTC").tz_localize(None).normalize()
         index = pd.date_range(end=today, periods=90, freq="D")
         series = _base_series(index)
 
@@ -106,7 +106,7 @@ class ValidationTests(unittest.TestCase):
         self.assertIn("attention_dispersion_lower_in_sideways", checks)
 
     def test_validation_fails_on_critical_source_contract(self) -> None:
-        today = pd.Timestamp.utcnow().tz_localize(None).normalize()
+        today = pd.Timestamp.now("UTC").tz_localize(None).normalize()
         index = pd.date_range(end=today, periods=90, freq="D")
         series = _base_series(index)
 
@@ -137,7 +137,7 @@ class ValidationTests(unittest.TestCase):
         self.assertTrue(any("Critical source contract failed" in err for err in validation.errors))
 
     def test_validation_warns_on_noncritical_source_contract(self) -> None:
-        today = pd.Timestamp.utcnow().tz_localize(None).normalize()
+        today = pd.Timestamp.now("UTC").tz_localize(None).normalize()
         index = pd.date_range(end=today, periods=90, freq="D")
         series = _base_series(index)
 
@@ -170,7 +170,7 @@ class ValidationTests(unittest.TestCase):
         self.assertTrue(any("Some sources are unavailable" in msg for msg in validation.warnings))
 
     def test_validation_warns_when_source_modes_missing(self) -> None:
-        today = pd.Timestamp.utcnow().tz_localize(None).normalize()
+        today = pd.Timestamp.now("UTC").tz_localize(None).normalize()
         index = pd.date_range(end=today, periods=90, freq="D")
         series = _base_series(index)
 

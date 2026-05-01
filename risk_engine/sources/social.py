@@ -210,7 +210,7 @@ def _should_fetch_youtube_snapshot(existing: Optional[pd.Series], interval_hours
     latest = pd.to_datetime(existing.index.max(), utc=True, errors="coerce")
     if pd.isna(latest):
         return True
-    now = pd.Timestamp.utcnow()
+    now = pd.Timestamp.now("UTC")
     elapsed_hours = float((now - latest).total_seconds() / 3600.0)
     return elapsed_hours >= float(max(1, interval_hours))
 
@@ -255,7 +255,7 @@ def _fetch_youtube_interest(cfg: RuntimeConfig, existing: Optional[pd.Series]) -
         total_views += float(stats.get("viewCount", 0.0))
 
     interest = np.log1p(total_subscribers) + 0.25 * np.log1p(total_views)
-    today = pd.Timestamp.utcnow().normalize().tz_localize(None)
+    today = pd.Timestamp.now("UTC").tz_localize(None).normalize()
     return pd.Series([interest], index=[today], name="youtube_interest")
 
 
@@ -439,7 +439,7 @@ def _fetch_coinbase_rank_snapshot(cfg: RuntimeConfig) -> pd.Series:
         return pd.Series(dtype=float)
 
     updated_raw = feed.get("updated")
-    timestamp = pd.Timestamp.utcnow().normalize().tz_localize(None)
+    timestamp = pd.Timestamp.now("UTC").tz_localize(None).normalize()
     if updated_raw:
         parsed = pd.to_datetime(updated_raw, utc=True, errors="coerce")
         if pd.notna(parsed):

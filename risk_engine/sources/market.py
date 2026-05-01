@@ -132,7 +132,7 @@ def _fetch_coingecko_global_latest(cfg: RuntimeConfig) -> Optional[pd.Series]:
 
     updated_at = data.get("updated_at")
     if updated_at is None:
-        timestamp = pd.Timestamp.utcnow().normalize()
+        timestamp = pd.Timestamp.now("UTC").tz_localize(None).normalize()
     else:
         timestamp = pd.to_datetime(int(updated_at), unit="s").tz_localize(None).normalize()
 

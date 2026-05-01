@@ -138,7 +138,7 @@ def _bootstrap_btc_daily_from_coingecko(cfg: RuntimeConfig) -> pd.DataFrame:
         prev_close = close_px
 
     frame = pd.DataFrame(rows, columns=_BTC_DAILY_COLUMNS).drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
-    frame = frame[frame["Date"] <= (pd.Timestamp.utcnow().tz_localize(None).normalize() - pd.Timedelta(days=1))]
+    frame = frame[frame["Date"] <= (pd.Timestamp.now("UTC").tz_localize(None).normalize() - pd.Timedelta(days=1))]
     if frame.empty:
         raise RuntimeError("Failed to bootstrap BTC daily from CoinGecko: produced empty frame")
     return frame
@@ -200,7 +200,7 @@ def refresh_btc_daily_from_binance(cfg: RuntimeConfig, symbol: str = "BTCUSDT") 
     else:
         fetched = pd.DataFrame(columns=_BTC_DAILY_COLUMNS)
 
-    yesterday_utc = pd.Timestamp.utcnow().tz_localize(None).normalize() - pd.Timedelta(days=1)
+    yesterday_utc = pd.Timestamp.now("UTC").tz_localize(None).normalize() - pd.Timedelta(days=1)
     fetched = fetched[fetched["Date"] <= yesterday_utc].copy()
 
     if fetched.empty:

@@ -121,7 +121,7 @@ class SocialSourceTests(unittest.TestCase):
             root = Path(tmp_dir)
             (root / "data").mkdir(parents=True, exist_ok=True)
 
-            today = pd.Timestamp.utcnow().normalize().strftime("%Y-%m-%d")
+            today = pd.Timestamp.now("UTC").tz_localize(None).normalize().strftime("%Y-%m-%d")
             pd.DataFrame(
                 {
                     "Date": [today],
