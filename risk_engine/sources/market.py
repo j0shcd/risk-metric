@@ -192,7 +192,11 @@ def load_total_market_cap(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Ser
         return out
 
     merged = merged[(merged.index >= start) & (merged.index <= end)]
-    merged = merged.reindex(index)
-    merged.name = "total_market_cap"
-    merged.attrs["source_mode"] = source_mode
-    return merged
+    aligned = merged.reindex(index).astype(float)
+
+    # Keep the series daily-continuous for price-based rolling metrics by only
+    # filling short source outages; long outages remain explicitly missing.
+    aligned = aligned.ffill(limit=7)
+    aligned.name = "total_market_cap"
+    aligned.attrs["source_mode"] = source_mode
+    return aligned
