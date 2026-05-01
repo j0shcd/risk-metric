@@ -10,6 +10,7 @@ from ..config import RuntimeConfig
 
 
 BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
+COINGECKO_MARKET_CHART_URL = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart"
 _BTC_DAILY_COLUMNS = ["Date", "Open", "High", "Low", "Price", "Vol.", "Change %"]
 
 
@@ -86,14 +87,81 @@ def _klines_to_frame(klines: List[list]) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=_BTC_DAILY_COLUMNS).drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
 
 
+def _bootstrap_btc_daily_from_coingecko(cfg: RuntimeConfig) -> pd.DataFrame:
+    try:
+        response = requests.get(
+            COINGECKO_MARKET_CHART_URL,
+            params={"vs_currency": "usd", "days": "max"},
+            timeout=cfg.request_timeout_seconds,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except Exception as exc:
+        raise RuntimeError(f"Failed to bootstrap BTC daily from CoinGecko: {exc}") from exc
+
+    prices = payload.get("prices", [])
+    volumes = payload.get("total_volumes", [])
+    if not prices:
+        raise RuntimeError("Failed to bootstrap BTC daily from CoinGecko: empty price payload")
+
+    close_by_date: dict[pd.Timestamp, float] = {}
+    for unix_ms, value in prices:
+        try:
+            date = pd.to_datetime(int(unix_ms), unit="ms", utc=True).tz_convert(None).normalize()
+            close_by_date[date] = float(value)
+        except Exception:
+            continue
+
+    volume_by_date: dict[pd.Timestamp, float] = {}
+    for unix_ms, value in volumes:
+        try:
+            date = pd.to_datetime(int(unix_ms), unit="ms", utc=True).tz_convert(None).normalize()
+            volume_by_date[date] = float(value)
+        except Exception:
+            continue
+
+    if not close_by_date:
+        raise RuntimeError("Failed to bootstrap BTC daily from CoinGecko: no usable price rows")
+
+    dates = sorted(close_by_date.keys())
+    rows: list[tuple[pd.Timestamp, float, float, float, float, float, float]] = []
+    prev_close: float | None = None
+
+    for date in dates:
+        close_px = float(close_by_date[date])
+        open_px = float(prev_close if prev_close is not None else close_px)
+        high_px = float(max(open_px, close_px))
+        low_px = float(min(open_px, close_px))
+        volume = float(volume_by_date.get(date, float("nan")))
+        change_pct = 0.0 if prev_close in (None, 0.0) else ((close_px / prev_close) - 1.0) * 100.0
+        rows.append((date, open_px, high_px, low_px, close_px, volume, round(change_pct, 2)))
+        prev_close = close_px
+
+    frame = pd.DataFrame(rows, columns=_BTC_DAILY_COLUMNS).drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
+    frame = frame[frame["Date"] <= (pd.Timestamp.utcnow().tz_localize(None).normalize() - pd.Timedelta(days=1))]
+    if frame.empty:
+        raise RuntimeError("Failed to bootstrap BTC daily from CoinGecko: produced empty frame")
+    return frame
+
+
 def refresh_btc_daily_from_binance(cfg: RuntimeConfig, symbol: str = "BTCUSDT") -> dict:
     csv_path = cfg.data_dir / "btc_daily.csv"
-    if not csv_path.exists():
-        raise FileNotFoundError(f"Missing BTC data file: {csv_path}")
-
-    existing = _read_existing_btc_daily(csv_path)
-    if existing.empty:
-        raise ValueError(f"BTC daily file has no usable rows: {csv_path}")
+    if csv_path.exists():
+        existing = _read_existing_btc_daily(csv_path)
+        if existing.empty:
+            raise ValueError(f"BTC daily file has no usable rows: {csv_path}")
+    else:
+        csv_path.parent.mkdir(parents=True, exist_ok=True)
+        existing = _bootstrap_btc_daily_from_coingecko(cfg)
+        existing.to_csv(csv_path, index=False, float_format="%.2f")
+        return {
+            "path": str(csv_path),
+            "rows_before": 0,
+            "rows_after": int(len(existing)),
+            "rows_added": int(len(existing)),
+            "last_date_before": None,
+            "last_date_after": str(pd.Timestamp(existing["Date"].max()).date()),
+        }
 
     last_date = pd.Timestamp(existing["Date"].max()).normalize()
     next_date = last_date + pd.Timedelta(days=1)

@@ -70,6 +70,35 @@ class BtcPriceBackfillTests(unittest.TestCase):
             self.assertIn("2024-01-04", updated["Date"].tolist())
             self.assertEqual(stats["rows_added"], 2)
 
+    @patch("risk_engine.sources.btc_price_backfill.requests.get")
+    def test_refresh_bootstraps_when_btc_daily_missing(self, mocked_get) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            (root / "data").mkdir(parents=True, exist_ok=True)
+
+            mocked_response = mocked_get.return_value
+            mocked_response.raise_for_status.return_value = None
+            mocked_response.json.return_value = {
+                "prices": [
+                    [1704067200000, 42000.0],  # 2024-01-01
+                    [1704153600000, 43000.0],  # 2024-01-02
+                ],
+                "total_volumes": [
+                    [1704067200000, 1000000000.0],
+                    [1704153600000, 1100000000.0],
+                ],
+            }
+
+            stats = refresh_btc_daily_from_binance(self._cfg(root))
+
+            csv_path = root / "data" / "btc_daily.csv"
+            self.assertTrue(csv_path.exists())
+            updated = pd.read_csv(csv_path)
+            self.assertEqual(len(updated), 2)
+            self.assertEqual(stats["rows_before"], 0)
+            self.assertEqual(stats["rows_after"], 2)
+            self.assertEqual(stats["rows_added"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
