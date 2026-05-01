@@ -55,6 +55,7 @@ jobs:
         run: |
           git add -f data/web/v1 || true
           git add -f \
+            data/btc_daily.csv \
             data/total_marketcap.csv \
             data/onchain_metrics.csv \
             data/fear_greed_index.csv \
