@@ -5,75 +5,38 @@ from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
+import requests
 
 from ..config import RuntimeConfig
-from .common import safe_get_json
 
-
-GLASSNODE_BASE = "https://api.glassnode.com/v1/metrics"
 CORE_METRICS = ["mvrv_z_score", "puell_multiple", "supply_in_profit"]
 
 
-def _parse_glassnode_series(payload: dict) -> Optional[pd.Series]:
-    if not isinstance(payload, list):
-        return None
-
-    rows = []
-    for item in payload:
-        t = item.get("t")
-        value = item.get("v")
-        if t is None or value is None:
-            continue
-        rows.append((pd.to_datetime(int(t), unit="s").tz_localize(None).normalize(), float(value)))
-
-    if not rows:
-        return None
-
-    frame = pd.DataFrame(rows, columns=["Date", "value"]).drop_duplicates(subset=["Date"]).sort_values("Date")
-    return frame.set_index("Date")["value"]
-
-
-def _fetch_glassnode_metric(cfg: RuntimeConfig, endpoint: str) -> Optional[pd.Series]:
+def _fetch_coinmetrics_asset_metrics(
+    cfg: RuntimeConfig,
+    metrics: list[str],
+) -> Optional[pd.DataFrame]:
     if not cfg.refresh_api_sources:
         return None
-    if not cfg.enable_paid_sources:
-        return None
-    if not cfg.glassnode_api_key:
-        return None
 
-    payload = safe_get_json(
-        url=f"{GLASSNODE_BASE}/{endpoint}",
-        timeout_seconds=cfg.request_timeout_seconds,
-        params={
-            "a": "BTC",
-            "i": "24h",
-            "api_key": cfg.glassnode_api_key,
-            "f": "json",
-        },
-    )
-
-    if payload is None:
+    if not metrics:
         return None
 
-    return _parse_glassnode_series(payload)
-
-
-def _fetch_coinmetrics_mvrv_fallback(cfg: RuntimeConfig) -> Optional[pd.Series]:
-    if not cfg.refresh_api_sources:
-        return None
-    # Community endpoint does not require a key for many metrics.
-    payload = safe_get_json(
-        url="https://community-api.coinmetrics.io/v4/timeseries/asset-metrics",
-        timeout_seconds=cfg.request_timeout_seconds,
-        params={
-            "assets": "btc",
-            "metrics": "CapMrktCurUSD,CapRealUSD",
-            "frequency": "1d",
-            "start_time": cfg.start_date,
-        },
-    )
-
-    if payload is None:
+    try:
+        response = requests.get(
+            "https://community-api.coinmetrics.io/v4/timeseries/asset-metrics",
+            params={
+                "assets": "btc",
+                "metrics": ",".join(metrics),
+                "frequency": "1d",
+                "start_time": cfg.start_date,
+                "page_size": 10000,
+            },
+            timeout=cfg.request_timeout_seconds,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except Exception:
         return None
 
     data = payload.get("data", [])
@@ -84,23 +47,34 @@ def _fetch_coinmetrics_mvrv_fallback(cfg: RuntimeConfig) -> Optional[pd.Series]:
     if "time" not in frame.columns:
         return None
 
-    for column in ["CapMrktCurUSD", "CapRealUSD"]:
-        if column not in frame.columns:
-            return None
-
     frame["Date"] = pd.to_datetime(frame["time"]).dt.tz_localize(None).dt.normalize()
-    frame["CapMrktCurUSD"] = pd.to_numeric(frame["CapMrktCurUSD"], errors="coerce")
-    frame["CapRealUSD"] = pd.to_numeric(frame["CapRealUSD"], errors="coerce")
-
-    frame = frame.dropna(subset=["CapMrktCurUSD", "CapRealUSD"]).sort_values("Date")
+    for metric in metrics:
+        if metric in frame.columns:
+            frame[metric] = pd.to_numeric(frame[metric], errors="coerce")
+    frame = frame.dropna(subset=["Date"]).sort_values("Date")
+    keep = ["Date"] + [m for m in metrics if m in frame.columns]
+    frame = frame[keep]
     if frame.empty:
         return None
 
-    spread = frame["CapMrktCurUSD"] - frame["CapRealUSD"]
-    scale = frame["CapMrktCurUSD"].rolling(365, min_periods=90).std(ddof=0)
-    mvrv_z = spread / scale.replace({0.0: np.nan})
+    return frame
 
-    return pd.Series(mvrv_z.values, index=frame["Date"], name="mvrv_z_score")
+
+def _mvrv_z_from_ratio(ratio: pd.Series) -> pd.Series:
+    mean = ratio.expanding(min_periods=365).mean()
+    std = ratio.expanding(min_periods=365).std(ddof=0).replace({0.0: np.nan})
+    return (ratio - mean) / std
+
+
+def _puell_from_issuance_usd(issuance_usd: pd.Series) -> pd.Series:
+    denom = issuance_usd.rolling(365, min_periods=90).mean().replace({0.0: np.nan})
+    return issuance_usd / denom
+
+
+def _supply_in_profit_proxy_from_mvrv_ratio(mvrv_ratio: pd.Series) -> pd.Series:
+    centered = (mvrv_ratio - 1.0).clip(lower=-2.0, upper=4.0)
+    proxy = 1.0 / (1.0 + np.exp(-2.2 * centered))
+    return proxy.clip(lower=0.0, upper=1.0)
 
 
 def _onchain_store_path(cfg: RuntimeConfig) -> Path:
@@ -159,11 +133,14 @@ def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Data
     series_map: Dict[str, pd.Series] = {}
     source_modes: Dict[str, str] = {}
 
-    mvrv = _fetch_glassnode_metric(cfg, endpoint="market/mvrv_z_score")
-    mvrv_mode = "glassnode_api" if mvrv is not None else None
-    if mvrv is None:
-        mvrv = _fetch_coinmetrics_mvrv_fallback(cfg)
-        mvrv_mode = "coinmetrics_community" if mvrv is not None else None
+    coinmetrics = _fetch_coinmetrics_asset_metrics(cfg, metrics=["CapMVRVCur", "IssTotUSD"])
+
+    mvrv = None
+    if coinmetrics is not None and "CapMVRVCur" in coinmetrics.columns:
+        ratio = coinmetrics.set_index("Date")["CapMVRVCur"].dropna().astype(float)
+        if not ratio.empty:
+            mvrv = pd.Series(_mvrv_z_from_ratio(ratio), name="mvrv_z_score")
+    mvrv_mode = "coinmetrics_community" if mvrv is not None else None
     local_mvrv = fallback_frame["mvrv_z_score"] if "mvrv_z_score" in fallback_frame.columns else None
     series_map["mvrv_z_score"] = _merge_metric(local_mvrv, mvrv, "mvrv_z_score")
     source_modes["mvrv_z_score"] = (
@@ -172,8 +149,12 @@ def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Data
         else ("local_cache" if local_mvrv is not None and not local_mvrv.empty else "unavailable")
     )
 
-    puell = _fetch_glassnode_metric(cfg, endpoint="indicators/puell_multiple")
-    puell_mode = "glassnode_api" if puell is not None else None
+    puell = None
+    if coinmetrics is not None and "IssTotUSD" in coinmetrics.columns:
+        issuance = coinmetrics.set_index("Date")["IssTotUSD"].dropna().astype(float)
+        if not issuance.empty:
+            puell = pd.Series(_puell_from_issuance_usd(issuance), name="puell_multiple")
+    puell_mode = "coinmetrics_community" if puell is not None else None
     local_puell = fallback_frame["puell_multiple"] if "puell_multiple" in fallback_frame.columns else None
     series_map["puell_multiple"] = _merge_metric(local_puell, puell, "puell_multiple")
     source_modes["puell_multiple"] = (
@@ -182,8 +163,15 @@ def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Data
         else ("local_cache" if local_puell is not None and not local_puell.empty else "unavailable")
     )
 
-    supply_profit = _fetch_glassnode_metric(cfg, endpoint="supply/profit_relative")
-    supply_mode = "glassnode_api" if supply_profit is not None else None
+    supply_profit = None
+    if coinmetrics is not None and "CapMVRVCur" in coinmetrics.columns:
+        ratio = coinmetrics.set_index("Date")["CapMVRVCur"].dropna().astype(float)
+        if not ratio.empty:
+            supply_profit = pd.Series(
+                _supply_in_profit_proxy_from_mvrv_ratio(ratio),
+                name="supply_in_profit",
+            )
+    supply_mode = "coinmetrics_community_proxy" if supply_profit is not None else None
     local_supply = fallback_frame["supply_in_profit"] if "supply_in_profit" in fallback_frame.columns else None
     series_map["supply_in_profit"] = _merge_metric(local_supply, supply_profit, "supply_in_profit")
     source_modes["supply_in_profit"] = (

@@ -153,6 +153,8 @@ def _source_mode_multiplier(mode: str) -> float:
         return 1.0
     if mode == "coinmetrics_community":
         return 0.90
+    if mode == "coinmetrics_community_proxy":
+        return 0.80
     if mode in {"apple_rss_top_free"}:
         return 0.80
     if mode in {"local_cache"}:
@@ -490,9 +492,9 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         + output["headline_total_market_mix_weight"] * output["total_market_risk_heat"]
     ).clip(0.0, 1.0)
 
-    fallback_monthly_heat = output["btc_risk_heat"].astype(float).resample("M").last()
-    top_monthly = output["top_reversal_risk"].astype(float).resample("M").last().fillna(fallback_monthly_heat)
-    bottom_monthly = output["bottom_reversal_risk"].astype(float).resample("M").last().fillna(1.0 - fallback_monthly_heat)
+    fallback_monthly_heat = output["btc_risk_heat"].astype(float).resample(pd.offsets.MonthEnd()).last()
+    top_monthly = output["top_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last().fillna(fallback_monthly_heat)
+    bottom_monthly = output["bottom_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last().fillna(1.0 - fallback_monthly_heat)
     top_operational = _build_operational_alert_policy(
         top_monthly,
         alert_rate=float(runtime.operational_top_alert_rate),
@@ -518,12 +520,12 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
 
     benchmark_result = evaluate_benchmark(
         runtime,
-        monthly_price=output["btc_price"].astype(float).resample("M").last(),
+        monthly_price=output["btc_price"].astype(float).resample(pd.offsets.MonthEnd()).last(),
         signals={
-            "trend_heat": output["trend_heat"].astype(float).resample("M").last(),
-            "top_reversal_risk": output["top_reversal_risk"].astype(float).resample("M").last(),
-            "bottom_reversal_risk": output["bottom_reversal_risk"].astype(float).resample("M").last(),
-            "attention_score": output["attention_score"].astype(float).resample("M").last(),
+            "trend_heat": output["trend_heat"].astype(float).resample(pd.offsets.MonthEnd()).last(),
+            "top_reversal_risk": output["top_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last(),
+            "bottom_reversal_risk": output["bottom_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last(),
+            "attention_score": output["attention_score"].astype(float).resample(pd.offsets.MonthEnd()).last(),
         },
         calibration_metadata=calibrated.metadata,
     )
@@ -634,7 +636,7 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
 
     combined_benchmark_warnings = list(benchmark_result.warnings) + list(regression_warnings)
 
-    as_of = pd.Timestamp.utcnow().tz_localize(None).normalize()
+    as_of = pd.Timestamp.now("UTC").tz_localize(None).normalize()
 
     source_map = {
         "btc_price": btc_price,
