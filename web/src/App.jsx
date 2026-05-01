@@ -14,7 +14,7 @@ import zoomPlugin from "chartjs-plugin-zoom";
 import { Line } from "react-chartjs-2";
 
 import { chartData, loadDashboardData, valueLabel } from "./data";
-import { useBreakdown } from "./useBreakdown";
+import { CURATED_METRICS, METRIC_COPY } from "./copy";
 
 ChartJS.register(
   CategoryScale,
@@ -31,7 +31,6 @@ ChartJS.register(
 const COLORS = {
   bg: "#0a0a0a",
   panel: "#111111",
-  panelHeader: "#0b0b0b",
   border: "#232323",
   borderDim: "#191919",
   text: "#cbc3ab",
@@ -40,87 +39,21 @@ const COLORS = {
   red: "#ee3333",
   green: "#22cc55",
   blue: "#5ca2ff",
+  violet: "#b58cff",
 };
 
 const FONT = "'IBM Plex Mono', 'Courier New', monospace";
 const PRICE_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
-const DAILY_METRIC_ROWS = [
-  {
-    metric: "btc_trend_extension_50d_350d",
-    calc: "SMA_50(BTC close) / SMA_350(BTC close)",
-  },
-  {
-    metric: "btc_running_roi_1y",
-    calc: "(BTC_t / BTC_t-365) - 1",
-  },
-  {
-    metric: "btc_log_reg_deviation",
-    calc: "BTC close / exp(polyfit(log(time), log(BTC close)))",
-  },
-  {
-    metric: "btc_drawdown_from_ath",
-    calc: "(BTC close / cummax(BTC close)) - 1",
-  },
-  {
-    metric: "btc_realized_vol_30d",
-    calc: "std(log returns, 30d) * sqrt(365), direction inverted for risk pressure",
-  },
-  {
-    metric: "total_* price-structure metrics",
-    calc: "Same formulas as BTC metrics, applied to total market cap",
-  },
-  {
-    metric: "btc_dominance_proxy",
-    calc: "(BTC close / max(BTC close)) / (total market cap / max(total market cap))",
-  },
-  {
-    metric: "fear_greed_index",
-    calc: "Daily value from alternative.me, normalized in scoring pipeline",
-  },
-];
-
-const SCORE_ROWS = [
-  "Each metric is transformed with rolling robust normalization and a bounded signed heat signal.",
-  "Per-category heat and attention are reliability-weighted means of available metrics.",
-  "Category weights are then reliability-adjusted and re-normalized each day.",
-  "headline_heat = confidence-aware blend of BTC heat and total-market heat (70/30 anchor).",
-  "headline_attention = confidence-aware blend of BTC attention and total-market attention (70/30 anchor).",
-  "confidence_score = 0.7 * btc_confidence + 0.3 * total_market_confidence.",
-];
-
-const CYCLE_ROWS = [
-  {
-    metric: "cycle_heat_score",
-    calc: "Weighted monthly composite of valuation/speculation/attention/macro hot percentiles",
-  },
-  {
-    metric: "cycle_cold_score",
-    calc: "1 - category hot scores, aggregated with same category weights",
-  },
-  {
-    metric: "cycle_p_frenzy / cycle_p_accumulation",
-    calc: "Logistic mapping of cycle_heat_score / cycle_cold_score with confidence shrinkage",
-  },
-  {
-    metric: "cycle_signal_regime",
-    calc: "BUY/HOLD/SELL from threshold + confirmation-months + cooldown rules",
-  },
-];
-
 const hoverGuidePlugin = {
   id: "hoverGuide",
   afterDatasetsDraw(chart) {
     const activeElements = chart.tooltip?.getActiveElements?.() ?? [];
-    if (!activeElements.length) {
-      return;
-    }
+    if (!activeElements.length) return;
 
     const x = activeElements[0]?.element?.x;
     const { top, bottom } = chart.chartArea || {};
-    if (!Number.isFinite(x) || !Number.isFinite(top) || !Number.isFinite(bottom)) {
-      return;
-    }
+    if (!Number.isFinite(x) || !Number.isFinite(top) || !Number.isFinite(bottom)) return;
 
     const { ctx } = chart;
     ctx.save();
@@ -133,32 +66,6 @@ const hoverGuidePlugin = {
     ctx.restore();
   },
 };
-
-function alignSeries(primary, secondary) {
-  const secondaryMap = new Map();
-  secondary.labels.forEach((label, idx) => {
-    secondaryMap.set(label, secondary.values[idx] ?? null);
-  });
-
-  const labels = [];
-  const primaryValues = [];
-  const secondaryValues = [];
-
-  primary.labels.forEach((label, idx) => {
-    if (!secondaryMap.has(label)) {
-      return;
-    }
-    labels.push(label);
-    primaryValues.push(primary.values[idx] ?? null);
-    secondaryValues.push(secondaryMap.get(label) ?? null);
-  });
-
-  return {
-    labels,
-    primaryValues,
-    secondaryValues,
-  };
-}
 
 function alignOverlayValues(labels, overlaySeries) {
   const overlayMap = new Map();
@@ -173,26 +80,93 @@ function formatPrice(value) {
   return Number.isFinite(num) ? PRICE_FORMAT.format(num) : "n/a";
 }
 
-function formatPct(value) {
-  const num = Number(value);
-  if (!Number.isFinite(num)) {
-    return "n/a";
-  }
-  return `${(num * 100).toFixed(1)}%`;
+function makeChartOptions({
+  numLabels,
+  hasPrice,
+  priceScaleType,
+  accentColor,
+  yAutoScale = false,
+  yDomain = [0, 1],
+}) {
+  const [yMin, yMax] = yDomain;
+  const yScale = {
+    ...(yAutoScale ? {} : { min: yMin, max: yMax }),
+    ticks: { color: COLORS.muted, font: { family: FONT, size: 10 } },
+    grid: { color: COLORS.borderDim },
+    border: { color: COLORS.border },
+  };
+  return {
+    animation: false,
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
+    scales: {
+      x: {
+        ticks: { maxTicksLimit: 8, color: COLORS.muted, font: { family: FONT, size: 10 } },
+        grid: { color: COLORS.borderDim },
+        border: { color: COLORS.border },
+      },
+      y: yScale,
+      yPrice: {
+        display: hasPrice,
+        position: "right",
+        type: priceScaleType,
+        ticks: {
+          callback: (v) => formatPrice(v),
+          color: "#8f8b80",
+          font: { family: FONT, size: 10 },
+        },
+        grid: { drawOnChartArea: false },
+        border: { color: COLORS.border },
+      },
+    },
+    plugins: {
+      legend: {
+        display: true,
+        labels: { color: COLORS.text, font: { family: FONT, size: 11 }, boxWidth: 10 },
+      },
+      tooltip: {
+        backgroundColor: "#090909f0",
+        borderColor: COLORS.border,
+        borderWidth: 1,
+        titleColor: COLORS.text,
+        bodyColor: COLORS.text,
+        titleFont: { family: FONT, size: 11, weight: "600" },
+        bodyFont: { family: FONT, size: 11 },
+        callbacks: {
+          title: (items) => (items.length ? `Date: ${items[0].label}` : ""),
+          label: (item) =>
+            item.dataset.yAxisID === "yPrice"
+              ? `${item.dataset.label}: ${formatPrice(item.parsed.y)}`
+              : `${item.dataset.label}: ${valueLabel(item.parsed.y, 4)}`,
+        },
+      },
+      zoom: {
+        limits: { x: { min: 0, max: Math.max(0, numLabels - 1) } },
+        pan: { enabled: true, mode: "x" },
+        zoom: {
+          mode: "x",
+          wheel: { enabled: true },
+          pinch: { enabled: true },
+          drag: {
+            enabled: true,
+            backgroundColor: `${accentColor}1f`,
+            borderColor: accentColor,
+            borderWidth: 1,
+          },
+        },
+      },
+    },
+  };
 }
 
-function snapshotCards(latestSnapshot) {
-  return [
-    { label: "Headline Heat", value: latestSnapshot.headline_heat, tone: "red" },
-    { label: "Headline Attention", value: latestSnapshot.headline_attention, tone: "amber" },
-    { label: "Cycle Regime Index", value: latestSnapshot.cycle_model?.heat_score, tone: "red" },
-    { label: "Cycle Confidence", value: latestSnapshot.cycle_model?.confidence, tone: "blue" },
-    { label: "BTC Risk Heat", value: latestSnapshot.btc_risk?.heat, tone: "red" },
-    { label: "BTC Risk Attention", value: latestSnapshot.btc_risk?.attention, tone: "amber" },
-    { label: "Total Market Heat", value: latestSnapshot.total_market_risk?.heat, tone: "red" },
-    { label: "Total Market Attention", value: latestSnapshot.total_market_risk?.attention, tone: "amber" },
-    { label: "Confidence Score", value: latestSnapshot.confidence_score, tone: "blue" },
-  ];
+function MetricCard({ label, value, tone = "amber", highlight = false }) {
+  return (
+    <article className={`bb-card${highlight ? " bb-card--highlight" : ""}`}>
+      <p className="bb-card__label">{label}</p>
+      <p className={`bb-card__value bb-card__value--${tone}`}>{valueLabel(value)}</p>
+    </article>
+  );
 }
 
 function StatusTicker({ manifest }) {
@@ -205,77 +179,231 @@ function StatusTicker({ manifest }) {
   );
 }
 
-function MetricCard({ label, value, tone = "amber", highlight = false }) {
+function OverviewPanel({ historyCore, setActiveTab }) {
+  const chartRef = useRef(null);
+  const [visible, setVisible] = useState({ heat: true, attention: true, cycle: true, price: true });
+  const [priceScaleType, setPriceScaleType] = useState("logarithmic");
+
+  const heatSeries = useMemo(() => chartData(historyCore, "headline_heat"), [historyCore]);
+  const attnValues = useMemo(
+    () => alignOverlayValues(heatSeries.labels, chartData(historyCore, "headline_attention")),
+    [heatSeries.labels, historyCore],
+  );
+  const cycleValues = useMemo(
+    () => alignOverlayValues(heatSeries.labels, chartData(historyCore, "cycle_heat_score")),
+    [heatSeries.labels, historyCore],
+  );
+  const btcValues = useMemo(
+    () => alignOverlayValues(heatSeries.labels, chartData(historyCore, "btc_price")),
+    [heatSeries.labels, historyCore],
+  );
+
+  const hasBtcData = btcValues.some((v) => v !== null);
+  const showPrice = visible.price && hasBtcData;
+
+  const datasets = useMemo(() => {
+    const ds = [];
+    if (visible.heat) {
+      ds.push({
+        label: "Heat",
+        data: heatSeries.values,
+        borderColor: COLORS.red,
+        borderWidth: 1.9,
+        pointRadius: 0,
+        fill: true,
+        backgroundColor: "#ee33331f",
+        tension: 0.16,
+      });
+    }
+    if (visible.attention) {
+      ds.push({
+        label: "Attention",
+        data: attnValues,
+        borderColor: COLORS.amber,
+        borderWidth: 1.9,
+        pointRadius: 0,
+        fill: true,
+        backgroundColor: "#f0a50019",
+        tension: 0.16,
+      });
+    }
+    if (visible.cycle) {
+      ds.push({
+        label: "Cycle Regime Index",
+        data: cycleValues,
+        borderColor: COLORS.violet,
+        borderWidth: 1.9,
+        pointRadius: 0,
+        fill: true,
+        backgroundColor: "#b58cff19",
+        tension: 0.14,
+      });
+    }
+    if (showPrice) {
+      ds.push({
+        label: "BTC Price",
+        data: btcValues,
+        borderColor: "#8b8473",
+        borderWidth: 1.3,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.12,
+        yAxisID: "yPrice",
+      });
+    }
+    return ds;
+  }, [visible, heatSeries.values, attnValues, cycleValues, btcValues, showPrice]);
+
+  const chartPayload = useMemo(
+    () => ({ labels: heatSeries.labels, datasets }),
+    [heatSeries.labels, datasets],
+  );
+
+  const options = useMemo(
+    () =>
+      makeChartOptions({
+        numLabels: heatSeries.labels.length,
+        hasPrice: showPrice,
+        priceScaleType,
+        accentColor: COLORS.amber,
+      }),
+    [heatSeries.labels.length, showPrice, priceScaleType],
+  );
+
+  function toggle(key) {
+    setVisible((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
   return (
-    <article className={`bb-card${highlight ? " bb-card--highlight" : ""}`}>
-      <p className="bb-card__label">{label}</p>
-      <p className={`bb-card__value bb-card__value--${tone}`}>{valueLabel(value)}</p>
-    </article>
+    <section className="bb-panel bb-panel--focus">
+      <div className="bb-panel__head">
+        <h2 className="bb-panel__title bb-panel__title--solo">Market Indices</h2>
+        <div className="bb-panel__actions">
+          <label className="bb-checkbox">
+            <input type="checkbox" checked={visible.heat} onChange={() => toggle("heat")} />
+            Heat
+          </label>
+          <label className="bb-checkbox">
+            <input type="checkbox" checked={visible.attention} onChange={() => toggle("attention")} />
+            Attention
+          </label>
+          <label className="bb-checkbox">
+            <input type="checkbox" checked={visible.cycle} onChange={() => toggle("cycle")} />
+            Cycle Regime
+          </label>
+          <label className="bb-checkbox">
+            <input
+              type="checkbox"
+              checked={visible.price}
+              onChange={() => toggle("price")}
+              disabled={!hasBtcData}
+            />
+            BTC Price
+          </label>
+          {showPrice && (
+            <select
+              className="bb-select bb-select--compact"
+              value={priceScaleType}
+              onChange={(e) => setPriceScaleType(e.target.value)}
+            >
+              <option value="logarithmic">LOG</option>
+              <option value="linear">LINEAR</option>
+            </select>
+          )}
+          <button type="button" className="bb-button" onClick={() => chartRef.current?.resetZoom?.()}>
+            Reset Zoom
+          </button>
+        </div>
+      </div>
+      <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="overview-chart">
+        {heatSeries.labels.length > 0 ? (
+          <Line ref={chartRef} data={chartPayload} options={options} plugins={[hoverGuidePlugin]} />
+        ) : (
+          <p className="bb-empty">No data available.</p>
+        )}
+      </div>
+      <div className="bb-overview-desc">
+        <p>
+          Heat, Attention, and the Cycle Regime Index are three independent estimates of where the
+          market sits relative to its historical range. They are computed from different signal
+          categories and may agree or diverge.
+        </p>
+        <p>
+          All three are normalized to 0-1. A higher reading indicates conditions historically
+          associated with more stretched market positioning. It does not predict what happens
+          next.{" "}
+          <button type="button" className="bb-link" onClick={() => setActiveTab("about")}>
+            Details in About →
+          </button>
+        </p>
+        <p className="bb-overview-note">Attention and Cycle Regime data begins December 2014.</p>
+      </div>
+    </section>
   );
 }
 
-function FocusPanel({
-  heatSeries,
-  attentionSeries,
-  btcSeries,
-  cycleSeries,
-  cycleConfidenceSeries,
-}) {
+function MetricsPanel({ metricBtc, historyCore, setActiveTab }) {
+  const availableMetrics = useMemo(
+    () => CURATED_METRICS.filter((m) => chartData(metricBtc, m.btcColumn).values.some((v) => v !== null)),
+    [metricBtc],
+  );
+
+  const defaultKey = availableMetrics.find((m) => m.key === "trend_extension")?.key ?? availableMetrics[0]?.key;
+  const [selectedKey, setSelectedKey] = useState(defaultKey);
+  const [scope, setScope] = useState("btc");
+  const [priceScaleType, setPriceScaleType] = useState("logarithmic");
   const chartRef = useRef(null);
-  const cycleChartRef = useRef(null);
-  const [btcScaleType, setBtcScaleType] = useState("logarithmic");
-  const [cycleBtcScaleType, setCycleBtcScaleType] = useState("logarithmic");
 
-  const merged = useMemo(() => alignSeries(heatSeries, attentionSeries), [heatSeries, attentionSeries]);
-  const btcOverlayValues = useMemo(
-    () => alignOverlayValues(merged.labels, btcSeries),
-    [merged.labels, btcSeries],
-  );
-  const hasBtcOverlay = btcOverlayValues.some((value) => value !== null);
-  const hasData = merged.labels.length > 0;
-  const cycleConfidenceValues = useMemo(
-    () => alignOverlayValues(cycleSeries.labels, cycleConfidenceSeries),
-    [cycleSeries.labels, cycleConfidenceSeries],
-  );
-  const cycleBtcOverlayValues = useMemo(
-    () => alignOverlayValues(cycleSeries.labels, btcSeries),
-    [cycleSeries.labels, btcSeries],
-  );
-  const hasCycleData = cycleSeries.labels.length > 0;
-  const hasCycleBtcOverlay = cycleBtcOverlayValues.some((value) => value !== null);
+  const metric = availableMetrics.find((m) => m.key === selectedKey) ?? availableMetrics[0];
+  const hasTotal = metric?.totalColumn !== null;
+  const copy = METRIC_COPY[metric?.copyKey];
 
-  const chartDataPayload = useMemo(() => {
-    if (!hasData) {
-      return { labels: [], datasets: [] };
-    }
-    return {
-      labels: merged.labels,
+  useEffect(() => {
+    setScope("btc");
+    chartRef.current?.resetZoom?.();
+  }, [selectedKey]);
+
+  const activeColumn =
+    scope === "total" && hasTotal ? metric.totalColumn : metric.btcColumn;
+  const priceColumn =
+    scope === "total" && hasTotal ? "total_market_cap" : "btc_price";
+  const priceLabel =
+    scope === "total" && hasTotal ? "Total Market Cap" : "BTC Price";
+
+  const series = useMemo(
+    () => chartData(metricBtc, activeColumn),
+    [metricBtc, activeColumn],
+  );
+  const priceSeries = useMemo(
+    () => chartData(historyCore, priceColumn),
+    [historyCore, priceColumn],
+  );
+  const priceValues = useMemo(
+    () => alignOverlayValues(series.labels, priceSeries),
+    [series.labels, priceSeries],
+  );
+  const hasPrice = priceValues.some((v) => v !== null);
+
+  const chartPayload = useMemo(
+    () => ({
+      labels: series.labels,
       datasets: [
         {
-          label: "Headline Heat",
-          data: merged.primaryValues,
-          borderColor: COLORS.red,
-          borderWidth: 1.9,
-          pointRadius: 0,
-          fill: true,
-          backgroundColor: "#ee33331f",
-          tension: 0.16,
-        },
-        {
-          label: "Headline Attention",
-          data: merged.secondaryValues,
+          label: copy.shortName,
+          data: series.values,
           borderColor: COLORS.amber,
           borderWidth: 1.9,
           pointRadius: 0,
           fill: true,
           backgroundColor: "#f0a50019",
           tension: 0.16,
+          yAxisID: "y",
         },
-        ...(hasBtcOverlay
+        ...(hasPrice
           ? [
               {
-                label: "BTC Price",
-                data: btcOverlayValues,
+                label: priceLabel,
+                data: priceValues,
                 borderColor: "#8b8473",
                 borderWidth: 1.3,
                 pointRadius: 0,
@@ -286,737 +414,172 @@ function FocusPanel({
             ]
           : []),
       ],
-    };
-  }, [hasData, merged, hasBtcOverlay, btcOverlayValues]);
-
-  const chartOptions = useMemo(
-    () => ({
-      animation: false,
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: "index",
-        intersect: false,
-      },
-      scales: {
-        x: {
-          ticks: {
-            maxTicksLimit: 8,
-            color: COLORS.muted,
-            font: { family: FONT, size: 10 },
-          },
-          grid: { color: COLORS.borderDim },
-          border: { color: COLORS.border },
-        },
-        y: {
-          min: 0,
-          max: 1,
-          ticks: {
-            color: COLORS.muted,
-            font: { family: FONT, size: 10 },
-          },
-          grid: { color: COLORS.borderDim },
-          border: { color: COLORS.border },
-        },
-        yPrice: {
-          display: hasBtcOverlay,
-          position: "right",
-          type: btcScaleType,
-          ticks: {
-            callback: (tickValue) => formatPrice(tickValue),
-            color: "#8f8b80",
-            font: { family: FONT, size: 10 },
-          },
-          grid: { drawOnChartArea: false },
-          border: { color: COLORS.border },
-        },
-      },
-      plugins: {
-        legend: {
-          display: true,
-          labels: {
-            color: COLORS.text,
-            font: { family: FONT, size: 11 },
-            boxWidth: 10,
-          },
-        },
-        tooltip: {
-          backgroundColor: "#090909f0",
-          borderColor: COLORS.border,
-          borderWidth: 1,
-          titleColor: COLORS.text,
-          bodyColor: COLORS.text,
-          titleFont: { family: FONT, size: 11, weight: "600" },
-          bodyFont: { family: FONT, size: 11 },
-          callbacks: {
-            title: (items) => (items.length ? `Date: ${items[0].label}` : ""),
-            label: (item) => (
-              item.dataset.yAxisID === "yPrice"
-                ? `${item.dataset.label}: ${formatPrice(item.parsed.y)}`
-                : `${item.dataset.label}: ${valueLabel(item.parsed.y, 4)}`
-            ),
-          },
-        },
-        zoom: {
-          limits: {
-            x: {
-              min: 0,
-              max: Math.max(0, merged.labels.length - 1),
-            },
-          },
-          pan: {
-            enabled: true,
-            mode: "x",
-          },
-          zoom: {
-            mode: "x",
-            wheel: { enabled: true },
-            pinch: { enabled: true },
-            drag: {
-              enabled: true,
-              backgroundColor: "#f0a5001f",
-              borderColor: COLORS.amber,
-              borderWidth: 1,
-            },
-          },
-        },
-      },
     }),
-    [merged.labels.length, hasBtcOverlay, btcScaleType],
+    [series, priceValues, hasPrice, copy.shortName, priceLabel],
   );
 
-  const cycleChartDataPayload = useMemo(() => {
-    if (!hasCycleData) {
-      return { labels: [], datasets: [] };
-    }
-    return {
-      labels: cycleSeries.labels,
-      datasets: [
-        {
-          label: "Cycle Regime Index (0=cold, 1=hot)",
-          data: cycleSeries.values,
-          borderColor: COLORS.red,
-          borderWidth: 1.9,
-          pointRadius: 0,
-          fill: true,
-          backgroundColor: "#ee333324",
-          tension: 0.14,
-        },
-        {
-          label: "Cycle Confidence",
-          data: cycleConfidenceValues,
-          borderColor: COLORS.blue,
-          borderWidth: 1.5,
-          borderDash: [4, 4],
-          pointRadius: 0,
-          fill: false,
-          tension: 0.14,
-        },
-        ...(hasCycleBtcOverlay
-          ? [
-              {
-                label: "BTC Price",
-                data: cycleBtcOverlayValues,
-                borderColor: "#8b8473",
-                borderWidth: 1.2,
-                pointRadius: 0,
-                fill: false,
-                tension: 0.1,
-                yAxisID: "yPrice",
-              },
-            ]
-          : []),
-      ],
-    };
-  }, [hasCycleData, cycleSeries, cycleConfidenceValues, hasCycleBtcOverlay, cycleBtcOverlayValues]);
-
-  const cycleChartOptions = useMemo(
-    () => ({
-      animation: false,
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: "index",
-        intersect: false,
-      },
-      scales: {
-        x: {
-          ticks: {
-            maxTicksLimit: 8,
-            color: COLORS.muted,
-            font: { family: FONT, size: 10 },
-          },
-          grid: { color: COLORS.borderDim },
-          border: { color: COLORS.border },
-        },
-        y: {
-          min: 0,
-          max: 1,
-          ticks: {
-            color: COLORS.muted,
-            font: { family: FONT, size: 10 },
-          },
-          grid: { color: COLORS.borderDim },
-          border: { color: COLORS.border },
-        },
-        yPrice: {
-          display: hasCycleBtcOverlay,
-          position: "right",
-          type: cycleBtcScaleType,
-          ticks: {
-            callback: (tickValue) => formatPrice(tickValue),
-            color: "#8f8b80",
-            font: { family: FONT, size: 10 },
-          },
-          grid: { drawOnChartArea: false },
-          border: { color: COLORS.border },
-        },
-      },
-      plugins: {
-        legend: {
-          display: true,
-          labels: {
-            color: COLORS.text,
-            font: { family: FONT, size: 11 },
-            boxWidth: 10,
-          },
-        },
-        tooltip: {
-          backgroundColor: "#090909f0",
-          borderColor: COLORS.border,
-          borderWidth: 1,
-          titleColor: COLORS.text,
-          bodyColor: COLORS.text,
-          titleFont: { family: FONT, size: 11, weight: "600" },
-          bodyFont: { family: FONT, size: 11 },
-          callbacks: {
-            title: (items) => (items.length ? `Date: ${items[0].label}` : ""),
-            label: (item) => (
-              item.dataset.yAxisID === "yPrice"
-                ? `${item.dataset.label}: ${formatPrice(item.parsed.y)}`
-                : `${item.dataset.label}: ${valueLabel(item.parsed.y, 4)}`
-            ),
-          },
-        },
-        zoom: {
-          limits: {
-            x: {
-              min: 0,
-              max: Math.max(0, cycleSeries.labels.length - 1),
-            },
-          },
-          pan: {
-            enabled: true,
-            mode: "x",
-          },
-          zoom: {
-            mode: "x",
-            wheel: { enabled: true },
-            pinch: { enabled: true },
-            drag: {
-              enabled: true,
-              backgroundColor: "#5ca2ff1f",
-              borderColor: COLORS.blue,
-              borderWidth: 1,
-            },
-          },
-        },
-      },
-    }),
-    [cycleSeries.labels.length, hasCycleBtcOverlay, cycleBtcScaleType],
+  const options = useMemo(
+    () =>
+      makeChartOptions({
+        numLabels: series.labels.length,
+        hasPrice,
+        priceScaleType,
+        accentColor: COLORS.amber,
+        yDomain: [-1, 1],
+      }),
+    [series.labels.length, hasPrice, priceScaleType],
   );
 
   return (
     <section className="bb-panel bb-panel--focus">
-      <div className="bb-chart-block">
-        <div className="bb-panel__head">
-          <div>
-            <h2 className="bb-panel__title bb-panel__title--solo">Headline Heat + Headline Attention</h2>
-          </div>
-          <div className="bb-panel__actions">
-            <label className="bb-checkbox">
-              BTC SCALE
-              <select className="bb-select bb-select--compact" value={btcScaleType} onChange={(event) => setBtcScaleType(event.target.value)}>
-                <option value="logarithmic">LOG</option>
-                <option value="linear">LINEAR</option>
-              </select>
-            </label>
-            <button type="button" className="bb-button" onClick={() => chartRef.current?.resetZoom?.()}>
-              Reset Zoom
-            </button>
-          </div>
-        </div>
-        <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="focus-chart">
-          {hasData ? (
-            <Line ref={chartRef} data={chartDataPayload} options={chartOptions} plugins={[hoverGuidePlugin]} />
-          ) : (
-            <p className="bb-empty">No focus-series data available.</p>
-          )}
-        </div>
-      </div>
-
-      <div className="bb-chart-block bb-chart-block--spaced">
-        <div className="bb-panel__head">
-          <div>
-            <h2 className="bb-panel__title bb-panel__title--solo">Cycle Regime Index</h2>
-          </div>
-          <div className="bb-panel__actions">
-            <label className="bb-checkbox">
-              BTC SCALE
-              <select
-                className="bb-select bb-select--compact"
-                value={cycleBtcScaleType}
-                onChange={(event) => setCycleBtcScaleType(event.target.value)}
-              >
-              <option value="logarithmic">LOG</option>
-              <option value="linear">LINEAR</option>
-            </select>
-            </label>
-            <button type="button" className="bb-button" onClick={() => cycleChartRef.current?.resetZoom?.()}>
-              Reset Zoom
-            </button>
-          </div>
-        </div>
-        <div className="bb-chart-wrap bb-chart-wrap--cycle" data-testid="cycle-chart">
-          {hasCycleData ? (
-            <Line ref={cycleChartRef} data={cycleChartDataPayload} options={cycleChartOptions} plugins={[hoverGuidePlugin]} />
-          ) : (
-            <p className="bb-empty">No cycle-series data available.</p>
-          )}
-        </div>
-      </div>
-
-      <p className="bb-hint">Scroll to zoom, drag to zoom a range, drag horizontally to pan, and hover to inspect values at each date.</p>
-      <p className="bb-hint">
-        CRI is a normalized 0-1 multi-year regime estimate: lower values imply historically cheaper conditions, higher values imply historically hotter conditions.
-      </p>
-    </section>
-  );
-}
-
-function chartOptions(showOverlay, hasOverlayData, overlayScaleType = "linear") {
-  return {
-    animation: false,
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { mode: "index", intersect: false },
-    scales: {
-      x: {
-        ticks: {
-          maxTicksLimit: 7,
-          color: COLORS.muted,
-          font: { family: FONT, size: 10 },
-        },
-        grid: { color: COLORS.borderDim },
-        border: { color: COLORS.border },
-      },
-      y: {
-        ticks: {
-          color: COLORS.muted,
-          font: { family: FONT, size: 10 },
-        },
-        grid: { color: COLORS.borderDim },
-        border: { color: COLORS.border },
-      },
-      yOverlay: {
-        display: showOverlay && hasOverlayData,
-        position: "right",
-        type: overlayScaleType,
-        ticks: {
-          callback: (tickValue) => formatPrice(tickValue),
-          color: "#8f8b80",
-          font: { family: FONT, size: 10 },
-        },
-        grid: { drawOnChartArea: false },
-        border: { color: COLORS.border },
-      },
-    },
-    plugins: {
-      legend: {
-        display: showOverlay && hasOverlayData,
-        labels: {
-          color: COLORS.text,
-          font: { family: FONT, size: 10 },
-        },
-      },
-      tooltip: {
-        backgroundColor: "#090909f0",
-        borderColor: COLORS.border,
-        borderWidth: 1,
-        titleColor: COLORS.text,
-        bodyColor: COLORS.text,
-        titleFont: { family: FONT, size: 11, weight: "600" },
-        bodyFont: { family: FONT, size: 11 },
-        callbacks: {
-          label: (item) => (
-            item.dataset.yAxisID === "yOverlay"
-              ? `${item.dataset.label}: ${formatPrice(item.parsed.y)}`
-              : `${item.dataset.label}: ${valueLabel(item.parsed.y, 4)}`
-          ),
-        },
-      },
-    },
-  };
-}
-
-function BreakdownPanel({
-  title,
-  payload,
-  color,
-  overlayPayload,
-  overlayColumn,
-  overlayLabel,
-  defaultOverlayScale = "linear",
-  overlayScaleToggle = false,
-}) {
-  const {
-    columns,
-    selectedColumn,
-    setSelectedColumn,
-    showOverlay,
-    setShowOverlay,
-    series,
-    latestContributions,
-    hasOverlayData,
-  } = useBreakdown(payload, overlayPayload, overlayColumn);
-  const [overlayScaleType, setOverlayScaleType] = useState(defaultOverlayScale);
-
-  useEffect(() => {
-    setOverlayScaleType(defaultOverlayScale);
-  }, [defaultOverlayScale]);
-
-  const datasets = [
-    {
-      label: selectedColumn,
-      data: series.values,
-      borderColor: color,
-      borderWidth: 1.7,
-      pointRadius: 0,
-      fill: true,
-      backgroundColor: `${color}1d`,
-      tension: 0.18,
-      yAxisID: "y",
-    },
-    ...(showOverlay && hasOverlayData
-      ? [
-          {
-            label: overlayLabel,
-            data: series.overlayValues,
-            borderColor: "#7d7666",
-            borderWidth: 1.1,
-            pointRadius: 0,
-            fill: false,
-            tension: 0.14,
-            yAxisID: "yOverlay",
-          },
-        ]
-      : []),
-  ];
-
-  return (
-    <section className="bb-panel">
-      <div className="bb-panel__head bb-panel__head--tight">
-        <h3 className="bb-panel__title bb-panel__title--small">{title}</h3>
-        <div className="bb-controls">
-          <label className="bb-checkbox">
-            <input
-              type="checkbox"
-              checked={showOverlay}
-              onChange={(event) => setShowOverlay(event.target.checked)}
-              disabled={!hasOverlayData}
-            />
-            + {overlayLabel}
-          </label>
-          {overlayScaleToggle && hasOverlayData && (
-            <label className="bb-checkbox">
-              BTC SCALE
-              <select
-                className="bb-select bb-select--compact"
-                value={overlayScaleType}
-                onChange={(event) => setOverlayScaleType(event.target.value)}
-                disabled={!showOverlay}
-              >
-                <option value="logarithmic">LOG</option>
-                <option value="linear">LINEAR</option>
-              </select>
-            </label>
-          )}
-          <select className="bb-select" value={selectedColumn} onChange={(event) => setSelectedColumn(event.target.value)}>
-            {columns.map((name) => (
-              <option key={name} value={name}>{name}</option>
+      <div className="bb-panel__head">
+        <div className="bb-controls-left">
+          <select
+            className="bb-metric-select"
+            value={selectedKey}
+            onChange={(e) => setSelectedKey(e.target.value)}
+          >
+            {availableMetrics.map((m) => (
+              <option key={m.key} value={m.key}>
+                {METRIC_COPY[m.copyKey].shortName}
+              </option>
             ))}
           </select>
-        </div>
-      </div>
-      <div className="bb-chart-wrap bb-chart-wrap--debug">
-        <Line
-          data={{ labels: series.labels, datasets }}
-          options={chartOptions(showOverlay, hasOverlayData, overlayScaleType)}
-          plugins={[hoverGuidePlugin]}
-        />
-      </div>
-      <p className="bb-table-title">Top Heat Contributions</p>
-      <table className="bb-table">
-        <thead>
-          <tr>
-            <th>Signal</th>
-            <th style={{ textAlign: "right" }}>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {latestContributions.length === 0
-            ? (
-              <tr><td colSpan={2}>No data</td></tr>
-            )
-            : latestContributions.map((item) => (
-              <tr key={item.name}>
-                <td>{item.name}</td>
-                <td>{valueLabel(item.value, 4)}</td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
-    </section>
-  );
-}
-
-function DiagnosticsPanel({ diagnostics }) {
-  const sourceModes = useMemo(() => {
-    const rows = Array.isArray(diagnostics?.source_modes) ? diagnostics.source_modes : [];
-    const map = new Map();
-    rows.forEach((row) => map.set(row.source, row.mode));
-    return map;
-  }, [diagnostics]);
-
-  const sourceHealth = Array.isArray(diagnostics?.source_health) ? diagnostics.source_health : [];
-  const sanity = Array.isArray(diagnostics?.sanity_report) ? diagnostics.sanity_report : [];
-  const warnings = Array.isArray(diagnostics?.validation?.warnings) ? diagnostics.validation.warnings : [];
-  const benchmarkSummary = Array.isArray(diagnostics?.benchmark_summary) ? diagnostics.benchmark_summary : [];
-  const benchmarkByLabel = Array.isArray(diagnostics?.benchmark_by_label) ? diagnostics.benchmark_by_label : [];
-  const benchmarkBySignal = Array.isArray(diagnostics?.benchmark_by_signal) ? diagnostics.benchmark_by_signal : [];
-  const benchmarkConfig = diagnostics?.benchmark_config ?? {};
-  const calibrationMetadata = diagnostics?.calibration_metadata ?? {};
-
-  const topKpi = benchmarkSummary.find((row) => row.kpi === "lead_recall_top");
-  const bottomKpi = benchmarkSummary.find((row) => row.kpi === "lead_recall_bottom");
-
-  return (
-    <section className="bb-panel">
-      <div className="bb-panel__head bb-panel__head--tight">
-        <h3 className="bb-panel__title bb-panel__title--small">System Diagnostics</h3>
-      </div>
-      <div className="bb-diag-grid">
-        <div>
-          <p className="bb-table-title">Source Availability</p>
-          <table className="bb-table">
-            <thead>
-              <tr>
-                <th>Source</th>
-                <th>Avail</th>
-                <th>Mode</th>
-                <th style={{ textAlign: "right" }}>Stale (d)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sourceHealth.map((row) => (
-                <tr key={row.source}>
-                  <td>{row.source}</td>
-                  <td style={{ color: row.available ? COLORS.green : COLORS.red }}>{row.available ? "YES" : "NO"}</td>
-                  <td>{sourceModes.get(row.source) || "unknown"}</td>
-                  <td>{row.staleness_days ?? "n/a"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div>
-          <p className="bb-table-title">Sanity Report</p>
-          <table className="bb-table">
-            <thead>
-              <tr>
-                <th>Check</th>
-                <th>Pass</th>
-                <th>Value</th>
-                <th style={{ textAlign: "right" }}>Threshold</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sanity.map((row) => (
-                <tr key={row.check}>
-                  <td>{row.check}</td>
-                  <td style={{ color: row.passed ? COLORS.green : COLORS.red }}>{row.passed ? "YES" : "NO"}</td>
-                  <td>{row.value ?? "n/a"}</td>
-                  <td>{row.threshold ?? "n/a"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {warnings.length > 0 && (
-            <div className="bb-warnings">
-              <p className="bb-table-title">Validation Warnings</p>
-              <ul>
-                {warnings.map((warning) => (
-                  <li key={warning}>{warning}</li>
-                ))}
-              </ul>
+          {hasTotal && (
+            <div className="bb-scope-toggle">
+              <button
+                type="button"
+                className={`bb-scope-btn${scope === "btc" ? " bb-scope-btn--active" : ""}`}
+                onClick={() => setScope("btc")}
+              >
+                BTC
+              </button>
+              <button
+                type="button"
+                className={`bb-scope-btn${scope === "total" ? " bb-scope-btn--active" : ""}`}
+                onClick={() => setScope("total")}
+              >
+                Total Market
+              </button>
             </div>
           )}
         </div>
-      </div>
-
-      <div className="bb-diag-grid" style={{ marginTop: "1.2rem" }}>
-        <div>
-          <p className="bb-table-title">Benchmark KPIs</p>
-          <table className="bb-table">
-            <thead>
-              <tr>
-                <th>Metric</th>
-                <th>Expanding</th>
-                <th>Recent</th>
-                <th>Delta</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Top Lead Recall @ Alert Budget</td>
-                <td>{formatPct(topKpi?.expanding)}</td>
-                <td>{formatPct(topKpi?.recent)}</td>
-                <td>{formatPct(topKpi?.delta_recent_minus_expanding)}</td>
-              </tr>
-              <tr>
-                <td>Bottom Lead Recall @ Alert Budget</td>
-                <td>{formatPct(bottomKpi?.expanding)}</td>
-                <td>{formatPct(bottomKpi?.recent)}</td>
-                <td>{formatPct(bottomKpi?.delta_recent_minus_expanding)}</td>
-              </tr>
-              <tr>
-                <td>Alert Budget</td>
-                <td colSpan={3}>{formatPct(benchmarkConfig.alert_rate)}</td>
-              </tr>
-              <tr>
-                <td>Calibration Reference</td>
-                <td colSpan={3}>{calibrationMetadata.walkforward_last_train_end || "n/a"}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div>
-          <p className="bb-table-title">Label Comparison (Recent)</p>
-          <table className="bb-table">
-            <thead>
-              <tr>
-                <th>Label</th>
-                <th>Signal</th>
-                <th style={{ textAlign: "right" }}>Lead Recall</th>
-                <th style={{ textAlign: "right" }}>AUC</th>
-              </tr>
-            </thead>
-            <tbody>
-              {benchmarkByLabel
-                .filter((row) => row.window === "recent")
-                .slice(0, 12)
-                .map((row) => (
-                  <tr key={`${row.label_id}-${row.signal}-${row.window}`}>
-                    <td>{row.label_id}</td>
-                    <td>{row.signal}</td>
-                    <td style={{ textAlign: "right" }}>{formatPct(row.lead_recall_at_alert_rate)}</td>
-                    <td style={{ textAlign: "right" }}>{valueLabel(row.auc, 3)}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+        <div className="bb-panel__actions">
+          {hasPrice && (
+            <label className="bb-checkbox">
+              PRICE SCALE
+              <select
+                className="bb-select bb-select--compact"
+                value={priceScaleType}
+                onChange={(e) => setPriceScaleType(e.target.value)}
+              >
+                <option value="logarithmic">LOG</option>
+                <option value="linear">LINEAR</option>
+              </select>
+            </label>
+          )}
+          <button
+            type="button"
+            className="bb-button"
+            onClick={() => chartRef.current?.resetZoom?.()}
+          >
+            Reset Zoom
+          </button>
         </div>
       </div>
-
-      <div style={{ marginTop: "1rem" }}>
-        <p className="bb-table-title">Signal Performance (Window Averages)</p>
-        <table className="bb-table">
-          <thead>
-            <tr>
-              <th>Window</th>
-              <th>Signal</th>
-              <th style={{ textAlign: "right" }}>Lead Recall</th>
-              <th style={{ textAlign: "right" }}>PR-AUC</th>
-              <th style={{ textAlign: "right" }}>False Alarm</th>
-            </tr>
-          </thead>
-          <tbody>
-            {benchmarkBySignal.map((row) => (
-              <tr key={`${row.window}-${row.signal}`}>
-                <td>{row.window}</td>
-                <td>{row.signal}</td>
-                <td style={{ textAlign: "right" }}>{formatPct(row.lead_recall_at_alert_rate)}</td>
-                <td style={{ textAlign: "right" }}>{valueLabel(row.pr_auc, 3)}</td>
-                <td style={{ textAlign: "right" }}>{formatPct(row.false_alarm_rate)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="metrics-chart">
+        {series.labels.length > 0 ? (
+          <Line ref={chartRef} data={chartPayload} options={options} plugins={[hoverGuidePlugin]} />
+        ) : (
+          <p className="bb-empty">No data available for this metric.</p>
+        )}
       </div>
-
-      <p className="bb-hint" style={{ marginTop: "1rem" }}>
-        Benchmarks are transparency metrics, not trade advice. Crypto cycle behavior is asymmetric: bull markets often rise fast and retrace slowly, while bear shocks can fall quickly and recover over months.
-      </p>
-      <p className="bb-hint">
-        Paid on-chain and social datasets may be unavailable, so this benchmark framework is designed to run on currently available free/stable data and track quality over time.
-      </p>
+      <div className="bb-metric-desc">
+        <p className="bb-metric-desc__text">{copy.description}</p>
+        <p className="bb-metric-desc__link">
+          <button type="button" className="bb-link" onClick={() => setActiveTab("about")}>
+            Details in About →
+          </button>
+        </p>
+      </div>
     </section>
   );
 }
 
-function MethodologyPanel() {
-  return (
-    <section className="bb-panel bb-panel--methodology" aria-label="Methodology panel">
-      <div className="bb-panel__head bb-panel__head--tight">
-        <h3 className="bb-panel__title bb-panel__title--small">Technical Methodology</h3>
-      </div>
-      <div className="bb-method">
-        <p className="bb-method__title">Daily Metrics (Current Core)</p>
-        <table className="bb-table">
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th>Calculation</th>
-            </tr>
-          </thead>
-          <tbody>
-            {DAILY_METRIC_ROWS.map((row) => (
-              <tr key={row.metric}>
-                <td>{row.metric}</td>
-                <td>{row.calc}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+const ABOUT_HEADLINE_KEYS = ["headline_heat", "headline_attention", "cycle_regime"];
 
-        <p className="bb-method__title">Scoring</p>
-        <ul className="bb-method__list">
-          {SCORE_ROWS.map((row) => (
-            <li key={row}>{row}</li>
+function AboutPanel() {
+  return (
+    <section className="bb-about">
+      <div className="bb-about__intro">
+        <p>
+          A personal project exploring quantitative approaches to understanding Bitcoin market cycles.
+          The three headline indices (Heat, Attention, and the Cycle Regime Index) are composite
+          signals that synthesize structural, on-chain, and sentiment data to describe where the
+          market appears to sit relative to its historical range. The input metrics below feed into
+          those composites.
+        </p>
+      </div>
+
+      <div className="bb-about__section-title">Headline Indices</div>
+
+      {ABOUT_HEADLINE_KEYS.map((key) => {
+        const copy = METRIC_COPY[key];
+        return (
+          <div key={key} className="bb-about__entry">
+            <div className="bb-about__entry-name">{copy.shortName}</div>
+            <p className="bb-about__desc">{copy.description}</p>
+            <p className="bb-about__not">{copy.notMeaning}</p>
+            <details className="bb-about__technical">
+              <summary>Technical</summary>
+              <table className="bb-table">
+                <tbody>
+                  {copy.technicalRows.map((row) => (
+                    <tr key={row.label}>
+                      <td>{row.label}</td>
+                      <td>{row.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </details>
+          </div>
+        );
+      })}
+
+      <details className="bb-about__technical bb-about__scoring">
+        <summary>Scoring Methodology</summary>
+        <ul>
+          {METRIC_COPY.scoring.steps.map((step) => (
+            <li key={step}>{step}</li>
           ))}
         </ul>
+      </details>
 
-        <p className="bb-method__title">Cycle Model Outputs</p>
-        <table className="bb-table">
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th>Calculation</th>
-            </tr>
-          </thead>
-          <tbody>
-            {CYCLE_ROWS.map((row) => (
-              <tr key={row.metric}>
-                <td>{row.metric}</td>
-                <td>{row.calc}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className="bb-about__section-title">Input Metrics</div>
+
+      {CURATED_METRICS.filter((m) => m.key !== "mvrv").map((m) => {
+        const copy = METRIC_COPY[m.copyKey];
+        return (
+          <div key={m.key} className="bb-about__entry">
+            <div className="bb-about__entry-name">{copy.shortName}</div>
+            <p className="bb-about__desc">{copy.description}</p>
+            <details className="bb-about__technical">
+              <summary>Technical</summary>
+              <table className="bb-table">
+                <tbody>
+                  {copy.technicalRows.map((row) => (
+                    <tr key={row.label}>
+                      <td>{row.label}</td>
+                      <td>{row.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </details>
+          </div>
+        );
+      })}
     </section>
   );
 }
@@ -1025,59 +588,45 @@ export default function App() {
   const [status, setStatus] = useState("loading");
   const [payload, setPayload] = useState(null);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("focus");
-  const [showMethodology, setShowMethodology] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     let active = true;
-
     loadDashboardData()
       .then((data) => {
-        if (!active) {
-          return;
-        }
+        if (!active) return;
         setPayload(data);
         setStatus("ready");
       })
       .catch((err) => {
-        if (!active) {
-          return;
-        }
+        if (!active) return;
         setError(err instanceof Error ? err.message : "Unknown data load error");
         setStatus("error");
       });
-
     return () => {
       active = false;
     };
   }, []);
 
   if (status === "loading") {
-    return <div className="bb-app"><p className="bb-status">LOADING DASHBOARD<span className="bb-blink">_</span></p></div>;
+    return (
+      <div className="bb-app">
+        <p className="bb-status">
+          LOADING<span className="bb-blink">_</span>
+        </p>
+      </div>
+    );
   }
 
   if (status === "error") {
-    return <div className="bb-app"><p className="bb-status bb-status--error">ERROR: {error}</p></div>;
+    return (
+      <div className="bb-app">
+        <p className="bb-status bb-status--error">ERROR: {error}</p>
+      </div>
+    );
   }
 
-  const {
-    latestSnapshot,
-    historyCore,
-    categoryBtc,
-    categoryTotal,
-    metricBtc,
-    metricTotal,
-    diagnostics,
-    manifest,
-  } = payload;
-
-  const heatSeries = chartData(historyCore, "headline_heat");
-  const attentionSeries = chartData(historyCore, "headline_attention");
-  const btcSeries = chartData(historyCore, "btc_price");
-  const cycleSeries = chartData(historyCore, "cycle_heat_score");
-  const cycleConfidenceSeries = chartData(historyCore, "cycle_confidence");
-
-  const cards = snapshotCards(latestSnapshot);
+  const { latestSnapshot, historyCore, metricBtc, manifest } = payload;
 
   return (
     <div className="bb-app">
@@ -1085,122 +634,51 @@ export default function App() {
 
       <main className="bb-main">
         <div className="bb-tabs" role="tablist" aria-label="Dashboard Views">
-          <button
-            type="button"
-            className={`bb-tab${activeTab === "focus" ? " bb-tab--active" : ""}`}
-            onClick={() => setActiveTab("focus")}
-            role="tab"
-            aria-selected={activeTab === "focus"}
-          >
-            Focus
-          </button>
-          <button
-            type="button"
-            className={`bb-tab${activeTab === "debug" ? " bb-tab--active" : ""}`}
-            onClick={() => setActiveTab("debug")}
-            role="tab"
-            aria-selected={activeTab === "debug"}
-          >
-            Debug
-          </button>
-          <button
-            type="button"
-            className={`bb-tab${showMethodology ? " bb-tab--active" : ""}`}
-            onClick={() => setShowMethodology((prev) => !prev)}
-            aria-expanded={showMethodology}
-            aria-controls="bb-methodology"
-          >
-            Info
-          </button>
+          {[
+            { key: "overview", label: "Overview" },
+            { key: "metrics", label: "Metrics" },
+            { key: "about", label: "About" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              className={`bb-tab${activeTab === key ? " bb-tab--active" : ""}`}
+              onClick={() => setActiveTab(key)}
+              role="tab"
+              aria-selected={activeTab === key}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
-        {showMethodology && (
-          <div id="bb-methodology">
-            <MethodologyPanel />
-          </div>
+        {activeTab === "overview" && (
+          <section aria-label="Overview">
+            <div className="bb-card-grid bb-card-grid--focus">
+              <MetricCard label="Heat" value={latestSnapshot.headline_heat} tone="red" highlight />
+              <MetricCard label="Attention" value={latestSnapshot.headline_attention} tone="amber" highlight />
+              <MetricCard label="Cycle Regime Index" value={latestSnapshot.cycle_model?.heat_score} tone="violet" highlight />
+            </div>
+            <OverviewPanel historyCore={historyCore} setActiveTab={setActiveTab} />
+          </section>
         )}
 
-        {activeTab === "focus" ? (
-          <section aria-label="Focus view">
-            <div className="bb-card-grid bb-card-grid--focus">
-              <MetricCard label="Headline Heat" value={latestSnapshot.headline_heat} tone="red" highlight />
-              <MetricCard label="Headline Attention" value={latestSnapshot.headline_attention} tone="amber" highlight />
-              <MetricCard label="Cycle Regime Index" value={latestSnapshot.cycle_model?.heat_score} tone="red" highlight />
-              <MetricCard label="Cycle Confidence" value={latestSnapshot.cycle_model?.confidence} tone="blue" />
-              <MetricCard label="Confidence Score" value={latestSnapshot.confidence_score} tone="blue" />
-            </div>
-            <FocusPanel
-              heatSeries={heatSeries}
-              attentionSeries={attentionSeries}
-              btcSeries={btcSeries}
-              cycleSeries={cycleSeries}
-              cycleConfidenceSeries={cycleConfidenceSeries}
-            />
+        {activeTab === "metrics" && (
+          <section aria-label="Metrics">
+            <MetricsPanel metricBtc={metricBtc} historyCore={historyCore} setActiveTab={setActiveTab} />
           </section>
-        ) : (
-          <section aria-label="Debug view">
-            <p className="bb-section-title">Current Snapshot</p>
-            <div className="bb-card-grid">
-              {cards.map((card) => (
-                <MetricCard
-                  key={card.label}
-                  label={card.label}
-                  value={card.value}
-                  tone={card.tone}
-                  highlight={card.label === "Headline Heat" || card.label === "Headline Attention"}
-                />
-              ))}
-            </div>
+        )}
 
-            <p className="bb-section-title">Category Breakdowns</p>
-            <div className="bb-panel-grid bb-panel-grid--two">
-              <BreakdownPanel
-                title="Category — BTC"
-                payload={categoryBtc}
-                color={COLORS.red}
-                overlayPayload={historyCore}
-                overlayColumn="btc_price"
-                overlayLabel="BTC Price"
-                defaultOverlayScale="logarithmic"
-                overlayScaleToggle
-              />
-              <BreakdownPanel
-                title="Category — Total Market"
-                payload={categoryTotal}
-                color={COLORS.amber}
-                overlayPayload={historyCore}
-                overlayColumn="total_market_cap"
-                overlayLabel="Market Cap"
-              />
-            </div>
-
-            <p className="bb-section-title">Metric Breakdowns</p>
-            <div className="bb-panel-grid bb-panel-grid--two">
-              <BreakdownPanel
-                title="Metric — BTC"
-                payload={metricBtc}
-                color={COLORS.green}
-                overlayPayload={historyCore}
-                overlayColumn="btc_price"
-                overlayLabel="BTC Price"
-                defaultOverlayScale="logarithmic"
-                overlayScaleToggle
-              />
-              <BreakdownPanel
-                title="Metric — Total Market"
-                payload={metricTotal}
-                color={COLORS.blue}
-                overlayPayload={historyCore}
-                overlayColumn="total_market_cap"
-                overlayLabel="Market Cap"
-              />
-            </div>
-
-            <p className="bb-section-title">Diagnostics</p>
-            <DiagnosticsPanel diagnostics={diagnostics} />
+        {activeTab === "about" && (
+          <section aria-label="About">
+            <AboutPanel />
           </section>
         )}
       </main>
+
+      <footer className="bb-footer">
+        Personal project &middot; Code written with a lot of support from AI &middot; Not investment advice.
+      </footer>
     </div>
   );
 }

@@ -12,7 +12,9 @@
   --bb-red: #ee3333;
   --bb-green: #22cc55;
   --bb-blue: #5ca2ff;
+  --bb-violet: #b58cff;
   --bb-font: 'IBM Plex Mono', 'Courier New', monospace;
+  --bb-copy-size: 0.8125rem;
 }
 
 * {
@@ -52,7 +54,7 @@ body {
 .bb-brand {
   background: var(--bb-amber);
   color: #060606;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.09em;
   padding: 0.18rem 0.58rem;
@@ -106,7 +108,7 @@ body {
 
 .bb-meta {
   color: var(--bb-muted);
-  font-size: 0.65rem;
+  font-size: 0.66rem;
   white-space: nowrap;
 }
 
@@ -125,7 +127,7 @@ body {
 
 .bb-tab {
   font-family: var(--bb-font);
-  font-size: 0.69rem;
+  font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   border: none;
@@ -148,7 +150,7 @@ body {
 .bb-section-title {
   margin: 0.9rem 0 0.52rem;
   color: var(--bb-muted);
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   border-bottom: 1px solid var(--bb-border);
@@ -179,7 +181,7 @@ body {
 
 .bb-card__label {
   margin: 0;
-  font-size: 0.62rem;
+  font-size: 0.73rem;
   letter-spacing: 0.1em;
   color: var(--bb-muted);
   text-transform: uppercase;
@@ -206,6 +208,17 @@ body {
 
 .bb-card__value--blue {
   color: var(--bb-blue);
+}
+
+.bb-card__value--violet {
+  color: var(--bb-violet);
+}
+
+.bb-card__sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.6rem;
+  color: var(--bb-muted);
+  letter-spacing: 0.05em;
 }
 
 .bb-panel {
@@ -236,12 +249,12 @@ body {
   color: var(--bb-muted);
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 0.58rem;
+  font-size: 0.65rem;
 }
 
 .bb-panel__title {
   margin: 0.08rem 0 0;
-  font-size: 0.83rem;
+  font-size: 0.84rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--bb-text);
@@ -253,7 +266,7 @@ body {
 
 .bb-panel__title--small {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.73rem;
   letter-spacing: 0.1em;
   color: var(--bb-muted);
 }
@@ -268,7 +281,7 @@ body {
 
 .bb-button {
   font-family: var(--bb-font);
-  font-size: 0.63rem;
+  font-size: var(--bb-copy-size);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   border: 1px solid #3f3624;
@@ -293,7 +306,7 @@ body {
   align-items: center;
   gap: 0.3rem;
   color: var(--bb-muted);
-  font-size: 0.63rem;
+  font-size: var(--bb-copy-size);
   white-space: nowrap;
 }
 
@@ -303,7 +316,7 @@ body {
 
 .bb-select {
   font-family: var(--bb-font);
-  font-size: 0.63rem;
+  font-size: var(--bb-copy-size);
   color: var(--bb-text);
   background: #0e0e0e;
   border: 1px solid var(--bb-border);
@@ -343,7 +356,7 @@ body {
 .bb-note-panel__title {
   margin: 0;
   color: var(--bb-amber);
-  font-size: 0.61rem;
+  font-size: 0.65rem;
   letter-spacing: 0.11em;
   text-transform: uppercase;
 }
@@ -351,7 +364,7 @@ body {
 .bb-note-panel__text {
   margin: 0.22rem 0 0;
   color: var(--bb-text);
-  font-size: 0.66rem;
+  font-size: 0.69rem;
   line-height: 1.45;
 }
 
@@ -362,7 +375,7 @@ body {
 .bb-hint {
   margin: 0 0.7rem 0.62rem;
   color: var(--bb-muted);
-  font-size: 0.62rem;
+  font-size: 0.66rem;
   letter-spacing: 0.02em;
 }
 
@@ -400,7 +413,7 @@ body {
 .bb-method__title {
   margin: 0.28rem 0 0.4rem;
   color: var(--bb-muted);
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -409,13 +422,13 @@ body {
   margin: 0 0 0.6rem;
   padding-left: 1rem;
   color: var(--bb-text);
-  font-size: 0.66rem;
+  font-size: 0.7rem;
   line-height: 1.45;
 }
 
 .bb-table-title {
   margin: 0.5rem 0.64rem 0.28rem;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--bb-muted);
@@ -425,13 +438,13 @@ body {
   width: calc(100% - 1.3rem);
   margin: 0 0.65rem 0.62rem;
   border-collapse: collapse;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
 }
 
 .bb-table th {
   text-align: left;
   color: var(--bb-muted);
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 500;
@@ -464,7 +477,7 @@ body {
 
 .bb-warnings li {
   color: var(--bb-red);
-  font-size: 0.67rem;
+  font-size: 0.7rem;
   margin-bottom: 0.22rem;
 }
 
@@ -476,7 +489,7 @@ body {
   color: var(--bb-muted);
   padding: 1rem;
   text-align: center;
-  font-size: 0.74rem;
+  font-size: 0.76rem;
 }
 
 .bb-status--error {
@@ -547,5 +560,312 @@ body {
   .bb-select {
     width: 100%;
     max-width: none;
+  }
+}
+
+/* ── Info hint tooltip ─────────────────────────── */
+.bb-info-hint {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.bb-info-hint__btn {
+  background: none;
+  border: none;
+  color: var(--bb-muted);
+  font-family: var(--bb-font);
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0 0.18rem;
+  line-height: 1;
+}
+
+.bb-info-hint__btn:hover {
+  color: var(--bb-text);
+}
+
+.bb-info-hint__popover {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 230px;
+  background: #111;
+  border: 1px solid var(--bb-border);
+  padding: 0.45rem 0.55rem;
+  font-size: 0.66rem;
+  line-height: 1.5;
+  color: var(--bb-text);
+  z-index: 200;
+  pointer-events: none;
+  white-space: normal;
+}
+
+.bb-info-hint:hover .bb-info-hint__popover,
+.bb-info-hint:focus-within .bb-info-hint__popover {
+  display: block;
+}
+
+/* ── Overview description block ───────────────── */
+.bb-overview-desc {
+  padding: 0.62rem 0.75rem 0.7rem;
+  border-top: 1px solid var(--bb-border);
+}
+
+.bb-overview-desc p {
+  margin: 0 0 0.45rem;
+  font-size: var(--bb-copy-size);
+  line-height: 1.6;
+  color: var(--bb-text);
+}
+
+.bb-overview-desc p:last-child {
+  margin-bottom: 0;
+}
+
+.bb-link {
+  background: none;
+  border: none;
+  color: var(--bb-amber);
+  font-family: var(--bb-font);
+  font-size: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Metric description block ─────────────────── */
+.bb-metric-desc {
+  padding: 0.62rem 0.75rem 0.7rem;
+  border-top: 1px solid var(--bb-border);
+}
+
+.bb-metric-desc__text {
+  margin: 0 0 0.35rem;
+  font-size: var(--bb-copy-size);
+  line-height: 1.6;
+  color: var(--bb-text);
+}
+
+.bb-metric-desc__link {
+  margin: 0;
+  font-size: var(--bb-copy-size);
+}
+
+/* ── Scope toggle (BTC / Total Market) ────────── */
+.bb-scope-toggle {
+  display: inline-flex;
+  border: 1px solid var(--bb-border);
+}
+
+.bb-scope-btn {
+  font-family: var(--bb-font);
+  font-size: var(--bb-copy-size);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: none;
+  border-right: 1px solid var(--bb-border);
+  background: transparent;
+  color: var(--bb-muted);
+  padding: 0.24rem 0.52rem;
+  cursor: pointer;
+}
+
+.bb-scope-btn:last-child {
+  border-right: none;
+}
+
+.bb-scope-btn--active {
+  background: #17140d;
+  color: var(--bb-amber);
+}
+
+.bb-controls-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.bb-metric-select {
+  font-family: var(--bb-font);
+  font-size: 0.96rem;
+  font-weight: 500;
+  color: var(--bb-amber);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bb-border);
+  padding: 0.1rem 0.3rem 0.1rem 0;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  max-width: 400px;
+}
+
+.bb-metric-select:focus {
+  outline: 1px solid var(--bb-amber);
+  outline-offset: 2px;
+}
+
+.bb-metric-select option {
+  background: #111;
+  color: var(--bb-text);
+  font-size: var(--bb-copy-size);
+}
+
+.bb-overview-note {
+  margin: 0.22rem 0 0 !important;
+  font-size: 0.66rem !important;
+  color: var(--bb-muted) !important;
+  letter-spacing: 0.02em;
+}
+
+/* ── About tab ─────────────────────────────────── */
+.bb-about {
+  background: var(--bb-surface);
+  border: 1px solid var(--bb-border);
+  padding: 0.72rem 0.82rem 1.2rem;
+}
+
+.bb-about__intro {
+  margin-bottom: 1rem;
+}
+
+.bb-about__intro p {
+  margin: 0;
+  font-size: var(--bb-copy-size);
+  line-height: 1.65;
+  color: var(--bb-text);
+}
+
+.bb-about__section-title {
+  margin: 1.1rem 0 0.55rem;
+  color: var(--bb-muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--bb-border);
+  padding-bottom: 0.28rem;
+}
+
+.bb-about__entry {
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--bb-border-dim);
+}
+
+.bb-about__entry:last-of-type {
+  border-bottom: none;
+}
+
+.bb-about__entry-name {
+  font-size: 0.84rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--bb-amber);
+  margin-bottom: 0.35rem;
+}
+
+.bb-about__desc {
+  margin: 0 0 0.38rem;
+  font-size: var(--bb-copy-size);
+  line-height: 1.65;
+  color: var(--bb-text);
+}
+
+.bb-about__not {
+  margin: 0 0 0.42rem;
+  font-size: 0.74rem;
+  line-height: 1.55;
+  color: var(--bb-muted);
+}
+
+.bb-about__technical {
+  font-size: 0.7rem;
+}
+
+.bb-about__technical summary {
+  cursor: pointer;
+  color: var(--bb-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  padding: 0.22rem 0;
+  user-select: none;
+}
+
+.bb-about__technical summary:hover {
+  color: var(--bb-text);
+}
+
+.bb-about__technical .bb-table {
+  margin: 0.3rem 0 0;
+  width: 100%;
+}
+
+.bb-about__scoring {
+  margin-bottom: 0.6rem;
+}
+
+.bb-about__scoring ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1rem;
+  color: var(--bb-text);
+  font-size: 0.74rem;
+  line-height: 1.6;
+}
+
+.bb-about__disclaimer {
+  margin-top: 1.4rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--bb-border);
+  font-size: 0.62rem;
+  line-height: 1.55;
+  color: var(--bb-muted);
+}
+
+/* ── Footer ────────────────────────────────────── */
+.bb-footer {
+  border-top: 1px solid var(--bb-border);
+  background: #070707;
+  padding: 0.48rem 0.95rem;
+  font-size: 0.62rem;
+  color: var(--bb-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.bb-footer__link {
+  background: none;
+  border: none;
+  font-family: var(--bb-font);
+  font-size: inherit;
+  color: var(--bb-muted);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.bb-footer__link:hover {
+  color: var(--bb-text);
+}
+
+@media (max-width: 760px) {
+  .bb-controls-left {
+    width: 100%;
+  }
+
+  .bb-scope-toggle {
+    width: 100%;
+  }
+
+  .bb-scope-btn {
+    flex: 1;
   }
 }
