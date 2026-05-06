@@ -94,7 +94,10 @@ def _pr_auc(scores: pd.Series, labels: pd.Series) -> float:
     precision = np.r_[1.0, precision]
     recall = np.r_[0.0, recall]
 
-    area = np.trapz(precision, recall)
+    trapz = getattr(np, "trapezoid", None)
+    if trapz is None:
+        trapz = np.trapz
+    area = trapz(precision, recall)
     return float(area)
 
 
