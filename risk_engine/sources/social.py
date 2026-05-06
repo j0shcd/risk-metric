@@ -471,6 +471,17 @@ def _load_coinbase_app_rank(cfg: RuntimeConfig) -> Tuple[pd.Series, str]:
     return transformed, "unavailable"
 
 
+def _align_series_to_index(series: pd.Series, index: pd.DatetimeIndex) -> pd.Series:
+    aligned = series.reindex(index)
+    if aligned.notna().any():
+        return aligned
+    non_null = series.dropna()
+    if non_null.empty or len(index) == 0:
+        return aligned
+    aligned.iloc[-1] = float(non_null.iloc[-1])
+    return aligned
+
+
 def load_social_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.DataFrame:
     out = pd.DataFrame(index=index)
     source_modes = {}
@@ -481,21 +492,21 @@ def load_social_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.DataF
     if youtube.empty:
         out["youtube_interest"] = np.nan
     else:
-        out["youtube_interest"] = youtube.reindex(index)
+        out["youtube_interest"] = _align_series_to_index(youtube, index)
 
     google_trends, trends_mode = _load_google_trends_interest(cfg)
     source_modes["google_trends_interest"] = trends_mode
     if google_trends.empty:
         out["google_trends_interest"] = np.nan
     else:
-        out["google_trends_interest"] = google_trends.reindex(index)
+        out["google_trends_interest"] = _align_series_to_index(google_trends, index)
 
     coinbase, coinbase_mode = _load_coinbase_app_rank(cfg)
     source_modes["coinbase_app_rank_proxy"] = coinbase_mode
     if coinbase.empty:
         out["coinbase_app_rank_proxy"] = np.nan
     else:
-        out["coinbase_app_rank_proxy"] = coinbase.reindex(index)
+        out["coinbase_app_rank_proxy"] = _align_series_to_index(coinbase, index)
 
     out.attrs["source_modes"] = source_modes
     return out
