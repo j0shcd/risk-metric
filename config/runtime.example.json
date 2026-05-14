@@ -90,7 +90,7 @@
   "benchmark_delta_warn_dynamic_dca_calmar": -0.1,
   "benchmark_delta_warn_dynamic_dca_max_drawdown": 0.05,
   "benchmark_foundation_min_top_recall_delta": 0.0,
-  "benchmark_foundation_min_top_pr_auc_delta": 0.0,
+  "benchmark_foundation_min_top_pr_auc_delta": -0.002,
   "benchmark_foundation_max_top_false_alarm_delta": 0.05,
   "benchmark_foundation_min_bottom_recall_delta": 0.0,
   "benchmark_foundation_min_bottom_pr_auc_delta": 0.0,

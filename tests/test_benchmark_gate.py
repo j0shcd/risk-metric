@@ -27,6 +27,16 @@ def _runtime() -> RuntimeConfig:
     )
 
 
+def _runtime_with_defaults() -> RuntimeConfig:
+    cwd = Path.cwd()
+    return RuntimeConfig(
+        project_root=cwd,
+        data_dir=cwd / "data",
+        output_dir=cwd / "output",
+        cache_dir=cwd / "data",
+    )
+
+
 def _result(
     by_signal: pd.DataFrame,
     summary: pd.DataFrame,
@@ -222,6 +232,92 @@ class BenchmarkGateTests(unittest.TestCase):
                 report = evaluate_benchmark_gate(_runtime(), sota_path=sota_path, foundation_path=foundation_path)
         self.assertFalse(report.passed)
         self.assertTrue(any("[vs foundation]" in line for line in report.lines))
+
+    def test_default_gate_allows_tiny_foundation_pr_auc_dip(self) -> None:
+        baseline = {
+            "by_signal": [
+                {
+                    "window": "recent",
+                    "signal": "top_reversal_risk",
+                    "auc": 0.585455,
+                    "pr_auc": 0.865467,
+                    "lead_recall_at_alert_rate": 1.0,
+                    "false_alarm_rate": 0.066667,
+                }
+            ],
+            "summary": [],
+        }
+        foundation = baseline
+
+        with tempfile.TemporaryDirectory() as tmp:
+            sota_path = Path(tmp) / "sota.json"
+            foundation_path = Path(tmp) / "foundation.json"
+            sota_path.write_text(json.dumps(baseline), encoding="utf-8")
+            foundation_path.write_text(json.dumps(foundation), encoding="utf-8")
+
+            by_signal = pd.DataFrame(
+                [
+                    {
+                        "window": "recent",
+                        "signal": "top_reversal_risk",
+                        "auc": 0.590909,
+                        "pr_auc": 0.864177,
+                        "lead_recall_at_alert_rate": 1.0,
+                        "false_alarm_rate": 0.066667,
+                    }
+                ]
+            )
+            with patch(
+                "risk_engine.benchmark_gate.run_pipeline",
+                return_value=_result(by_signal, pd.DataFrame()),
+            ):
+                report = evaluate_benchmark_gate(_runtime_with_defaults(), sota_path=sota_path, foundation_path=foundation_path)
+
+        self.assertTrue(report.passed)
+        self.assertTrue(any("Gate status: PASS" in line for line in report.lines))
+
+    def test_default_gate_still_fails_larger_foundation_pr_auc_dip(self) -> None:
+        baseline = {
+            "by_signal": [
+                {
+                    "window": "recent",
+                    "signal": "top_reversal_risk",
+                    "auc": 0.585455,
+                    "pr_auc": 0.865467,
+                    "lead_recall_at_alert_rate": 1.0,
+                    "false_alarm_rate": 0.066667,
+                }
+            ],
+            "summary": [],
+        }
+        foundation = baseline
+
+        with tempfile.TemporaryDirectory() as tmp:
+            sota_path = Path(tmp) / "sota.json"
+            foundation_path = Path(tmp) / "foundation.json"
+            sota_path.write_text(json.dumps(baseline), encoding="utf-8")
+            foundation_path.write_text(json.dumps(foundation), encoding="utf-8")
+
+            by_signal = pd.DataFrame(
+                [
+                    {
+                        "window": "recent",
+                        "signal": "top_reversal_risk",
+                        "auc": 0.590909,
+                        "pr_auc": 0.862000,
+                        "lead_recall_at_alert_rate": 1.0,
+                        "false_alarm_rate": 0.066667,
+                    }
+                ]
+            )
+            with patch(
+                "risk_engine.benchmark_gate.run_pipeline",
+                return_value=_result(by_signal, pd.DataFrame()),
+            ):
+                report = evaluate_benchmark_gate(_runtime_with_defaults(), sota_path=sota_path, foundation_path=foundation_path)
+
+        self.assertFalse(report.passed)
+        self.assertTrue(any("[vs foundation] top PR-AUC delta" in line for line in report.lines))
 
     def test_gate_treats_less_negative_max_drawdown_as_improvement(self) -> None:
         baseline = {

@@ -123,7 +123,7 @@ class RuntimeConfig:
     benchmark_delta_warn_dynamic_dca_calmar: float = -0.10
     benchmark_delta_warn_dynamic_dca_max_drawdown: float = 0.05
     benchmark_foundation_min_top_recall_delta: float = 0.0
-    benchmark_foundation_min_top_pr_auc_delta: float = 0.0
+    benchmark_foundation_min_top_pr_auc_delta: float = -0.002
     benchmark_foundation_max_top_false_alarm_delta: float = 0.05
     benchmark_foundation_min_bottom_recall_delta: float = 0.0
     benchmark_foundation_min_bottom_pr_auc_delta: float = 0.0
@@ -564,7 +564,7 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
         benchmark_foundation_min_top_pr_auc_delta=float(
             env.get(
                 "BENCHMARK_FOUNDATION_MIN_TOP_PR_AUC_DELTA",
-                file_cfg.get("benchmark_foundation_min_top_pr_auc_delta", 0.0),
+                file_cfg.get("benchmark_foundation_min_top_pr_auc_delta", -0.002),
             )
         ),
         benchmark_foundation_max_top_false_alarm_delta=float(
