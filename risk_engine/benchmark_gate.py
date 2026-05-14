@@ -62,6 +62,12 @@ def _delta(current: float, baseline: float) -> float:
     return float(current - baseline)
 
 
+def _drawdown_depth_delta(current: float, baseline: float) -> float:
+    if not np.isfinite(current) or not np.isfinite(baseline):
+        return float("nan")
+    return float(abs(current) - abs(baseline))
+
+
 def evaluate_benchmark_gate(
     cfg: RuntimeConfig,
     *,
@@ -169,16 +175,27 @@ def evaluate_benchmark_gate(
         cur = cur_dynamic.get(metric, float("nan"))
         sota_base = sota_dynamic.get(metric, float("nan"))
         foundation_base = foundation_dynamic.get(metric, float("nan"))
-        d_sota = _delta(cur, sota_base)
-        d_foundation = _delta(cur, foundation_base)
-        lines.append(
-            f" - dynamic_dca.{metric}: current={cur:.6f} sota={sota_base:.6f} delta_vs_sota={d_sota:.6f} "
-            f"foundation={foundation_base:.6f} delta_vs_foundation={d_foundation:.6f}"
-        )
+        if metric == "max_drawdown":
+            d_sota = _drawdown_depth_delta(cur, sota_base)
+            d_foundation = _drawdown_depth_delta(cur, foundation_base)
+            lines.append(
+                f" - dynamic_dca.{metric}: current={cur:.6f} sota={sota_base:.6f} depth_delta_vs_sota={d_sota:.6f} "
+                f"foundation={foundation_base:.6f} depth_delta_vs_foundation={d_foundation:.6f}"
+            )
+        else:
+            d_sota = _delta(cur, sota_base)
+            d_foundation = _delta(cur, foundation_base)
+            lines.append(
+                f" - dynamic_dca.{metric}: current={cur:.6f} sota={sota_base:.6f} delta_vs_sota={d_sota:.6f} "
+                f"foundation={foundation_base:.6f} delta_vs_foundation={d_foundation:.6f}"
+            )
 
     cagr_delta_sota = _delta(cur_dynamic.get("cagr", float("nan")), sota_dynamic.get("cagr", float("nan")))
     calmar_delta_sota = _delta(cur_dynamic.get("calmar", float("nan")), sota_dynamic.get("calmar", float("nan")))
-    max_dd_delta_sota = _delta(cur_dynamic.get("max_drawdown", float("nan")), sota_dynamic.get("max_drawdown", float("nan")))
+    max_dd_delta_sota = _drawdown_depth_delta(
+        cur_dynamic.get("max_drawdown", float("nan")),
+        sota_dynamic.get("max_drawdown", float("nan")),
+    )
     if np.isfinite(cagr_delta_sota) and cagr_delta_sota < float(cfg.benchmark_delta_warn_dynamic_dca_cagr):
         failures.append(
             f"[vs SOTA] dynamic DCA CAGR delta {cagr_delta_sota:.6f} is below threshold {float(cfg.benchmark_delta_warn_dynamic_dca_cagr):.6f}"
@@ -189,12 +206,12 @@ def evaluate_benchmark_gate(
         )
     if np.isfinite(max_dd_delta_sota) and max_dd_delta_sota > float(cfg.benchmark_delta_warn_dynamic_dca_max_drawdown):
         failures.append(
-            f"[vs SOTA] dynamic DCA max-drawdown delta {max_dd_delta_sota:.6f} is above threshold {float(cfg.benchmark_delta_warn_dynamic_dca_max_drawdown):.6f}"
+            f"[vs SOTA] dynamic DCA max-drawdown depth delta {max_dd_delta_sota:.6f} is above threshold {float(cfg.benchmark_delta_warn_dynamic_dca_max_drawdown):.6f}"
         )
 
     cagr_delta_foundation = _delta(cur_dynamic.get("cagr", float("nan")), foundation_dynamic.get("cagr", float("nan")))
     calmar_delta_foundation = _delta(cur_dynamic.get("calmar", float("nan")), foundation_dynamic.get("calmar", float("nan")))
-    max_dd_delta_foundation = _delta(
+    max_dd_delta_foundation = _drawdown_depth_delta(
         cur_dynamic.get("max_drawdown", float("nan")),
         foundation_dynamic.get("max_drawdown", float("nan")),
     )
@@ -208,7 +225,7 @@ def evaluate_benchmark_gate(
         )
     if np.isfinite(max_dd_delta_foundation) and max_dd_delta_foundation > float(cfg.benchmark_foundation_max_dynamic_dca_max_drawdown_delta):
         failures.append(
-            f"[vs foundation] dynamic DCA max-drawdown delta {max_dd_delta_foundation:.6f} is above maximum {float(cfg.benchmark_foundation_max_dynamic_dca_max_drawdown_delta):.6f}"
+            f"[vs foundation] dynamic DCA max-drawdown depth delta {max_dd_delta_foundation:.6f} is above maximum {float(cfg.benchmark_foundation_max_dynamic_dca_max_drawdown_delta):.6f}"
         )
 
     if failures:

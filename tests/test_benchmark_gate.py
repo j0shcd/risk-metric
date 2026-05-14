@@ -27,12 +27,17 @@ def _runtime() -> RuntimeConfig:
     )
 
 
-def _result(by_signal: pd.DataFrame, summary: pd.DataFrame) -> RiskOutput:
+def _result(
+    by_signal: pd.DataFrame,
+    summary: pd.DataFrame,
+    financial_summary: pd.DataFrame | None = None,
+) -> RiskOutput:
     return RiskOutput(
         series=pd.DataFrame(),
         feature_frames={},
         benchmark_by_signal=by_signal,
         benchmark_summary=summary,
+        financial_benchmark_summary=financial_summary if financial_summary is not None else pd.DataFrame(),
     )
 
 
@@ -217,6 +222,93 @@ class BenchmarkGateTests(unittest.TestCase):
                 report = evaluate_benchmark_gate(_runtime(), sota_path=sota_path, foundation_path=foundation_path)
         self.assertFalse(report.passed)
         self.assertTrue(any("[vs foundation]" in line for line in report.lines))
+
+    def test_gate_treats_less_negative_max_drawdown_as_improvement(self) -> None:
+        baseline = {
+            "by_signal": [],
+            "summary": [],
+            "financial_summary": [
+                {
+                    "strategy": "dynamic_dca",
+                    "cagr": 0.70,
+                    "calmar": 1.10,
+                    "max_drawdown": -0.62,
+                    "total_return": 100.0,
+                }
+            ],
+        }
+        foundation = baseline
+
+        with tempfile.TemporaryDirectory() as tmp:
+            sota_path = Path(tmp) / "sota.json"
+            foundation_path = Path(tmp) / "foundation.json"
+            sota_path.write_text(json.dumps(baseline), encoding="utf-8")
+            foundation_path.write_text(json.dumps(foundation), encoding="utf-8")
+
+            financial_summary = pd.DataFrame(
+                [
+                    {
+                        "strategy": "dynamic_dca",
+                        "cagr": 0.72,
+                        "calmar": 1.20,
+                        "max_drawdown": -0.54,
+                        "total_return": 110.0,
+                    }
+                ]
+            )
+            with patch(
+                "risk_engine.benchmark_gate.run_pipeline",
+                return_value=_result(pd.DataFrame(), pd.DataFrame(), financial_summary),
+            ):
+                report = evaluate_benchmark_gate(_runtime(), sota_path=sota_path, foundation_path=foundation_path)
+
+        self.assertTrue(report.passed)
+        self.assertTrue(any("depth_delta_vs_sota=-0.080000" in line for line in report.lines))
+
+    def test_gate_fails_when_max_drawdown_depth_regresses(self) -> None:
+        baseline = {
+            "by_signal": [],
+            "summary": [],
+            "financial_summary": [
+                {
+                    "strategy": "dynamic_dca",
+                    "cagr": 0.70,
+                    "calmar": 1.10,
+                    "max_drawdown": -0.62,
+                    "total_return": 100.0,
+                }
+            ],
+        }
+        foundation = baseline
+
+        with tempfile.TemporaryDirectory() as tmp:
+            sota_path = Path(tmp) / "sota.json"
+            foundation_path = Path(tmp) / "foundation.json"
+            sota_path.write_text(json.dumps(baseline), encoding="utf-8")
+            foundation_path.write_text(json.dumps(foundation), encoding="utf-8")
+
+            financial_summary = pd.DataFrame(
+                [
+                    {
+                        "strategy": "dynamic_dca",
+                        "cagr": 0.72,
+                        "calmar": 1.20,
+                        "max_drawdown": -0.70,
+                        "total_return": 110.0,
+                    }
+                ]
+            )
+            with patch(
+                "risk_engine.benchmark_gate.run_pipeline",
+                return_value=_result(pd.DataFrame(), pd.DataFrame(), financial_summary),
+            ):
+                report = evaluate_benchmark_gate(_runtime(), sota_path=sota_path, foundation_path=foundation_path)
+
+        self.assertFalse(report.passed)
+        self.assertTrue(any("[vs SOTA] dynamic DCA max-drawdown depth delta 0.080000" in line for line in report.lines))
+        self.assertTrue(
+            any("[vs foundation] dynamic DCA max-drawdown depth delta 0.080000" in line for line in report.lines)
+        )
 
 
 if __name__ == "__main__":
