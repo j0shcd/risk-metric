@@ -10,7 +10,9 @@ from ..config import RuntimeConfig
 
 
 BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
+BINANCE_US_KLINES_URL = "https://api.binance.us/api/v3/klines"
 COINGECKO_MARKET_CHART_URL = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart"
+COINGECKO_MARKET_CHART_RANGE_URL = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range"
 _BTC_DAILY_COLUMNS = ["Date", "Open", "High", "Low", "Price", "Vol.", "Change %"]
 
 
@@ -40,25 +42,28 @@ def _fetch_binance_klines_page(
     timeout_seconds: int,
     limit: int = 1000,
 ) -> List[list]:
-    try:
-        response = requests.get(
-            BINANCE_KLINES_URL,
-            params={
-                "symbol": symbol,
-                "interval": interval,
-                "startTime": start_time_ms,
-                "limit": limit,
-            },
-            timeout=timeout_seconds,
-        )
-        response.raise_for_status()
-        payload = response.json()
-    except Exception:
-        return []
+    params = {
+        "symbol": symbol,
+        "interval": interval,
+        "startTime": start_time_ms,
+        "limit": limit,
+    }
 
-    if not isinstance(payload, list):
-        return []
-    return payload
+    for base_url in (BINANCE_KLINES_URL, BINANCE_US_KLINES_URL):
+        try:
+            response = requests.get(
+                base_url,
+                params=params,
+                timeout=timeout_seconds,
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except Exception:
+            continue
+
+        if isinstance(payload, list):
+            return payload
+    return []
 
 
 def _klines_to_frame(klines: List[list]) -> pd.DataFrame:
@@ -151,6 +156,61 @@ def _fetch_coingecko_daily_frame(cfg: RuntimeConfig, previous_close: float | Non
     return _coingecko_payload_to_daily_frame(payload, previous_close=previous_close)
 
 
+def _fetch_coingecko_daily_range(
+    cfg: RuntimeConfig,
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+    previous_close: float | None = None,
+) -> pd.DataFrame:
+    if end < start:
+        return pd.DataFrame(columns=_BTC_DAILY_COLUMNS)
+
+    frames: list[pd.DataFrame] = []
+    prior_close = previous_close
+
+    # Keep calls bounded to reduce payload size and improve reliability.
+    window_days = 90
+    cursor = start.normalize()
+    end_norm = end.normalize()
+    while cursor <= end_norm:
+        window_end = min(cursor + pd.Timedelta(days=window_days - 1), end_norm)
+        from_ts = int(cursor.tz_localize("UTC").timestamp())
+        # Inclusive end; add a full day to safely capture the last daily point.
+        to_ts = int((window_end + pd.Timedelta(days=1)).tz_localize("UTC").timestamp())
+
+        try:
+            response = requests.get(
+                COINGECKO_MARKET_CHART_RANGE_URL,
+                params={
+                    "vs_currency": "usd",
+                    "from": from_ts,
+                    "to": to_ts,
+                },
+                timeout=cfg.request_timeout_seconds,
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except Exception:
+            cursor = window_end + pd.Timedelta(days=1)
+            continue
+
+        frame = _coingecko_payload_to_daily_frame(payload, previous_close=prior_close)
+        if not frame.empty:
+            frame = frame[(frame["Date"] >= cursor) & (frame["Date"] <= window_end)].copy()
+            if not frame.empty:
+                frames.append(frame)
+                prior_close = float(frame.iloc[-1]["Price"])
+
+        cursor = window_end + pd.Timedelta(days=1)
+
+    if not frames:
+        return pd.DataFrame(columns=_BTC_DAILY_COLUMNS)
+
+    merged = pd.concat(frames, ignore_index=True)
+    merged = merged.drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
+    return merged
+
+
 def _bootstrap_btc_daily_from_coingecko(cfg: RuntimeConfig) -> pd.DataFrame:
     frame = _fetch_coingecko_daily_frame(cfg)
     frame = frame[frame["Date"] <= _yesterday_utc()]
@@ -221,13 +281,30 @@ def refresh_btc_daily_from_binance(cfg: RuntimeConfig, symbol: str = "BTCUSDT") 
     fetched = fetched[fetched["Date"] <= yesterday_utc].copy()
     needs_update = next_date <= yesterday_utc
 
-    if fetched.empty and needs_update:
-        previous_close = float(existing.iloc[-1]["Price"]) if not existing.empty else None
-        fallback = _fetch_coingecko_daily_frame(cfg, previous_close=previous_close)
-        fallback = fallback[(fallback["Date"] >= next_date) & (fallback["Date"] <= yesterday_utc)].copy()
-        if not fallback.empty:
-            fetched = fallback
-            fetch_mode = "coingecko_fallback"
+    if needs_update:
+        if fetched.empty:
+            missing_start = next_date
+            missing_previous_close = float(existing.iloc[-1]["Price"]) if not existing.empty else None
+        else:
+            last_fetched_date = pd.Timestamp(fetched["Date"].max()).normalize()
+            missing_start = last_fetched_date + pd.Timedelta(days=1)
+            missing_previous_close = float(fetched.iloc[-1]["Price"])
+
+        if missing_start <= yesterday_utc:
+            fallback = _fetch_coingecko_daily_range(
+                cfg,
+                start=missing_start,
+                end=yesterday_utc,
+                previous_close=missing_previous_close,
+            )
+            if not fallback.empty:
+                fetched = (
+                    pd.concat([fetched, fallback], ignore_index=True)
+                    if not fetched.empty
+                    else fallback
+                )
+                fetched = fetched.drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
+                fetch_mode = "coingecko_fallback" if fetch_mode == "none" else "binance+coingecko_fallback"
 
     if fetched.empty:
         merged = existing.copy()

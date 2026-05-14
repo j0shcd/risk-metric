@@ -148,6 +148,57 @@ class BtcPriceBackfillTests(unittest.TestCase):
             self.assertEqual(stats["rows_added"], 2)
             self.assertEqual(stats["fetch_mode"], "coingecko_fallback")
 
+    @patch("risk_engine.sources.btc_price_backfill.requests.get")
+    @patch("risk_engine.sources.btc_price_backfill._fetch_binance_klines_page")
+    def test_refresh_fills_remaining_gap_with_coingecko_when_binance_partial(self, mocked_fetch, mocked_get) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            (root / "data").mkdir(parents=True, exist_ok=True)
+
+            csv_path = root / "data" / "btc_daily.csv"
+            pd.DataFrame(
+                {
+                    "Date": ["2024-01-01", "2024-01-02"],
+                    "Open": [42000.0, 42100.0],
+                    "High": [43000.0, 43200.0],
+                    "Low": [41000.0, 42000.0],
+                    "Price": [42500.0, 42900.0],
+                    "Vol.": [1000000.0, 1100000.0],
+                    "Change %": [1.19, 1.90],
+                }
+            ).to_csv(csv_path, index=False)
+
+            mocked_fetch.side_effect = [
+                [
+                    _kline(1704240000000, 43000.0, 44000.0, 42500.0, 43800.0, 1200000.0),  # 2024-01-03
+                ],
+                [],
+            ]
+
+            mocked_response = mocked_get.return_value
+            mocked_response.raise_for_status.return_value = None
+            mocked_response.json.return_value = {
+                "prices": [
+                    [1704326400000, 44200.0],  # 2024-01-04
+                    [1704412800000, 44600.0],  # 2024-01-05
+                ],
+                "total_volumes": [
+                    [1704326400000, 1300000.0],
+                    [1704412800000, 1400000.0],
+                ],
+            }
+
+            with patch("risk_engine.sources.btc_price_backfill._yesterday_utc", return_value=pd.Timestamp("2024-01-06")):
+                stats = refresh_btc_daily_from_binance(self._cfg(root))
+
+            updated = pd.read_csv(csv_path)
+            self.assertEqual(len(updated), 5)
+            self.assertIn("2024-01-03", updated["Date"].tolist())
+            self.assertIn("2024-01-04", updated["Date"].tolist())
+            self.assertIn("2024-01-05", updated["Date"].tolist())
+            self.assertEqual(stats["rows_added"], 3)
+            self.assertEqual(stats["fetch_mode"], "binance+coingecko_fallback")
+
 
 if __name__ == "__main__":
     unittest.main()
