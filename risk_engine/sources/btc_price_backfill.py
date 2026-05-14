@@ -14,6 +14,10 @@ COINGECKO_MARKET_CHART_URL = "https://api.coingecko.com/api/v3/coins/bitcoin/mar
 _BTC_DAILY_COLUMNS = ["Date", "Open", "High", "Low", "Price", "Vol.", "Change %"]
 
 
+def _yesterday_utc() -> pd.Timestamp:
+    return pd.Timestamp.now("UTC").tz_localize(None).normalize() - pd.Timedelta(days=1)
+
+
 def _read_existing_btc_daily(csv_path: Path) -> pd.DataFrame:
     frame = pd.read_csv(csv_path, parse_dates=["Date"])
     frame["Date"] = pd.to_datetime(frame["Date"], errors="coerce").dt.tz_localize(None)
@@ -87,22 +91,11 @@ def _klines_to_frame(klines: List[list]) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=_BTC_DAILY_COLUMNS).drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
 
 
-def _bootstrap_btc_daily_from_coingecko(cfg: RuntimeConfig) -> pd.DataFrame:
-    try:
-        response = requests.get(
-            COINGECKO_MARKET_CHART_URL,
-            params={"vs_currency": "usd", "days": "max"},
-            timeout=cfg.request_timeout_seconds,
-        )
-        response.raise_for_status()
-        payload = response.json()
-    except Exception as exc:
-        raise RuntimeError(f"Failed to bootstrap BTC daily from CoinGecko: {exc}") from exc
-
+def _coingecko_payload_to_daily_frame(payload: dict, previous_close: float | None = None) -> pd.DataFrame:
     prices = payload.get("prices", [])
     volumes = payload.get("total_volumes", [])
     if not prices:
-        raise RuntimeError("Failed to bootstrap BTC daily from CoinGecko: empty price payload")
+        return pd.DataFrame(columns=_BTC_DAILY_COLUMNS)
 
     close_by_date: dict[pd.Timestamp, float] = {}
     for unix_ms, value in prices:
@@ -112,6 +105,9 @@ def _bootstrap_btc_daily_from_coingecko(cfg: RuntimeConfig) -> pd.DataFrame:
         except Exception:
             continue
 
+    if not close_by_date:
+        return pd.DataFrame(columns=_BTC_DAILY_COLUMNS)
+
     volume_by_date: dict[pd.Timestamp, float] = {}
     for unix_ms, value in volumes:
         try:
@@ -120,25 +116,44 @@ def _bootstrap_btc_daily_from_coingecko(cfg: RuntimeConfig) -> pd.DataFrame:
         except Exception:
             continue
 
-    if not close_by_date:
-        raise RuntimeError("Failed to bootstrap BTC daily from CoinGecko: no usable price rows")
-
-    dates = sorted(close_by_date.keys())
     rows: list[tuple[pd.Timestamp, float, float, float, float, float, float]] = []
-    prev_close: float | None = None
-
-    for date in dates:
+    prev_close = previous_close
+    for date in sorted(close_by_date.keys()):
         close_px = float(close_by_date[date])
-        open_px = float(prev_close if prev_close is not None else close_px)
+        if prev_close is None or pd.isna(prev_close):
+            open_px = close_px
+            change_pct = 0.0
+        else:
+            open_px = float(prev_close)
+            change_pct = 0.0 if open_px == 0 else ((close_px / open_px) - 1.0) * 100.0
+
         high_px = float(max(open_px, close_px))
         low_px = float(min(open_px, close_px))
         volume = float(volume_by_date.get(date, float("nan")))
-        change_pct = 0.0 if prev_close in (None, 0.0) else ((close_px / prev_close) - 1.0) * 100.0
         rows.append((date, open_px, high_px, low_px, close_px, volume, round(change_pct, 2)))
         prev_close = close_px
 
-    frame = pd.DataFrame(rows, columns=_BTC_DAILY_COLUMNS).drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
-    frame = frame[frame["Date"] <= (pd.Timestamp.now("UTC").tz_localize(None).normalize() - pd.Timedelta(days=1))]
+    return pd.DataFrame(rows, columns=_BTC_DAILY_COLUMNS).drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
+
+
+def _fetch_coingecko_daily_frame(cfg: RuntimeConfig, previous_close: float | None = None) -> pd.DataFrame:
+    try:
+        response = requests.get(
+            COINGECKO_MARKET_CHART_URL,
+            params={"vs_currency": "usd", "days": "max"},
+            timeout=cfg.request_timeout_seconds,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except Exception:
+        return pd.DataFrame(columns=_BTC_DAILY_COLUMNS)
+
+    return _coingecko_payload_to_daily_frame(payload, previous_close=previous_close)
+
+
+def _bootstrap_btc_daily_from_coingecko(cfg: RuntimeConfig) -> pd.DataFrame:
+    frame = _fetch_coingecko_daily_frame(cfg)
+    frame = frame[frame["Date"] <= _yesterday_utc()]
     if frame.empty:
         raise RuntimeError("Failed to bootstrap BTC daily from CoinGecko: produced empty frame")
     return frame
@@ -197,11 +212,22 @@ def refresh_btc_daily_from_binance(cfg: RuntimeConfig, symbol: str = "BTCUSDT") 
     if fetched_frames:
         fetched = pd.concat(fetched_frames, ignore_index=True)
         fetched = fetched.drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
+        fetch_mode = "binance"
     else:
         fetched = pd.DataFrame(columns=_BTC_DAILY_COLUMNS)
+        fetch_mode = "none"
 
-    yesterday_utc = pd.Timestamp.now("UTC").tz_localize(None).normalize() - pd.Timedelta(days=1)
+    yesterday_utc = _yesterday_utc()
     fetched = fetched[fetched["Date"] <= yesterday_utc].copy()
+    needs_update = next_date <= yesterday_utc
+
+    if fetched.empty and needs_update:
+        previous_close = float(existing.iloc[-1]["Price"]) if not existing.empty else None
+        fallback = _fetch_coingecko_daily_frame(cfg, previous_close=previous_close)
+        fallback = fallback[(fallback["Date"] >= next_date) & (fallback["Date"] <= yesterday_utc)].copy()
+        if not fallback.empty:
+            fetched = fallback
+            fetch_mode = "coingecko_fallback"
 
     if fetched.empty:
         merged = existing.copy()
@@ -211,6 +237,15 @@ def refresh_btc_daily_from_binance(cfg: RuntimeConfig, symbol: str = "BTCUSDT") 
     merged = merged[_BTC_DAILY_COLUMNS]
     merged.to_csv(csv_path, index=False, float_format="%.2f")
 
+    last_after = pd.Timestamp(merged["Date"].max()).normalize()
+    today_utc = _yesterday_utc() + pd.Timedelta(days=1)
+    staleness_days = int((today_utc - last_after).days)
+    if staleness_days > 3:
+        raise RuntimeError(
+            f"BTC daily refresh is stale after update attempt ({staleness_days}d > 3d). "
+            f"Last date in store: {last_after.date()}."
+        )
+
     return {
         "path": str(csv_path),
         "rows_before": int(len(existing)),
@@ -218,4 +253,5 @@ def refresh_btc_daily_from_binance(cfg: RuntimeConfig, symbol: str = "BTCUSDT") 
         "rows_added": int(max(len(merged) - len(existing), 0)),
         "last_date_before": str(last_date.date()),
         "last_date_after": str(pd.Timestamp(merged["Date"].max()).date()),
+        "fetch_mode": fetch_mode,
     }
