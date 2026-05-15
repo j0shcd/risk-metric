@@ -69,6 +69,7 @@
   "benchmark_recent_window_months": 48,
   "benchmark_alert_rate": 0.2,
   "benchmark_event_weight_pivot": 5,
+  "benchmark_min_events_per_label": 3,
   "benchmark_label_families": ["threshold", "quantile", "local_extrema"],
   "benchmark_quantile_levels": [0.15, 0.2, 0.25],
   "benchmark_top_drawdown_thresholds": [0.3, 0.4, 0.5],

@@ -225,7 +225,7 @@ def _check_benchmark_quality(result: RiskOutput, warnings: List[str]) -> None:
         if missing:
             warnings.append(f"Benchmark missing expected label families: {', '.join(missing)}")
 
-    if "n_events" in result.benchmark_by_label.columns:
+    if "n_events" in result.benchmark_by_label.columns and "eligible_for_aggregate" not in result.benchmark_by_label.columns:
         low = result.benchmark_by_label["n_events"].fillna(0) < 3
         if bool(low.any()):
             warnings.append(
@@ -241,6 +241,14 @@ def _check_benchmark_quality(result: RiskOutput, warnings: List[str]) -> None:
             except (TypeError, ValueError):
                 continue
 
+            recent_labels = getattr(row, "recent_effective_label_count", None)
+            if recent_labels is not None:
+                try:
+                    if int(recent_labels) <= 0:
+                        continue
+                except (TypeError, ValueError):
+                    pass
+
             if np.isfinite(expanding) and np.isfinite(recent) and recent + 0.05 < expanding:
                 warnings.append(
                     f"Benchmark degradation detected for {kpi}: recent ({recent:.3f}) is below expanding ({expanding:.3f})."
@@ -255,9 +263,12 @@ def _check_benchmark_quality(result: RiskOutput, warnings: List[str]) -> None:
 def build_walkforward_sanity_report(
     series: pd.DataFrame,
     price_column: str = "btc_price",
-    signal_column: str = "btc_risk_signal",
+    signal_column: str = "top_reversal_risk",
     attention_column: str = "headline_attention",
 ) -> pd.DataFrame:
+    if signal_column not in series.columns and signal_column == "top_reversal_risk" and "btc_risk_signal" in series.columns:
+        signal_column = "btc_risk_signal"
+
     required = {price_column, signal_column, attention_column}
     if not required.issubset(set(series.columns)):
         return pd.DataFrame(
@@ -292,14 +303,22 @@ def build_walkforward_sanity_report(
     signal = frame[signal_column]
     attention = frame[attention_column]
 
-    top_threshold = price.quantile(0.90)
-    bottom_threshold = price.quantile(0.10)
-    top_mask = price >= top_threshold
-    bottom_mask = price <= bottom_threshold
-
-    mid_low = price.quantile(0.40)
-    mid_high = price.quantile(0.60)
-    mid_mask = (price >= mid_low) & (price <= mid_high)
+    price_regime = pd.Series(index=price.index, dtype=float)
+    observed: list[float] = []
+    regime_window = 365 * 4
+    for idx, value in price.astype(float).items():
+        if not np.isfinite(value):
+            price_regime.loc[idx] = np.nan
+            continue
+        observed.append(float(value))
+        if len(observed) < 365:
+            price_regime.loc[idx] = np.nan
+            continue
+        history = np.asarray(observed[-regime_window:], dtype=float)
+        price_regime.loc[idx] = float((history <= float(value)).mean())
+    top_mask = price_regime >= 0.90
+    bottom_mask = price_regime <= 0.10
+    mid_mask = (price_regime >= 0.40) & (price_regime <= 0.60)
 
     one_year_roi = price.pct_change(365, fill_method=None)
     sideways_threshold = one_year_roi.abs().quantile(0.25)
@@ -317,23 +336,29 @@ def build_walkforward_sanity_report(
     mid_attention = attention[mid_mask].mean()
     sideways_attention_std = attention[sideways_mask].std(ddof=0)
     global_attention_std = attention.std(ddof=0)
+    top_bottom_signal_eligible = bool(top_mask.sum() >= 30 and bottom_mask.sum() >= 30)
+    attention_extremes_eligible = bool((top_mask | bottom_mask).sum() >= 30 and mid_mask.sum() >= 30)
 
     rows = [
         {
             "check": "signal_higher_in_top_vs_bottom_regime",
-            "passed": bool(top_signal > bottom_signal),
+            "passed": bool((not top_bottom_signal_eligible) or top_signal > bottom_signal),
             "value": float(top_signal - bottom_signal),
             "threshold": 0.0,
             "comparator": ">",
-            "details": "Top-price regime should have higher signal than bottom regime.",
+            "details": "Top-price regime should have higher signal than bottom regime."
+            if top_bottom_signal_eligible
+            else "Insufficient top/bottom regime samples for sanity check.",
         },
         {
             "check": "attention_higher_at_extremes_vs_mid",
-            "passed": bool(extremes_attention > mid_attention),
+            "passed": bool((not attention_extremes_eligible) or extremes_attention > mid_attention),
             "value": float(extremes_attention - mid_attention),
             "threshold": 0.0,
             "comparator": ">",
-            "details": "Attention should be higher in extreme regimes than in mid regimes.",
+            "details": "Attention should be higher in extreme regimes than in mid regimes."
+            if attention_extremes_eligible
+            else "Insufficient extreme/mid regime samples for sanity check.",
         },
         {
             "check": "attention_dispersion_lower_in_sideways",

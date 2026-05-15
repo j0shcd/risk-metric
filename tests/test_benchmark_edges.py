@@ -23,13 +23,20 @@ class BenchmarkEdgeTests(unittest.TestCase):
         out = evaluate_benchmark(cfg, monthly_price=pd.Series(dtype=float), signals={"x": pd.Series(dtype=float)})
         self.assertTrue(any("benchmark_unavailable" in w for w in out.warnings))
 
-    def test_low_event_warning_present(self) -> None:
+    def test_low_event_rows_are_retained_but_excluded_from_aggregates(self) -> None:
         idx = pd.date_range("2018-01-31", periods=80, freq=pd.offsets.MonthEnd())
         price = pd.Series(np.linspace(100.0, 200.0, len(idx)), index=idx)
         signal = pd.Series(np.linspace(0.1, 0.9, len(idx)), index=idx)
         cfg = self._cfg(benchmark_top_drawdown_thresholds=[0.9], benchmark_bottom_rally_thresholds=[5.0])
         out = evaluate_benchmark(cfg, monthly_price=price, signals={"trend_composite_score": signal, "top_reversal_risk": signal, "bottom_reversal_risk": 1.0 - signal, "attention_score": signal})
-        self.assertTrue(any("benchmark_low_event_count" in w for w in out.warnings))
+        self.assertFalse(out.by_label.empty)
+        self.assertIn("eligible_for_aggregate", out.by_label.columns)
+        self.assertIn("eligibility_reason", out.by_label.columns)
+        self.assertTrue((out.by_label["n_events"].fillna(0) < cfg.benchmark_min_events_per_label).any())
+        low_event = out.by_label[out.by_label["n_events"].fillna(0) < cfg.benchmark_min_events_per_label]
+        self.assertFalse(low_event["eligible_for_aggregate"].fillna(True).any())
+        self.assertTrue((low_event["eligibility_reason"] == "insufficient_events").all())
+        self.assertFalse(any("benchmark_low_event_count" in w for w in out.warnings))
 
 
 if __name__ == "__main__":

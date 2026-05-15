@@ -83,6 +83,7 @@ class PipelineBehaviorTests(unittest.TestCase):
             output_dir=cwd / "output",
             cache_dir=cwd / "data",
             data_profile="extended",
+            benchmark_min_events_per_label=0,
         )
 
     @patch("risk_engine.pipeline.load_cycle_market_context")

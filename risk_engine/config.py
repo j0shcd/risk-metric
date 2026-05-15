@@ -108,6 +108,7 @@ class RuntimeConfig:
     benchmark_local_extrema_lookbacks: List[int] = field(default_factory=lambda: [24, 36, 48])
     benchmark_local_extrema_forwards: List[int] = field(default_factory=lambda: [36, 48])
     benchmark_event_weight_pivot: int = 5
+    benchmark_min_events_per_label: int = 3
     operational_top_alert_rate: float = 0.15
     operational_bottom_alert_rate: float = 0.25
     operational_top_cooldown_months: int = 4
@@ -476,6 +477,9 @@ def load_runtime_config(project_root: Optional[Path] = None) -> RuntimeConfig:
         ),
         benchmark_event_weight_pivot=int(
             env.get("BENCHMARK_EVENT_WEIGHT_PIVOT", file_cfg.get("benchmark_event_weight_pivot", 5))
+        ),
+        benchmark_min_events_per_label=int(
+            env.get("BENCHMARK_MIN_EVENTS_PER_LABEL", file_cfg.get("benchmark_min_events_per_label", 3))
         ),
         operational_top_alert_rate=float(
             env.get("OPERATIONAL_TOP_ALERT_RATE", file_cfg.get("operational_top_alert_rate", 0.15))

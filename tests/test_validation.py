@@ -195,6 +195,52 @@ class ValidationTests(unittest.TestCase):
         self.assertTrue(validation.passed)
         self.assertTrue(any("Source mode report missing" in msg for msg in validation.warnings))
 
+    def test_validation_uses_eligible_benchmark_rows_for_quality_warnings(self) -> None:
+        today = pd.Timestamp.now("UTC").tz_localize(None).normalize()
+        index = pd.date_range(end=today, periods=90, freq="D")
+        series = _base_series(index)
+
+        result = RiskOutput(
+            series=series,
+            feature_frames={"x": pd.DataFrame({"reliability": [0.5]}, index=[index[-1]])},
+            metric_health=pd.DataFrame(
+                {
+                    "target": ["btc", "total_market"],
+                    "available": [True, True],
+                }
+            ),
+            source_health=pd.DataFrame(
+                {
+                    "source": ["btc_price"],
+                    "available": [True],
+                }
+            ),
+            source_modes={
+                "btc_price": "local_csv",
+            },
+            benchmark_by_label=pd.DataFrame(
+                {
+                    "family": ["threshold"],
+                    "n_events": [1],
+                    "eligible_for_aggregate": [False],
+                    "eligibility_reason": ["insufficient_events"],
+                }
+            ),
+            benchmark_summary=pd.DataFrame(
+                {
+                    "kpi": ["lead_recall_bottom"],
+                    "expanding": [0.9],
+                    "recent": [0.1],
+                    "recent_effective_label_count": [0],
+                }
+            ),
+        )
+
+        validation = validate_output(result)
+        self.assertTrue(validation.passed)
+        self.assertFalse(any("Benchmark low-event rows" in msg for msg in validation.warnings))
+        self.assertFalse(any("Benchmark degradation detected" in msg for msg in validation.warnings))
+
 
 if __name__ == "__main__":
     unittest.main()
