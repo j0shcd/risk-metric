@@ -43,12 +43,12 @@ jobs:
       - name: Refresh caches from APIs + publish web export
         env:
           REFRESH_API_SOURCES: "true"
-        run: python publish_web_v1.py
+        run: python publish_web.py
 
       - name: Verify cache-only execution
         env:
           REFRESH_API_SOURCES: "false"
-        run: python publish_web_v1.py
+        run: python publish_web.py
 
       - name: Stage web artifacts and cache files
         id: detect_changes

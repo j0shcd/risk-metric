@@ -22,7 +22,7 @@ class CliEntrypointTests(unittest.TestCase):
         )
 
     @patch("risk_engine.web_publish.run_web_publish")
-    def test_publish_web_v1_exits_on_validation_failure(self, mocked_publish) -> None:
+    def test_publish_web_exits_on_validation_failure(self, mocked_publish) -> None:
         from risk_engine.web_publish import WebPublishResult
 
         mocked_publish.return_value = WebPublishResult(
@@ -32,7 +32,7 @@ class CliEntrypointTests(unittest.TestCase):
             sanity_report=pd.DataFrame(),
         )
         with self.assertRaises(SystemExit):
-            runpy.run_path("publish_web_v1.py", run_name="__main__")
+            runpy.run_path("publish_web.py", run_name="__main__")
 
     @patch("risk_engine.validation.validate_output")
     @patch("risk_engine.validation.write_sanity_report")
