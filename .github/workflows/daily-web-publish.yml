@@ -53,7 +53,7 @@ jobs:
       - name: Stage web artifacts and cache files
         id: detect_changes
         run: |
-          git add -f data/web/v1 || true
+          git add -f data/web/v2 || true
           git add -f \
             data/btc_daily.csv \
             data/total_marketcap.csv \
@@ -82,9 +82,9 @@ jobs:
         run: |
           git config user.name "risk-metric-bot"
           git config user.email "risk-metric-bot@users.noreply.github.com"
-          git commit -m "chore(data): refresh caches + web v1 artifacts"
+          git commit -m "chore(data): refresh caches + web v2 artifacts"
           git push origin HEAD:main
 
       - name: No artifact changes
         if: steps.detect_changes.outputs.changed != 'true'
-        run: echo "No data/web/v1 changes detected."
+        run: echo "No data/web/v2 changes detected."
