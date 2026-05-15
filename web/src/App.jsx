@@ -87,6 +87,7 @@ function makeChartOptions({
   accentColor,
   yAutoScale = false,
   yDomain = [0, 1],
+  showLegend = true,
 }) {
   const [yMin, yMax] = yDomain;
   const yScale = {
@@ -122,7 +123,7 @@ function makeChartOptions({
     },
     plugins: {
       legend: {
-        display: true,
+        display: showLegend,
         labels: { color: COLORS.text, font: { family: FONT, size: 11 }, boxWidth: 10 },
       },
       tooltip: {
@@ -172,7 +173,6 @@ function MetricCard({ label, value, tone = "amber", highlight = false }) {
 function StatusTicker({ manifest }) {
   return (
     <header className="bb-topbar">
-      <span className="bb-brand">RISK METRIC</span>
       <div className="bb-topbar__spacer" />
       <span className="bb-meta">LAST PRINT {manifest.generated_at}</span>
     </header>
@@ -181,32 +181,46 @@ function StatusTicker({ manifest }) {
 
 function OverviewPanel({ historyCore, setActiveTab }) {
   const chartRef = useRef(null);
-  const [visible, setVisible] = useState({ heat: true, attention: true, cycle: true, price: true });
+  const [visible, setVisible] = useState({
+    topRisk: true,
+    bottomRisk: true,
+    extension: false,
+    attention: false,
+    cycle: false,
+  });
   const [priceScaleType, setPriceScaleType] = useState("logarithmic");
 
-  const heatSeries = useMemo(() => chartData(historyCore, "headline_heat"), [historyCore]);
+  const topRiskSeries = useMemo(() => chartData(historyCore, "top_reversal_risk"), [historyCore]);
+  const bottomRiskValues = useMemo(
+    () => alignOverlayValues(topRiskSeries.labels, chartData(historyCore, "bottom_reversal_risk")),
+    [topRiskSeries.labels, historyCore],
+  );
+  const extensionValues = useMemo(
+    () => alignOverlayValues(topRiskSeries.labels, chartData(historyCore, "cycle_extension_score")),
+    [topRiskSeries.labels, historyCore],
+  );
   const attnValues = useMemo(
-    () => alignOverlayValues(heatSeries.labels, chartData(historyCore, "headline_attention")),
-    [heatSeries.labels, historyCore],
+    () => alignOverlayValues(topRiskSeries.labels, chartData(historyCore, "attention_score")),
+    [topRiskSeries.labels, historyCore],
   );
   const cycleValues = useMemo(
-    () => alignOverlayValues(heatSeries.labels, chartData(historyCore, "cycle_heat_score")),
-    [heatSeries.labels, historyCore],
+    () => alignOverlayValues(topRiskSeries.labels, chartData(historyCore, "cycle_frenzy_score")),
+    [topRiskSeries.labels, historyCore],
   );
   const btcValues = useMemo(
-    () => alignOverlayValues(heatSeries.labels, chartData(historyCore, "btc_price")),
-    [heatSeries.labels, historyCore],
+    () => alignOverlayValues(topRiskSeries.labels, chartData(historyCore, "btc_price")),
+    [topRiskSeries.labels, historyCore],
   );
 
   const hasBtcData = btcValues.some((v) => v !== null);
-  const showPrice = visible.price && hasBtcData;
+  const showPrice = hasBtcData;
 
   const datasets = useMemo(() => {
     const ds = [];
-    if (visible.heat) {
+    if (visible.topRisk) {
       ds.push({
-        label: "Heat",
-        data: heatSeries.values,
+        label: "Top Reversal Risk",
+        data: topRiskSeries.values,
         borderColor: COLORS.red,
         borderWidth: 1.9,
         pointRadius: 0,
@@ -215,15 +229,39 @@ function OverviewPanel({ historyCore, setActiveTab }) {
         tension: 0.16,
       });
     }
-    if (visible.attention) {
+    if (visible.bottomRisk) {
       ds.push({
-        label: "Attention",
-        data: attnValues,
+        label: "Bottom Reversal Risk",
+        data: bottomRiskValues,
+        borderColor: COLORS.green,
+        borderWidth: 1.9,
+        pointRadius: 0,
+        fill: true,
+        backgroundColor: "#22cc5517",
+        tension: 0.16,
+      });
+    }
+    if (visible.extension) {
+      ds.push({
+        label: "Cycle Extension",
+        data: extensionValues,
         borderColor: COLORS.amber,
         borderWidth: 1.9,
         pointRadius: 0,
         fill: true,
         backgroundColor: "#f0a50019",
+        tension: 0.16,
+      });
+    }
+    if (visible.attention) {
+      ds.push({
+        label: "Signal Agreement",
+        data: attnValues,
+        borderColor: COLORS.blue,
+        borderWidth: 1.9,
+        pointRadius: 0,
+        fill: true,
+        backgroundColor: "#5ca2ff19",
         tension: 0.16,
       });
     }
@@ -252,54 +290,42 @@ function OverviewPanel({ historyCore, setActiveTab }) {
       });
     }
     return ds;
-  }, [visible, heatSeries.values, attnValues, cycleValues, btcValues, showPrice]);
+  }, [visible, topRiskSeries.values, bottomRiskValues, extensionValues, attnValues, cycleValues, btcValues, showPrice]);
 
   const chartPayload = useMemo(
-    () => ({ labels: heatSeries.labels, datasets }),
-    [heatSeries.labels, datasets],
+    () => ({ labels: topRiskSeries.labels, datasets }),
+    [topRiskSeries.labels, datasets],
   );
 
   const options = useMemo(
     () =>
       makeChartOptions({
-        numLabels: heatSeries.labels.length,
+        numLabels: topRiskSeries.labels.length,
         hasPrice: showPrice,
         priceScaleType,
         accentColor: COLORS.amber,
+        showLegend: false,
       }),
-    [heatSeries.labels.length, showPrice, priceScaleType],
+    [topRiskSeries.labels.length, showPrice, priceScaleType],
   );
 
   function toggle(key) {
     setVisible((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
+  const legendItems = [
+    { key: "topRisk", label: "Top Reversal Risk", color: COLORS.red },
+    { key: "bottomRisk", label: "Bottom Reversal Risk", color: COLORS.green },
+    { key: "extension", label: "Cycle Extension", color: COLORS.amber },
+    { key: "attention", label: "Signal Agreement", color: COLORS.blue },
+    { key: "cycle", label: "Cycle Regime Index", color: COLORS.violet },
+  ];
+
   return (
     <section className="bb-panel bb-panel--focus">
       <div className="bb-panel__head">
         <h2 className="bb-panel__title bb-panel__title--solo">Market Indices</h2>
         <div className="bb-panel__actions">
-          <label className="bb-checkbox">
-            <input type="checkbox" checked={visible.heat} onChange={() => toggle("heat")} />
-            Heat
-          </label>
-          <label className="bb-checkbox">
-            <input type="checkbox" checked={visible.attention} onChange={() => toggle("attention")} />
-            Attention
-          </label>
-          <label className="bb-checkbox">
-            <input type="checkbox" checked={visible.cycle} onChange={() => toggle("cycle")} />
-            Cycle Regime
-          </label>
-          <label className="bb-checkbox">
-            <input
-              type="checkbox"
-              checked={visible.price}
-              onChange={() => toggle("price")}
-              disabled={!hasBtcData}
-            />
-            BTC Price
-          </label>
           {showPrice && (
             <select
               className="bb-select bb-select--compact"
@@ -315,8 +341,36 @@ function OverviewPanel({ historyCore, setActiveTab }) {
           </button>
         </div>
       </div>
+      <div className="bb-legend" role="group" aria-label="Series visibility">
+        {legendItems.map((item) => {
+          const on = visible[item.key];
+          return (
+            <button
+              key={item.key}
+              type="button"
+              role="switch"
+              aria-checked={on}
+              aria-label={`${item.label} — ${on ? "shown" : "hidden"}`}
+              className={`bb-legend__item${on ? "" : " bb-legend__item--off"}`}
+              onClick={() => toggle(item.key)}
+            >
+              <span
+                className={`bb-legend__swatch${on ? "" : " bb-legend__swatch--off"}`}
+                style={on ? { background: item.color } : { borderColor: item.color }}
+              />
+              <span className="bb-legend__label">{item.label}</span>
+            </button>
+          );
+        })}
+        {hasBtcData && (
+          <span className="bb-legend__item bb-legend__item--static" aria-label="BTC Price — always shown">
+            <span className="bb-legend__swatch" style={{ background: "#8b8473" }} />
+            <span className="bb-legend__label">BTC Price</span>
+          </span>
+        )}
+      </div>
       <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="overview-chart">
-        {heatSeries.labels.length > 0 ? (
+        {topRiskSeries.labels.length > 0 ? (
           <Line ref={chartRef} data={chartPayload} options={options} plugins={[hoverGuidePlugin]} />
         ) : (
           <p className="bb-empty">No data available.</p>
@@ -324,19 +378,28 @@ function OverviewPanel({ historyCore, setActiveTab }) {
       </div>
       <div className="bb-overview-desc">
         <p>
-          Heat, Attention, and the Cycle Regime Index are three independent estimates of where the
-          market sits relative to its historical range. They are computed from different signal
-          categories and may agree or diverge.
+          This dashboard tracks five 0–1 indices derived from BTC price structure, on-chain activity,
+          sentiment, social signals, and total-market context. Click any legend entry above to toggle
+          that series on or off.
         </p>
         <p>
-          All three are normalized to 0-1. A higher reading indicates conditions historically
-          associated with more stretched market positioning. It does not predict what happens
-          next.{" "}
+          <strong>Top Reversal Risk</strong> and <strong>Bottom Reversal Risk</strong> are the
+          primary signals here — calibrated, probability-like estimates of top-side and bottom-side
+          reversal conditions. <strong>Cycle Extension</strong> measures how stretched price is
+          versus long-run moving averages. <strong>Signal Agreement</strong> measures how broadly
+          the underlying inputs agree with each other (high = many inputs pointing the same way; not
+          a directional buy/sell). The <strong>Cycle Regime Index (CRI)</strong> is a slow-moving
+          estimate of where the market sits within the multi-year cycle — near 0 looks historically
+          accumulation-like, near 1 looks historically bubble-like.
+        </p>
+        <p>
+          All five are bounded 0–1; higher values mean stronger historical alignment with the named
+          regime, not a forecast.{" "}
           <button type="button" className="bb-link" onClick={() => setActiveTab("about")}>
             Details in About →
           </button>
         </p>
-        <p className="bb-overview-note">Attention and Cycle Regime data begins December 2014.</p>
+        <p className="bb-overview-note">Reversal and cycle-series data begins December 2014.</p>
       </div>
     </section>
   );
@@ -355,16 +418,17 @@ function MetricsPanel({ metricBtc, historyCore, setActiveTab }) {
   const chartRef = useRef(null);
 
   const metric = availableMetrics.find((m) => m.key === selectedKey) ?? availableMetrics[0];
-  const hasTotal = metric?.totalColumn !== null;
-  const copy = METRIC_COPY[metric?.copyKey];
+  const hasTotal = !!metric && metric.totalColumn !== null;
+  const copy = metric ? METRIC_COPY[metric.copyKey] : null;
 
   useEffect(() => {
     setScope("btc");
     chartRef.current?.resetZoom?.();
   }, [selectedKey]);
 
-  const activeColumn =
-    scope === "total" && hasTotal ? metric.totalColumn : metric.btcColumn;
+  const activeColumn = metric
+    ? scope === "total" && hasTotal ? metric.totalColumn : metric.btcColumn
+    : null;
   const priceColumn =
     scope === "total" && hasTotal ? "total_market_cap" : "btc_price";
   const priceLabel =
@@ -389,7 +453,7 @@ function MetricsPanel({ metricBtc, historyCore, setActiveTab }) {
       labels: series.labels,
       datasets: [
         {
-          label: copy.shortName,
+          label: copy?.shortName ?? "",
           data: series.values,
           borderColor: COLORS.amber,
           borderWidth: 1.9,
@@ -415,7 +479,7 @@ function MetricsPanel({ metricBtc, historyCore, setActiveTab }) {
           : []),
       ],
     }),
-    [series, priceValues, hasPrice, copy.shortName, priceLabel],
+    [series, priceValues, hasPrice, copy?.shortName, priceLabel],
   );
 
   const options = useMemo(
@@ -425,7 +489,7 @@ function MetricsPanel({ metricBtc, historyCore, setActiveTab }) {
         hasPrice,
         priceScaleType,
         accentColor: COLORS.amber,
-        yDomain: [-1, 1],
+        yAutoScale: true,
       }),
     [series.labels.length, hasPrice, priceScaleType],
   );
@@ -495,7 +559,7 @@ function MetricsPanel({ metricBtc, historyCore, setActiveTab }) {
         )}
       </div>
       <div className="bb-metric-desc">
-        <p className="bb-metric-desc__text">{copy.description}</p>
+        <p className="bb-metric-desc__text">{copy?.description ?? ""}</p>
         <p className="bb-metric-desc__link">
           <button type="button" className="bb-link" onClick={() => setActiveTab("about")}>
             Details in About →
@@ -506,80 +570,92 @@ function MetricsPanel({ metricBtc, historyCore, setActiveTab }) {
   );
 }
 
-const ABOUT_HEADLINE_KEYS = ["headline_heat", "headline_attention", "cycle_regime"];
+const ABOUT_HEADLINE_KEYS = [
+  "top_reversal_risk",
+  "bottom_reversal_risk",
+  "cycle_extension",
+  "headline_attention",
+  "cycle_regime",
+];
+
+function AboutEntry({ copy }) {
+  return (
+    <div className="bb-about__entry">
+      <div className="bb-about__entry-rail">
+        <div className="bb-about__entry-name">{copy.shortName}</div>
+        {copy.oneLiner && <div className="bb-about__entry-tag">{copy.oneLiner}</div>}
+      </div>
+      <div className="bb-about__entry-body">
+        <p className="bb-about__desc">{copy.description}</p>
+        {copy.notMeaning && (
+          <p className="bb-about__not">
+            <span className="bb-about__not-label">Not</span> {copy.notMeaning}
+          </p>
+        )}
+        <details className="bb-about__technical">
+          <summary>Technical detail</summary>
+          <table className="bb-table">
+            <tbody>
+              {copy.technicalRows.map((row) => (
+                <tr key={row.label}>
+                  <td>{row.label}</td>
+                  <td>{row.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      </div>
+    </div>
+  );
+}
 
 function AboutPanel() {
   return (
     <section className="bb-about">
-      <div className="bb-about__intro">
-        <p>
+      <div className="bb-about__hero">
+        <p className="bb-about__lede">
           A personal project exploring quantitative approaches to understanding Bitcoin market cycles.
-          The three headline indices (Heat, Attention, and the Cycle Regime Index) are composite
-          signals that synthesize structural, on-chain, and sentiment data to describe where the
-          market appears to sit relative to its historical range. The input metrics below feed into
-          those composites.
+        </p>
+        <p className="bb-about__hero-body">
+          The primary operational signals are <strong>Top Reversal Risk</strong> and{" "}
+          <strong>Bottom Reversal Risk</strong>. Cycle Extension, Signal Agreement, and the Cycle
+          Regime Index sit alongside them as contextual regime descriptors. Every score on this
+          dashboard is computed with point-in-time data — historical values are never recomputed
+          with future information.
         </p>
       </div>
 
-      <div className="bb-about__section-title">Headline Indices</div>
+      <div className="bb-about__section">
+        <div className="bb-about__section-head">
+          <span className="bb-about__rule" />
+          <h2 className="bb-about__section-title">Headline Indices</h2>
+        </div>
 
-      {ABOUT_HEADLINE_KEYS.map((key) => {
-        const copy = METRIC_COPY[key];
-        return (
-          <div key={key} className="bb-about__entry">
-            <div className="bb-about__entry-name">{copy.shortName}</div>
-            <p className="bb-about__desc">{copy.description}</p>
-            <p className="bb-about__not">{copy.notMeaning}</p>
-            <details className="bb-about__technical">
-              <summary>Technical</summary>
-              <table className="bb-table">
-                <tbody>
-                  {copy.technicalRows.map((row) => (
-                    <tr key={row.label}>
-                      <td>{row.label}</td>
-                      <td>{row.value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </details>
-          </div>
-        );
-      })}
+        {ABOUT_HEADLINE_KEYS.map((key) => (
+          <AboutEntry key={key} copy={METRIC_COPY[key]} />
+        ))}
 
-      <details className="bb-about__technical bb-about__scoring">
-        <summary>Scoring Methodology</summary>
-        <ul>
-          {METRIC_COPY.scoring.steps.map((step) => (
-            <li key={step}>{step}</li>
-          ))}
-        </ul>
-      </details>
+        <div className="bb-about__methodology">
+          <div className="bb-about__methodology-eyebrow">Scoring methodology</div>
+          <ol className="bb-about__methodology-list">
+            {METRIC_COPY.scoring.steps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
+        </div>
+      </div>
 
-      <div className="bb-about__section-title">Input Metrics</div>
+      <div className="bb-about__section">
+        <div className="bb-about__section-head">
+          <span className="bb-about__rule" />
+          <h2 className="bb-about__section-title">Input Metrics</h2>
+        </div>
 
-      {CURATED_METRICS.filter((m) => m.key !== "mvrv").map((m) => {
-        const copy = METRIC_COPY[m.copyKey];
-        return (
-          <div key={m.key} className="bb-about__entry">
-            <div className="bb-about__entry-name">{copy.shortName}</div>
-            <p className="bb-about__desc">{copy.description}</p>
-            <details className="bb-about__technical">
-              <summary>Technical</summary>
-              <table className="bb-table">
-                <tbody>
-                  {copy.technicalRows.map((row) => (
-                    <tr key={row.label}>
-                      <td>{row.label}</td>
-                      <td>{row.value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </details>
-          </div>
-        );
-      })}
+        {CURATED_METRICS.filter((m) => m.key !== "mvrv").map((m) => (
+          <AboutEntry key={m.key} copy={METRIC_COPY[m.copyKey]} />
+        ))}
+      </div>
     </section>
   );
 }
@@ -655,9 +731,16 @@ export default function App() {
         {activeTab === "overview" && (
           <section aria-label="Overview">
             <div className="bb-card-grid bb-card-grid--focus">
-              <MetricCard label="Heat" value={latestSnapshot.headline_heat} tone="red" highlight />
-              <MetricCard label="Attention" value={latestSnapshot.headline_attention} tone="amber" highlight />
-              <MetricCard label="Cycle Regime Index" value={latestSnapshot.cycle_model?.heat_score} tone="violet" highlight />
+              <MetricCard label="Top Reversal Risk" value={latestSnapshot.top_reversal_risk} tone="red" highlight />
+              <MetricCard label="Bottom Reversal Risk" value={latestSnapshot.bottom_reversal_risk} tone="green" highlight />
+              <MetricCard label="Cycle Extension" value={latestSnapshot.cycle_extension_score} tone="amber" highlight />
+              <MetricCard label="Signal Agreement" value={latestSnapshot.attention_score} tone="blue" highlight />
+              <MetricCard
+                label="Cycle Regime Index"
+                value={latestSnapshot.cycle_model?.frenzy_score ?? latestSnapshot.cycle_frenzy_score}
+                tone="violet"
+                highlight
+              />
             </div>
             <OverviewPanel historyCore={historyCore} setActiveTab={setActiveTab} />
           </section>
