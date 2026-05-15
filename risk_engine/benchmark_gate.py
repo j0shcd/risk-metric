@@ -19,6 +19,12 @@ class GateReport:
     lines: List[str]
 
 
+@dataclass(frozen=True)
+class SignalMetrics:
+    values: Dict[str, float]
+    window: str | None
+
+
 def _load_baseline(path: Path) -> Dict[str, object]:
     if not path.exists():
         raise FileNotFoundError(f"Benchmark baseline not found: {path}")
@@ -26,18 +32,28 @@ def _load_baseline(path: Path) -> Dict[str, object]:
         return json.load(handle)
 
 
-def _extract_recent_signal(frame: pd.DataFrame, signal_name: str) -> Dict[str, float]:
+def _extract_signal(frame: pd.DataFrame, signal_name: str, preferred_window: str = "recent") -> SignalMetrics:
     if frame.empty:
-        return {}
-    sel = frame[(frame["window"].astype(str) == "recent") & (frame["signal"].astype(str) == signal_name)]
+        return SignalMetrics(values={}, window=None)
+
+    signal_rows = frame[frame["signal"].astype(str) == signal_name]
+    if signal_rows.empty:
+        return SignalMetrics(values={}, window=None)
+
+    sel = signal_rows[signal_rows["window"].astype(str) == preferred_window]
+    window = preferred_window
     if sel.empty:
-        return {}
+        sel = signal_rows[signal_rows["window"].astype(str) == "expanding"]
+        window = "expanding"
+    if sel.empty:
+        return SignalMetrics(values={}, window=None)
+
     row = sel.iloc[0]
     out: Dict[str, float] = {}
     for key in ["auc", "pr_auc", "lead_recall_at_alert_rate", "false_alarm_rate"]:
         value = row.get(key)
         out[key] = float(value) if pd.notna(value) else float("nan")
-    return out
+    return SignalMetrics(values=out, window=window)
 
 
 def _extract_financial_strategy(frame: pd.DataFrame, strategy: str) -> Dict[str, float]:
@@ -112,14 +128,24 @@ def evaluate_benchmark_gate(
         ),
     ]
     for signal_name, label, warn_recall, warn_pr, warn_far, min_foundation_recall, min_foundation_pr, max_foundation_far in signal_specs:
-        cur_signal = _extract_recent_signal(current_by_signal, signal_name)
-        sota_signal = _extract_recent_signal(sota_by_signal, signal_name)
-        foundation_signal = _extract_recent_signal(foundation_by_signal, signal_name)
+        cur_signal = _extract_signal(current_by_signal, signal_name)
+        sota_signal = _extract_signal(sota_by_signal, signal_name)
+        foundation_signal = _extract_signal(foundation_by_signal, signal_name)
+
+        window_notes = []
+        if cur_signal.window and cur_signal.window != "recent":
+            window_notes.append(f"current={cur_signal.window}")
+        if sota_signal.window and sota_signal.window != "recent":
+            window_notes.append(f"sota={sota_signal.window}")
+        if foundation_signal.window and foundation_signal.window != "recent":
+            window_notes.append(f"foundation={foundation_signal.window}")
+        if window_notes:
+            lines.append(f" - {signal_name}: recent window unavailable; using {', '.join(window_notes)} benchmark rows")
 
         for metric in ["auc", "pr_auc", "lead_recall_at_alert_rate", "false_alarm_rate"]:
-            cur = cur_signal.get(metric, float("nan"))
-            sota_base = sota_signal.get(metric, float("nan"))
-            foundation_base = foundation_signal.get(metric, float("nan"))
+            cur = cur_signal.values.get(metric, float("nan"))
+            sota_base = sota_signal.values.get(metric, float("nan"))
+            foundation_base = foundation_signal.values.get(metric, float("nan"))
             d_sota = _delta(cur, sota_base)
             d_foundation = _delta(cur, foundation_base)
             lines.append(
@@ -128,13 +154,13 @@ def evaluate_benchmark_gate(
             )
 
         recall_delta_sota = _delta(
-            cur_signal.get("lead_recall_at_alert_rate", float("nan")),
-            sota_signal.get("lead_recall_at_alert_rate", float("nan")),
+            cur_signal.values.get("lead_recall_at_alert_rate", float("nan")),
+            sota_signal.values.get("lead_recall_at_alert_rate", float("nan")),
         )
-        pr_delta_sota = _delta(cur_signal.get("pr_auc", float("nan")), sota_signal.get("pr_auc", float("nan")))
+        pr_delta_sota = _delta(cur_signal.values.get("pr_auc", float("nan")), sota_signal.values.get("pr_auc", float("nan")))
         far_delta_sota = _delta(
-            cur_signal.get("false_alarm_rate", float("nan")),
-            sota_signal.get("false_alarm_rate", float("nan")),
+            cur_signal.values.get("false_alarm_rate", float("nan")),
+            sota_signal.values.get("false_alarm_rate", float("nan")),
         )
         if np.isfinite(recall_delta_sota) and recall_delta_sota < warn_recall:
             failures.append(f"[vs SOTA] {label} recall delta {recall_delta_sota:.6f} is below threshold {warn_recall:.6f}")
@@ -144,16 +170,16 @@ def evaluate_benchmark_gate(
             failures.append(f"[vs SOTA] {label} false-alarm delta {far_delta_sota:.6f} is above threshold {warn_far:.6f}")
 
         recall_delta_foundation = _delta(
-            cur_signal.get("lead_recall_at_alert_rate", float("nan")),
-            foundation_signal.get("lead_recall_at_alert_rate", float("nan")),
+            cur_signal.values.get("lead_recall_at_alert_rate", float("nan")),
+            foundation_signal.values.get("lead_recall_at_alert_rate", float("nan")),
         )
         pr_delta_foundation = _delta(
-            cur_signal.get("pr_auc", float("nan")),
-            foundation_signal.get("pr_auc", float("nan")),
+            cur_signal.values.get("pr_auc", float("nan")),
+            foundation_signal.values.get("pr_auc", float("nan")),
         )
         far_delta_foundation = _delta(
-            cur_signal.get("false_alarm_rate", float("nan")),
-            foundation_signal.get("false_alarm_rate", float("nan")),
+            cur_signal.values.get("false_alarm_rate", float("nan")),
+            foundation_signal.values.get("false_alarm_rate", float("nan")),
         )
         if np.isfinite(recall_delta_foundation) and recall_delta_foundation < min_foundation_recall:
             failures.append(

@@ -319,6 +319,51 @@ class BenchmarkGateTests(unittest.TestCase):
         self.assertFalse(report.passed)
         self.assertTrue(any("[vs foundation] top PR-AUC delta" in line for line in report.lines))
 
+    def test_gate_falls_back_to_expanding_signal_rows_when_recent_is_missing(self) -> None:
+        baseline = {
+            "by_signal": [
+                {
+                    "window": "expanding",
+                    "signal": "top_reversal_risk",
+                    "auc": 0.50,
+                    "pr_auc": 0.30,
+                    "lead_recall_at_alert_rate": 0.60,
+                    "false_alarm_rate": 0.20,
+                }
+            ],
+            "summary": [],
+        }
+        foundation = baseline
+
+        with tempfile.TemporaryDirectory() as tmp:
+            sota_path = Path(tmp) / "sota.json"
+            foundation_path = Path(tmp) / "foundation.json"
+            sota_path.write_text(json.dumps(baseline), encoding="utf-8")
+            foundation_path.write_text(json.dumps(foundation), encoding="utf-8")
+
+            by_signal = pd.DataFrame(
+                [
+                    {
+                        "window": "expanding",
+                        "signal": "top_reversal_risk",
+                        "auc": 0.52,
+                        "pr_auc": 0.32,
+                        "lead_recall_at_alert_rate": 0.62,
+                        "false_alarm_rate": 0.19,
+                    }
+                ]
+            )
+            with patch(
+                "risk_engine.benchmark_gate.run_pipeline",
+                return_value=_result(by_signal, pd.DataFrame()),
+            ):
+                report = evaluate_benchmark_gate(_runtime(), sota_path=sota_path, foundation_path=foundation_path)
+
+        self.assertTrue(report.passed)
+        self.assertTrue(any("recent window unavailable" in line for line in report.lines))
+        self.assertTrue(any("top_reversal_risk.auc: current=0.520000" in line for line in report.lines))
+        self.assertFalse(any("top_reversal_risk.auc: current=nan" in line for line in report.lines))
+
     def test_gate_treats_less_negative_max_drawdown_as_improvement(self) -> None:
         baseline = {
             "by_signal": [],
