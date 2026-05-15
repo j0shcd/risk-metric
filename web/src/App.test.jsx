@@ -238,8 +238,7 @@ describe("App", () => {
     render(<App />);
 
     expect(await screen.findByText("VALIDATION FAIL")).toBeInTheDocument();
-    expect(screen.getByText(/Validation failing/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/stale:17d>3d/i).length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText(/Data status/i)).not.toBeInTheDocument();
   });
 
   it("renders even when diagnostics payload is minimal", async () => {

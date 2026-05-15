@@ -216,43 +216,6 @@ function StatusTicker({ manifest, latestSnapshot, diagnostics }) {
   );
 }
 
-function DataStatusPanel({ latestSnapshot, diagnostics, degraded }) {
-  const validation = validationState(diagnostics);
-  const sourceIssues = criticalSourceIssues(diagnostics);
-  const errors = validation.errors.slice(0, 3);
-  const warnings = validation.warnings.slice(0, 2);
-  const degradedReasons = Array.isArray(degraded?.reasons) ? degraded.reasons : [];
-  const isFailing = validation.passed === false || sourceIssues.length > 0;
-  const isDegraded = Boolean(degraded?.isDegraded);
-
-  if (!isFailing && !isDegraded && warnings.length === 0) {
-    return (
-      <section className="bb-data-status bb-data-status--ok" aria-label="Data status">
-        <div>
-          <p className="bb-data-status__label">Data Status</p>
-          <p className="bb-data-status__value">Validated through {latestSnapshot?.date ?? "n/a"}</p>
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <section className={`bb-data-status${isFailing ? " bb-data-status--fail" : ""}`} aria-label="Data status">
-      <div className="bb-data-status__main">
-        <p className="bb-data-status__label">Data Status</p>
-        <p className="bb-data-status__value">
-          {isFailing ? "Validation failing" : "Degraded inputs"} · score date {latestSnapshot?.date ?? "n/a"}
-        </p>
-      </div>
-      <ul className="bb-data-status__list">
-        {[...sourceIssues, ...errors, ...degradedReasons, ...warnings].slice(0, 5).map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 function OverviewPanel({ historyCore, setActiveTab }) {
   const chartRef = useRef(null);
   const [visible, setVisible] = useState({
@@ -776,7 +739,7 @@ export default function App() {
     );
   }
 
-  const { latestSnapshot, historyCore, metricBtc, manifest, diagnostics, degraded } = payload;
+  const { latestSnapshot, historyCore, metricBtc, manifest, diagnostics } = payload;
 
   return (
     <div className="bb-app">
@@ -801,8 +764,6 @@ export default function App() {
             </button>
           ))}
         </div>
-
-        <DataStatusPanel latestSnapshot={latestSnapshot} diagnostics={diagnostics} degraded={degraded} />
 
         {activeTab === "overview" && (
           <section aria-label="Overview">
