@@ -80,6 +80,33 @@ function formatPrice(value) {
   return Number.isFinite(num) ? PRICE_FORMAT.format(num) : "n/a";
 }
 
+function formatDateTime(value) {
+  if (!value) return "n/a";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toISOString().replace(".000Z", "Z");
+}
+
+function validationState(diagnostics) {
+  const validation = diagnostics?.validation;
+  if (!validation || validation.passed === undefined) {
+    return { passed: null, errors: [], warnings: [] };
+  }
+  return {
+    passed: Boolean(validation.passed),
+    errors: Array.isArray(validation.errors) ? validation.errors : [],
+    warnings: Array.isArray(validation.warnings) ? validation.warnings : [],
+  };
+}
+
+function criticalSourceIssues(diagnostics) {
+  const rows = Array.isArray(diagnostics?.source_health) ? diagnostics.source_health : [];
+  return rows
+    .filter((row) => row?.source === "btc_price" && row.contract_passed === 0)
+    .map((row) => String(row.contract_issues || "contract failed"))
+    .filter(Boolean);
+}
+
 function makeChartOptions({
   numLabels,
   hasPrice,
@@ -170,12 +197,59 @@ function MetricCard({ label, value, tone = "amber", highlight = false }) {
   );
 }
 
-function StatusTicker({ manifest }) {
+function StatusTicker({ manifest, latestSnapshot, diagnostics }) {
+  const validation = validationState(diagnostics);
+  const sourceIssues = criticalSourceIssues(diagnostics);
+  const generatedAt = manifest?.generated_at ?? latestSnapshot?.generated_at;
+  const scoreDate = latestSnapshot?.date ?? "n/a";
+  const isFailing = validation.passed === false || sourceIssues.length > 0;
+  const statusLabel = validation.passed === null ? "UNVERIFIED" : isFailing ? "VALIDATION FAIL" : "VALIDATED";
+
   return (
     <header className="bb-topbar">
-      <div className="bb-topbar__spacer" />
-      <span className="bb-meta">LAST PRINT {manifest.generated_at}</span>
+      <span className={`bb-live-dot${isFailing ? " bb-live-dot--fail" : ""}`} aria-hidden="true" />
+      <span className={`bb-meta bb-meta--status${isFailing ? " bb-meta--fail" : ""}`}>{statusLabel}</span>
+      <span className="bb-meta">SCORE DATE {scoreDate}</span>
+      <span className="bb-meta">ARTIFACT {formatDateTime(generatedAt)}</span>
+      <span className="bb-meta">SCHEMA {manifest?.schema_version ?? latestSnapshot?.schema_version ?? "n/a"}</span>
     </header>
+  );
+}
+
+function DataStatusPanel({ latestSnapshot, diagnostics, degraded }) {
+  const validation = validationState(diagnostics);
+  const sourceIssues = criticalSourceIssues(diagnostics);
+  const errors = validation.errors.slice(0, 3);
+  const warnings = validation.warnings.slice(0, 2);
+  const degradedReasons = Array.isArray(degraded?.reasons) ? degraded.reasons : [];
+  const isFailing = validation.passed === false || sourceIssues.length > 0;
+  const isDegraded = Boolean(degraded?.isDegraded);
+
+  if (!isFailing && !isDegraded && warnings.length === 0) {
+    return (
+      <section className="bb-data-status bb-data-status--ok" aria-label="Data status">
+        <div>
+          <p className="bb-data-status__label">Data Status</p>
+          <p className="bb-data-status__value">Validated through {latestSnapshot?.date ?? "n/a"}</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className={`bb-data-status${isFailing ? " bb-data-status--fail" : ""}`} aria-label="Data status">
+      <div className="bb-data-status__main">
+        <p className="bb-data-status__label">Data Status</p>
+        <p className="bb-data-status__value">
+          {isFailing ? "Validation failing" : "Degraded inputs"} · score date {latestSnapshot?.date ?? "n/a"}
+        </p>
+      </div>
+      <ul className="bb-data-status__list">
+        {[...sourceIssues, ...errors, ...degradedReasons, ...warnings].slice(0, 5).map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -702,11 +776,11 @@ export default function App() {
     );
   }
 
-  const { latestSnapshot, historyCore, metricBtc, manifest } = payload;
+  const { latestSnapshot, historyCore, metricBtc, manifest, diagnostics, degraded } = payload;
 
   return (
     <div className="bb-app">
-      <StatusTicker manifest={manifest} />
+      <StatusTicker manifest={manifest} latestSnapshot={latestSnapshot} diagnostics={diagnostics} />
 
       <main className="bb-main">
         <div className="bb-tabs" role="tablist" aria-label="Dashboard Views">
@@ -727,6 +801,8 @@ export default function App() {
             </button>
           ))}
         </div>
+
+        <DataStatusPanel latestSnapshot={latestSnapshot} diagnostics={diagnostics} degraded={degraded} />
 
         {activeTab === "overview" && (
           <section aria-label="Overview">

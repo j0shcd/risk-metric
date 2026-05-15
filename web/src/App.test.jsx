@@ -181,7 +181,8 @@ describe("App", () => {
   it("renders Overview by default and supports tab switching", async () => {
     render(<App />);
 
-    expect(await screen.findByText(/LAST PRINT/i)).toBeInTheDocument();
+    expect(await screen.findByText(/VALIDATED/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/SCORE DATE 2026-04-24/i).length).toBeGreaterThan(0);
     expect((await screen.findAllByText("Top Reversal Risk")).length).toBeGreaterThan(0);
     expect((await screen.findAllByText("Bottom Reversal Risk")).length).toBeGreaterThan(0);
     expect((await screen.findAllByText("Cycle Extension")).length).toBeGreaterThan(0);
@@ -189,13 +190,56 @@ describe("App", () => {
     expect(screen.getAllByRole("button", { name: /^Reset Zoom$/ }).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Cycle Regime Index").length).toBeGreaterThan(0);
     await waitFor(() => {
-      expect(screen.getByText(/LAST PRINT/i)).toBeInTheDocument();
+      expect(screen.getByText(/ARTIFACT 2026-04-24T06:00:00Z/i)).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("tab", { name: "About" }));
 
     expect(await screen.findByText("Headline Indices")).toBeInTheDocument();
     expect(screen.getByText(/Scoring methodology/i)).toBeInTheDocument();
+  });
+
+  it("surfaces validation failures from diagnostics", async () => {
+    global.fetch = vi.fn(async (url) => {
+      const key = String(url).split("/").pop();
+      if (!key || !(key in fixtures)) {
+        return { ok: false, status: 404, json: async () => ({}) };
+      }
+      if (key === "diagnostics.json") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            ...fixtures["diagnostics.json"],
+            validation: {
+              passed: false,
+              errors: ["Critical source contract failed: btc_price(stale:17d>3d)"],
+              warnings: [],
+            },
+            source_health: [
+              {
+                source: "btc_price",
+                available: true,
+                contract_passed: 0,
+                contract_issues: "stale:17d>3d",
+                staleness_days: 17,
+              },
+            ],
+          }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => fixtures[key],
+      };
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("VALIDATION FAIL")).toBeInTheDocument();
+    expect(screen.getByText(/Validation failing/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/stale:17d>3d/i).length).toBeGreaterThan(0);
   });
 
   it("renders even when diagnostics payload is minimal", async () => {
