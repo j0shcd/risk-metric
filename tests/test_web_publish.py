@@ -24,12 +24,12 @@ class WebPublishTests(unittest.TestCase):
         index = pd.to_datetime(["2026-04-23", "2026-04-24"])
         series = pd.DataFrame(
             {
-                "btc_risk_heat": [0.2, 0.3],
+                "btc_risk_signal": [0.2, 0.3],
                 "btc_risk_attention": [0.4, 0.5],
-                "total_market_risk_heat": [0.1, 0.2],
+                "total_market_risk_signal": [0.1, 0.2],
                 "total_market_risk_attention": [0.3, 0.4],
                 "headline_attention": [0.36, 0.43],
-                "headline_heat": [0.17, 0.24],
+                "trend_composite_score": [0.17, 0.24],
                 "confidence_score": [0.65, 0.7],
                 "btc_risk_confidence": [0.7, 0.8],
                 "total_market_risk_confidence": [0.55, 0.6],
@@ -50,7 +50,7 @@ class WebPublishTests(unittest.TestCase):
             metric_breakdowns={"btc": pd.DataFrame(index=index), "total_market": pd.DataFrame(index=index)},
         )
 
-    @patch("risk_engine.web_publish.export_web_v1")
+    @patch("risk_engine.web_publish.export_web_v2")
     @patch("risk_engine.web_publish.validate_output")
     @patch("risk_engine.web_publish.write_sanity_report")
     @patch("risk_engine.web_publish.write_outputs")
@@ -76,7 +76,7 @@ class WebPublishTests(unittest.TestCase):
         mocked_write_outputs.assert_called_once()
         mocked_export.assert_called_once()
 
-    @patch("risk_engine.web_publish.export_web_v1")
+    @patch("risk_engine.web_publish.export_web_v2")
     @patch("risk_engine.web_publish.validate_output")
     @patch("risk_engine.web_publish.write_sanity_report")
     @patch("risk_engine.web_publish.write_outputs")

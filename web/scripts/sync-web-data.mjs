@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const sourceRoot = path.resolve(__dirname, "../../data/web/v1");
-const targetRoot = path.resolve(__dirname, "../public/data/v1");
+const sourceRoot = path.resolve(__dirname, "../../data/web/v2");
+const targetRoot = path.resolve(__dirname, "../public/data/v2");
 
 fs.rmSync(targetRoot, { force: true, recursive: true });
 fs.mkdirSync(targetRoot, { recursive: true });

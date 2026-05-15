@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { loadDashboardData } from "./data";
 
 const base = {
-  "manifest.json": { version: "v1" },
+  "manifest.json": { version: "v2" },
   "latest_snapshot.json": { confidence_score: 0.7 },
   "history_core.json": { index: [], columns: {} },
   "category_breakdowns_btc.json": { index: [], columns: {} },

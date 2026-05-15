@@ -4,7 +4,7 @@ import { chartData, listColumns, pickLatestContributions } from "./data";
 export function useBreakdown(payload, overlayPayload, overlayColumn) {
   const columns = useMemo(() => listColumns(payload), [payload]);
   const preferred = useMemo(
-    () => columns.find((name) => name.endsWith("_heat_contribution")) || columns[0] || "",
+    () => columns.find((name) => name.endsWith("_signal_contribution")) || columns[0] || "",
     [columns],
   );
   const [selectedColumn, setSelectedColumn] = useState(preferred);

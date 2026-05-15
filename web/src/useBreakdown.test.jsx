@@ -6,8 +6,8 @@ import { useBreakdown } from "./useBreakdown";
 const payloadA = {
   index: ["2026-01-01", "2026-01-02"],
   columns: {
-    metric_b_heat_contribution: [0.1, 0.2],
-    metric_a_heat_contribution: [0.3, 0.4],
+    metric_b_signal_contribution: [0.1, 0.2],
+    metric_a_signal_contribution: [0.3, 0.4],
   },
 };
 
@@ -17,9 +17,9 @@ const overlay = {
 };
 
 describe("useBreakdown", () => {
-  it("selects a heat contribution column by default and detects overlay data", () => {
+  it("selects a signal contribution column by default and detects overlay data", () => {
     const { result } = renderHook(() => useBreakdown(payloadA, overlay, "btc_price"));
-    expect(result.current.selectedColumn.endsWith("_heat_contribution")).toBe(true);
+    expect(result.current.selectedColumn.endsWith("_signal_contribution")).toBe(true);
     expect(result.current.hasOverlayData).toBe(true);
   });
 
@@ -30,15 +30,15 @@ describe("useBreakdown", () => {
     );
 
     const first = result.current.selectedColumn;
-    result.current.setSelectedColumn("metric_a_heat_contribution");
+    result.current.setSelectedColumn("metric_a_signal_contribution");
 
     const payloadB = {
       index: ["2026-01-01"],
-      columns: { metric_new_heat_contribution: [0.5] },
+      columns: { metric_new_signal_contribution: [0.5] },
     };
     rerender({ payload: payloadB });
 
     expect(result.current.selectedColumn).not.toBe(first);
-    expect(result.current.selectedColumn).toBe("metric_new_heat_contribution");
+    expect(result.current.selectedColumn).toBe("metric_new_signal_contribution");
   });
 });

@@ -12,7 +12,7 @@ from risk_engine.validation import ValidationResult
 class CliEntrypointTests(unittest.TestCase):
     def _result(self) -> RiskOutput:
         idx = pd.date_range("2026-01-01", periods=2, freq="D")
-        series = pd.DataFrame({"btc_risk_heat": [0.1, 0.2]}, index=idx)
+        series = pd.DataFrame({"btc_risk_signal": [0.1, 0.2]}, index=idx)
         return RiskOutput(
             series=series,
             feature_frames={"x": pd.DataFrame({"reliability": [0.5]}, index=[idx[-1]])},

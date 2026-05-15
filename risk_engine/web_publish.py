@@ -8,7 +8,7 @@ import pandas as pd
 from .config import RuntimeConfig, load_runtime_config
 from .pipeline import run_pipeline, write_outputs
 from .validation import ValidationResult, validate_output, write_sanity_report
-from .web_export import WebExportResult, export_web_v1
+from .web_export import WebExportResult, export_web_v2
 
 
 @dataclass(frozen=True)
@@ -41,7 +41,7 @@ def run_web_publish(
         )
 
     target_root = contract_root or (runtime.project_root / "data" / "web")
-    export_result = export_web_v1(
+    export_result = export_web_v2(
         pipeline_result,
         validation,
         target_root=target_root,

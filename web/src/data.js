@@ -1,4 +1,4 @@
-const ARTIFACT_ROOT = "/data/v1";
+const ARTIFACT_ROOT = "/data/v2";
 
 const FALLBACK_MODES = new Set([
   "local_cache",
@@ -51,7 +51,7 @@ export function valueLabel(value, digits = 3) {
 
 export function pickLatestContributions(columnarPayload, limit = 12) {
   const columns = columnarPayload?.columns ?? {};
-  const names = Object.keys(columns).filter((name) => name.endsWith("_heat_contribution"));
+  const names = Object.keys(columns).filter((name) => name.endsWith("_signal_contribution"));
 
   const entries = names
     .map((name) => ({

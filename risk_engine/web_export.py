@@ -14,10 +14,10 @@ from .types import RiskOutput
 from .validation import ValidationResult
 
 
-WEB_V1_VERSION = "v1"
-WEB_V1_SCHEMA_VERSION = "1.0.0"
+WEB_V2_VERSION = "v2"
+WEB_V2_SCHEMA_VERSION = "2.0.0"
 
-WEB_V1_ARTIFACTS = [
+WEB_V2_ARTIFACTS = [
     "manifest.json",
     "latest_snapshot.json",
     "history_core.json",
@@ -29,24 +29,24 @@ WEB_V1_ARTIFACTS = [
 ]
 
 CORE_HISTORY_COLUMNS = [
-    "btc_risk_heat",
+    "btc_risk_signal",
     "btc_risk_attention",
     "btc_risk_confidence",
     "btc_risk_coverage",
-    "total_market_risk_heat",
+    "total_market_risk_signal",
     "total_market_risk_attention",
     "total_market_risk_confidence",
     "total_market_risk_coverage",
     "headline_attention",
-    "headline_heat",
+    "trend_composite_score",
+    "cycle_extension_score",
     "confidence_score",
-    "cycle_heat_score",
-    "cycle_cold_score",
+    "cycle_frenzy_score",
+    "cycle_accumulation_score",
     "cycle_p_frenzy",
     "cycle_p_accumulation",
     "cycle_confidence",
     "cycle_position",
-    "trend_heat",
     "top_reversal_risk",
     "bottom_reversal_risk",
     "attention_score",
@@ -157,23 +157,27 @@ def _latest_snapshot(series: pd.DataFrame) -> Dict[str, Any]:
         return {
             "date": None,
             "btc_risk": {
-                "heat": None,
+                "signal": None,
                 "attention": None,
                 "confidence": None,
                 "coverage": None,
             },
             "total_market_risk": {
-                "heat": None,
+                "signal": None,
                 "attention": None,
                 "confidence": None,
                 "coverage": None,
             },
             "headline_attention": None,
-            "headline_heat": None,
+            "trend_composite_score": None,
+            "cycle_extension_score": None,
+            "top_reversal_risk": None,
+            "bottom_reversal_risk": None,
+            "attention_score": None,
             "confidence_score": None,
             "cycle_model": {
-                "heat_score": None,
-                "cold_score": None,
+                "frenzy_score": None,
+                "accumulation_score": None,
                 "p_frenzy": None,
                 "p_accumulation": None,
                 "confidence": None,
@@ -187,23 +191,27 @@ def _latest_snapshot(series: pd.DataFrame) -> Dict[str, Any]:
     return {
         "date": pd.Timestamp(date).date().isoformat(),
         "btc_risk": {
-            "heat": _coerce_json_scalar(row.get("btc_risk_heat")),
+            "signal": _coerce_json_scalar(row.get("btc_risk_signal")),
             "attention": _coerce_json_scalar(row.get("btc_risk_attention")),
             "confidence": _coerce_json_scalar(row.get("btc_risk_confidence")),
             "coverage": _coerce_json_scalar(row.get("btc_risk_coverage")),
         },
         "total_market_risk": {
-            "heat": _coerce_json_scalar(row.get("total_market_risk_heat")),
+            "signal": _coerce_json_scalar(row.get("total_market_risk_signal")),
             "attention": _coerce_json_scalar(row.get("total_market_risk_attention")),
             "confidence": _coerce_json_scalar(row.get("total_market_risk_confidence")),
             "coverage": _coerce_json_scalar(row.get("total_market_risk_coverage")),
         },
         "headline_attention": _coerce_json_scalar(row.get("headline_attention")),
-        "headline_heat": _coerce_json_scalar(row.get("headline_heat")),
+        "trend_composite_score": _coerce_json_scalar(row.get("trend_composite_score")),
+        "cycle_extension_score": _coerce_json_scalar(row.get("cycle_extension_score")),
+        "top_reversal_risk": _coerce_json_scalar(row.get("top_reversal_risk")),
+        "bottom_reversal_risk": _coerce_json_scalar(row.get("bottom_reversal_risk")),
+        "attention_score": _coerce_json_scalar(row.get("attention_score")),
         "confidence_score": _coerce_json_scalar(row.get("confidence_score")),
         "cycle_model": {
-            "heat_score": _coerce_json_scalar(row.get("cycle_heat_score")),
-            "cold_score": _coerce_json_scalar(row.get("cycle_cold_score")),
+            "frenzy_score": _coerce_json_scalar(row.get("cycle_frenzy_score")),
+            "accumulation_score": _coerce_json_scalar(row.get("cycle_accumulation_score")),
             "p_frenzy": _coerce_json_scalar(row.get("cycle_p_frenzy")),
             "p_accumulation": _coerce_json_scalar(row.get("cycle_p_accumulation")),
             "confidence": _coerce_json_scalar(row.get("cycle_confidence")),
@@ -213,7 +221,7 @@ def _latest_snapshot(series: pd.DataFrame) -> Dict[str, Any]:
     }
 
 
-def export_web_v1(
+def export_web_v2(
     result: RiskOutput,
     validation: ValidationResult,
     *,
@@ -221,7 +229,7 @@ def export_web_v1(
     sanity_report: pd.DataFrame,
     generated_at: str | None = None,
 ) -> WebExportResult:
-    root = target_root / WEB_V1_VERSION
+    root = target_root / WEB_V2_VERSION
     generated_at_value = generated_at or _iso_utc_now()
     root.mkdir(parents=True, exist_ok=True)
 
@@ -281,8 +289,8 @@ def export_web_v1(
         latest_snapshot_path,
         {
             "generated_at": generated_at_value,
-            "schema_version": WEB_V1_SCHEMA_VERSION,
-            "version": WEB_V1_VERSION,
+            "schema_version": WEB_V2_SCHEMA_VERSION,
+            "version": WEB_V2_VERSION,
             **latest_snapshot_payload,
         },
     )
@@ -293,8 +301,8 @@ def export_web_v1(
         history_core_path,
         {
             "generated_at": generated_at_value,
-            "schema_version": WEB_V1_SCHEMA_VERSION,
-            "version": WEB_V1_VERSION,
+            "schema_version": WEB_V2_SCHEMA_VERSION,
+            "version": WEB_V2_VERSION,
             **_columnar_payload(history_frame),
         },
     )
@@ -305,9 +313,9 @@ def export_web_v1(
         category_btc_path,
         {
             "generated_at": generated_at_value,
-            "schema_version": WEB_V1_SCHEMA_VERSION,
+            "schema_version": WEB_V2_SCHEMA_VERSION,
             "target": "btc",
-            "version": WEB_V1_VERSION,
+            "version": WEB_V2_VERSION,
             **_columnar_payload(result.category_breakdowns.get("btc", pd.DataFrame())),
         },
     )
@@ -318,9 +326,9 @@ def export_web_v1(
         category_total_path,
         {
             "generated_at": generated_at_value,
-            "schema_version": WEB_V1_SCHEMA_VERSION,
+            "schema_version": WEB_V2_SCHEMA_VERSION,
             "target": "total_market",
-            "version": WEB_V1_VERSION,
+            "version": WEB_V2_VERSION,
             **_columnar_payload(result.category_breakdowns.get("total_market", pd.DataFrame())),
         },
     )
@@ -331,9 +339,9 @@ def export_web_v1(
         metric_btc_path,
         {
             "generated_at": generated_at_value,
-            "schema_version": WEB_V1_SCHEMA_VERSION,
+            "schema_version": WEB_V2_SCHEMA_VERSION,
             "target": "btc",
-            "version": WEB_V1_VERSION,
+            "version": WEB_V2_VERSION,
             **_columnar_payload(result.metric_breakdowns.get("btc", pd.DataFrame())),
         },
     )
@@ -344,9 +352,9 @@ def export_web_v1(
         metric_total_path,
         {
             "generated_at": generated_at_value,
-            "schema_version": WEB_V1_SCHEMA_VERSION,
+            "schema_version": WEB_V2_SCHEMA_VERSION,
             "target": "total_market",
-            "version": WEB_V1_VERSION,
+            "version": WEB_V2_VERSION,
             **_columnar_payload(result.metric_breakdowns.get("total_market", pd.DataFrame())),
         },
     )
@@ -357,18 +365,18 @@ def export_web_v1(
         diagnostics_path,
         {
             "generated_at": generated_at_value,
-            "schema_version": WEB_V1_SCHEMA_VERSION,
-            "version": WEB_V1_VERSION,
+            "schema_version": WEB_V2_SCHEMA_VERSION,
+            "version": WEB_V2_VERSION,
             **diagnostics_payload,
         },
     )
     files.append(diagnostics_path)
 
     manifest = {
-        "version": WEB_V1_VERSION,
-        "schema_version": WEB_V1_SCHEMA_VERSION,
+        "version": WEB_V2_VERSION,
+        "schema_version": WEB_V2_SCHEMA_VERSION,
         "generated_at": generated_at_value,
-        "artifacts": sorted(WEB_V1_ARTIFACTS),
+        "artifacts": sorted(WEB_V2_ARTIFACTS),
     }
 
     manifest_path = root / "manifest.json"

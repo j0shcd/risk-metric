@@ -11,7 +11,7 @@ from risk_engine.types import RiskOutput
 class PipelineWriteOutputsTests(unittest.TestCase):
     def _result(self) -> RiskOutput:
         idx = pd.date_range("2026-01-01", periods=3, freq="D")
-        series = pd.DataFrame({"btc_risk_heat": [0.1, 0.2, 0.3]}, index=idx)
+        series = pd.DataFrame({"btc_risk_signal": [0.1, 0.2, 0.3]}, index=idx)
         return RiskOutput(
             series=series,
             feature_frames={"metric_a": pd.DataFrame({"x": [1, 2, 3]}, index=idx)},
