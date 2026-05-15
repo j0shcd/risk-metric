@@ -23,15 +23,15 @@ class CalibrationTests(unittest.TestCase):
             index=index,
             name="btc_price",
         )
-        # First-draft heat with trend-following bias.
-        raw_heat = pd.Series(
+        # First-draft signal with trend-following bias.
+        raw_signal = pd.Series(
             (0.50 + 0.25 * np.tanh((x - x.mean()) / 380.0) + 0.04 * np.sin(x / 55.0)).clip(0.0, 1.0),
             index=index,
-            name="btc_risk_heat",
+            name="btc_risk_signal",
         )
         # Attention peaks near the middle in this synthetic setup (a known undesirable behavior).
         raw_attention = pd.Series(
-            (0.60 - 0.50 * (2.0 * (raw_heat - 0.5).abs()) + 0.03 * np.sin(x / 28.0)).clip(0.0, 1.0),
+            (0.60 - 0.50 * (2.0 * (raw_signal - 0.5).abs()) + 0.03 * np.sin(x / 28.0)).clip(0.0, 1.0),
             index=index,
             name="headline_attention",
         )
@@ -39,10 +39,10 @@ class CalibrationTests(unittest.TestCase):
         frame = pd.DataFrame(
             {
                 "btc_price": btc_price,
-                "btc_risk_heat": raw_heat,
-                "top_reversal_risk": raw_heat,
-                "bottom_reversal_risk": 1.0 - raw_heat,
-                "trend_heat": raw_heat,
+                "btc_risk_signal": raw_signal,
+                "top_reversal_risk": raw_signal,
+                "bottom_reversal_risk": 1.0 - raw_signal,
+                "trend_composite_score": raw_signal,
                 "attention_score": raw_attention,
                 "headline_attention": raw_attention,
             }

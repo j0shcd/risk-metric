@@ -31,8 +31,7 @@ class CalibrationWalkforwardTests(unittest.TestCase):
                 "bottom_reversal_risk": (0.5 - 0.3 * np.sin(x / 130.0)).clip(0.0, 1.0),
                 "attention_score": (0.3 + 0.2 * np.abs(np.sin(x / 70.0))).clip(0.0, 1.0),
                 "headline_attention": (0.3 + 0.2 * np.abs(np.sin(x / 70.0))).clip(0.0, 1.0),
-                "trend_heat": (0.4 + 0.2 * np.sin(x / 95.0)).clip(0.0, 1.0),
-                "headline_heat": (0.4 + 0.2 * np.sin(x / 95.0)).clip(0.0, 1.0),
+                "trend_composite_score": (0.4 + 0.2 * np.sin(x / 95.0)).clip(0.0, 1.0),
             },
             index=idx,
         )

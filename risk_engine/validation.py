@@ -26,17 +26,17 @@ def _check_index(series: pd.DataFrame, errors: List[str]) -> None:
 
 def _check_bounds(series: pd.DataFrame, errors: List[str]) -> None:
     required_bounded_columns = {
-        "btc_risk_heat": (0.0, 1.0),
+        "btc_risk_signal": (0.0, 1.0),
         "btc_risk_attention": (0.0, 1.0),
-        "total_market_risk_heat": (0.0, 1.0),
+        "total_market_risk_signal": (0.0, 1.0),
         "total_market_risk_attention": (0.0, 1.0),
         "headline_attention": (0.0, 1.0),
-        "headline_heat": (0.0, 1.0),
+        "trend_composite_score": (0.0, 1.0),
         "confidence_score": (0.0, 1.0),
     }
     optional_bounded_columns = {
-        "cycle_heat_score": (0.0, 1.0),
-        "cycle_cold_score": (0.0, 1.0),
+        "cycle_frenzy_score": (0.0, 1.0),
+        "cycle_accumulation_score": (0.0, 1.0),
         "cycle_p_frenzy": (0.0, 1.0),
         "cycle_p_accumulation": (0.0, 1.0),
         "cycle_confidence": (0.0, 1.0),
@@ -70,10 +70,10 @@ def _check_bounds(series: pd.DataFrame, errors: List[str]) -> None:
 def _check_recent_signal_presence(series: pd.DataFrame, errors: List[str], lookback_days: int = 30) -> None:
     tail = series.tail(lookback_days)
     required_columns = [
-        "btc_risk_heat",
+        "btc_risk_signal",
         "btc_risk_attention",
         "headline_attention",
-        "headline_heat",
+        "trend_composite_score",
         "confidence_score",
     ]
     for column in required_columns:
@@ -255,10 +255,10 @@ def _check_benchmark_quality(result: RiskOutput, warnings: List[str]) -> None:
 def build_walkforward_sanity_report(
     series: pd.DataFrame,
     price_column: str = "btc_price",
-    heat_column: str = "btc_risk_heat",
+    signal_column: str = "btc_risk_signal",
     attention_column: str = "headline_attention",
 ) -> pd.DataFrame:
-    required = {price_column, heat_column, attention_column}
+    required = {price_column, signal_column, attention_column}
     if not required.issubset(set(series.columns)):
         return pd.DataFrame(
             [
@@ -273,7 +273,7 @@ def build_walkforward_sanity_report(
             ]
         )
 
-    frame = series[[price_column, heat_column, attention_column]].dropna()
+    frame = series[[price_column, signal_column, attention_column]].dropna()
     if len(frame) < 365:
         return pd.DataFrame(
             [
@@ -289,7 +289,7 @@ def build_walkforward_sanity_report(
         )
 
     price = frame[price_column]
-    heat = frame[heat_column]
+    signal = frame[signal_column]
     attention = frame[attention_column]
 
     top_threshold = price.quantile(0.90)
@@ -306,13 +306,13 @@ def build_walkforward_sanity_report(
     sideways_mask = one_year_roi.abs() <= sideways_threshold
 
     forward_return_90d = price.shift(-90) / price - 1.0
-    corr_data = pd.concat([heat, forward_return_90d], axis=1).dropna()
+    corr_data = pd.concat([signal, forward_return_90d], axis=1).dropna()
     forward_corr = np.nan
     if len(corr_data) >= 50:
         forward_corr = corr_data.corr(method="spearman").iloc[0, 1]
 
-    top_heat = heat[top_mask].mean()
-    bottom_heat = heat[bottom_mask].mean()
+    top_signal = signal[top_mask].mean()
+    bottom_signal = signal[bottom_mask].mean()
     extremes_attention = attention[top_mask | bottom_mask].mean()
     mid_attention = attention[mid_mask].mean()
     sideways_attention_std = attention[sideways_mask].std(ddof=0)
@@ -320,12 +320,12 @@ def build_walkforward_sanity_report(
 
     rows = [
         {
-            "check": "heat_higher_in_top_vs_bottom_regime",
-            "passed": bool(top_heat > bottom_heat),
-            "value": float(top_heat - bottom_heat),
+            "check": "signal_higher_in_top_vs_bottom_regime",
+            "passed": bool(top_signal > bottom_signal),
+            "value": float(top_signal - bottom_signal),
             "threshold": 0.0,
             "comparator": ">",
-            "details": "Top-price regime should have higher heat than bottom regime.",
+            "details": "Top-price regime should have higher signal than bottom regime.",
         },
         {
             "check": "attention_higher_at_extremes_vs_mid",
@@ -344,12 +344,12 @@ def build_walkforward_sanity_report(
             "details": "Sideways periods should have lower attention dispersion.",
         },
         {
-            "check": "heat_vs_forward_90d_return_spearman_nonpositive",
+            "check": "signal_vs_forward_90d_return_spearman_nonpositive",
             "passed": bool(np.isnan(forward_corr) or forward_corr <= 0.0),
             "value": float(forward_corr) if not np.isnan(forward_corr) else np.nan,
             "threshold": 0.0,
             "comparator": "<=",
-            "details": "Higher heat should not correlate positively with 90-day forward returns.",
+            "details": "Higher signal should not correlate positively with 90-day forward returns.",
         },
     ]
 
@@ -394,12 +394,12 @@ def validate_output(result: RiskOutput) -> ValidationResult:
         result.series,
         errors,
         columns=[
-            "btc_risk_heat",
+            "btc_risk_signal",
             "btc_risk_attention",
-            "total_market_risk_heat",
+            "total_market_risk_signal",
             "total_market_risk_attention",
             "headline_attention",
-            "headline_heat",
+            "trend_composite_score",
             "confidence_score",
         ],
     )

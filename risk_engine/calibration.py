@@ -492,13 +492,13 @@ def calibrate_primary_outputs(
 
     output = series.copy()
 
-    top_col = "top_reversal_risk" if "top_reversal_risk" in output.columns else "btc_risk_heat"
+    top_col = "top_reversal_risk" if "top_reversal_risk" in output.columns else "btc_risk_signal"
     bottom_col = (
         "bottom_reversal_risk"
         if "bottom_reversal_risk" in output.columns
         else ("cycle_p_accumulation" if "cycle_p_accumulation" in output.columns else None)
     )
-    trend_col = "trend_heat" if "trend_heat" in output.columns else "headline_heat"
+    trend_col = "trend_composite_score" if "trend_composite_score" in output.columns else top_col
     attention_col = "attention_score" if "attention_score" in output.columns else "headline_attention"
 
     if bottom_col is None:
@@ -611,8 +611,6 @@ def calibrate_primary_outputs(
         "top_mean_w_price_extremity": float(top_meta.get("mean_w_price_extremity_pct", 0.0)),
         "top_mean_w_momentum_exhaustion": float(top_meta.get("mean_w_momentum_exhaustion_pct", 0.0)),
         "top_mean_w_attention_blowoff": float(top_meta.get("mean_w_attention_blowoff_pct", 0.0)),
-        # Backward-compatible alias.
-        "top_mean_w_momentum": float(top_meta.get("mean_w_momentum_exhaustion_pct", 0.0)),
         "top_train_event_count_mean": float(top_meta.get("top_train_event_count_mean", float("nan"))),
         "bottom_mean_w_base": float(bottom_meta.get("mean_w_base", 1.0)),
         "bottom_mean_w_drawdown_depth": float(bottom_meta.get("mean_w_feature_a", 0.0)),

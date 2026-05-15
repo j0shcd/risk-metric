@@ -253,6 +253,56 @@ def _expanding_quantile_thresholds(
     return out
 
 
+def _expanding_percentile_series(series: pd.Series, *, min_history: int) -> pd.Series:
+    values = series.astype(float)
+    out = pd.Series(index=values.index, dtype=float)
+    for i, idx in enumerate(values.index):
+        history = values.iloc[: i + 1].dropna()
+        current = values.iloc[i]
+        if pd.isna(current) or len(history) < max(int(min_history), 1):
+            out.loc[idx] = np.nan
+            continue
+        out.loc[idx] = float(history.rank(pct=True).iloc[-1])
+    return out.clip(0.0, 1.0)
+
+
+def _build_cycle_extension_signals(btc_price: pd.Series) -> pd.DataFrame:
+    ratio_50d_350d = btc_price.rolling(50, min_periods=50).mean() / btc_price.rolling(350, min_periods=350).mean()
+    ratio_price_200d = btc_price / btc_price.rolling(200, min_periods=200).mean()
+    ratio_price_200w = btc_price / btc_price.rolling(1400, min_periods=700).mean()
+    momentum_1y = btc_price.pct_change(365, fill_method=None)
+
+    ratio_50d_350d_pct = _expanding_percentile_series(ratio_50d_350d, min_history=365)
+    ratio_price_200d_pct = _expanding_percentile_series(ratio_price_200d, min_history=365)
+    ratio_price_200w_pct = _expanding_percentile_series(ratio_price_200w, min_history=730)
+    momentum_1y_pct = _expanding_percentile_series(momentum_1y, min_history=365)
+
+    weighted = pd.DataFrame(
+        {
+            "ratio_50d_350d": ratio_50d_350d_pct * 0.30,
+            "ratio_price_200d": ratio_price_200d_pct * 0.20,
+            "ratio_price_200w": ratio_price_200w_pct * 0.35,
+            "momentum_1y": momentum_1y_pct * 0.15,
+        },
+        index=btc_price.index,
+    )
+
+    extension_signal = weighted.sum(axis=1, min_count=1)
+    weight_used = weighted.notna().mul([0.30, 0.20, 0.35, 0.15], axis=1).sum(axis=1)
+    extension_signal = (extension_signal / weight_used.replace({0.0: np.nan})).clip(0.0, 1.0)
+
+    return pd.DataFrame(
+        {
+            "cycle_extension_score": extension_signal,
+            "price_extremity_pct": (
+                0.45 * ratio_price_200w_pct + 0.35 * ratio_50d_350d_pct + 0.20 * ratio_price_200d_pct
+            ).clip(0.0, 1.0),
+            "momentum_exhaustion_pct": momentum_1y_pct.clip(0.0, 1.0),
+        },
+        index=btc_price.index,
+    )
+
+
 def _build_operational_alert_policy(
     scores: pd.Series,
     *,
@@ -411,6 +461,7 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         source_modes[f"cycle::{column}"] = str(cycle_modes.get(f"cycle::{column}", "unknown"))
 
     market_features = build_market_features(btc_price=btc_price, total_market_cap=total_market_cap)
+    cycle_extension = _build_cycle_extension_signals(btc_price=btc_price)
     onchain_features = build_onchain_features(onchain_frame)
     social_features = build_social_sentiment_features(fear_greed=fear_greed, social_frame=social_frame)
 
@@ -438,12 +489,12 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     )
 
     output = pd.DataFrame(index=index)
-    output["btc_risk_heat"] = ((btc_score.heat + 1.0) / 2.0).clip(0.0, 1.0)
+    output["btc_risk_signal"] = ((btc_score.signal + 1.0) / 2.0).clip(0.0, 1.0)
     output["btc_risk_attention"] = btc_score.attention
     output["btc_risk_confidence"] = btc_score.confidence
     output["btc_risk_coverage"] = btc_score.coverage
 
-    output["total_market_risk_heat"] = ((total_score.heat + 1.0) / 2.0).clip(0.0, 1.0)
+    output["total_market_risk_signal"] = ((total_score.signal + 1.0) / 2.0).clip(0.0, 1.0)
     output["total_market_risk_attention"] = total_score.attention
     output["total_market_risk_confidence"] = total_score.confidence
     output["total_market_risk_coverage"] = total_score.coverage
@@ -458,9 +509,10 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         btc_headline_mix * output["btc_risk_attention"] + total_headline_mix * output["total_market_risk_attention"]
     ).clip(0.0, 1.0)
 
-    output["headline_heat"] = (
-        btc_headline_mix * output["btc_risk_heat"] + total_headline_mix * output["total_market_risk_heat"]
+    output["trend_composite_score"] = (
+        btc_headline_mix * output["btc_risk_signal"] + total_headline_mix * output["total_market_risk_signal"]
     ).clip(0.0, 1.0)
+    output["cycle_extension_score"] = cycle_extension["cycle_extension_score"].reindex(output.index)
 
     output["confidence_score"] = (
         0.7 * output["btc_risk_confidence"] + 0.3 * output["total_market_risk_confidence"]
@@ -479,22 +531,27 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         daily_index=index,
     )
     output = pd.concat([output, cycle.daily_projection], axis=1)
+    output["price_extremity_pct"] = cycle_extension["price_extremity_pct"].reindex(output.index)
+    output["momentum_exhaustion_pct"] = cycle_extension["momentum_exhaustion_pct"].reindex(output.index)
 
-    output["trend_heat"] = output["headline_heat"].clip(0.0, 1.0)
-    output["top_reversal_risk"] = output.get("cycle_p_frenzy", output["btc_risk_heat"]).clip(0.0, 1.0)
-    output["bottom_reversal_risk"] = output.get("cycle_p_accumulation", (1.0 - output["btc_risk_heat"])).clip(0.0, 1.0)
+    output["trend_composite_score"] = output["cycle_extension_score"].fillna(output["trend_composite_score"]).clip(0.0, 1.0)
+    output["top_reversal_risk"] = output.get("cycle_p_frenzy", output["btc_risk_signal"]).clip(0.0, 1.0)
+    output["bottom_reversal_risk"] = output.get("cycle_p_accumulation", (1.0 - output["btc_risk_signal"])).clip(0.0, 1.0)
     output["attention_score"] = output["headline_attention"].clip(0.0, 1.0)
+    output["attention_blowoff_pct"] = (
+        0.65 * output["attention_score"] + 0.35 * output["price_extremity_pct"]
+    ).clip(0.0, 1.0)
 
     calibrated = calibrate_primary_outputs(output, cfg=runtime)
     output = calibrated.series
-    output["headline_heat"] = (
-        output["headline_btc_mix_weight"] * output["btc_risk_heat"]
-        + output["headline_total_market_mix_weight"] * output["total_market_risk_heat"]
+    output["trend_composite_score"] = (
+        output["headline_btc_mix_weight"] * output["btc_risk_signal"]
+        + output["headline_total_market_mix_weight"] * output["total_market_risk_signal"]
     ).clip(0.0, 1.0)
 
-    fallback_monthly_heat = output["btc_risk_heat"].astype(float).resample(pd.offsets.MonthEnd()).last()
-    top_monthly = output["top_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last().fillna(fallback_monthly_heat)
-    bottom_monthly = output["bottom_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last().fillna(1.0 - fallback_monthly_heat)
+    fallback_monthly_signal = output["btc_risk_signal"].astype(float).resample(pd.offsets.MonthEnd()).last()
+    top_monthly = output["top_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last().fillna(fallback_monthly_signal)
+    bottom_monthly = output["bottom_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last().fillna(1.0 - fallback_monthly_signal)
     top_operational = _build_operational_alert_policy(
         top_monthly,
         alert_rate=float(runtime.operational_top_alert_rate),
@@ -522,7 +579,7 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         runtime,
         monthly_price=output["btc_price"].astype(float).resample(pd.offsets.MonthEnd()).last(),
         signals={
-            "trend_heat": output["trend_heat"].astype(float).resample(pd.offsets.MonthEnd()).last(),
+            "trend_composite_score": output["trend_composite_score"].astype(float).resample(pd.offsets.MonthEnd()).last(),
             "top_reversal_risk": output["top_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last(),
             "bottom_reversal_risk": output["bottom_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last(),
             "attention_score": output["attention_score"].astype(float).resample(pd.offsets.MonthEnd()).last(),

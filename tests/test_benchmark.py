@@ -20,7 +20,7 @@ class BenchmarkTests(unittest.TestCase):
         )
 
         signals = {
-            "trend_heat": pd.Series((0.5 + 0.3 * np.sin(x / 9.0)).clip(0.0, 1.0), index=index),
+            "trend_composite_score": pd.Series((0.5 + 0.3 * np.sin(x / 9.0)).clip(0.0, 1.0), index=index),
             "top_reversal_risk": pd.Series((0.5 + 0.35 * np.sin(x / 8.0 + 0.3)).clip(0.0, 1.0), index=index),
             "bottom_reversal_risk": pd.Series((0.5 - 0.35 * np.sin(x / 8.0 + 0.3)).clip(0.0, 1.0), index=index),
             "attention_score": pd.Series((0.4 + 0.25 * np.abs(np.sin(x / 7.0))).clip(0.0, 1.0), index=index),
@@ -75,7 +75,7 @@ class BenchmarkTests(unittest.TestCase):
             cfg,
             monthly_price=price,
             signals={
-                "trend_heat": signal,
+                "trend_composite_score": signal,
                 "top_reversal_risk": signal,
                 "bottom_reversal_risk": 1.0 - signal,
                 "attention_score": signal,
@@ -103,7 +103,7 @@ class BenchmarkTests(unittest.TestCase):
             cfg,
             monthly_price=price,
             signals={
-                "trend_heat": signal,
+                "trend_composite_score": signal,
                 "top_reversal_risk": signal,
                 "bottom_reversal_risk": 1.0 - signal,
                 "attention_score": signal,

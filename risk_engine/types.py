@@ -57,8 +57,8 @@ class FeatureSnapshot:
 @dataclass(frozen=True)
 class RegimeScores:
     date: pd.Timestamp
-    heat_score: float
-    cold_score: float
+    frenzy_score: float
+    accumulation_score: float
     p_frenzy: float
     p_accumulation: float
     confidence: float

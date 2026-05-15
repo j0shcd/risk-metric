@@ -12,13 +12,13 @@ def _bundle(
     name: str,
     category: str,
     target: str,
-    signed_heat: float,
+    signed_signal: float,
     attention: float,
     reliability: float = 1.0,
 ) -> FeatureBundle:
     frame = pd.DataFrame(
         {
-            "signed_heat": signed_heat,
+            "signed_signal": signed_signal,
             "attention": attention,
             "reliability": reliability,
         },
@@ -32,22 +32,22 @@ class ScoringBehaviorTests(unittest.TestCase):
         self.index = pd.date_range("2024-01-01", periods=50, freq="D")
         self.weights = {"price_structure": 1.0}
 
-    def test_crowding_damps_heat_and_boosts_attention(self) -> None:
+    def test_crowding_lifts_consensus_signal_and_boosts_attention(self) -> None:
         consensus_bundles = [
-            _bundle(self.index, "m1", "price_structure", "btc", signed_heat=0.4, attention=0.5),
-            _bundle(self.index, "m2", "price_structure", "btc", signed_heat=0.4, attention=0.5),
-            _bundle(self.index, "m3", "price_structure", "btc", signed_heat=0.4, attention=0.5),
+            _bundle(self.index, "m1", "price_structure", "btc", signed_signal=0.4, attention=0.5),
+            _bundle(self.index, "m2", "price_structure", "btc", signed_signal=0.4, attention=0.5),
+            _bundle(self.index, "m3", "price_structure", "btc", signed_signal=0.4, attention=0.5),
         ]
         mixed_bundles = [
-            _bundle(self.index, "m1", "price_structure", "btc", signed_heat=0.9, attention=0.5),
-            _bundle(self.index, "m2", "price_structure", "btc", signed_heat=0.9, attention=0.5),
-            _bundle(self.index, "m3", "price_structure", "btc", signed_heat=-0.6, attention=0.5),
+            _bundle(self.index, "m1", "price_structure", "btc", signed_signal=0.9, attention=0.5),
+            _bundle(self.index, "m2", "price_structure", "btc", signed_signal=0.9, attention=0.5),
+            _bundle(self.index, "m3", "price_structure", "btc", signed_signal=-0.6, attention=0.5),
         ]
 
         consensus = score_target(self.index, consensus_bundles, self.weights, target="btc")
         mixed = score_target(self.index, mixed_bundles, self.weights, target="btc")
 
-        self.assertLess(float(consensus.heat.mean()), float(mixed.heat.mean()))
+        self.assertGreater(float(consensus.signal.mean()), float(mixed.signal.mean()))
 
         consensus_breakdown = consensus.category_breakdown
         mixed_breakdown = mixed.category_breakdown
@@ -63,8 +63,8 @@ class ScoringBehaviorTests(unittest.TestCase):
         )
 
     def test_reliability_adjusts_effective_weight(self) -> None:
-        strong = _bundle(self.index, "strong", "price_structure", "btc", signed_heat=0.8, attention=0.7, reliability=1.0)
-        weak = _bundle(self.index, "weak", "price_structure", "btc", signed_heat=0.8, attention=0.7, reliability=0.1)
+        strong = _bundle(self.index, "strong", "price_structure", "btc", signed_signal=0.8, attention=0.7, reliability=1.0)
+        weak = _bundle(self.index, "weak", "price_structure", "btc", signed_signal=0.8, attention=0.7, reliability=0.1)
 
         score_strong = score_target(self.index, [strong], self.weights, target="btc")
         score_weak = score_target(self.index, [weak], self.weights, target="btc")

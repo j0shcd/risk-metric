@@ -60,7 +60,7 @@ class CycleModelTests(unittest.TestCase):
         self.assertFalse(out.financial_benchmark_summary.empty)
         self.assertFalse(out.financial_benchmark_curves.empty)
 
-        for col in ["heat_score", "cold_score", "p_frenzy", "p_accumulation", "confidence"]:
+        for col in ["frenzy_score", "accumulation_score", "p_frenzy", "p_accumulation", "confidence"]:
             values = out.regime_scores[col].dropna()
             self.assertFalse(values.empty)
             self.assertTrue(((values >= 0.0) & (values <= 1.0)).all())

@@ -273,7 +273,7 @@ def _weighted_category_composite(frame: pd.DataFrame, columns: Dict[str, str], w
 
 
 def _build_regime_scores(feature_frame: pd.DataFrame, cfg: RuntimeConfig) -> pd.DataFrame:
-    heat_columns = {
+    frenzy_columns = {
         "valuation": "valuation_hot",
         "speculation": "speculation_hot",
         "attention": "attention_hot",
@@ -287,8 +287,8 @@ def _build_regime_scores(feature_frame: pd.DataFrame, cfg: RuntimeConfig) -> pd.
     }
 
     regime = pd.DataFrame(index=feature_frame.index)
-    regime["heat_score"] = _weighted_category_composite(feature_frame, heat_columns, cfg.cycle_category_weights)
-    regime["cold_score"] = _weighted_category_composite(feature_frame, cold_columns, cfg.cycle_category_weights)
+    regime["frenzy_score"] = _weighted_category_composite(feature_frame, frenzy_columns, cfg.cycle_category_weights)
+    regime["accumulation_score"] = _weighted_category_composite(feature_frame, cold_columns, cfg.cycle_category_weights)
 
     categories_available = pd.concat(
         [
@@ -320,8 +320,8 @@ def _build_regime_scores(feature_frame: pd.DataFrame, cfg: RuntimeConfig) -> pd.
     regime["feature_coverage"] = raw_available.mean(axis=1).clip(0.0, 1.0)
     regime["confidence"] = (0.5 * regime["category_coverage"] + 0.5 * regime["feature_coverage"]).clip(0.0, 1.0)
 
-    base_frenzy = _logistic_probability(regime["heat_score"], center=0.65, slope=10.0)
-    base_accum = _logistic_probability(regime["cold_score"], center=0.65, slope=10.0)
+    base_frenzy = _logistic_probability(regime["frenzy_score"], center=0.65, slope=10.0)
+    base_accum = _logistic_probability(regime["accumulation_score"], center=0.65, slope=10.0)
     shrink = (0.4 + 0.6 * regime["confidence"]).clip(0.0, 1.0)
     regime["p_frenzy"] = (0.5 + (base_frenzy - 0.5) * shrink).clip(0.0, 1.0)
     regime["p_accumulation"] = (0.5 + (base_accum - 0.5) * shrink).clip(0.0, 1.0)
@@ -404,15 +404,15 @@ def _build_signal_decisions(feature_frame: pd.DataFrame, regime_scores: pd.DataF
 
 def _simulate_dynamic_dca(
     price: pd.Series,
-    heat_score: pd.Series,
-    cold_score: pd.Series,
+    frenzy_score: pd.Series,
+    accumulation_score: pd.Series,
     cfg: RuntimeConfig,
 ) -> pd.DataFrame:
     aligned = pd.DataFrame(
         {
             "price": price.astype(float),
-            "heat_score": heat_score.astype(float).reindex(price.index),
-            "cold_score": cold_score.astype(float).reindex(price.index),
+            "frenzy_score": frenzy_score.astype(float).reindex(price.index),
+            "accumulation_score": accumulation_score.astype(float).reindex(price.index),
         },
         index=price.index,
     ).dropna(subset=["price"])
@@ -433,8 +433,8 @@ def _simulate_dynamic_dca(
 
     for date, row in aligned.iterrows():
         p = float(row["price"])
-        heat = float(row["heat_score"]) if np.isfinite(row["heat_score"]) else np.nan
-        cold = float(row["cold_score"]) if np.isfinite(row["cold_score"]) else np.nan
+        frenzy = float(row["frenzy_score"]) if np.isfinite(row["frenzy_score"]) else np.nan
+        cold = float(row["accumulation_score"]) if np.isfinite(row["accumulation_score"]) else np.nan
 
         cash += base_contribution
 
@@ -443,9 +443,9 @@ def _simulate_dynamic_dca(
         if np.isfinite(cold):
             denom = max(1e-9, 1.0 - buy_threshold)
             buy_strength = float(np.clip((cold - buy_threshold) / denom, 0.0, 1.0))
-        if np.isfinite(heat):
+        if np.isfinite(frenzy):
             denom = max(1e-9, 1.0 - sell_threshold)
-            sell_strength = float(np.clip((heat - sell_threshold) / denom, 0.0, 1.0))
+            sell_strength = float(np.clip((frenzy - sell_threshold) / denom, 0.0, 1.0))
 
         buy_usd = 0.0
         sell_usd = 0.0
@@ -523,8 +523,8 @@ def _build_financial_benchmark_outputs(
 
     dynamic_dca = _simulate_dynamic_dca(
         price=price,
-        heat_score=aligned_regime["heat_score"],
-        cold_score=aligned_regime["cold_score"],
+        frenzy_score=aligned_regime["frenzy_score"],
+        accumulation_score=aligned_regime["accumulation_score"],
         cfg=cfg,
     )
     dynamic_equity = dynamic_dca.get("equity", pd.Series(index=price.index, dtype=float)).reindex(price.index)
@@ -614,7 +614,7 @@ def _build_backtest_report(monthly_price: pd.Series, decisions: pd.DataFrame, fi
 
 def _metric_audit_frame() -> pd.DataFrame:
     rows = [
-        ("btc_trend_extension_50d_350d", "recalibrate", "Keep for daily heat, replace in cycle with 48m trend stretch."),
+        ("btc_trend_extension_50d_350d", "recalibrate", "Keep for daily signal, replace in cycle with 48m trend stretch."),
         ("btc_running_roi_1y", "recalibrate", "Downgrade as standalone; absorbed into broader valuation/speculation blocks."),
         ("btc_log_reg_deviation", "keep", "Still useful as long-horizon valuation proxy."),
         ("btc_drawdown_from_ath", "keep", "Retain as cold-regime context."),
@@ -684,8 +684,8 @@ def build_cycle_model(
     migration_plan = _migration_plan_markdown()
 
     daily_projection = pd.DataFrame(index=daily_index)
-    daily_projection["cycle_heat_score"] = regime_scores["heat_score"].reindex(daily_index, method="ffill")
-    daily_projection["cycle_cold_score"] = regime_scores["cold_score"].reindex(daily_index, method="ffill")
+    daily_projection["cycle_frenzy_score"] = regime_scores["frenzy_score"].reindex(daily_index, method="ffill")
+    daily_projection["cycle_accumulation_score"] = regime_scores["accumulation_score"].reindex(daily_index, method="ffill")
     daily_projection["cycle_p_frenzy"] = regime_scores["p_frenzy"].reindex(daily_index, method="ffill")
     daily_projection["cycle_p_accumulation"] = regime_scores["p_accumulation"].reindex(daily_index, method="ffill")
     daily_projection["cycle_confidence"] = regime_scores["confidence"].reindex(daily_index, method="ffill")

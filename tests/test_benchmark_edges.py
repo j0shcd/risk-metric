@@ -28,7 +28,7 @@ class BenchmarkEdgeTests(unittest.TestCase):
         price = pd.Series(np.linspace(100.0, 200.0, len(idx)), index=idx)
         signal = pd.Series(np.linspace(0.1, 0.9, len(idx)), index=idx)
         cfg = self._cfg(benchmark_top_drawdown_thresholds=[0.9], benchmark_bottom_rally_thresholds=[5.0])
-        out = evaluate_benchmark(cfg, monthly_price=price, signals={"trend_heat": signal, "top_reversal_risk": signal, "bottom_reversal_risk": 1.0 - signal, "attention_score": signal})
+        out = evaluate_benchmark(cfg, monthly_price=price, signals={"trend_composite_score": signal, "top_reversal_risk": signal, "bottom_reversal_risk": 1.0 - signal, "attention_score": signal})
         self.assertTrue(any("benchmark_low_event_count" in w for w in out.warnings))
 
 

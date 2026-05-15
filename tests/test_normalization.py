@@ -13,7 +13,7 @@ class NormalizationTests(unittest.TestCase):
 
         frame = build_feature_frame(values, base_reliability=0.8)
 
-        signed = frame["signed_heat"].dropna()
+        signed = frame["signed_signal"].dropna()
         attention = frame["attention"].dropna()
         reliability = frame["reliability"].dropna()
 
@@ -64,18 +64,18 @@ class NormalizationTests(unittest.TestCase):
         for column in [
             "surprise",
             "regime_volatility_ratio",
-            "heat_regime_scale",
+            "signal_regime_scale",
             "attention_regime_scale",
         ]:
             self.assertIn(column, frame.columns)
             self.assertFalse(frame[column].dropna().empty)
 
-        calm_heat_scale = frame["heat_regime_scale"].iloc[200:240].mean()
-        turbulent_heat_scale = frame["heat_regime_scale"].iloc[420:460].mean()
+        calm_signal_scale = frame["signal_regime_scale"].iloc[200:240].mean()
+        turbulent_signal_scale = frame["signal_regime_scale"].iloc[420:460].mean()
         calm_attention_scale = frame["attention_regime_scale"].iloc[200:240].mean()
         turbulent_attention_scale = frame["attention_regime_scale"].iloc[420:460].mean()
 
-        self.assertGreater(calm_heat_scale, turbulent_heat_scale)
+        self.assertGreater(calm_signal_scale, turbulent_signal_scale)
         self.assertLess(calm_attention_scale, turbulent_attention_scale)
 
     def test_surprise_channel_lifts_attention_on_impulse(self) -> None:
@@ -88,7 +88,7 @@ class NormalizationTests(unittest.TestCase):
         impulse_day = frame.index[360]
         surprise = float(frame.loc[impulse_day, "surprise"])
         attention = float(frame.loc[impulse_day, "attention"])
-        level_only = abs(float(frame.loc[impulse_day, "signed_heat"]))
+        level_only = abs(float(frame.loc[impulse_day, "signed_signal"]))
 
         self.assertGreater(surprise, 0.2)
         self.assertGreaterEqual(attention, level_only)
