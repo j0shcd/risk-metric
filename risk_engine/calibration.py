@@ -586,8 +586,18 @@ def calibrate_primary_outputs(
         buy_threshold=float(runtime.cycle_dynamic_dca_buy_threshold if runtime is not None else 0.75),
     )
 
-    attention_extremity = (2.0 * (top_calibrated - 0.5).abs()).clip(0.0, 1.0)
-    attention_calibrated = (0.80 * monthly["attention"].clip(0.0, 1.0) + 0.20 * attention_extremity).clip(0.0, 1.0)
+    bottom_persistence = bottom_calibrated.rolling(6, min_periods=1).max().mul(0.85)
+    bottom_calibrated = pd.concat([bottom_calibrated, bottom_persistence], axis=1).max(axis=1).clip(0.0, 1.0)
+
+    attention_extremity = pd.concat(
+        [
+            (2.0 * (top_calibrated - 0.5).abs()).clip(0.0, 1.0),
+            bottom_calibrated.clip(0.0, 1.0),
+            (2.0 * (price_percentile - 0.5).abs()).clip(0.0, 1.0),
+        ],
+        axis=1,
+    ).max(axis=1)
+    attention_calibrated = (0.20 * monthly["attention"].clip(0.0, 1.0) + 0.80 * attention_extremity).clip(0.0, 1.0)
 
     top_daily = top_calibrated.reindex(output.index, method="ffill")
     bottom_daily = bottom_calibrated.reindex(output.index, method="ffill")
@@ -615,6 +625,8 @@ def calibrate_primary_outputs(
         "bottom_mean_w_base": float(bottom_meta.get("mean_w_base", 1.0)),
         "bottom_mean_w_drawdown_depth": float(bottom_meta.get("mean_w_feature_a", 0.0)),
         "bottom_mean_w_anti_momentum": float(bottom_meta.get("mean_w_feature_b", 0.0)),
+        "bottom_recovery_persistence_months": 6.0,
+        "bottom_recovery_persistence_decay": 0.85,
         "walkforward_steps_top": float(top_meta.get("walkforward_steps", 0.0)),
         "walkforward_steps_bottom": float(bottom_meta.get("walkforward_steps", 0.0)),
         "walkforward_last_train_end": str(
