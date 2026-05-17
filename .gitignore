@@ -1,4 +1,5 @@
 Data/
+data/web/v1/
 !data/
 *.ipynb
 *.csv
