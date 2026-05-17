@@ -50,10 +50,23 @@ jobs:
           REFRESH_API_SOURCES: "false"
         run: python publish_web.py
 
+      - name: Sync web public artifacts from data contract
+        run: node web/scripts/sync-web-data.mjs
+
+      - name: Print artifact timestamps
+        run: |
+          echo "data/web/v2/manifest.json generated_at:"
+          node -e "const fs=require('fs');const p='data/web/v2/manifest.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));console.log(j.generated_at)"
+          echo "data/web/v2/latest_snapshot.json date + generated_at:"
+          node -e "const fs=require('fs');const p='data/web/v2/latest_snapshot.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));console.log(j.date, j.generated_at)"
+          echo "web/public/data/v2/manifest.json generated_at:"
+          node -e "const fs=require('fs');const p='web/public/data/v2/manifest.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));console.log(j.generated_at)"
+
       - name: Stage web artifacts and cache files
         id: detect_changes
         run: |
           git add -f data/web/v2 || true
+          git add -f web/public/data/v2 || true
           git add -f \
             data/btc_daily.csv \
             data/total_marketcap.csv \
