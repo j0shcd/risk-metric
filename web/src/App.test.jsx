@@ -199,6 +199,19 @@ describe("App", () => {
     expect(screen.getByText(/Scoring methodology/i)).toBeInTheDocument();
   });
 
+  it("renders the DCA dashboard with configurable strategy controls", async () => {
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole("tab", { name: "DCA" }));
+
+    expect(await screen.findByText("Strategy")).toBeInTheDocument();
+    expect(screen.getByText("Latest Signal")).toBeInTheDocument();
+    expect(screen.getAllByText(/DCA Risk/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Aggregate DCA Risk").length).toBeGreaterThan(0);
+    expect(screen.getByText("Recent Strategy Signals")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Weekly")).toBeInTheDocument();
+  });
+
   it("surfaces validation failures from diagnostics", async () => {
     global.fetch = vi.fn(async (url) => {
       const key = String(url).split("/").pop();

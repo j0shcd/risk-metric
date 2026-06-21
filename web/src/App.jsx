@@ -13,7 +13,14 @@ import {
 import zoomPlugin from "chartjs-plugin-zoom";
 import { Line } from "react-chartjs-2";
 
-import { chartData, loadDashboardData, valueLabel } from "./data";
+import {
+  buildDcaRiskSeries,
+  chartData,
+  DEFAULT_DCA_STRATEGY,
+  loadDashboardData,
+  simulateDcaStrategy,
+  valueLabel,
+} from "./data";
 import { CURATED_METRICS, METRIC_COPY } from "./copy";
 
 ChartJS.register(
@@ -44,6 +51,8 @@ const COLORS = {
 
 const FONT = "'IBM Plex Mono', 'Courier New', monospace";
 const PRICE_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const MONEY_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const DCA_STRATEGY_STORAGE_KEY = "riskMetricDcaStrategy.v1";
 
 const hoverGuidePlugin = {
   id: "hoverGuide",
@@ -78,6 +87,11 @@ function alignOverlayValues(labels, overlaySeries) {
 function formatPrice(value) {
   const num = Number(value);
   return Number.isFinite(num) ? PRICE_FORMAT.format(num) : "n/a";
+}
+
+function formatMoney(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? MONEY_FORMAT.format(num) : "n/a";
 }
 
 function formatDateTime(value) {
@@ -607,6 +621,304 @@ function MetricsPanel({ metricBtc, historyCore, setActiveTab }) {
   );
 }
 
+function loadStoredDcaStrategy() {
+  if (typeof window === "undefined") return DEFAULT_DCA_STRATEGY;
+  try {
+    const raw = window.localStorage.getItem(DCA_STRATEGY_STORAGE_KEY);
+    return raw ? { ...DEFAULT_DCA_STRATEGY, ...JSON.parse(raw) } : DEFAULT_DCA_STRATEGY;
+  } catch {
+    return DEFAULT_DCA_STRATEGY;
+  }
+}
+
+function StrategyField({ label, value, min = 0, max, step, onChange }) {
+  return (
+    <label className="bb-dca-field">
+      <span>{label}</span>
+      <input
+        className="bb-dca-input"
+        type="number"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </label>
+  );
+}
+
+function DcaPanel({ historyCore }) {
+  const chartRef = useRef(null);
+  const [strategyInput, setStrategyInput] = useState(loadStoredDcaStrategy);
+  const [priceScaleType, setPriceScaleType] = useState("logarithmic");
+
+  const dcaSeries = useMemo(() => buildDcaRiskSeries(historyCore), [historyCore]);
+  const simulation = useMemo(() => simulateDcaStrategy(dcaSeries, strategyInput), [dcaSeries, strategyInput]);
+  const strategy = simulation.strategy;
+  const btcSeries = useMemo(() => chartData(historyCore, "btc_price"), [historyCore]);
+  const btcValues = useMemo(
+    () => alignOverlayValues(dcaSeries.labels, btcSeries),
+    [dcaSeries.labels, btcSeries],
+  );
+  const hasBtcData = btcValues.some((v) => v !== null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(DCA_STRATEGY_STORAGE_KEY, JSON.stringify(strategyInput));
+  }, [strategyInput]);
+
+  function updateStrategy(key, value) {
+    setStrategyInput((prev) => ({ ...prev, [key]: value }));
+  }
+
+  const latest = simulation.latest;
+  const latestIdx = latest ? dcaSeries.labels.indexOf(latest.date) : -1;
+  const latestComponents = dcaSeries.components.map((component) => {
+    const latestValue = latestIdx >= 0 ? component.values[latestIdx] : null;
+    return { ...component, latestValue };
+  });
+  const recentSignals = simulation.signalRows.slice(-12).reverse();
+
+  const chartPayload = useMemo(
+    () => ({
+      labels: dcaSeries.labels,
+      datasets: [
+        {
+          label: "Aggregate DCA Risk",
+          data: dcaSeries.values,
+          borderColor: COLORS.amber,
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: true,
+          backgroundColor: "#f0a5001f",
+          tension: 0.15,
+          yAxisID: "y",
+        },
+        {
+          label: "Buy Threshold",
+          data: dcaSeries.labels.map(() => strategy.buyStartRisk),
+          borderColor: COLORS.green,
+          borderDash: [5, 5],
+          borderWidth: 1.2,
+          pointRadius: 0,
+          fill: false,
+          yAxisID: "y",
+        },
+        {
+          label: "Sell Threshold",
+          data: dcaSeries.labels.map(() => strategy.sellStartRisk),
+          borderColor: COLORS.red,
+          borderDash: [5, 5],
+          borderWidth: 1.2,
+          pointRadius: 0,
+          fill: false,
+          yAxisID: "y",
+        },
+        ...(hasBtcData
+          ? [
+              {
+                label: "BTC Price",
+                data: btcValues,
+                borderColor: "#8b8473",
+                borderWidth: 1.3,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.12,
+                yAxisID: "yPrice",
+              },
+            ]
+          : []),
+      ],
+    }),
+    [dcaSeries.labels, dcaSeries.values, strategy.buyStartRisk, strategy.sellStartRisk, hasBtcData, btcValues],
+  );
+
+  const options = useMemo(
+    () =>
+      makeChartOptions({
+        numLabels: dcaSeries.labels.length,
+        hasPrice: hasBtcData,
+        priceScaleType,
+        accentColor: COLORS.amber,
+      }),
+    [dcaSeries.labels.length, hasBtcData, priceScaleType],
+  );
+
+  return (
+    <section aria-label="DCA">
+      <div className="bb-dca-layout">
+        <section className="bb-panel">
+          <div className="bb-panel__head">
+            <h2 className="bb-panel__title bb-panel__title--solo">Strategy</h2>
+            <button type="button" className="bb-button" onClick={() => setStrategyInput(DEFAULT_DCA_STRATEGY)}>
+              Reset
+            </button>
+          </div>
+          <div className="bb-dca-controls">
+            <label className="bb-dca-field">
+              <span>Start Date</span>
+              <input
+                className="bb-dca-input"
+                type="date"
+                value={strategy.startDate}
+                min={dcaSeries.labels[0] ?? undefined}
+                max={dcaSeries.labels[dcaSeries.labels.length - 1] ?? undefined}
+                onChange={(event) => updateStrategy("startDate", event.target.value)}
+              />
+            </label>
+            <label className="bb-dca-field">
+              <span>Cadence</span>
+              <select
+                className="bb-dca-input"
+                value={strategy.cadence}
+                onChange={(event) => updateStrategy("cadence", event.target.value)}
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </label>
+            <StrategyField
+              label="Buy Below"
+              value={strategyInput.buyStartRisk}
+              max={1}
+              step="0.01"
+              onChange={(value) => updateStrategy("buyStartRisk", value)}
+            />
+            <StrategyField
+              label="Buy Step"
+              value={strategyInput.buyStep}
+              max={1}
+              step="0.01"
+              onChange={(value) => updateStrategy("buyStep", value)}
+            />
+            <StrategyField
+              label="Buy Base"
+              value={strategyInput.buyBaseAmount}
+              step="1"
+              onChange={(value) => updateStrategy("buyBaseAmount", value)}
+            />
+            <StrategyField
+              label="Sell Above"
+              value={strategyInput.sellStartRisk}
+              max={1}
+              step="0.01"
+              onChange={(value) => updateStrategy("sellStartRisk", value)}
+            />
+            <StrategyField
+              label="Sell Step"
+              value={strategyInput.sellStep}
+              max={1}
+              step="0.01"
+              onChange={(value) => updateStrategy("sellStep", value)}
+            />
+            <StrategyField
+              label="Sell Base"
+              value={strategyInput.sellBaseAmount}
+              step="1"
+              onChange={(value) => updateStrategy("sellBaseAmount", value)}
+            />
+          </div>
+          {simulation.warnings.length > 0 && (
+            <p className="bb-dca-warning">{simulation.warnings.join(" ")}</p>
+          )}
+        </section>
+
+        <section className={`bb-dca-signal bb-dca-signal--${latest?.side ?? "hold"}`}>
+          <p className="bb-dca-signal__label">Latest Signal</p>
+          <p className="bb-dca-signal__action">{latest?.label ?? "Hold"}</p>
+          <p className="bb-dca-signal__risk">DCA Risk {valueLabel(latest?.risk, 3)}</p>
+          <p className="bb-dca-signal__risk">Signal Date {latest?.date ?? "n/a"}</p>
+          <p className="bb-dca-signal__amount">
+            {latest?.side === "hold" ? `No allocation on ${latest?.date ?? "latest row"}` : `${formatMoney(latest?.amount)} notional`}
+          </p>
+        </section>
+      </div>
+
+      <div className="bb-card-grid bb-card-grid--dca">
+        <MetricCard label="Aggregate DCA Risk" value={latest?.risk} tone="amber" highlight />
+        {latestComponents.map((component) => (
+          <MetricCard key={component.key} label={`${component.label} Component`} value={component.latestValue} tone="blue" />
+        ))}
+        <article className="bb-card">
+          <p className="bb-card__label">Simulated Net Flow</p>
+          <p className="bb-card__value bb-card__value--amber">{formatMoney(simulation.summary.netFlow)}</p>
+          <p className="bb-card__sub">
+            {simulation.summary.buySignals} buys / {simulation.summary.sellSignals} sells
+          </p>
+        </article>
+      </div>
+
+      <section className="bb-panel bb-panel--focus">
+        <div className="bb-panel__head">
+          <h2 className="bb-panel__title bb-panel__title--solo">Aggregate Risk</h2>
+          <div className="bb-panel__actions">
+            {hasBtcData && (
+              <select
+                className="bb-select bb-select--compact"
+                value={priceScaleType}
+                onChange={(e) => setPriceScaleType(e.target.value)}
+              >
+                <option value="logarithmic">LOG</option>
+                <option value="linear">LINEAR</option>
+              </select>
+            )}
+            <button type="button" className="bb-button" onClick={() => chartRef.current?.resetZoom?.()}>
+              Reset Zoom
+            </button>
+          </div>
+        </div>
+        <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="dca-chart">
+          {dcaSeries.labels.length > 0 ? (
+            <Line ref={chartRef} data={chartPayload} options={options} plugins={[hoverGuidePlugin]} />
+          ) : (
+            <p className="bb-empty">No DCA data available.</p>
+          )}
+        </div>
+        <p className="bb-dca-note">
+          Aggregate DCA Risk is an expanding historical normalization of top reversal risk, inverted
+          bottom reversal risk, cycle extension, and cycle regime index. Lower values are buy-attractive;
+          higher values are sell-risky. Component cards are already transformed into DCA-risk direction,
+          so low component values are more attractive even when the original source metric is high-positive.
+        </p>
+      </section>
+
+      <section className="bb-panel bb-panel--focus">
+        <div className="bb-panel__head">
+          <h2 className="bb-panel__title bb-panel__title--solo">Recent Strategy Signals</h2>
+        </div>
+        <table className="bb-table bb-table--dca">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Risk</th>
+              <th>Action</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentSignals.length > 0 ? (
+              recentSignals.map((row) => (
+                <tr key={`${row.date}-${row.side}-${row.amount}`}>
+                  <td>{row.date}</td>
+                  <td>{valueLabel(row.risk, 3)}</td>
+                  <td className={`bb-table__side bb-table__side--${row.side}`}>{row.label}</td>
+                  <td>{formatMoney(row.amount)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4">No buy or sell signals since the selected start date.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </section>
+    </section>
+  );
+}
+
 const ABOUT_HEADLINE_KEYS = [
   "top_reversal_risk",
   "bottom_reversal_risk",
@@ -750,6 +1062,7 @@ export default function App() {
           {[
             { key: "overview", label: "Overview" },
             { key: "metrics", label: "Metrics" },
+            { key: "dca", label: "DCA" },
             { key: "about", label: "About" },
           ].map(({ key, label }) => (
             <button
@@ -788,6 +1101,8 @@ export default function App() {
             <MetricsPanel metricBtc={metricBtc} historyCore={historyCore} setActiveTab={setActiveTab} />
           </section>
         )}
+
+        {activeTab === "dca" && <DcaPanel historyCore={historyCore} />}
 
         {activeTab === "about" && (
           <section aria-label="About">

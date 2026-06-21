@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { chartData } from "./data";
+import { buildDcaRiskSeries, chartData, dcaActionForRisk, simulateDcaStrategy } from "./data";
 
 describe("chartData", () => {
   it("trims leading null values to first available datapoint", () => {
@@ -37,5 +37,81 @@ describe("chartData", () => {
 
     expect(series.labels).toEqual(["2026-01-03", "2026-01-04"]);
     expect(series.overlayValues).toEqual([102, 103]);
+  });
+});
+
+describe("DCA helpers", () => {
+  it("orients aggregate risk so high bottom reversal is buy-attractive", () => {
+    const series = buildDcaRiskSeries({
+      index: ["2026-01-01", "2026-01-02", "2026-01-03"],
+      columns: {
+        top_reversal_risk: [0.5, 0.4, 0.3],
+        bottom_reversal_risk: [0.5, 0.7, 0.9],
+        cycle_extension_score: [0.5, 0.4, 0.3],
+        cycle_frenzy_score: [0.5, 0.4, 0.3],
+      },
+    });
+
+    expect(series.values[0]).toBe(0.5);
+    expect(series.values[2]).toBe(0);
+    expect(series.components.find((c) => c.key === "bottom_reversal_risk").values[2]).toBe(0);
+  });
+
+  it("uses exported DCA columns when present", () => {
+    const series = buildDcaRiskSeries({
+      index: ["2026-01-01", "2026-01-02"],
+      columns: {
+        dca_risk: [0.2, 0.8],
+        dca_top_reversal_component: [0.1, 0.2],
+        top_reversal_risk: [0.9, 0.1],
+      },
+    });
+
+    expect(series.values).toEqual([0.2, 0.8]);
+    expect(series.components.find((c) => c.key === "top_reversal_risk").values).toEqual([0.1, 0.2]);
+  });
+
+  it("falls back to raw metrics when exported DCA columns are all null", () => {
+    const series = buildDcaRiskSeries({
+      index: ["2026-01-01", "2026-01-02"],
+      columns: {
+        dca_risk: [null, null],
+        dca_top_reversal_component: [null, null],
+        top_reversal_risk: [0.4, 0.8],
+        bottom_reversal_risk: [0.6, 0.8],
+        cycle_extension_score: [0.2, 0.4],
+        cycle_frenzy_score: [0.3, 0.5],
+      },
+    });
+
+    expect(series.values[0]).toBe(0.5);
+    expect(series.values[1]).not.toBeNull();
+  });
+
+  it("simulates only the selected cadence after the start date", () => {
+    const simulation = simulateDcaStrategy(
+      {
+        labels: ["2026-01-01", "2026-01-02", "2026-01-08", "2026-01-09"],
+        values: [0.1, 0.1, 0.1, 0.1],
+      },
+      { startDate: "2026-01-01", cadence: "weekly", buyStartRisk: 0.3, buyStep: 0.1, buyBaseAmount: 50 },
+    );
+
+    expect(simulation.signalRows.map((row) => row.date)).toEqual(["2026-01-01", "2026-01-08"]);
+    expect(simulation.summary.buyTotal).toBe(200);
+  });
+
+  it("warns when buy and sell thresholds overlap", () => {
+    const simulation = simulateDcaStrategy(
+      { labels: ["2026-01-01"], values: [0.5] },
+      { buyStartRisk: 0.7, sellStartRisk: 0.6 },
+    );
+
+    expect(simulation.warnings).toContain("Buy threshold should be below sell threshold.");
+  });
+
+  it("keeps exact threshold values as hold", () => {
+    expect(dcaActionForRisk(0.3, { buyStartRisk: 0.3, buyStep: 0.1, buyBaseAmount: 1, sellStartRisk: 0.6, sellStep: 0.1, sellBaseAmount: 1 }).side).toBe("hold");
+    expect(dcaActionForRisk(0.6, { buyStartRisk: 0.3, buyStep: 0.1, buyBaseAmount: 1, sellStartRisk: 0.6, sellStep: 0.1, sellBaseAmount: 1 }).side).toBe("hold");
   });
 });

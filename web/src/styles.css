@@ -183,6 +183,11 @@ body {
   margin-bottom: 0.82rem;
 }
 
+.bb-card-grid--dca {
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  margin: 0.82rem 0;
+}
+
 .bb-card {
   background: var(--bb-surface);
   padding: 0.65rem 0.72rem;
@@ -381,6 +386,123 @@ body {
   line-height: 1.45;
 }
 
+.bb-dca-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 0.82rem;
+  align-items: stretch;
+}
+
+.bb-dca-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 0.55rem;
+  padding: 0.65rem;
+}
+
+.bb-dca-warning {
+  margin: -0.2rem 0.65rem 0.65rem;
+  color: var(--bb-red);
+  font-size: 0.68rem;
+}
+
+.bb-dca-field {
+  display: grid;
+  gap: 0.22rem;
+  color: var(--bb-muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bb-dca-input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--bb-border);
+  background: #0e0e0e;
+  color: var(--bb-text);
+  font-family: var(--bb-font);
+  font-size: 0.8rem;
+  padding: 0.34rem 0.42rem;
+}
+
+.bb-dca-signal {
+  border: 1px solid var(--bb-border);
+  background: linear-gradient(180deg, #111111 0%, #0d0d0d 100%);
+  padding: 0.8rem;
+}
+
+.bb-dca-signal--buy {
+  border-color: #1f6f3b;
+  background: linear-gradient(180deg, #0e1711 0%, #0b100d 100%);
+}
+
+.bb-dca-signal--sell {
+  border-color: #7f2c2c;
+  background: linear-gradient(180deg, #190f0f 0%, #100b0b 100%);
+}
+
+.bb-dca-signal__label {
+  margin: 0;
+  color: var(--bb-muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bb-dca-signal__action {
+  margin: 0.44rem 0 0;
+  color: var(--bb-amber);
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.bb-dca-signal--buy .bb-dca-signal__action {
+  color: var(--bb-green);
+}
+
+.bb-dca-signal--sell .bb-dca-signal__action {
+  color: var(--bb-red);
+}
+
+.bb-dca-signal__risk,
+.bb-dca-signal__amount {
+  margin: 0.42rem 0 0;
+  color: var(--bb-text);
+  font-size: 0.75rem;
+}
+
+.bb-dca-signal__amount {
+  color: var(--bb-muted);
+}
+
+.bb-dca-note {
+  margin: 0 0.7rem 0.7rem;
+  border-top: 1px solid var(--bb-border);
+  padding-top: 0.52rem;
+  color: var(--bb-muted);
+  font-size: 0.69rem;
+  line-height: 1.45;
+}
+
+.bb-table--dca td:first-child,
+.bb-table--dca th:first-child {
+  text-align: left;
+}
+
+.bb-table__side {
+  font-weight: 700;
+}
+
+.bb-table__side--buy {
+  color: var(--bb-green);
+}
+
+.bb-table__side--sell {
+  color: var(--bb-red);
+}
+
 .bb-chart-wrap--debug {
   height: 255px;
 }
@@ -530,8 +652,13 @@ body {
   }
 
   .bb-panel-grid--two,
-  .bb-diag-grid {
+  .bb-diag-grid,
+  .bb-dca-layout {
     grid-template-columns: 1fr;
+  }
+
+  .bb-dca-controls {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
   }
 
   .bb-chart-wrap--focus {
@@ -569,6 +696,10 @@ body {
   .bb-select {
     width: 100%;
     max-width: none;
+  }
+
+  .bb-dca-controls {
+    grid-template-columns: 1fr;
   }
 }
 

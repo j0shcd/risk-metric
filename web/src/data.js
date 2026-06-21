@@ -15,6 +15,48 @@ const UNAVAILABLE_MODES = new Set([
   "future_upgrade_local_cache",
 ]);
 
+export const DEFAULT_DCA_STRATEGY = {
+  buyStartRisk: 0.3,
+  buyStep: 0.1,
+  buyBaseAmount: 100,
+  sellStartRisk: 0.6,
+  sellStep: 0.1,
+  sellBaseAmount: 100,
+  startDate: "",
+  cadence: "weekly",
+};
+
+const DCA_COMPONENTS = [
+  {
+    key: "top_reversal_risk",
+    label: "Top Reversal Risk",
+    column: "top_reversal_risk",
+    derivedColumn: "dca_top_reversal_component",
+    lowRiskWhen: "low",
+  },
+  {
+    key: "bottom_reversal_risk",
+    label: "Bottom Reversal Risk",
+    column: "bottom_reversal_risk",
+    derivedColumn: "dca_bottom_reversal_component",
+    lowRiskWhen: "high",
+  },
+  {
+    key: "cycle_extension_score",
+    label: "Cycle Extension",
+    column: "cycle_extension_score",
+    derivedColumn: "dca_cycle_extension_component",
+    lowRiskWhen: "low",
+  },
+  {
+    key: "cycle_regime_index",
+    label: "Cycle Regime Index",
+    column: "cycle_frenzy_score",
+    derivedColumn: "dca_cycle_regime_component",
+    lowRiskWhen: "low",
+  },
+];
+
 async function fetchArtifact(name) {
   const response = await fetch(`${ARTIFACT_ROOT}/${name}`);
   if (!response.ok) {
@@ -31,6 +73,12 @@ function toNumber(value) {
   return Number.isFinite(num) ? num : null;
 }
 
+function clamp01(value) {
+  const num = toNumber(value);
+  if (num === null) return null;
+  return Math.min(1, Math.max(0, num));
+}
+
 function lastFinite(values = []) {
   for (let idx = values.length - 1; idx >= 0; idx -= 1) {
     const num = toNumber(values[idx]);
@@ -39,6 +87,10 @@ function lastFinite(values = []) {
     }
   }
   return null;
+}
+
+function hasFinite(values = []) {
+  return Array.isArray(values) && values.some((value) => toNumber(value) !== null);
 }
 
 export function valueLabel(value, digits = 3) {
@@ -120,6 +172,166 @@ export function listColumns(columnarPayload) {
     return [];
   }
   return Object.keys(columnarPayload.columns);
+}
+
+function expandingMinMaxRisk(values, lowRiskWhen) {
+  let min = null;
+  let max = null;
+
+  return values.map((value) => {
+    const num = clamp01(value);
+    if (num === null) return null;
+
+    min = min === null ? num : Math.min(min, num);
+    max = max === null ? num : Math.max(max, num);
+
+    const normalized = max === min ? 0.5 : (num - min) / (max - min);
+    const risk = lowRiskWhen === "high" ? 1 - normalized : normalized;
+    return Math.min(1, Math.max(0, risk));
+  });
+}
+
+export function buildDcaRiskSeries(historyCore) {
+  const labels = Array.isArray(historyCore?.index) ? historyCore.index : [];
+  if (!labels.length) {
+    return { labels: [], values: [], components: [] };
+  }
+
+  const hasExportedDca = hasFinite(historyCore?.columns?.dca_risk);
+  const components = DCA_COMPONENTS.map((component) => {
+    const exportedValues = hasFinite(historyCore?.columns?.[component.derivedColumn])
+      ? historyCore.columns[component.derivedColumn].map((value) => clamp01(value))
+      : null;
+    const rawValues = Array.isArray(historyCore?.columns?.[component.column]) ? historyCore.columns[component.column] : [];
+    return {
+      ...component,
+      values: exportedValues ?? expandingMinMaxRisk(rawValues, component.lowRiskWhen),
+    };
+  });
+
+  const values = hasExportedDca
+    ? historyCore.columns.dca_risk.map((value) => clamp01(value))
+    : labels.map((_, idx) => {
+        const finite = components
+          .map((component) => toNumber(component.values[idx]))
+          .filter((value) => value !== null);
+        if (!finite.length) return null;
+        return finite.reduce((sum, value) => sum + value, 0) / finite.length;
+      });
+
+  return { labels, values, components };
+}
+
+function positiveNumber(value, fallback) {
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? num : fallback;
+}
+
+function thresholdNumber(value, fallback) {
+  const num = Number(value);
+  return Number.isFinite(num) ? Math.min(1, Math.max(0, num)) : fallback;
+}
+
+export function normalizeDcaStrategy(strategy = {}, labels = []) {
+  const merged = { ...DEFAULT_DCA_STRATEGY, ...strategy };
+  const firstLabel = labels.find(Boolean) ?? "";
+  const cadence = ["daily", "weekly", "monthly"].includes(merged.cadence) ? merged.cadence : DEFAULT_DCA_STRATEGY.cadence;
+
+  return {
+    buyStartRisk: thresholdNumber(merged.buyStartRisk, DEFAULT_DCA_STRATEGY.buyStartRisk),
+    buyStep: positiveNumber(merged.buyStep, DEFAULT_DCA_STRATEGY.buyStep),
+    buyBaseAmount: positiveNumber(merged.buyBaseAmount, DEFAULT_DCA_STRATEGY.buyBaseAmount),
+    sellStartRisk: thresholdNumber(merged.sellStartRisk, DEFAULT_DCA_STRATEGY.sellStartRisk),
+    sellStep: positiveNumber(merged.sellStep, DEFAULT_DCA_STRATEGY.sellStep),
+    sellBaseAmount: positiveNumber(merged.sellBaseAmount, DEFAULT_DCA_STRATEGY.sellBaseAmount),
+    startDate: /^\d{4}-\d{2}-\d{2}$/.test(String(merged.startDate || "")) ? merged.startDate : firstLabel,
+    cadence,
+  };
+}
+
+export function dcaActionForRisk(risk, strategy = DEFAULT_DCA_STRATEGY) {
+  const value = toNumber(risk);
+  if (value === null) {
+    return { side: "hold", multiplier: 0, amount: 0, label: "Hold" };
+  }
+
+  if (value < strategy.buyStartRisk) {
+    const multiplier = Math.max(1, Math.ceil((strategy.buyStartRisk - value) / strategy.buyStep));
+    const amount = multiplier * strategy.buyBaseAmount;
+    return { side: "buy", multiplier, amount, label: `Buy ${multiplier}x` };
+  }
+
+  if (value > strategy.sellStartRisk) {
+    const multiplier = Math.max(1, Math.ceil((value - strategy.sellStartRisk) / strategy.sellStep));
+    const amount = multiplier * strategy.sellBaseAmount;
+    return { side: "sell", multiplier, amount, label: `Sell ${multiplier}x` };
+  }
+
+  return { side: "hold", multiplier: 0, amount: 0, label: "Hold" };
+}
+
+function cadenceKey(dateLabel, cadence) {
+  if (cadence === "daily") return dateLabel;
+
+  const date = new Date(`${dateLabel}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return dateLabel;
+
+  if (cadence === "monthly") {
+    return dateLabel.slice(0, 7);
+  }
+
+  const start = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const dayOfYear = Math.floor((date - start) / 86400000) + 1;
+  const week = Math.ceil((dayOfYear + start.getUTCDay()) / 7);
+  return `${date.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+export function simulateDcaStrategy(dcaSeries, strategyInput = {}) {
+  const labels = Array.isArray(dcaSeries?.labels) ? dcaSeries.labels : [];
+  const values = Array.isArray(dcaSeries?.values) ? dcaSeries.values : [];
+  const strategy = normalizeDcaStrategy(strategyInput, labels);
+  const warnings = [];
+  if (strategy.buyStartRisk >= strategy.sellStartRisk) {
+    warnings.push("Buy threshold should be below sell threshold.");
+  }
+  const seenCadence = new Set();
+
+  const rows = labels.map((date, idx) => {
+    const risk = toNumber(values[idx]);
+    const active = !strategy.startDate || date >= strategy.startDate;
+    const key = cadenceKey(date, strategy.cadence);
+    const cadenceDate = active && !seenCadence.has(key);
+    if (active) {
+      seenCadence.add(key);
+    }
+    const action = active && cadenceDate ? dcaActionForRisk(risk, strategy) : dcaActionForRisk(null, strategy);
+    return { date, risk, active, cadenceDate, ...action };
+  });
+
+  const activeRows = rows.filter((row) => row.active);
+  const signalRows = activeRows.filter((row) => row.side !== "hold");
+  const buyTotal = signalRows
+    .filter((row) => row.side === "buy")
+    .reduce((sum, row) => sum + row.amount, 0);
+  const sellTotal = signalRows
+    .filter((row) => row.side === "sell")
+    .reduce((sum, row) => sum + row.amount, 0);
+  const latest = [...activeRows].reverse().find((row) => row.risk !== null) ?? null;
+
+  return {
+    strategy,
+    rows,
+    signalRows,
+    latest,
+    warnings,
+    summary: {
+      buySignals: signalRows.filter((row) => row.side === "buy").length,
+      sellSignals: signalRows.filter((row) => row.side === "sell").length,
+      buyTotal,
+      sellTotal,
+      netFlow: buyTotal - sellTotal,
+    },
+  };
 }
 
 function buildDegradedSummary(latestSnapshot, diagnostics) {
