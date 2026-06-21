@@ -24,6 +24,17 @@ export const DEFAULT_DCA_STRATEGY = {
   sellBaseAmount: 100,
   startDate: "",
   cadence: "weekly",
+  dayOfWeek: "monday",
+};
+
+const DAY_INDEX = {
+  sunday: 0,
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
 };
 
 const DCA_COMPONENTS = [
@@ -236,6 +247,9 @@ export function normalizeDcaStrategy(strategy = {}, labels = []) {
   const merged = { ...DEFAULT_DCA_STRATEGY, ...strategy };
   const firstLabel = labels.find(Boolean) ?? "";
   const cadence = ["daily", "weekly", "monthly"].includes(merged.cadence) ? merged.cadence : DEFAULT_DCA_STRATEGY.cadence;
+  const dayOfWeek = Object.prototype.hasOwnProperty.call(DAY_INDEX, merged.dayOfWeek)
+    ? merged.dayOfWeek
+    : DEFAULT_DCA_STRATEGY.dayOfWeek;
 
   return {
     buyStartRisk: thresholdNumber(merged.buyStartRisk, DEFAULT_DCA_STRATEGY.buyStartRisk),
@@ -246,6 +260,7 @@ export function normalizeDcaStrategy(strategy = {}, labels = []) {
     sellBaseAmount: positiveNumber(merged.sellBaseAmount, DEFAULT_DCA_STRATEGY.sellBaseAmount),
     startDate: /^\d{4}-\d{2}-\d{2}$/.test(String(merged.startDate || "")) ? merged.startDate : firstLabel,
     cadence,
+    dayOfWeek,
   };
 }
 
@@ -286,37 +301,130 @@ function cadenceKey(dateLabel, cadence) {
   return `${date.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
+function parseDateLabel(dateLabel) {
+  const date = new Date(`${dateLabel}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isScheduledDate(dateLabel, cadence, dayOfWeek) {
+  if (cadence === "daily") return true;
+
+  const date = parseDateLabel(dateLabel);
+  if (!date) return true;
+  if (date.getUTCDay() !== DAY_INDEX[dayOfWeek]) return false;
+
+  if (cadence === "weekly") return true;
+
+  const month = date.getUTCMonth();
+  const year = date.getUTCFullYear();
+  for (let day = 1; day < date.getUTCDate(); day += 1) {
+    const candidate = new Date(Date.UTC(year, month, day));
+    if (candidate.getUTCDay() === DAY_INDEX[dayOfWeek]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function simulateDcaStrategy(dcaSeries, strategyInput = {}) {
   const labels = Array.isArray(dcaSeries?.labels) ? dcaSeries.labels : [];
   const values = Array.isArray(dcaSeries?.values) ? dcaSeries.values : [];
+  const prices = Array.isArray(dcaSeries?.priceValues) ? dcaSeries.priceValues : [];
   const strategy = normalizeDcaStrategy(strategyInput, labels);
   const warnings = [];
   if (strategy.buyStartRisk >= strategy.sellStartRisk) {
     warnings.push("Buy threshold should be below sell threshold.");
   }
   const seenCadence = new Set();
+  let units = 0;
+  let openCostBasis = 0;
 
   const rows = labels.map((date, idx) => {
     const risk = toNumber(values[idx]);
+    const price = toNumber(prices[idx]);
     const active = !strategy.startDate || date >= strategy.startDate;
     const key = cadenceKey(date, strategy.cadence);
-    const cadenceDate = active && !seenCadence.has(key);
-    if (active) {
+    const scheduled = isScheduledDate(date, strategy.cadence, strategy.dayOfWeek);
+    const cadenceDate = active && scheduled && !seenCadence.has(key);
+    if (active && scheduled) {
       seenCadence.add(key);
     }
-    const action = active && cadenceDate ? dcaActionForRisk(risk, strategy) : dcaActionForRisk(null, strategy);
-    return { date, risk, active, cadenceDate, ...action };
+    const desiredAction = active && cadenceDate ? dcaActionForRisk(risk, strategy) : dcaActionForRisk(null, strategy);
+    const row = {
+      date,
+      risk,
+      price,
+      active,
+      cadenceDate,
+      desiredAmount: desiredAction.amount,
+      requestedSide: desiredAction.side,
+      unitsDelta: 0,
+      realizedPnl: 0,
+      unitsHeld: units,
+      positionValue: price === null ? null : units * price,
+      averageCostBasis: units > 0 ? openCostBasis / units : null,
+      capped: false,
+      blockedByHoldings: false,
+      ...desiredAction,
+    };
+
+    if (desiredAction.side === "buy") {
+      row.amount = desiredAction.amount;
+      if (price !== null && price > 0) {
+        row.unitsDelta = desiredAction.amount / price;
+        units += row.unitsDelta;
+        openCostBasis += desiredAction.amount;
+      }
+    } else if (desiredAction.side === "sell") {
+      if (price === null || price <= 0 || units <= 0) {
+        row.side = "hold";
+        row.label = units <= 0 ? "Hold (no holdings)" : "Hold";
+        row.amount = 0;
+        row.multiplier = 0;
+        row.blockedByHoldings = units <= 0;
+      } else {
+        const requestedUnits = desiredAction.amount / price;
+        const soldUnits = Math.min(units, requestedUnits);
+        const costReduction = openCostBasis * (soldUnits / units);
+        units -= soldUnits;
+        openCostBasis = Math.max(0, openCostBasis - costReduction);
+        row.unitsDelta = -soldUnits;
+        row.amount = soldUnits * price;
+        row.realizedPnl = row.amount - costReduction;
+        row.capped = soldUnits < requestedUnits;
+        row.label = row.capped ? `${desiredAction.label} (capped)` : desiredAction.label;
+      }
+    }
+
+    row.unitsHeld = units;
+    row.positionValue = price === null ? null : units * price;
+    row.averageCostBasis = units > 0 ? openCostBasis / units : null;
+    return row;
   });
 
   const activeRows = rows.filter((row) => row.active);
   const signalRows = activeRows.filter((row) => row.side !== "hold");
+  const latestRiskRow = [...activeRows].reverse().find((row) => row.risk !== null) ?? null;
+  const currentSignal = latestRiskRow
+    ? { ...latestRiskRow, ...dcaActionForRisk(latestRiskRow.risk, strategy), cadenceDate: false }
+    : null;
   const buyTotal = signalRows
     .filter((row) => row.side === "buy")
     .reduce((sum, row) => sum + row.amount, 0);
   const sellTotal = signalRows
     .filter((row) => row.side === "sell")
     .reduce((sum, row) => sum + row.amount, 0);
-  const latest = [...activeRows].reverse().find((row) => row.risk !== null) ?? null;
+  const latest = currentSignal;
+  const latestLedgerRow = [...activeRows].reverse().find((row) => row.price !== null) ?? null;
+  const totalUnitsBought = signalRows
+    .filter((row) => row.side === "buy")
+    .reduce((sum, row) => sum + Math.max(0, row.unitsDelta), 0);
+  const totalUnitsSold = signalRows
+    .filter((row) => row.side === "sell")
+    .reduce((sum, row) => sum + Math.abs(Math.min(0, row.unitsDelta)), 0);
+  const realizedPnl = signalRows
+    .filter((row) => row.side === "sell")
+    .reduce((sum, row) => sum + row.realizedPnl, 0);
 
   return {
     strategy,
@@ -329,7 +437,15 @@ export function simulateDcaStrategy(dcaSeries, strategyInput = {}) {
       sellSignals: signalRows.filter((row) => row.side === "sell").length,
       buyTotal,
       sellTotal,
+      sellProceeds: sellTotal,
+      savedCash: sellTotal,
+      realizedPnl,
       netFlow: buyTotal - sellTotal,
+      totalUnitsBought,
+      totalUnitsSold,
+      unitsHeld: latestLedgerRow?.unitsHeld ?? 0,
+      positionValue: latestLedgerRow?.positionValue ?? null,
+      averageCostBasis: latestLedgerRow?.averageCostBasis ?? null,
     },
   };
 }

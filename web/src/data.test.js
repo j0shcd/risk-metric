@@ -91,14 +91,69 @@ describe("DCA helpers", () => {
   it("simulates only the selected cadence after the start date", () => {
     const simulation = simulateDcaStrategy(
       {
-        labels: ["2026-01-01", "2026-01-02", "2026-01-08", "2026-01-09"],
+        labels: ["2026-01-05", "2026-01-06", "2026-01-12", "2026-01-13"],
         values: [0.1, 0.1, 0.1, 0.1],
+        priceValues: [100, 100, 200, 200],
       },
-      { startDate: "2026-01-01", cadence: "weekly", buyStartRisk: 0.3, buyStep: 0.1, buyBaseAmount: 50 },
+      { startDate: "2026-01-05", cadence: "weekly", dayOfWeek: "monday", buyStartRisk: 0.3, buyStep: 0.1, buyBaseAmount: 50 },
     );
 
-    expect(simulation.signalRows.map((row) => row.date)).toEqual(["2026-01-01", "2026-01-08"]);
+    expect(simulation.signalRows.map((row) => row.date)).toEqual(["2026-01-05", "2026-01-12"]);
     expect(simulation.summary.buyTotal).toBe(200);
+    expect(simulation.summary.unitsHeld).toBe(1.5);
+    expect(simulation.summary.averageCostBasis).toBeCloseTo(200 / 1.5);
+  });
+
+  it("caps sales at available holdings and tracks saved cash", () => {
+    const simulation = simulateDcaStrategy(
+      {
+        labels: ["2026-01-05", "2026-01-12", "2026-01-19"],
+        values: [0.1, 0.9, 0.9],
+        priceValues: [100, 100, 100],
+      },
+      {
+        startDate: "2026-01-05",
+        cadence: "weekly",
+        dayOfWeek: "monday",
+        buyStartRisk: 0.3,
+        buyStep: 0.1,
+        buyBaseAmount: 50,
+        sellStartRisk: 0.6,
+        sellStep: 0.1,
+        sellBaseAmount: 200,
+      },
+    );
+
+    expect(simulation.summary.buyTotal).toBe(100);
+    expect(simulation.summary.sellTotal).toBe(100);
+    expect(simulation.summary.sellProceeds).toBe(100);
+    expect(simulation.summary.realizedPnl).toBe(0);
+    expect(simulation.summary.unitsHeld).toBe(0);
+    expect(simulation.signalRows.map((row) => row.side)).toEqual(["buy", "sell"]);
+  });
+
+  it("separates sell proceeds from realized profit", () => {
+    const simulation = simulateDcaStrategy(
+      {
+        labels: ["2026-01-05", "2026-01-12"],
+        values: [0.1, 0.9],
+        priceValues: [100, 150],
+      },
+      {
+        startDate: "2026-01-05",
+        cadence: "weekly",
+        dayOfWeek: "monday",
+        buyStartRisk: 0.3,
+        buyStep: 0.1,
+        buyBaseAmount: 50,
+        sellStartRisk: 0.6,
+        sellStep: 0.1,
+        sellBaseAmount: 150,
+      },
+    );
+
+    expect(simulation.summary.sellProceeds).toBe(150);
+    expect(simulation.summary.realizedPnl).toBe(50);
   });
 
   it("warns when buy and sell thresholds overlap", () => {

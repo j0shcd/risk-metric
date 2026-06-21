@@ -205,11 +205,16 @@ describe("App", () => {
     fireEvent.click(await screen.findByRole("tab", { name: "DCA" }));
 
     expect(await screen.findByText("Strategy")).toBeInTheDocument();
-    expect(screen.getByText("Latest Signal")).toBeInTheDocument();
+    expect(screen.getByText("Current Model Signal")).toBeInTheDocument();
     expect(screen.getAllByText(/DCA Risk/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Aggregate DCA Risk").length).toBeGreaterThan(0);
     expect(screen.getByText("Recent Strategy Signals")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Weekly")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Monday")).toBeInTheDocument();
+    expect(screen.getByText("Capital In")).toBeInTheDocument();
+    expect(screen.getByText("Sell Proceeds")).toBeInTheDocument();
+    expect(screen.getByText("Realized P/L")).toBeInTheDocument();
+    expect(screen.getByText("Remaining Position")).toBeInTheDocument();
   });
 
   it("surfaces validation failures from diagnostics", async () => {

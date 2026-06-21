@@ -53,6 +53,16 @@ const FONT = "'IBM Plex Mono', 'Courier New', monospace";
 const PRICE_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const MONEY_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const DCA_STRATEGY_STORAGE_KEY = "riskMetricDcaStrategy.v1";
+const ACTIVE_TAB_STORAGE_KEY = "riskMetricActiveTab.v1";
+const DAY_OPTIONS = [
+  ["monday", "Monday"],
+  ["tuesday", "Tuesday"],
+  ["wednesday", "Wednesday"],
+  ["thursday", "Thursday"],
+  ["friday", "Friday"],
+  ["saturday", "Saturday"],
+  ["sunday", "Sunday"],
+];
 
 const hoverGuidePlugin = {
   id: "hoverGuide",
@@ -92,6 +102,11 @@ function formatPrice(value) {
 function formatMoney(value) {
   const num = Number(value);
   return Number.isFinite(num) ? MONEY_FORMAT.format(num) : "n/a";
+}
+
+function formatUnits(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toFixed(6) : "n/a";
 }
 
 function formatDateTime(value) {
@@ -631,6 +646,12 @@ function loadStoredDcaStrategy() {
   }
 }
 
+function loadStoredActiveTab() {
+  if (typeof window === "undefined") return "overview";
+  const tab = window.localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+  return ["overview", "metrics", "dca", "about"].includes(tab) ? tab : "overview";
+}
+
 function StrategyField({ label, value, min = 0, max, step, onChange }) {
   return (
     <label className="bb-dca-field">
@@ -654,13 +675,17 @@ function DcaPanel({ historyCore }) {
   const [priceScaleType, setPriceScaleType] = useState("logarithmic");
 
   const dcaSeries = useMemo(() => buildDcaRiskSeries(historyCore), [historyCore]);
-  const simulation = useMemo(() => simulateDcaStrategy(dcaSeries, strategyInput), [dcaSeries, strategyInput]);
-  const strategy = simulation.strategy;
   const btcSeries = useMemo(() => chartData(historyCore, "btc_price"), [historyCore]);
   const btcValues = useMemo(
     () => alignOverlayValues(dcaSeries.labels, btcSeries),
     [dcaSeries.labels, btcSeries],
   );
+  const simulationInput = useMemo(
+    () => ({ ...dcaSeries, priceValues: btcValues }),
+    [dcaSeries, btcValues],
+  );
+  const simulation = useMemo(() => simulateDcaStrategy(simulationInput, strategyInput), [simulationInput, strategyInput]);
+  const strategy = simulation.strategy;
   const hasBtcData = btcValues.some((v) => v !== null);
 
   useEffect(() => {
@@ -670,6 +695,15 @@ function DcaPanel({ historyCore }) {
 
   function updateStrategy(key, value) {
     setStrategyInput((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function startToday() {
+    const min = dcaSeries.labels[0];
+    const max = dcaSeries.labels[dcaSeries.labels.length - 1];
+    let today = new Date().toLocaleDateString("en-CA");
+    if (max && today > max) today = max;
+    if (min && today < min) today = min;
+    updateStrategy("startDate", today);
   }
 
   const latest = simulation.latest;
@@ -757,7 +791,12 @@ function DcaPanel({ historyCore }) {
           </div>
           <div className="bb-dca-controls">
             <label className="bb-dca-field">
-              <span>Start Date</span>
+              <span className="bb-dca-field__label">
+                Start Date
+                <button type="button" className="bb-dca-today" onClick={startToday}>
+                  Today
+                </button>
+              </span>
               <input
                 className="bb-dca-input"
                 type="date"
@@ -777,6 +816,20 @@ function DcaPanel({ historyCore }) {
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
+              </select>
+            </label>
+            <label className="bb-dca-field">
+              <span>Day</span>
+              <select
+                className="bb-dca-input"
+                value={strategy.dayOfWeek}
+                onChange={(event) => updateStrategy("dayOfWeek", event.target.value)}
+              >
+                {DAY_OPTIONS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </label>
             <StrategyField
@@ -826,7 +879,7 @@ function DcaPanel({ historyCore }) {
         </section>
 
         <section className={`bb-dca-signal bb-dca-signal--${latest?.side ?? "hold"}`}>
-          <p className="bb-dca-signal__label">Latest Signal</p>
+          <p className="bb-dca-signal__label">Current Model Signal</p>
           <p className="bb-dca-signal__action">{latest?.label ?? "Hold"}</p>
           <p className="bb-dca-signal__risk">DCA Risk {valueLabel(latest?.risk, 3)}</p>
           <p className="bb-dca-signal__risk">Signal Date {latest?.date ?? "n/a"}</p>
@@ -841,12 +894,35 @@ function DcaPanel({ historyCore }) {
         {latestComponents.map((component) => (
           <MetricCard key={component.key} label={`${component.label} Component`} value={component.latestValue} tone="blue" />
         ))}
+      </div>
+
+      <div className="bb-card-grid bb-card-grid--account">
         <article className="bb-card">
-          <p className="bb-card__label">Simulated Net Flow</p>
-          <p className="bb-card__value bb-card__value--amber">{formatMoney(simulation.summary.netFlow)}</p>
-          <p className="bb-card__sub">
-            {simulation.summary.buySignals} buys / {simulation.summary.sellSignals} sells
+          <p className="bb-card__label">Capital In</p>
+          <p className="bb-card__value bb-card__value--green">{formatMoney(simulation.summary.buyTotal)}</p>
+          <p className="bb-card__sub">{simulation.summary.buySignals} buy executions</p>
+        </article>
+        <article className="bb-card">
+          <p className="bb-card__label">Sell Proceeds</p>
+          <p className="bb-card__value bb-card__value--red">{formatMoney(simulation.summary.sellProceeds)}</p>
+          <p className="bb-card__sub">{simulation.summary.sellSignals} sell executions</p>
+        </article>
+        <article className="bb-card">
+          <p className="bb-card__label">Realized P/L</p>
+          <p className={`bb-card__value bb-card__value--${simulation.summary.realizedPnl >= 0 ? "green" : "red"}`}>
+            {formatMoney(simulation.summary.realizedPnl)}
           </p>
+          <p className="bb-card__sub">after sold cost basis</p>
+        </article>
+        <article className="bb-card">
+          <p className="bb-card__label">Remaining Position</p>
+          <p className="bb-card__value bb-card__value--amber">{formatMoney(simulation.summary.positionValue)}</p>
+          <p className="bb-card__sub">{formatUnits(simulation.summary.unitsHeld)} BTC</p>
+        </article>
+        <article className="bb-card">
+          <p className="bb-card__label">Avg Entry</p>
+          <p className="bb-card__value bb-card__value--amber">{formatMoney(simulation.summary.averageCostBasis)}</p>
+          <p className="bb-card__sub">open position</p>
         </article>
       </div>
 
@@ -895,6 +971,7 @@ function DcaPanel({ historyCore }) {
               <th>Risk</th>
               <th>Action</th>
               <th>Amount</th>
+              <th>BTC Held</th>
             </tr>
           </thead>
           <tbody>
@@ -905,11 +982,12 @@ function DcaPanel({ historyCore }) {
                   <td>{valueLabel(row.risk, 3)}</td>
                   <td className={`bb-table__side bb-table__side--${row.side}`}>{row.label}</td>
                   <td>{formatMoney(row.amount)}</td>
+                  <td>{formatUnits(row.unitsHeld)}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="4">No buy or sell signals since the selected start date.</td>
+                <td colSpan="5">No buy or sell signals since the selected start date.</td>
               </tr>
             )}
           </tbody>
@@ -1013,7 +1091,7 @@ export default function App() {
   const [status, setStatus] = useState("loading");
   const [payload, setPayload] = useState(null);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(loadStoredActiveTab);
 
   useEffect(() => {
     let active = true;
@@ -1032,6 +1110,11 @@ export default function App() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTab);
+  }, [activeTab]);
 
   if (status === "loading") {
     return (

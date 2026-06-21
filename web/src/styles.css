@@ -188,6 +188,11 @@ body {
   margin: 0.82rem 0;
 }
 
+.bb-card-grid--account {
+  grid-template-columns: repeat(5, minmax(170px, 1fr));
+  margin: -0.82rem 0 0.82rem;
+}
+
 .bb-card {
   background: var(--bb-surface);
   padding: 0.65rem 0.72rem;
@@ -413,6 +418,29 @@ body {
   font-size: 0.66rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.bb-dca-field__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.bb-dca-today {
+  font-family: var(--bb-font);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid #3f3624;
+  color: var(--bb-amber);
+  background: #151109;
+  padding: 0.1rem 0.34rem;
+  cursor: pointer;
+}
+
+.bb-dca-today:hover {
+  background: #1b150a;
 }
 
 .bb-dca-input {
@@ -651,6 +679,10 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .bb-card-grid--account {
+    grid-template-columns: repeat(2, minmax(170px, 1fr));
+  }
+
   .bb-panel-grid--two,
   .bb-diag-grid,
   .bb-dca-layout {
@@ -699,6 +731,10 @@ body {
   }
 
   .bb-dca-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .bb-card-grid--account {
     grid-template-columns: 1fr;
   }
 }
