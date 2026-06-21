@@ -10,7 +10,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "reinstall": "bash scripts/install-nosync.sh"
   },
   "dependencies": {
     "chart.js": "^4.5.0",
