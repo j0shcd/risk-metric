@@ -36,6 +36,12 @@ class WebExportTests(unittest.TestCase):
                 "cycle_signal_regime": ["HOLD", "HOLD", "HOLD"],
                 "top_reversal_risk": [0.42, 0.45, 0.48],
                 "bottom_reversal_risk": [0.61, 0.58, 0.55],
+                "dca_risk": [0.2, 0.35, 0.48],
+                "dca_top_reversal_component": [0.5, 1.0, 1.0],
+                "dca_bottom_reversal_component": [0.5, 1.0, 1.0],
+                "dca_cycle_extension_component": [0.5, 1.0, 1.0],
+                "dca_cycle_regime_component": [0.5, 1.0, 1.0],
+                "dca_component_coverage": [1.0, 1.0, 1.0],
                 "attention_score": [0.34, 0.41, 0.48],
                 "btc_price": [70000.0, 71000.0, 72000.0],
                 "total_market_cap": [2.5e12, 2.55e12, 2.6e12],
@@ -186,9 +192,13 @@ class WebExportTests(unittest.TestCase):
             self.assertIn("cycle_extension_score", latest)
             self.assertIn("top_reversal_risk", latest)
             self.assertIn("bottom_reversal_risk", latest)
+            self.assertIn("dca_risk", latest)
+            self.assertIn("dca_model", latest)
             self.assertIn("attention_score", latest)
             self.assertIsNotNone(latest["top_reversal_risk"])
             self.assertIsNotNone(latest["bottom_reversal_risk"])
+            self.assertIsNotNone(latest["dca_risk"])
+            self.assertIn("cycle_regime_component", latest["dca_model"])
             self.assertIsNotNone(latest["cycle_extension_score"])
             self.assertIsNotNone(latest["attention_score"])
             self.assertIn("cycle_model", latest)
@@ -199,6 +209,8 @@ class WebExportTests(unittest.TestCase):
             self.assertEqual(history["index"], ["2026-04-22", "2026-04-23", "2026-04-24"])
             self.assertIn("trend_composite_score", history["columns"])
             self.assertIn("total_market_cap", history["columns"])
+            self.assertIn("dca_risk", history["columns"])
+            self.assertIn("dca_cycle_regime_component", history["columns"])
 
             diagnostics = json.loads((export_result.root / "diagnostics.json").read_text(encoding="utf-8"))
             self.assertIn("source_health", diagnostics)

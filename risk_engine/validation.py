@@ -40,6 +40,14 @@ def _check_bounds(series: pd.DataFrame, errors: List[str]) -> None:
         "cycle_p_frenzy": (0.0, 1.0),
         "cycle_p_accumulation": (0.0, 1.0),
         "cycle_confidence": (0.0, 1.0),
+        "top_reversal_risk": (0.0, 1.0),
+        "bottom_reversal_risk": (0.0, 1.0),
+        "dca_risk": (0.0, 1.0),
+        "dca_top_reversal_component": (0.0, 1.0),
+        "dca_bottom_reversal_component": (0.0, 1.0),
+        "dca_cycle_extension_component": (0.0, 1.0),
+        "dca_cycle_regime_component": (0.0, 1.0),
+        "dca_component_coverage": (0.0, 1.0),
     }
 
     for column, (low, high) in required_bounded_columns.items():

@@ -26,6 +26,45 @@ from .sources import (
 from .types import FeatureBundle, RiskOutput
 
 
+DCA_COMPONENT_SPECS = {
+    "dca_top_reversal_component": ("top_reversal_risk", "low"),
+    "dca_bottom_reversal_component": ("bottom_reversal_risk", "high"),
+    "dca_cycle_extension_component": ("cycle_extension_score", "low"),
+    "dca_cycle_regime_component": ("cycle_frenzy_score", "low"),
+}
+
+
+def _expanding_minmax_risk(values: pd.Series, *, low_risk_when: str) -> pd.Series:
+    numeric = pd.to_numeric(values, errors="coerce").clip(0.0, 1.0)
+    expanding_min = numeric.expanding(min_periods=1).min()
+    expanding_max = numeric.expanding(min_periods=1).max()
+    span = expanding_max - expanding_min
+    normalized = (numeric - expanding_min) / span.replace(0.0, np.nan)
+    equal_span_observation = numeric.notna() & span.eq(0.0)
+    normalized = normalized.mask(equal_span_observation, 0.5)
+    if low_risk_when == "high":
+        normalized = 1.0 - normalized
+    return normalized.where(numeric.notna()).clip(0.0, 1.0)
+
+
+def add_dca_risk_columns(series: pd.DataFrame) -> pd.DataFrame:
+    output = series.copy()
+    component_columns: list[str] = []
+    for component_column, (source_column, low_risk_when) in DCA_COMPONENT_SPECS.items():
+        if source_column not in output.columns:
+            output[component_column] = np.nan
+        else:
+            output[component_column] = _expanding_minmax_risk(
+                output[source_column],
+                low_risk_when=low_risk_when,
+            )
+        component_columns.append(component_column)
+
+    output["dca_component_coverage"] = output[component_columns].notna().mean(axis=1)
+    output["dca_risk"] = output[component_columns].mean(axis=1, skipna=True).clip(0.0, 1.0)
+    return output
+
+
 def _metric_specs_free_stable(include_total_market_fallback_proxies: bool) -> List[MetricSpec]:
     specs = [
         MetricSpec("btc_trend_extension_50d_350d", "price_structure", "btc", base_reliability=0.95, max_carry_days=7),
@@ -548,6 +587,7 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         output["headline_btc_mix_weight"] * output["btc_risk_signal"]
         + output["headline_total_market_mix_weight"] * output["total_market_risk_signal"]
     ).clip(0.0, 1.0)
+    output = add_dca_risk_columns(output)
 
     fallback_monthly_signal = output["btc_risk_signal"].astype(float).resample(pd.offsets.MonthEnd()).last()
     top_monthly = output["top_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last().fillna(fallback_monthly_signal)
