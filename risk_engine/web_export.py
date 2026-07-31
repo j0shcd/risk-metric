@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import re
 import shutil
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -159,12 +160,67 @@ def _write_json(path: Path, payload: Dict[str, Any]) -> None:
     )
 
 
+_FLOAT_REPR_RE = re.compile(r"^(\d+)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$")
+
+
+def _canonical_json_number(value: float) -> str:
+    # Replicates the ECMA-262 Number::toString algorithm so the digit string,
+    # decimal-vs-scientific choice, and exponent formatting are byte-identical
+    # to what scripts/lib/release-integrity.mjs computes via JS's native
+    # JSON.stringify(Number) after JSON.parse — Python's own float formatting
+    # (str/repr/json.dumps) diverges from JS in both respects and would make
+    # the cross-language content digest never match.
+    if isinstance(value, bool):
+        raise TypeError("bool is not a JSON number")
+    if isinstance(value, int):
+        return str(value)
+    if value == 0:
+        return "0"
+
+    sign = "-" if value < 0 else ""
+    match = _FLOAT_REPR_RE.match(repr(abs(value)))
+    int_part, frac_part, exp_part = match.group(1), match.group(2) or "", match.group(3)
+    exp = int(exp_part) if exp_part else 0
+
+    raw_digits = int_part + frac_part
+    digits = raw_digits.lstrip("0")
+    n = len(int_part) + exp - (len(raw_digits) - len(digits))
+    digits = digits.rstrip("0") or "0"
+    k = len(digits)
+
+    if k <= n <= 21:
+        return f"{sign}{digits}{'0' * (n - k)}"
+    if 0 < n <= 21:
+        return f"{sign}{digits[:n]}.{digits[n:]}"
+    if -6 < n <= 0:
+        return f"{sign}0.{'0' * -n}{digits}"
+    exponent = n - 1
+    exponent_str = f"+{exponent}" if exponent >= 0 else str(exponent)
+    mantissa = digits if k == 1 else f"{digits[0]}.{digits[1:]}"
+    return f"{sign}{mantissa}e{exponent_str}"
+
+
+def _canonical_json_value(value: Any) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return _canonical_json_number(value)
+    if isinstance(value, str):
+        # ensure_ascii=False matches JS's JSON.stringify, which leaves printable
+        # non-ASCII characters unescaped rather than emitting \uXXXX sequences.
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, list):
+        return "[" + ",".join(_canonical_json_value(item) for item in value) + "]"
+    if isinstance(value, dict):
+        items = sorted(value.items(), key=lambda kv: kv[0])
+        return "{" + ",".join(f"{json.dumps(str(key), ensure_ascii=False)}:{_canonical_json_value(item)}" for key, item in items) + "}"
+    raise TypeError(f"unsupported type for canonical JSON: {type(value)!r}")
+
+
 def _canonical_digest(payload: Any) -> str:
-    content = json.dumps(
-        payload,
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("utf-8")
+    content = _canonical_json_value(payload).encode("utf-8")
     return hashlib.sha256(content).hexdigest()
 
 

@@ -7,7 +7,12 @@ import pandas as pd
 
 from risk_engine.types import RiskOutput
 from risk_engine.validation import ValidationResult
-from risk_engine.web_export import WEB_V2_ARTIFACTS, export_web_v2, validate_web_release
+from risk_engine.web_export import (
+    WEB_V2_ARTIFACTS,
+    _canonical_json_number,
+    export_web_v2,
+    validate_web_release,
+)
 
 
 class WebExportTests(unittest.TestCase):
@@ -236,6 +241,31 @@ class WebExportTests(unittest.TestCase):
             self.assertIn("calibration_metadata", diagnostics)
             self.assertEqual(diagnostics["benchmark_config"]["alert_rate"], 0.2)
             self.assertTrue(any(row["mode"] == "unavailable" for row in diagnostics["source_modes"]))
+
+
+class CanonicalJsonNumberTests(unittest.TestCase):
+    """scripts/lib/release-integrity.mjs recomputes each artifact's canonical
+    digest in JS after JSON.parse, so _canonical_json_number must match what
+    JS's native Number-to-string produces byte-for-byte, or CI's
+    validate-web-release.mjs will reject every release (manifest canonical
+    content digests do not match artifacts)."""
+
+    def test_whole_number_floats_serialize_without_decimal_point(self) -> None:
+        # JS's JSON.stringify(JSON.parse("1.0")) is "1", not "1.0".
+        self.assertEqual(_canonical_json_number(1.0), "1")
+        self.assertEqual(_canonical_json_number(-42.0), "-42")
+
+    def test_small_magnitude_floats_use_plain_decimal_like_javascript(self) -> None:
+        # JS's Number#toString only switches to scientific notation below 1e-6;
+        # Python's repr()/json.dumps switch around 1e-4.
+        self.assertEqual(_canonical_json_number(2.20577400667163e-05), "0.0000220577400667163")
+        self.assertEqual(_canonical_json_number(-0.00033224551075938504), "-0.00033224551075938504")
+
+    def test_floats_below_1e_minus_6_use_scientific_notation_like_javascript(self) -> None:
+        self.assertEqual(_canonical_json_number(-5.403790920555968e-07), "-5.403790920555968e-7")
+
+    def test_negative_zero_serializes_as_zero(self) -> None:
+        self.assertEqual(_canonical_json_number(-0.0), "0")
 
 
 if __name__ == "__main__":
