@@ -14,6 +14,44 @@ const base = {
 };
 
 describe("loadDashboardData degraded summary", () => {
+  it("ignores a non-JSON SPA fallback for the optional evaluation summary", async () => {
+    global.fetch = vi.fn(async (url) => {
+      const key = String(url).split("/").pop();
+      if (key === "evaluation_summary.json") {
+        return {
+          ok: true,
+          json: async () => {
+            throw new SyntaxError("Unexpected token '<'");
+          },
+        };
+      }
+      return { ok: true, json: async () => base[key] };
+    });
+
+    const out = await loadDashboardData();
+    expect(out.evaluationSummary).toBeNull();
+    expect(out.latestSnapshot.release_id).toBe("release-1");
+  });
+
+  it("reports a useful error when a required artifact is not JSON", async () => {
+    global.fetch = vi.fn(async (url) => {
+      const key = String(url).split("/").pop();
+      if (key === "history_core.json") {
+        return {
+          ok: true,
+          json: async () => {
+            throw new SyntaxError("Unexpected token '<'");
+          },
+        };
+      }
+      return { ok: true, json: async () => base[key] };
+    });
+
+    await expect(loadDashboardData()).rejects.toThrow(
+      "Failed to load history_core.json: response was not valid JSON",
+    );
+  });
+
   it("marks degraded for fallback/unavailable modes", async () => {
     global.fetch = vi.fn(async (url) => {
       const key = String(url).split("/").pop();

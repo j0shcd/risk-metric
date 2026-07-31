@@ -79,8 +79,13 @@ jobs:
       - name: Stage web artifacts and cache files
         id: detect_changes
         run: |
-          git add -f data/web/v2 || true
-          git add -f web/public/data/v2 || true
+          RELEASE_ID=$(node -p "require('./data/web/v2/manifest.json').release_id")
+          for artifact in $(node -p "require('./data/web/v2/manifest.json').artifacts.join(' ')")
+          do
+            git add -f "data/web/v2/$artifact"
+            git add -f "web/public/data/v2/$artifact"
+            git add -f "web/public/data/releases/$RELEASE_ID/$artifact"
+          done
           if [ -e data/web/archive/release_snapshots.ndjson ]; then
             git add -f data/web/archive/release_snapshots.ndjson
           fi

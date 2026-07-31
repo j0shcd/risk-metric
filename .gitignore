@@ -49,3 +49,4 @@ web/src/themes/
 # iCloud conflict copies (" 2", " 3", …)
 *\ [0-9]
 *\ [0-9]/
+*\ [0-9].*

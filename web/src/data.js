@@ -78,7 +78,11 @@ async function fetchArtifact(name, root = ARTIFACT_ROOT) {
   if (!response.ok) {
     throw new Error(`Failed to load ${name}: ${response.status}`);
   }
-  return response.json();
+  try {
+    return await response.json();
+  } catch {
+    throw new Error(`Failed to load ${name}: response was not valid JSON`);
+  }
 }
 
 async function fetchOptionalArtifact(name, fallback = null, root = ARTIFACT_ROOT) {
@@ -86,7 +90,12 @@ async function fetchOptionalArtifact(name, fallback = null, root = ARTIFACT_ROOT
   if (!response.ok) {
     return fallback;
   }
-  return response.json();
+  try {
+    return await response.json();
+  } catch {
+    // Static hosts commonly rewrite missing files to index.html with a 200 status.
+    return fallback;
+  }
 }
 
 function toNumber(value) {

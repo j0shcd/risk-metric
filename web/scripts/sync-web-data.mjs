@@ -17,9 +17,20 @@ if (!fs.existsSync(sourceRoot)) {
   process.exit(0);
 }
 
-for (const item of fs.readdirSync(sourceRoot)) {
+const manifest = JSON.parse(fs.readFileSync(path.join(sourceRoot, "manifest.json"), "utf8"));
+if (!Array.isArray(manifest.artifacts) || !manifest.artifacts.includes("manifest.json")) {
+  throw new Error("[sync-web-data] manifest.json does not declare a valid artifact set");
+}
+
+for (const item of manifest.artifacts) {
+  if (path.basename(item) !== item) {
+    throw new Error(`[sync-web-data] Refusing unsafe artifact path: ${item}`);
+  }
   const sourcePath = path.join(sourceRoot, item);
   const targetPath = path.join(targetRoot, item);
+  if (!fs.existsSync(sourcePath)) {
+    throw new Error(`[sync-web-data] Declared artifact is missing: ${item}`);
+  }
   const stats = fs.statSync(sourcePath);
 
   if (stats.isDirectory()) {
@@ -29,10 +40,9 @@ for (const item of fs.readdirSync(sourceRoot)) {
   }
 }
 
-const manifest = JSON.parse(fs.readFileSync(path.join(sourceRoot, "manifest.json"), "utf8"));
 if (/^web-v2-[a-f0-9]{64}$/.test(String(manifest.release_id))) {
   const immutableRoot = path.resolve(targetBase, "releases", manifest.release_id);
-  fs.cpSync(sourceRoot, immutableRoot, { recursive: true });
+  fs.cpSync(targetRoot, immutableRoot, { recursive: true });
   console.log(`[sync-web-data] Synced ${sourceRoot} -> ${targetRoot} and ${immutableRoot}`);
 } else {
   console.warn(`[sync-web-data] Synced legacy release without immutable path: ${sourceRoot} -> ${targetRoot}`);
