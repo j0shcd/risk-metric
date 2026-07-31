@@ -3,14 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { loadDashboardData } from "./data";
 
 const base = {
-  "manifest.json": { version: "v2" },
-  "latest_snapshot.json": { confidence_score: 0.7 },
-  "history_core.json": { index: [], columns: {} },
-  "category_breakdowns_btc.json": { index: [], columns: {} },
-  "category_breakdowns_total_market.json": { index: [], columns: {} },
-  "metric_breakdowns_btc.json": { index: [], columns: {} },
-  "metric_breakdowns_total_market.json": { index: [], columns: {} },
-  "diagnostics.json": { source_modes: [] },
+  "manifest.json": { version: "v2", release_id: "release-1" },
+  "latest_snapshot.json": { confidence_score: 0.7, release_id: "release-1" },
+  "history_core.json": { index: [], columns: {}, release_id: "release-1" },
+  "category_breakdowns_btc.json": { index: [], columns: {}, release_id: "release-1" },
+  "category_breakdowns_total_market.json": { index: [], columns: {}, release_id: "release-1" },
+  "metric_breakdowns_btc.json": { index: [], columns: {}, release_id: "release-1" },
+  "metric_breakdowns_total_market.json": { index: [], columns: {}, release_id: "release-1" },
+  "diagnostics.json": { source_modes: [], release_id: "release-1" },
 };
 
 describe("loadDashboardData degraded summary", () => {
@@ -19,6 +19,7 @@ describe("loadDashboardData degraded summary", () => {
       const key = String(url).split("/").pop();
       const payload = { ...base };
       payload["diagnostics.json"] = {
+        release_id: "release-1",
         source_modes: [
           { source: "x", mode: "local_cache" },
           { source: "y", mode: "unavailable" },
@@ -38,8 +39,8 @@ describe("loadDashboardData degraded summary", () => {
       const key = String(url).split("/").pop();
       const payload = {
         ...base,
-        "latest_snapshot.json": { confidence_score: 0.4 },
-        "diagnostics.json": { source_modes: [{ source: "x", mode: "cmc_api" }] },
+        "latest_snapshot.json": { confidence_score: 0.4, release_id: "release-1" },
+        "diagnostics.json": { source_modes: [{ source: "x", mode: "cmc_api" }], release_id: "release-1" },
       };
       return { ok: true, json: async () => payload[key] };
     });
@@ -47,5 +48,14 @@ describe("loadDashboardData degraded summary", () => {
     const out = await loadDashboardData();
     expect(out.degraded.lowConfidence).toBe(true);
     expect(out.degraded.isDegraded).toBe(true);
+  });
+
+  it("rejects a mixed client release", async () => {
+    global.fetch = vi.fn(async (url) => {
+      const key = String(url).split("/").pop();
+      const payload = { ...base, "history_core.json": { index: [], columns: {}, release_id: "release-2" } };
+      return { ok: true, json: async () => payload[key] };
+    });
+    await expect(loadDashboardData()).rejects.toThrow(/inconsistent release_id/);
   });
 });

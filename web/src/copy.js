@@ -26,7 +26,7 @@ export const METRIC_COPY = {
       },
       {
         label: "Per-input transform",
-        value: "Expanding-history percentile rank (uses only data available up to time t — no future leakage)",
+        value: "Expanding-history percentile rank using data available up to time t",
       },
       {
         label: "Weights",
@@ -38,50 +38,50 @@ export const METRIC_COPY = {
   },
   top_reversal_risk: {
     shortName: "Top Reversal Risk",
-    oneLiner: "Calibrated probability-like estimate of top-side reversal conditions.",
+    oneLiner: "Bounded historical-alignment score for top-side reversal conditions.",
     description:
-      "Top Reversal Risk takes the cycle model's raw top-side probability (p_frenzy, itself a logistic mapping of upper-cycle valuation, speculation, attention, and macro scores) and recalibrates it against historical top-side labels using a walk-forward objective. The objective rewards early recall of true top regimes while penalizing false alarms and drawdown-equivalent costs. The output is a 0-1 score that behaves like a probability of being in a top-reversal regime.",
+      "Top Reversal Risk takes the cycle model's raw top-side score (p_frenzy, a logistic mapping of upper-cycle valuation, speculation, attention, and macro scores) and aligns it against historical top-side labels using a walk-forward objective. The objective rewards early recall of true top regimes while penalizing false alarms and drawdown-equivalent costs. The output is a 0-1 historical-alignment score, not a validated probability.",
     notMeaning:
-      "A high reading is not an immediate sell signal — timing can stay elevated for long stretches, and the model expresses regime probability, not price direction over short windows.",
+      "A high reading is not an immediate sell signal and is not currently promoted as a validated probability — timing can stay elevated for long stretches.",
     technicalRows: [
       { label: "Base input", value: "p_frenzy (cycle-model logistic on upper-cycle scores) + cycle structural features" },
       {
         label: "Labels",
-        value: "Long-horizon top regimes derived from forward-drawdown thresholds (e.g. >=40% within 12 months)",
+        value: "Lower-tail 36/48-month forward returns observed from 24-month highs; outcome cuts use only already-resolved history",
       },
       {
         label: "Calibration",
-        value: "Walk-forward: each year-segment is calibrated only on prior years; no future data leaks into the score",
+        value: "Walk-forward-style alignment against prior segments; Phase 2 evidence currently blocks promoted live-style and leakage-sensitive claims",
       },
       {
         label: "Objective",
         value: "Weighted blend of lead-recall at a fixed alert rate, PR-AUC, and drawdown-avoidance KPIs",
       },
-      { label: "Output range", value: "Bounded 0-1 (higher = higher top-reversal probability)" },
+      { label: "Output range", value: "Bounded 0-1 (higher = stronger historical top-reversal alignment)" },
     ],
   },
   bottom_reversal_risk: {
     shortName: "Bottom Reversal Risk",
-    oneLiner: "Calibrated probability-like estimate of bottom-side reversal conditions.",
+    oneLiner: "Bounded historical-alignment score for bottom-side reversal conditions.",
     description:
-      "Bottom Reversal Risk applies the same walk-forward calibration pipeline as Top Reversal Risk but with the cycle model's accumulation-side probability (p_accumulation) as its base, and forward-recovery labels (price recoveries above a threshold within a forward window) as targets. The output behaves like a probability of being in a bottom/accumulation regime.",
+      "Bottom Reversal Risk applies the same historical-alignment pipeline as Top Reversal Risk but with the cycle model's accumulation-side score (p_accumulation) as its base, and forward-recovery labels as targets. The output is a 0-1 score for bottom/accumulation-like conditions, not a validated probability.",
     notMeaning:
       "A high reading is not an immediate buy signal and does not guarantee local price lows; accumulation regimes can persist for many months.",
     technicalRows: [
       { label: "Base input", value: "p_accumulation (cycle-model logistic on lower-cycle scores) + cycle structural features" },
       {
         label: "Labels",
-        value: "Long-horizon bottom regimes derived from forward-recovery thresholds within a fixed horizon",
+        value: "Upper-tail 36/48-month forward returns observed from 24-month lows; outcome cuts use only already-resolved history",
       },
       {
         label: "Calibration",
-        value: "Walk-forward: each year-segment is calibrated only on prior years; no future data leaks into the score",
+        value: "Walk-forward-style alignment against prior segments; Phase 2 evidence currently blocks promoted live-style and leakage-sensitive claims",
       },
       {
         label: "Objective",
         value: "Weighted blend of lead-recall at a fixed alert rate, PR-AUC, and recovery-capture KPIs",
       },
-      { label: "Output range", value: "Bounded 0-1 (higher = higher bottom-reversal probability)" },
+      { label: "Output range", value: "Bounded 0-1 (higher = stronger historical bottom-reversal alignment)" },
     ],
   },
   headline_attention: {
@@ -116,12 +116,12 @@ export const METRIC_COPY = {
     ],
   },
   cycle_regime: {
-    shortName: "Cycle Regime Index",
+    shortName: "Cycle Frenzy Score",
     oneLiner: "Where the market appears to sit in the multi-year Bitcoin cycle.",
     description:
-      "The Cycle Regime Index (CRI) is a slow-moving 0-1 estimate of where the current regime sits within the broader multi-year cycle. Underneath, two monthly composites — frenzy and accumulation — are each built from weighted valuation, speculation, attention, and macro percentiles. Those are mapped through logistic functions to produce p_frenzy and p_accumulation, then shrunk by a confidence factor (low coverage → pulled toward neutral). CRI summarizes this as a single 0-1 position: near 0 looks historically accumulation-like, near 1 looks historically bubble-like.",
+      "The Cycle Frenzy Score is a monthly 0-1 composite of upper-cycle valuation, speculation, attention, and macro percentiles. Higher readings indicate stronger historical alignment with frenzy-like conditions. It is a component of DCA Risk, not a complete cycle-position index.",
     notMeaning:
-      "CRI does not time entries or exits and does not predict how long a regime will last. It is a regime descriptor, not a trading signal.",
+      "The score does not time entries or exits and does not predict how long a regime will last. It is a descriptive component, not a trading signal.",
     technicalRows: [
       {
         label: "cycle_frenzy_score",
@@ -133,9 +133,9 @@ export const METRIC_COPY = {
       },
       {
         label: "p_frenzy / p_accumulation",
-        value: "Logistic mapping of the cycle scores, then multiplied by a 0-1 confidence factor (coverage × reliability)",
+        value: "Logistic mapping, then shrunk toward 0.5 using confidence = mean(category coverage, raw-feature coverage)",
       },
-      { label: "CRI", value: "Slow-moving composite of these probabilities; bounded 0-1" },
+      { label: "Output", value: "Confidence-adjusted frenzy probability; bounded 0-1" },
       { label: "Assumption", value: "Historical valuation/speculation extremes remain informative about current regime" },
     ],
   },
@@ -206,15 +206,15 @@ export const METRIC_COPY = {
       { label: "Scope", value: "BTC only" },
     ],
   },
-  mvrv_z_score: {
-    shortName: "MVRV Z-Score",
-    oneLiner: "Market value vs. realized value, standardized.",
+  mvrv_ratio_z_proxy: {
+    shortName: "MVRV Ratio Z Proxy",
+    oneLiner: "An expanding standardization of CoinMetrics' market-value/realized-value ratio.",
     description:
-      "Compares BTC market cap to its on-chain 'realized cap' (the aggregate cost basis: each coin valued at the price it last moved). The difference is divided by its rolling standard deviation to produce a z-score. Historically, very high z-scores have coincided with cycle peaks; very low z-scores with cycle bottoms.",
+      "Uses CoinMetrics' market-cap-to-realized-cap ratio and standardizes that ratio against its expanding historical mean and standard deviation. It is a proxy channel, not the canonical MVRV Z-Score formula based on the market-cap minus realized-cap spread.",
     technicalRows: [
       {
         label: "Raw formula",
-        value: "(Market Cap - Realized Cap) / std(Market Cap - Realized Cap)",
+        value: "(MVRV ratio - expanding mean) / expanding standard deviation, after 365 observations",
       },
       {
         label: "Normalization",
@@ -222,6 +222,17 @@ export const METRIC_COPY = {
       },
       { label: "Sign convention", value: "+ = market priced well above on-chain cost basis" },
       { label: "Scope", value: "BTC on-chain data" },
+    ],
+  },
+  mvrv_implied_profitability_proxy: {
+    shortName: "MVRV-implied Profitability View",
+    oneLiner: "A display-only transformation of the same MVRV ratio source.",
+    description:
+      "This bounded view makes the MVRV ratio easier to read as a rough profitability context. It is not measured supply in profit, is not an independent on-chain observation, and has zero separate weight in the scoring model.",
+    technicalRows: [
+      { label: "Source", value: "Derived from the same CoinMetrics MVRV ratio used by the MVRV Ratio Z Proxy" },
+      { label: "Role", value: "Display only — excluded from scoring and evidence counts" },
+      { label: "Interpretation", value: "Higher values imply more aggregate unrealized profitability; they do not estimate literal supply in profit" },
     ],
   },
   fear_greed: {
@@ -265,7 +276,7 @@ export const METRIC_COPY = {
       "trend_composite_score = confidence-aware blend of BTC signal (70%) and total market signal (30%); used as context only.",
       "headline_attention (= Signal Agreement) = 0.70 × BTC attention + 0.30 × total-market attention, after the per-category consensus/dispersion boosts.",
       "confidence_score = 0.7 × btc_confidence + 0.3 × total_market_confidence, where each confidence = mean of coverage and reliability.",
-      "Top/Bottom Reversal Risk are walk-forward calibrations of the cycle p_frenzy / p_accumulation probabilities against long-horizon labels — no future data leaks into any historical point on the chart.",
+      "Top/Bottom Reversal Risk align cycle p_frenzy / p_accumulation scores against long-horizon labels; the latest Phase 2 evidence blocks promoted probability, leakage-sensitive, and live-style claims until the gates pass.",
     ],
   },
 };
@@ -309,8 +320,8 @@ export const CURATED_METRICS = [
   },
   {
     key: "mvrv",
-    copyKey: "mvrv_z_score",
-    btcColumn: "metric_mvrv_z_score__both__onchain_signal",
+    copyKey: "mvrv_ratio_z_proxy",
+    btcColumn: "metric_mvrv_ratio_z_proxy__both__onchain_signal",
     totalColumn: null,
   },
 ];

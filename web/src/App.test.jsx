@@ -11,6 +11,7 @@ vi.mock("react-chartjs-2", () => ({
 }));
 
 const baseColumnar = {
+  release_id: "release-1",
   generated_at: "2026-04-24T06:00:00Z",
   schema_version: "2.0.0",
   version: "v2",
@@ -23,6 +24,7 @@ const baseColumnar = {
 
 const fixtures = {
   "manifest.json": {
+    release_id: "release-1",
     version: "v2",
     schema_version: "2.0.0",
     generated_at: "2026-04-24T06:00:00Z",
@@ -37,7 +39,112 @@ const fixtures = {
       "diagnostics.json",
     ],
   },
+  "evaluation_summary.json": {
+    generated_at: "2026-06-22T08:00:00Z",
+    schema_version: "1.0.0",
+    source_run: {
+      run_id: "phase2-standard-artifacts-cli-final",
+      profile: "standard",
+      status: "fail",
+      source_generated_at: "2026-06-22T07:24:57Z",
+      config_hash: "abc123",
+      git_commit: "e2b8786765bfe3c493b1b8237fc191d0aa93141c",
+      seed: 1729,
+    },
+    claim_state: {
+      status: "blocked",
+      headline: "Dashboard claims blocked",
+      interpretation: "Phase 2 produced evidence and blockers, not promoted claims.",
+      blocking_warning_count: 3,
+      high_warning_count: 4,
+      test_count: 13,
+      pass_count: 3,
+      warn_count: 5,
+      fail_count: 5,
+    },
+    blocking_warnings: [
+      {
+        code: "unknown_availability",
+        test_id: "temporal.live_availability",
+        severity: "high",
+        message: "No available_at_date column is present.",
+        blocks_dashboard: true,
+      },
+      {
+        code: "walkforward_no_initial_robust_rows",
+        test_id: "robustness.walkforward_nulls",
+        severity: "high",
+        message: "No walk-forward label rows pass initial gates.",
+        blocks_dashboard: true,
+      },
+    ],
+    top_warnings: [
+      {
+        code: "practical_no_metric_policy_beats_buy_hold",
+        test_id: "practical.monthly_strategy_suite",
+        severity: "high",
+        message: "No metric-policy strategy row beats buy-and-hold CAGR after costs.",
+        blocks_dashboard: true,
+      },
+    ],
+    test_groups: [
+      {
+        family: "temporal_validity",
+        pass: 0,
+        warn: 1,
+        fail: 1,
+        tests: [
+          { test_id: "temporal.live_availability", status: "fail", severity: "high", summary: "Availability metadata missing." },
+        ],
+      },
+      {
+        family: "practical",
+        pass: 0,
+        warn: 0,
+        fail: 1,
+        tests: [
+          { test_id: "practical.monthly_strategy_suite", status: "fail", severity: "high", summary: "Practical strategy suite failed." },
+        ],
+      },
+    ],
+    robustness: {
+      walkforward_rows: 624,
+      initial_robust_rows: 0,
+      survives_circular_shift_null: 0,
+      passes_fdr_auc: 0,
+      passes_event_concentration: 455,
+    },
+    validity: {
+      future_shift_material_advantage_label_rows: 220,
+      future_shift_material_advantage_probe_rows: 454,
+      label_cluster_pass_rows: 403,
+      label_rows: 624,
+    },
+    strength: {
+      degraded_pass_rows: 387,
+      degraded_rows: 624,
+      rolling_stability_pass_rows: 365,
+      rolling_rows: 624,
+    },
+    practical: {
+      metric_policy_rows: 260,
+      metric_policy_beats_buy_hold_rows: 0,
+      risk_weighted_dca_rows: 20,
+      risk_weighted_dca_beats_fixed_rows: 0,
+      best_rows: [
+        {
+          signal: "attention_score",
+          strategy: "metric_allocation_bands",
+          cost_bps: 0,
+          cagr: 0.286,
+          cagr_delta_vs_buy_hold: -0.667,
+          max_drawdown: -0.44,
+        },
+      ],
+    },
+  },
   "latest_snapshot.json": {
+    release_id: "release-1",
     generated_at: "2026-04-24T06:00:00Z",
     schema_version: "2.0.0",
     version: "v2",
@@ -62,6 +169,7 @@ const fixtures = {
     },
   },
   "history_core.json": {
+    release_id: "release-1",
     generated_at: "2026-04-24T06:00:00Z",
     schema_version: "2.0.0",
     version: "v2",
@@ -99,6 +207,7 @@ const fixtures = {
     },
   },
   "diagnostics.json": {
+    release_id: "release-1",
     generated_at: "2026-04-24T06:00:00Z",
     schema_version: "2.0.0",
     version: "v2",
@@ -178,17 +287,15 @@ describe("App", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders Overview by default and supports tab switching", async () => {
+  it("centers DCA Risk by default and supports tab switching", async () => {
     render(<App />);
 
-    expect(await screen.findByText(/VALIDATED/i)).toBeInTheDocument();
+    expect(await screen.findByText(/CLAIMS BLOCKED/i)).toBeInTheDocument();
     expect(screen.getAllByText(/SCORE DATE 2026-04-24/i).length).toBeGreaterThan(0);
+    expect(await screen.findByText("DCA Risk History")).toBeInTheDocument();
+    expect(screen.getByText(/HISTORICAL ALIGNMENT|DCA RISK UNAVAILABLE/)).toBeInTheDocument();
     expect((await screen.findAllByText("Top Reversal Risk")).length).toBeGreaterThan(0);
-    expect((await screen.findAllByText("Bottom Reversal Risk")).length).toBeGreaterThan(0);
-    expect((await screen.findAllByText("Cycle Extension")).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Signal Agreement").length).toBeGreaterThan(0);
     expect(screen.getAllByRole("button", { name: /^Reset Zoom$/ }).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Cycle Regime Index").length).toBeGreaterThan(0);
     await waitFor(() => {
       expect(screen.getByText(/ARTIFACT 2026-04-24T06:00:00Z/i)).toBeInTheDocument();
     });
@@ -197,24 +304,41 @@ describe("App", () => {
 
     expect(await screen.findByText("Headline Indices")).toBeInTheDocument();
     expect(screen.getByText(/Scoring methodology/i)).toBeInTheDocument();
+    expect(screen.getByText("MVRV Ratio Z Proxy")).toBeInTheDocument();
+    expect(screen.getByText("MVRV-implied Profitability View")).toBeInTheDocument();
+    expect(screen.getByText(/Display only — excluded from scoring/i)).toBeInTheDocument();
   });
 
-  it("renders the DCA dashboard with configurable strategy controls", async () => {
+  it("renders the scenario planner with configurable strategy controls", async () => {
     render(<App />);
 
-    fireEvent.click(await screen.findByRole("tab", { name: "DCA" }));
+    fireEvent.click(await screen.findByRole("tab", { name: "Scenarios" }));
 
-    expect(await screen.findByText("Strategy")).toBeInTheDocument();
-    expect(screen.getByText("Current Model Signal")).toBeInTheDocument();
-    expect(screen.getAllByText(/DCA Risk/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Aggregate DCA Risk").length).toBeGreaterThan(0);
-    expect(screen.getByText("Recent Strategy Signals")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Weekly")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Monday")).toBeInTheDocument();
-    expect(screen.getByText("Capital In")).toBeInTheDocument();
-    expect(screen.getByText("Sell Proceeds")).toBeInTheDocument();
-    expect(screen.getByText("Realized P/L")).toBeInTheDocument();
-    expect(screen.getByText("Remaining Position")).toBeInTheDocument();
+    expect(await screen.findByText("Same deposits. Different allocation policy.")).toBeInTheDocument();
+    expect(screen.getByText("Scenario assumptions")).toBeInTheDocument();
+    expect(screen.getByText("Fixed DCA")).toBeInTheDocument();
+    expect(screen.getByText("DCA Risk strategy")).toBeInTheDocument();
+    expect(screen.getAllByText("Deposited")).toHaveLength(2);
+    expect(screen.getAllByText("Money-weighted")).toHaveLength(2);
+    expect(screen.getByText("Recent monthly executions")).toBeInTheDocument();
+    expect(screen.getByText(/prior month.+DCA Risk/i)).toBeInTheDocument();
+  });
+
+  it("renders the Evidence dashboard with blocked claim gates", async () => {
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Evidence" }));
+
+    expect(await screen.findByText("Dashboard claims blocked")).toBeInTheDocument();
+    expect(screen.getByText(/Phase 2 produced evidence and blockers/i)).toBeInTheDocument();
+    expect(screen.getByText("Claim Blockers")).toBeInTheDocument();
+    expect(screen.getByText("walkforward_no_initial_robust_rows")).toBeInTheDocument();
+    expect(screen.getByText("Robustness Funnel")).toBeInTheDocument();
+    expect(screen.getByText("Future-shift failed labels")).toBeInTheDocument();
+    expect(screen.getByText("220 rows")).toBeInTheDocument();
+    expect(screen.getByText("Beat buy-and-hold after costs")).toBeInTheDocument();
+    expect(screen.getByText("Test Family Matrix")).toBeInTheDocument();
+    expect(screen.getByText("Best Practical Rows Still Do Not Clear Claims")).toBeInTheDocument();
   });
 
   it("surfaces validation failures from diagnostics", async () => {
@@ -255,7 +379,7 @@ describe("App", () => {
 
     render(<App />);
 
-    expect(await screen.findByText("VALIDATION FAIL")).toBeInTheDocument();
+    expect(await screen.findByText("CLAIMS BLOCKED")).toBeInTheDocument();
     expect(screen.queryByLabelText(/Data status/i)).not.toBeInTheDocument();
   });
 
@@ -270,6 +394,7 @@ describe("App", () => {
           ok: true,
           status: 200,
           json: async () => ({
+            release_id: "release-1",
             generated_at: "2026-04-24T06:00:00Z",
             schema_version: "2.0.0",
             version: "v2",
@@ -289,7 +414,7 @@ describe("App", () => {
     });
 
     render(<App />);
-    fireEvent.click(await screen.findByRole("tab", { name: "Metrics" }));
+    fireEvent.click(await screen.findByRole("tab", { name: "Method" }));
 
     expect((await screen.findAllByText("Trend Extension (50d/350d)")).length).toBeGreaterThan(0);
   });

@@ -16,16 +16,21 @@ const UNAVAILABLE_MODES = new Set([
 ]);
 
 export const DEFAULT_DCA_STRATEGY = {
-  buyStartRisk: 0.3,
+  buyStartRisk: 0.25,
   buyStep: 0.1,
   buyBaseAmount: 100,
-  sellStartRisk: 0.6,
+  sellStartRisk: 0.75,
   sellStep: 0.1,
   sellBaseAmount: 100,
   startDate: "",
   cadence: "weekly",
   dayOfWeek: "monday",
 };
+
+const SCENARIO_FEE_AND_SLIPPAGE = 0.002;
+const SCENARIO_MAX_BUY_MULTIPLIER = 3;
+const SCENARIO_MAX_SELL_FRACTION = 0.35;
+const SCENARIO_CASH_BUFFER_RATIO = 0.1;
 
 const DAY_INDEX = {
   sunday: 0,
@@ -61,17 +66,25 @@ const DCA_COMPONENTS = [
   },
   {
     key: "cycle_regime_index",
-    label: "Cycle Regime Index",
+    label: "Cycle Frenzy Score",
     column: "cycle_frenzy_score",
     derivedColumn: "dca_cycle_regime_component",
     lowRiskWhen: "low",
   },
 ];
 
-async function fetchArtifact(name) {
-  const response = await fetch(`${ARTIFACT_ROOT}/${name}`);
+async function fetchArtifact(name, root = ARTIFACT_ROOT) {
+  const response = await fetch(`${root}/${name}`);
   if (!response.ok) {
     throw new Error(`Failed to load ${name}: ${response.status}`);
+  }
+  return response.json();
+}
+
+async function fetchOptionalArtifact(name, fallback = null, root = ARTIFACT_ROOT) {
+  const response = await fetch(`${root}/${name}`);
+  if (!response.ok) {
+    return fallback;
   }
   return response.json();
 }
@@ -110,6 +123,22 @@ export function valueLabel(value, digits = 3) {
     return "n/a";
   }
   return num.toFixed(digits);
+}
+
+export function percentLabel(value, digits = 1) {
+  const num = toNumber(value);
+  if (num === null) {
+    return "n/a";
+  }
+  return `${(num * 100).toFixed(digits)}%`;
+}
+
+export function integerLabel(value) {
+  const num = toNumber(value);
+  if (num === null) {
+    return "n/a";
+  }
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(num);
 }
 
 export function pickLatestContributions(columnarPayload, limit = 12) {
@@ -230,7 +259,12 @@ export function buildDcaRiskSeries(historyCore) {
         return finite.reduce((sum, value) => sum + value, 0) / finite.length;
       });
 
-  return { labels, values, components };
+  const coverageValues = Array.isArray(historyCore?.columns?.dca_component_coverage)
+    ? historyCore.columns.dca_component_coverage.map((value) => toNumber(value))
+    : labels.map(
+        (_, idx) => components.filter((component) => toNumber(component.values[idx]) !== null).length / components.length,
+      );
+  return { labels, values, components, coverageValues };
 }
 
 function positiveNumber(value, fallback) {
@@ -265,18 +299,21 @@ export function normalizeDcaStrategy(strategy = {}, labels = []) {
 }
 
 export function dcaActionForRisk(risk, strategy = DEFAULT_DCA_STRATEGY) {
+  if (strategy.buyStartRisk >= strategy.sellStartRisk) {
+    return { side: "hold", multiplier: 0, amount: 0, label: "Invalid thresholds" };
+  }
   const value = toNumber(risk);
   if (value === null) {
     return { side: "hold", multiplier: 0, amount: 0, label: "Hold" };
   }
 
-  if (value < strategy.buyStartRisk) {
+  if (value <= strategy.buyStartRisk) {
     const multiplier = Math.max(1, Math.ceil((strategy.buyStartRisk - value) / strategy.buyStep));
     const amount = multiplier * strategy.buyBaseAmount;
     return { side: "buy", multiplier, amount, label: `Buy ${multiplier}x` };
   }
 
-  if (value > strategy.sellStartRisk) {
+  if (value >= strategy.sellStartRisk) {
     const multiplier = Math.max(1, Math.ceil((value - strategy.sellStartRisk) / strategy.sellStep));
     const amount = multiplier * strategy.sellBaseAmount;
     return { side: "sell", multiplier, amount, label: `Sell ${multiplier}x` };
@@ -326,126 +363,187 @@ function isScheduledDate(dateLabel, cadence, dayOfWeek) {
   return true;
 }
 
-export function simulateDcaStrategy(dcaSeries, strategyInput = {}) {
+function monthlyExecutionRows(dcaSeries, startDate) {
   const labels = Array.isArray(dcaSeries?.labels) ? dcaSeries.labels : [];
-  const values = Array.isArray(dcaSeries?.values) ? dcaSeries.values : [];
+  const risks = Array.isArray(dcaSeries?.values) ? dcaSeries.values : [];
   const prices = Array.isArray(dcaSeries?.priceValues) ? dcaSeries.priceValues : [];
-  const strategy = normalizeDcaStrategy(strategyInput, labels);
+  const byMonth = new Map();
+
+  labels.forEach((date, index) => {
+    if (startDate && date < startDate) return;
+    const price = toNumber(prices[index]);
+    if (price === null || price <= 0) return;
+    byMonth.set(date.slice(0, 7), {
+      date,
+      price,
+      observedRisk: toNumber(risks[index]),
+    });
+  });
+  return [...byMonth.values()];
+}
+
+function periodReturn(previousValue, preFlowValue, contribution, endingValue) {
+  const marketFactor = previousValue > 0 ? preFlowValue / previousValue : 1;
+  const postFlowValue = preFlowValue + contribution;
+  const tradingFactor = postFlowValue > 0 ? endingValue / postFlowValue : 1;
+  return marketFactor * tradingFactor - 1;
+}
+
+function xirr(contributions, terminalValue) {
+  if (!contributions.length || !Number.isFinite(terminalValue)) return null;
+  const origin = parseDateLabel(contributions[0].date);
+  if (!origin) return null;
+  const flows = contributions.map(({ date, amount }) => {
+    const parsed = parseDateLabel(date);
+    return {
+      years: parsed ? (parsed - origin) / (365.2425 * 86400000) : 0,
+      amount: -amount,
+    };
+  });
+  flows[flows.length - 1].amount += terminalValue;
+  if (!flows.some((flow) => flow.amount < 0) || !flows.some((flow) => flow.amount > 0)) return null;
+
+  const npv = (rate) => flows.reduce(
+    (sum, flow) => sum + flow.amount / ((1 + rate) ** flow.years),
+    0,
+  );
+  let low = -0.9999;
+  let high = 1;
+  let lowValue = npv(low);
+  let highValue = npv(high);
+  while (Math.sign(lowValue) === Math.sign(highValue) && high < 1_000_000) {
+    high *= 2;
+    highValue = npv(high);
+  }
+  if (Math.sign(lowValue) === Math.sign(highValue)) return null;
+  for (let iteration = 0; iteration < 160; iteration += 1) {
+    const mid = (low + high) / 2;
+    const midValue = npv(mid);
+    if (Math.abs(midValue) <= 1e-10) return mid;
+    if (Math.sign(midValue) === Math.sign(lowValue)) {
+      low = mid;
+      lowValue = midValue;
+    } else {
+      high = mid;
+    }
+  }
+  return (low + high) / 2;
+}
+
+function scenarioSummary(rows, contribution) {
+  const endingValue = rows.at(-1)?.value ?? 0;
+  const totalContributed = rows.length * contribution;
+  return {
+    endingValue,
+    totalContributed,
+    gain: endingValue - totalContributed,
+    gainOnContributions: totalContributed > 0 ? endingValue / totalContributed - 1 : null,
+    timeWeightedReturn: rows.length ? rows.at(-1).twrEquity - 1 : null,
+    moneyWeightedReturn: xirr(
+      rows.map((row) => ({ date: row.date, amount: row.contribution })),
+      endingValue,
+    ),
+  };
+}
+
+export function simulateDcaComparison(dcaSeries, strategyInput = {}) {
+  const strategy = normalizeDcaStrategy(strategyInput, dcaSeries?.labels ?? []);
+  const contribution = positiveNumber(strategyInput.monthlyContribution, strategy.buyBaseAmount);
+  const executionRows = monthlyExecutionRows(dcaSeries, strategy.startDate);
   const warnings = [];
   if (strategy.buyStartRisk >= strategy.sellStartRisk) {
     warnings.push("Buy threshold should be below sell threshold.");
-  }
-  const seenCadence = new Set();
-  let units = 0;
-  let openCostBasis = 0;
-
-  const rows = labels.map((date, idx) => {
-    const risk = toNumber(values[idx]);
-    const price = toNumber(prices[idx]);
-    const active = !strategy.startDate || date >= strategy.startDate;
-    const key = cadenceKey(date, strategy.cadence);
-    const scheduled = isScheduledDate(date, strategy.cadence, strategy.dayOfWeek);
-    const cadenceDate = active && scheduled && !seenCadence.has(key);
-    if (active && scheduled) {
-      seenCadence.add(key);
-    }
-    const desiredAction = active && cadenceDate ? dcaActionForRisk(risk, strategy) : dcaActionForRisk(null, strategy);
-    const row = {
-      date,
-      risk,
-      price,
-      active,
-      cadenceDate,
-      desiredAmount: desiredAction.amount,
-      requestedSide: desiredAction.side,
-      unitsDelta: 0,
-      realizedPnl: 0,
-      unitsHeld: units,
-      positionValue: price === null ? null : units * price,
-      averageCostBasis: units > 0 ? openCostBasis / units : null,
-      capped: false,
-      blockedByHoldings: false,
-      ...desiredAction,
+    return {
+      strategy: { ...strategy, monthlyContribution: contribution },
+      rows: [],
+      warnings,
+      fixed: scenarioSummary([], contribution),
+      dynamic: scenarioSummary([], contribution),
+      assumptions: {},
     };
+  }
 
-    if (desiredAction.side === "buy") {
-      row.amount = desiredAction.amount;
-      if (price !== null && price > 0) {
-        row.unitsDelta = desiredAction.amount / price;
-        units += row.unitsDelta;
-        openCostBasis += desiredAction.amount;
-      }
-    } else if (desiredAction.side === "sell") {
-      if (price === null || price <= 0 || units <= 0) {
-        row.side = "hold";
-        row.label = units <= 0 ? "Hold (no holdings)" : "Hold";
-        row.amount = 0;
-        row.multiplier = 0;
-        row.blockedByHoldings = units <= 0;
-      } else {
-        const requestedUnits = desiredAction.amount / price;
-        const soldUnits = Math.min(units, requestedUnits);
-        const costReduction = openCostBasis * (soldUnits / units);
-        units -= soldUnits;
-        openCostBasis = Math.max(0, openCostBasis - costReduction);
-        row.unitsDelta = -soldUnits;
-        row.amount = soldUnits * price;
-        row.realizedPnl = row.amount - costReduction;
-        row.capped = soldUnits < requestedUnits;
-        row.label = row.capped ? `${desiredAction.label} (capped)` : desiredAction.label;
-      }
+  let fixedUnits = 0;
+  let fixedPreviousValue = 0;
+  let fixedTwrEquity = 1;
+  let dynamicCash = 0;
+  let dynamicUnits = 0;
+  let dynamicPreviousValue = 0;
+  let dynamicTwrEquity = 1;
+  let previousObservedRisk = null;
+  const rows = [];
+
+  executionRows.forEach(({ date, price, observedRisk }) => {
+    const fixedPreFlow = fixedUnits * price;
+    const fixedEffectivePrice = price * (1 + SCENARIO_FEE_AND_SLIPPAGE);
+    fixedUnits += contribution / fixedEffectivePrice;
+    const fixedValue = fixedUnits * price;
+    const fixedReturn = periodReturn(fixedPreviousValue, fixedPreFlow, contribution, fixedValue);
+    fixedTwrEquity *= 1 + fixedReturn;
+    fixedPreviousValue = fixedValue;
+
+    const dynamicPreFlow = dynamicCash + dynamicUnits * price;
+    dynamicCash += contribution;
+    let buyAmount = 0;
+    let sellAmount = 0;
+    const riskUsed = previousObservedRisk;
+    if (riskUsed !== null && riskUsed <= strategy.buyStartRisk && strategy.buyStartRisk > 0) {
+      const strength = Math.min(1, Math.max(0, (strategy.buyStartRisk - riskUsed) / strategy.buyStartRisk));
+      const target = contribution * (1 + (SCENARIO_MAX_BUY_MULTIPLIER - 1) * strength);
+      const equityBeforeTrade = dynamicCash + dynamicUnits * price;
+      const spendable = Math.max(0, dynamicCash - SCENARIO_CASH_BUFFER_RATIO * equityBeforeTrade);
+      buyAmount = Math.min(target, spendable);
+      dynamicCash -= buyAmount;
+      dynamicUnits += buyAmount / (price * (1 + SCENARIO_FEE_AND_SLIPPAGE));
+    } else if (riskUsed !== null && riskUsed >= strategy.sellStartRisk && strategy.sellStartRisk < 1) {
+      const strength = Math.min(1, Math.max(0, (riskUsed - strategy.sellStartRisk) / (1 - strategy.sellStartRisk)));
+      const maximumSale = dynamicUnits * price * SCENARIO_MAX_SELL_FRACTION;
+      sellAmount = Math.min(maximumSale, Math.max(contribution, maximumSale * strength));
+      const unitsSold = sellAmount / price;
+      dynamicUnits = Math.max(0, dynamicUnits - unitsSold);
+      dynamicCash += sellAmount * (1 - SCENARIO_FEE_AND_SLIPPAGE);
     }
+    const dynamicValue = dynamicCash + dynamicUnits * price;
+    const dynamicReturn = periodReturn(dynamicPreviousValue, dynamicPreFlow, contribution, dynamicValue);
+    dynamicTwrEquity *= 1 + dynamicReturn;
+    dynamicPreviousValue = dynamicValue;
 
-    row.unitsHeld = units;
-    row.positionValue = price === null ? null : units * price;
-    row.averageCostBasis = units > 0 ? openCostBasis / units : null;
-    return row;
+    rows.push({
+      date,
+      price,
+      observedRisk,
+      riskUsed,
+      contribution,
+      fixedValue,
+      fixedUnits,
+      fixedTwrEquity,
+      dynamicValue,
+      dynamicCash,
+      dynamicUnits,
+      dynamicTwrEquity,
+      buyAmount,
+      sellAmount,
+    });
+    previousObservedRisk = observedRisk;
   });
 
-  const activeRows = rows.filter((row) => row.active);
-  const signalRows = activeRows.filter((row) => row.side !== "hold");
-  const latestRiskRow = [...activeRows].reverse().find((row) => row.risk !== null) ?? null;
-  const currentSignal = latestRiskRow
-    ? { ...latestRiskRow, ...dcaActionForRisk(latestRiskRow.risk, strategy), cadenceDate: false }
-    : null;
-  const buyTotal = signalRows
-    .filter((row) => row.side === "buy")
-    .reduce((sum, row) => sum + row.amount, 0);
-  const sellTotal = signalRows
-    .filter((row) => row.side === "sell")
-    .reduce((sum, row) => sum + row.amount, 0);
-  const latest = currentSignal;
-  const latestLedgerRow = [...activeRows].reverse().find((row) => row.price !== null) ?? null;
-  const totalUnitsBought = signalRows
-    .filter((row) => row.side === "buy")
-    .reduce((sum, row) => sum + Math.max(0, row.unitsDelta), 0);
-  const totalUnitsSold = signalRows
-    .filter((row) => row.side === "sell")
-    .reduce((sum, row) => sum + Math.abs(Math.min(0, row.unitsDelta)), 0);
-  const realizedPnl = signalRows
-    .filter((row) => row.side === "sell")
-    .reduce((sum, row) => sum + row.realizedPnl, 0);
-
   return {
-    strategy,
+    strategy: { ...strategy, monthlyContribution: contribution },
     rows,
-    signalRows,
-    latest,
     warnings,
-    summary: {
-      buySignals: signalRows.filter((row) => row.side === "buy").length,
-      sellSignals: signalRows.filter((row) => row.side === "sell").length,
-      buyTotal,
-      sellTotal,
-      sellProceeds: sellTotal,
-      savedCash: sellTotal,
-      realizedPnl,
-      netFlow: buyTotal - sellTotal,
-      totalUnitsBought,
-      totalUnitsSold,
-      unitsHeld: latestLedgerRow?.unitsHeld ?? 0,
-      positionValue: latestLedgerRow?.positionValue ?? null,
-      averageCostBasis: latestLedgerRow?.averageCostBasis ?? null,
+    fixed: scenarioSummary(
+      rows.map((row) => ({ ...row, value: row.fixedValue, twrEquity: row.fixedTwrEquity })),
+      contribution,
+    ),
+    dynamic: scenarioSummary(
+      rows.map((row) => ({ ...row, value: row.dynamicValue, twrEquity: row.dynamicTwrEquity })),
+      contribution,
+    ),
+    assumptions: {
+      feeAndSlippage: SCENARIO_FEE_AND_SLIPPAGE,
+      maxBuyMultiplier: SCENARIO_MAX_BUY_MULTIPLIER,
+      maxSellFraction: SCENARIO_MAX_SELL_FRACTION,
+      cashBufferRatio: SCENARIO_CASH_BUFFER_RATIO,
     },
   };
 }
@@ -482,17 +580,25 @@ function buildDegradedSummary(latestSnapshot, diagnostics) {
 
 export async function loadDashboardData() {
   const manifest = await fetchArtifact("manifest.json");
+  const releaseId = manifest?.release_id;
+  if (!releaseId) throw new Error("Published manifest is missing release_id");
+  const immutableRoot = `/data/releases/${encodeURIComponent(releaseId)}`;
 
   const [latestSnapshot, historyCore, categoryBtc, categoryTotal, metricBtc, metricTotal, diagnostics] =
     await Promise.all([
-      fetchArtifact("latest_snapshot.json"),
-      fetchArtifact("history_core.json"),
-      fetchArtifact("category_breakdowns_btc.json"),
-      fetchArtifact("category_breakdowns_total_market.json"),
-      fetchArtifact("metric_breakdowns_btc.json"),
-      fetchArtifact("metric_breakdowns_total_market.json"),
-      fetchArtifact("diagnostics.json"),
+      fetchArtifact("latest_snapshot.json", immutableRoot),
+      fetchArtifact("history_core.json", immutableRoot),
+      fetchArtifact("category_breakdowns_btc.json", immutableRoot),
+      fetchArtifact("category_breakdowns_total_market.json", immutableRoot),
+      fetchArtifact("metric_breakdowns_btc.json", immutableRoot),
+      fetchArtifact("metric_breakdowns_total_market.json", immutableRoot),
+      fetchArtifact("diagnostics.json", immutableRoot),
     ]);
+  const evaluationSummary = await fetchOptionalArtifact("evaluation_summary.json", null, immutableRoot);
+  const releaseArtifacts = [latestSnapshot, historyCore, categoryBtc, categoryTotal, metricBtc, metricTotal, diagnostics];
+  if (releaseArtifacts.some((artifact) => artifact?.release_id !== releaseId)) {
+    throw new Error("Published artifacts contain inconsistent release_id values");
+  }
 
   return {
     manifest,
@@ -503,6 +609,7 @@ export async function loadDashboardData() {
     metricBtc,
     metricTotal,
     diagnostics,
+    evaluationSummary,
     degraded: buildDegradedSummary(latestSnapshot, diagnostics),
   };
 }
