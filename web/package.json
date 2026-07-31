@@ -4,11 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "predev": "node scripts/sync-web-data.mjs",
+    "check:icloud": "node scripts/clean-icloud-conflicts.mjs",
+    "clean:icloud": "node scripts/clean-icloud-conflicts.mjs --apply",
+    "predev": "npm run clean:icloud && node scripts/sync-web-data.mjs",
     "dev": "vite",
-    "prebuild": "node scripts/sync-web-data.mjs",
+    "prebuild": "npm run clean:icloud && node scripts/sync-web-data.mjs",
     "build": "vite build",
     "preview": "vite preview",
+    "pretest": "npm run clean:icloud && node scripts/sync-web-data.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "reinstall": "bash scripts/install-nosync.sh"

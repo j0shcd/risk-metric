@@ -27,6 +27,12 @@ rewrites `node_modules` as a real directory in the iCloud-synced tree), which
 reintroduces the collisions. If you see `"<pkg> 2"` directories, run
 `npm run reinstall` to repair.
 
+The web scripts also run `npm run clean:icloud` before dev/build/test. It
+removes byte-identical iCloud collision files, removes empty collision
+directories, and moves differing collision copies into
+`.icloud-conflicts.nosync/` so they are outside iCloud sync and can be reviewed
+without breaking the app.
+
 ## Scripts
 
 | Command | Description |
@@ -35,6 +41,8 @@ reintroduces the collisions. If you see `"<pkg> 2"` directories, run
 | `npm run build` | Production build to `dist/` |
 | `npm run preview` | Preview the production build |
 | `npm test` | Run the test suite (Vitest) |
+| `npm run check:icloud` | Dry-run iCloud collision cleanup |
+| `npm run clean:icloud` | Clean/quarantine iCloud collision files |
 | `npm run reinstall` | iCloud-safe dependency install (see Setup) |
 
 `dev`, `build`, and `test` work normally through the `node_modules` symlink — no

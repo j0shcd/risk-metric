@@ -16,6 +16,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+node scripts/clean-icloud-conflicts.mjs --apply
+
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/rm-web-install.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 
@@ -33,5 +35,6 @@ echo "[install-nosync] relocating node_modules into iCloud-excluded node_modules
 rm -rf node_modules.nosync node_modules
 mv "$TMP/node_modules" node_modules.nosync
 ln -s node_modules.nosync node_modules
+node scripts/clean-icloud-conflicts.mjs --apply
 
 echo "[install-nosync] done. node_modules -> node_modules.nosync ($(ls node_modules | wc -l | tr -d ' ') entries)"
