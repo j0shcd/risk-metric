@@ -85,6 +85,9 @@ jobs:
         working-directory: web
         run: npm ci
 
+      - name: Run alert core tests
+        run: node --test scripts/lib/alerts-core.test.mjs web/functions/api/_lib/validate.test.mjs
+
       - name: Run web tests
         working-directory: web
         run: npm test

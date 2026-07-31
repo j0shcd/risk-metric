@@ -101,3 +101,19 @@ jobs:
       - name: No artifact changes
         if: steps.detect_changes.outputs.changed != 'true'
         run: echo "No data/web/v2 changes detected."
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Send risk alerts
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_TOKEN_ENCRYPTION_KEY: ${{ secrets.ALERT_TOKEN_ENCRYPTION_KEY }}
+          ALERT_FROM_EMAIL: ${{ vars.ALERT_FROM_EMAIL }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: node scripts/send-alerts.mjs
