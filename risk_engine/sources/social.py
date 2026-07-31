@@ -472,14 +472,9 @@ def _load_coinbase_app_rank(cfg: RuntimeConfig) -> Tuple[pd.Series, str]:
 
 
 def _align_series_to_index(series: pd.Series, index: pd.DatetimeIndex) -> pd.Series:
-    aligned = series.reindex(index)
-    if aligned.notna().any():
-        return aligned
-    non_null = series.dropna()
-    if non_null.empty or len(index) == 0:
-        return aligned
-    aligned.iloc[-1] = float(non_null.iloc[-1])
-    return aligned
+    # Preserve observation timestamps. In particular, never move a current
+    # snapshot backward onto the end of a historical run.
+    return series.reindex(index)
 
 
 def load_social_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.DataFrame:

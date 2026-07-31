@@ -93,7 +93,7 @@ def _parse_local_btc_volume(cfg: RuntimeConfig) -> pd.Series:
         return pd.Series(dtype=float, name="btc_volume_usd")
 
     frame = pd.read_csv(btc_path)
-    if "Date" not in frame.columns or "Vol." not in frame.columns:
+    if "Date" not in frame.columns or "Vol." not in frame.columns or "Price" not in frame.columns:
         return pd.Series(dtype=float, name="btc_volume_usd")
 
     frame["Date"] = pd.to_datetime(frame["Date"], errors="coerce").dt.tz_localize(None)
@@ -115,7 +115,12 @@ def _parse_local_btc_volume(cfg: RuntimeConfig) -> pd.Series:
         except Exception:
             return float("nan")
 
-    frame["btc_volume_usd"] = frame["Vol."].map(parse_volume)
+    # btc_daily.csv stores base-asset BTC volume. Convert it to an explicit
+    # USD notional using the same day's close before combining it with
+    # CoinGecko's USD-volume series.
+    base_volume = frame["Vol."].map(parse_volume)
+    close_price = pd.to_numeric(frame["Price"], errors="coerce")
+    frame["btc_volume_usd"] = base_volume * close_price
     series = pd.Series(frame["btc_volume_usd"].values, index=frame["Date"], name="btc_volume_usd")
     series = series[~series.index.duplicated(keep="last")].sort_index()
     return series.astype(float)
@@ -158,7 +163,9 @@ def load_cycle_market_context(
         export.reset_index().to_csv(market_store, index=False)
 
     volume_local_fallback = _parse_local_btc_volume(cfg)
-    merged_volume = _merge_series(merged_volume, volume_local_fallback, "btc_volume_usd")
+    # API/cache USD volume wins where available; the local BTC-volume
+    # conversion fills historical gaps only.
+    merged_volume = _merge_series(volume_local_fallback, merged_volume, "btc_volume_usd")
 
     # Keep project BTC price as canonical for consistency with existing outputs.
     out["btc_price"] = btc_price.reindex(index)
@@ -416,7 +423,9 @@ def _load_macro_series(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> Tuple[pd.
     out["fed_balance_sheet"] = series_store["fed_balance_sheet"].reindex(index)
     out["reverse_repo_balance"] = series_store["reverse_repo_balance"].reindex(index)
 
-    out["net_liquidity"] = out["fed_balance_sheet"] - out["reverse_repo_balance"]
+    # WALCL is published in USD millions; RRPONTSYD is USD billions.
+    reverse_repo_usd_millions = out["reverse_repo_balance"] * 1000.0
+    out["net_liquidity"] = out["fed_balance_sheet"] - reverse_repo_usd_millions
     components_available = out[["fed_balance_sheet", "reverse_repo_balance"]].notna().all(axis=1)
     out.loc[~components_available, "net_liquidity"] = np.nan
     fred_modes = {

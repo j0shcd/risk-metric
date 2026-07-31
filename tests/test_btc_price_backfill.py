@@ -97,6 +97,8 @@ class BtcPriceBackfillTests(unittest.TestCase):
             self.assertTrue(csv_path.exists())
             updated = pd.read_csv(csv_path)
             self.assertEqual(len(updated), 2)
+            self.assertAlmostEqual(float(updated.loc[0, "Vol."]), 1000000000.0 / 42000.0, places=2)
+            self.assertAlmostEqual(float(updated.loc[1, "Vol."]), 1100000000.0 / 43000.0, places=2)
             self.assertEqual(stats["rows_before"], 0)
             self.assertEqual(stats["rows_after"], 2)
             self.assertEqual(stats["rows_added"], 2)

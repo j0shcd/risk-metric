@@ -88,7 +88,7 @@ class CycleSourceTests(unittest.TestCase):
                 if fred_id == "WALCL":
                     return "DATE,WALCL\n2024-01-01,8000000\n2024-01-02,8050000\n"
                 if fred_id == "RRPONTSYD":
-                    return "DATE,RRPONTSYD\n2024-01-01,1500000\n2024-01-02,1490000\n"
+                    return "DATE,RRPONTSYD\n2024-01-01,1500\n2024-01-02,1490\n"
                 return None
 
             mocked_get_json.side_effect = json_side_effect
@@ -108,6 +108,7 @@ class CycleSourceTests(unittest.TestCase):
             self.assertEqual(context.attrs["source_modes"]["cycle::btc_volume_usd"], "coingecko_free_api")
             self.assertEqual(context.attrs["source_modes"]["cycle::wikipedia_pageviews"], "wikimedia_api")
             self.assertEqual(context.attrs["source_modes"]["cycle::dxy"], "fred_graph_csv")
+            self.assertEqual(float(context.loc[pd.Timestamp("2024-01-01"), "net_liquidity"]), 6500000.0)
 
     @patch("risk_engine.sources.cycle.safe_get_text")
     @patch("risk_engine.sources.cycle.safe_get_json")
@@ -141,7 +142,7 @@ class CycleSourceTests(unittest.TestCase):
                         "DTWEXBGS": "101.2",
                         "DFII10": "1.1",
                         "WALCL": "8100000",
-                        "RRPONTSYD": "1480000",
+                        "RRPONTSYD": "1480",
                     }
                     return {
                         "observations": [
@@ -164,6 +165,7 @@ class CycleSourceTests(unittest.TestCase):
 
             self.assertEqual(context.attrs["source_modes"]["cycle::dxy"], "fred_api_json")
             self.assertEqual(context.attrs["source_modes"]["cycle::net_liquidity"], "derived_from_fred_api_json")
+            self.assertEqual(float(context.loc[pd.Timestamp("2024-01-01"), "net_liquidity"]), 6620000.0)
 
     @patch("risk_engine.sources.cycle.safe_get_text")
     @patch("risk_engine.sources.cycle.safe_get_json")

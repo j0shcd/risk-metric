@@ -134,7 +134,7 @@ class SocialSourceTests(unittest.TestCase):
             index = pd.date_range("2026-04-20", periods=15, freq="D")
             social = load_social_metrics(cfg, index=index)
 
-            self.assertEqual(float(social["youtube_interest"].dropna().iloc[-1]), 12.0)
+            self.assertTrue(social["youtube_interest"].isna().all())
             mocked_get.assert_not_called()
 
     @patch("risk_engine.sources.social.safe_get_json")

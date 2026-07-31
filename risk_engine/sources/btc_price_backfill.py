@@ -134,7 +134,11 @@ def _coingecko_payload_to_daily_frame(payload: dict, previous_close: float | Non
 
         high_px = float(max(open_px, close_px))
         low_px = float(min(open_px, close_px))
-        volume = float(volume_by_date.get(date, float("nan")))
+        volume_usd = float(volume_by_date.get(date, float("nan")))
+        # ``Vol.`` is the legacy BTC-volume column. Keep CoinGecko bootstrap
+        # rows in the same unit as Binance rows; cycle ingestion converts the
+        # base-asset volume to USD explicitly.
+        volume = volume_usd / close_px if close_px > 0.0 else float("nan")
         rows.append((date, open_px, high_px, low_px, close_px, volume, round(change_pct, 2)))
         prev_close = close_px
 
