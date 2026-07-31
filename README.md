@@ -31,6 +31,33 @@ public APIs ──► risk_engine (Python) ──► data/web/v2/*.json ──�
 - `web/` — React + Vite dashboard, Chart.js for plots. Reads only the JSON artifacts; has no knowledge of the Python side.
 - `.github/workflows/daily-web-publish.yml` — the daily cron that keeps everything fresh.
 
+## Release and alert operations
+
+Each web publish has a `release_id`. Every JSON artifact carries that ID, and
+`manifest.json` records each artifact's SHA-256 digest and byte size. The daily
+workflow validates both the source and copied web release before staging it;
+the alert sender refuses mixed, modified, or stale releases.
+The ID is the full SHA-256 of the complete canonical artifact digests plus the
+model/config identity; both backend validation and the browser reject mixed
+release IDs or unexpected artifact sets.
+
+`scripts/archive-release.mjs` appends one compact snapshot record per release
+to `data/web/archive/release_snapshots.ndjson`. It deduplicates release IDs and
+hard-fails before the prospective archive exceeds 250,000,000 bytes. Upload is
+a no-op by default. An optional HTTP PUT boundary can be enabled with
+`RELEASE_ARCHIVE_UPLOAD_URL` and, if needed, `RELEASE_ARCHIVE_UPLOAD_TOKEN`.
+Each record includes the normalized feature values consumed on that run,
+source/metric provenance, canonical content hashes, and model/config identity.
+
+Alert subscriptions use hashed confirmation and unsubscribe tokens, POST-only
+state changes, a 15-minute per-address confirmation cooldown, and an atomic
+50-send hourly global ceiling. Alert deliveries are unique by subscriber,
+release, and zone; Resend receives a deterministic idempotency key and D1 keeps
+pending/sent/failed retry state for about one year. Existing D1 databases must
+apply `infra/d1/migrations/0002_release_alert_safety.sql` before deploying the
+new Pages functions or alert sender. Legacy plaintext tokens remain readable
+only during migration and are cleared when used or rotated.
+
 ## Run it locally
 
 ```bash

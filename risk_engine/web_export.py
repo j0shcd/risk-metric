@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import shutil
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -26,6 +27,7 @@ WEB_V2_ARTIFACTS = [
     "metric_breakdowns_btc.json",
     "metric_breakdowns_total_market.json",
     "diagnostics.json",
+    "prospective_evidence.json",
 ]
 
 CORE_HISTORY_COLUMNS = [
@@ -157,6 +159,75 @@ def _write_json(path: Path, payload: Dict[str, Any]) -> None:
     )
 
 
+def _canonical_digest(payload: Any) -> str:
+    content = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(content).hexdigest()
+
+
+def _release_id(content_digests: Dict[str, str], model_identity: Dict[str, Any]) -> str:
+    return f"web-v2-{_canonical_digest({'content_digests': content_digests, 'model_identity': model_identity})}"
+
+
+def _file_integrity(path: Path) -> Dict[str, Any]:
+    content = path.read_bytes()
+    return {"bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()}
+
+
+def validate_web_release(root: Path) -> Dict[str, Any]:
+    manifest_path = root / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    release_id = manifest.get("release_id")
+    if not isinstance(release_id, str) or not release_id:
+        raise ValueError("manifest.json is missing release_id")
+
+    integrity = manifest.get("integrity")
+    if not isinstance(integrity, dict):
+        raise ValueError("manifest.json is missing artifact integrity metadata")
+
+    artifacts = manifest.get("artifacts", [])
+    if sorted(artifacts) != sorted(WEB_V2_ARTIFACTS) or len(artifacts) != len(set(artifacts)):
+        raise ValueError("manifest.json artifact set does not match the required web v2 contract")
+    actual_files = sorted(path.name for path in root.iterdir() if path.is_file())
+    if actual_files != sorted(WEB_V2_ARTIFACTS):
+        raise ValueError("release directory contains a missing or unexpected artifact")
+    expected_integrity_keys = set(WEB_V2_ARTIFACTS) - {"manifest.json"}
+    if set(integrity) != expected_integrity_keys:
+        raise ValueError("manifest.json integrity set does not match required artifacts")
+
+    content_digests: Dict[str, str] = {}
+    for artifact in artifacts:
+        if artifact == "manifest.json":
+            continue
+        artifact_path = root / artifact
+        if not artifact_path.is_file():
+            raise ValueError(f"release artifact is missing: {artifact}")
+        payload = json.loads(artifact_path.read_text(encoding="utf-8"))
+        if payload.get("release_id") != release_id:
+            raise ValueError(f"release_id mismatch in {artifact}")
+        if integrity.get(artifact) != _file_integrity(artifact_path):
+            raise ValueError(f"integrity mismatch in {artifact}")
+
+        canonical_payload = {
+            key: value
+            for key, value in payload.items()
+            if key != "release_id"
+        }
+        content_digests[artifact] = _canonical_digest(canonical_payload)
+
+    release_basis = manifest.get("release_basis", {})
+    if release_basis.get("content_digests") != content_digests:
+        raise ValueError("manifest.json canonical content digests do not match artifacts")
+    expected_release_id = _release_id(content_digests, release_basis.get("model_identity", {}))
+    if release_id != expected_release_id:
+        raise ValueError("manifest.json release_id does not match its canonical release basis")
+
+    return manifest
+
+
 def _latest_snapshot(series: pd.DataFrame) -> Dict[str, Any]:
     latest_row = series.sort_index().tail(1)
     if latest_row.empty:
@@ -250,6 +321,7 @@ def export_web_v2(
     target_root: Path,
     sanity_report: pd.DataFrame,
     generated_at: str | None = None,
+    model_identity: Dict[str, Any] | None = None,
 ) -> WebExportResult:
     root = target_root / WEB_V2_VERSION
     generated_at_value = generated_at or _iso_utc_now()
@@ -303,6 +375,67 @@ def export_web_v2(
     }
 
     latest_snapshot_payload = _latest_snapshot(series)
+    history_payload = _columnar_payload(history_frame)
+    category_btc_payload = {"target": "btc", **_columnar_payload(result.category_breakdowns.get("btc", pd.DataFrame()))}
+    category_total_payload = {
+        "target": "total_market",
+        **_columnar_payload(result.category_breakdowns.get("total_market", pd.DataFrame())),
+    }
+    metric_btc_payload = {"target": "btc", **_columnar_payload(result.metric_breakdowns.get("btc", pd.DataFrame()))}
+    metric_total_payload = {
+        "target": "total_market",
+        **_columnar_payload(result.metric_breakdowns.get("total_market", pd.DataFrame())),
+    }
+    normalized_inputs = {}
+    input_content_sha256 = {}
+    for name, frame in sorted(result.feature_frames.items()):
+        if frame.empty:
+            continue
+        latest = frame.sort_index().tail(1)
+        normalized_inputs[name] = {
+            "date": _index_to_iso_dates(latest.index)[0],
+            **{str(column): _coerce_json_scalar(latest.iloc[0][column]) for column in latest.columns},
+        }
+        input_content_sha256[name] = _canonical_digest(_columnar_payload(frame))
+    identity = _coerce_json_scalar(model_identity or {
+        "benchmark_config": result.benchmark_config,
+        "calibration_metadata": result.calibration_metadata,
+        "schema_version": WEB_V2_SCHEMA_VERSION,
+    })
+    prospective_payload = {
+        "normalized_inputs": normalized_inputs,
+        "input_content_sha256": input_content_sha256,
+        "provenance": {
+            "source_modes": source_modes,
+            "source_health": diagnostics_payload["source_health"],
+            "metric_health": diagnostics_payload["metric_health"],
+        },
+        "model_identity": identity,
+        "score": latest_snapshot_payload,
+    }
+    canonical_metadata = {
+        "generated_at": generated_at_value,
+        "schema_version": WEB_V2_SCHEMA_VERSION,
+        "version": WEB_V2_VERSION,
+    }
+    canonical_payloads = {
+        "latest_snapshot.json": {**canonical_metadata, **latest_snapshot_payload},
+        "history_core.json": {**canonical_metadata, **history_payload},
+        "category_breakdowns_btc.json": {**canonical_metadata, **category_btc_payload},
+        "category_breakdowns_total_market.json": {**canonical_metadata, **category_total_payload},
+        "metric_breakdowns_btc.json": {**canonical_metadata, **metric_btc_payload},
+        "metric_breakdowns_total_market.json": {**canonical_metadata, **metric_total_payload},
+        "diagnostics.json": {**canonical_metadata, **diagnostics_payload},
+        "prospective_evidence.json": {**canonical_metadata, **prospective_payload},
+    }
+    content_digests = {name: _canonical_digest(payload) for name, payload in canonical_payloads.items()}
+    release_id = _release_id(content_digests, identity)
+    release_metadata = {
+        "generated_at": generated_at_value,
+        "release_id": release_id,
+        "schema_version": WEB_V2_SCHEMA_VERSION,
+        "version": WEB_V2_VERSION,
+    }
 
     files: List[Path] = []
 
@@ -310,9 +443,7 @@ def export_web_v2(
     _write_json(
         latest_snapshot_path,
         {
-            "generated_at": generated_at_value,
-            "schema_version": WEB_V2_SCHEMA_VERSION,
-            "version": WEB_V2_VERSION,
+            **release_metadata,
             **latest_snapshot_payload,
         },
     )
@@ -322,10 +453,8 @@ def export_web_v2(
     _write_json(
         history_core_path,
         {
-            "generated_at": generated_at_value,
-            "schema_version": WEB_V2_SCHEMA_VERSION,
-            "version": WEB_V2_VERSION,
-            **_columnar_payload(history_frame),
+            **release_metadata,
+            **history_payload,
         },
     )
     files.append(history_core_path)
@@ -334,11 +463,8 @@ def export_web_v2(
     _write_json(
         category_btc_path,
         {
-            "generated_at": generated_at_value,
-            "schema_version": WEB_V2_SCHEMA_VERSION,
-            "target": "btc",
-            "version": WEB_V2_VERSION,
-            **_columnar_payload(result.category_breakdowns.get("btc", pd.DataFrame())),
+            **release_metadata,
+            **category_btc_payload,
         },
     )
     files.append(category_btc_path)
@@ -347,11 +473,8 @@ def export_web_v2(
     _write_json(
         category_total_path,
         {
-            "generated_at": generated_at_value,
-            "schema_version": WEB_V2_SCHEMA_VERSION,
-            "target": "total_market",
-            "version": WEB_V2_VERSION,
-            **_columnar_payload(result.category_breakdowns.get("total_market", pd.DataFrame())),
+            **release_metadata,
+            **category_total_payload,
         },
     )
     files.append(category_total_path)
@@ -360,11 +483,8 @@ def export_web_v2(
     _write_json(
         metric_btc_path,
         {
-            "generated_at": generated_at_value,
-            "schema_version": WEB_V2_SCHEMA_VERSION,
-            "target": "btc",
-            "version": WEB_V2_VERSION,
-            **_columnar_payload(result.metric_breakdowns.get("btc", pd.DataFrame())),
+            **release_metadata,
+            **metric_btc_payload,
         },
     )
     files.append(metric_btc_path)
@@ -373,11 +493,8 @@ def export_web_v2(
     _write_json(
         metric_total_path,
         {
-            "generated_at": generated_at_value,
-            "schema_version": WEB_V2_SCHEMA_VERSION,
-            "target": "total_market",
-            "version": WEB_V2_VERSION,
-            **_columnar_payload(result.metric_breakdowns.get("total_market", pd.DataFrame())),
+            **release_metadata,
+            **metric_total_payload,
         },
     )
     files.append(metric_total_path)
@@ -386,23 +503,36 @@ def export_web_v2(
     _write_json(
         diagnostics_path,
         {
-            "generated_at": generated_at_value,
-            "schema_version": WEB_V2_SCHEMA_VERSION,
-            "version": WEB_V2_VERSION,
+            **release_metadata,
             **diagnostics_payload,
         },
     )
     files.append(diagnostics_path)
 
+    prospective_path = root / "prospective_evidence.json"
+    _write_json(prospective_path, {**release_metadata, **prospective_payload})
+    files.append(prospective_path)
+
     manifest = {
         "version": WEB_V2_VERSION,
         "schema_version": WEB_V2_SCHEMA_VERSION,
         "generated_at": generated_at_value,
+        "release_id": release_id,
         "artifacts": sorted(WEB_V2_ARTIFACTS),
+        "integrity": {
+            path.name: _file_integrity(path)
+            for path in sorted(files)
+        },
+        "release_basis": {
+            "content_digests": content_digests,
+            "model_identity": identity,
+        },
     }
 
     manifest_path = root / "manifest.json"
     _write_json(manifest_path, manifest)
     files.append(manifest_path)
+
+    validate_web_release(root)
 
     return WebExportResult(root=root, manifest=manifest, files=files)

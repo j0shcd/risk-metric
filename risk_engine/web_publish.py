@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from dataclasses import asdict
+import hashlib
+import json
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -17,6 +21,27 @@ class WebPublishResult:
     exported: bool
     export_result: WebExportResult | None
     sanity_report: pd.DataFrame
+
+
+def _model_identity(runtime: RuntimeConfig) -> dict[str, object]:
+    excluded = {
+        "project_root", "data_dir", "output_dir", "cache_dir", "request_timeout_seconds",
+        "wikimedia_api_user_agent", "google_trends_api_url",
+    }
+    safe_config = {
+        key: value
+        for key, value in asdict(runtime).items()
+        if key not in excluded
+        and not key.endswith("_api_key")
+        and not key.endswith("_api_token")
+        and not key.endswith("_csv")
+    }
+    canonical = json.dumps(safe_config, sort_keys=True, separators=(",", ":"), default=str)
+    return {
+        "code_identity": os.environ.get("GITHUB_SHA", "working-tree"),
+        "config_sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+        "data_profile": runtime.data_profile,
+    }
 
 
 def run_web_publish(
@@ -46,6 +71,7 @@ def run_web_publish(
         validation,
         target_root=target_root,
         sanity_report=sanity_report,
+        model_identity=_model_identity(runtime),
     )
 
     return WebPublishResult(

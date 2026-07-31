@@ -7,7 +7,7 @@ import pandas as pd
 
 from risk_engine.types import RiskOutput
 from risk_engine.validation import ValidationResult
-from risk_engine.web_export import WEB_V2_ARTIFACTS, export_web_v2
+from risk_engine.web_export import WEB_V2_ARTIFACTS, export_web_v2, validate_web_release
 
 
 class WebExportTests(unittest.TestCase):
@@ -183,8 +183,12 @@ class WebExportTests(unittest.TestCase):
             self.assertEqual(manifest["version"], "v2")
             self.assertEqual(manifest["schema_version"], "2.0.0")
             self.assertEqual(sorted(manifest["artifacts"]), sorted(WEB_V2_ARTIFACTS))
+            self.assertTrue(manifest["release_id"].startswith("web-v2-"))
+            self.assertEqual(validate_web_release(export_result.root)["release_id"], manifest["release_id"])
+            self.assertEqual(set(manifest["integrity"]), set(WEB_V2_ARTIFACTS) - {"manifest.json"})
 
             latest = json.loads((export_result.root / "latest_snapshot.json").read_text(encoding="utf-8"))
+            self.assertEqual(latest["release_id"], manifest["release_id"])
             self.assertEqual(latest["date"], "2026-04-24")
             self.assertIn("btc_risk", latest)
             self.assertIn("total_market_risk", latest)

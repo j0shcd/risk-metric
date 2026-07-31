@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: daily-web-publish
+  cancel-in-progress: false
+
 jobs:
   publish-web-data:
     runs-on: ubuntu-latest
@@ -53,6 +57,16 @@ jobs:
       - name: Sync web public artifacts from data contract
         run: node web/scripts/sync-web-data.mjs
 
+      - name: Validate release and append prospective archive
+        env:
+          RELEASE_ARCHIVE_UPLOAD_URL: ${{ vars.RELEASE_ARCHIVE_UPLOAD_URL }}
+          RELEASE_ARCHIVE_UPLOAD_TOKEN: ${{ secrets.RELEASE_ARCHIVE_UPLOAD_TOKEN }}
+        run: |
+          node scripts/validate-web-release.mjs data/web/v2 web/public/data/v2
+          RELEASE_ID=$(node -p "require('./data/web/v2/manifest.json').release_id")
+          node scripts/validate-web-release.mjs "web/public/data/releases/$RELEASE_ID"
+          node scripts/archive-release.mjs
+
       - name: Print artifact timestamps
         run: |
           echo "data/web/v2/manifest.json generated_at:"
@@ -67,7 +81,10 @@ jobs:
         run: |
           git add -f data/web/v2 || true
           git add -f web/public/data/v2 || true
-          git add -f \
+          if [ -e data/web/archive/release_snapshots.ndjson ]; then
+            git add -f data/web/archive/release_snapshots.ndjson
+          fi
+          for path in \
             data/btc_daily.csv \
             data/total_marketcap.csv \
             data/onchain_metrics.csv \
@@ -82,7 +99,12 @@ jobs:
             data/fred_rrpontsyd.csv \
             data/btc_market_coingecko.csv \
             data/wikipedia_pageviews_btc.csv \
-            data/reddit_post_volume.csv || true
+            data/reddit_post_volume.csv
+          do
+            if [ -e "$path" ]; then
+              git add -f "$path"
+            fi
+          done
 
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
