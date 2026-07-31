@@ -43,3 +43,9 @@ web/src/themes/
 .env.local
 .env.*
 !.env.example
+
+# iCloud sync workaround: .git is a symlink to .git.nosync
+.git.nosync/
+# iCloud conflict copies (" 2", " 3", …)
+*\ [0-9]
+*\ [0-9]/
