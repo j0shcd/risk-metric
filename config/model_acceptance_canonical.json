@@ -1,0 +1,19 @@
+{
+  "identity": {
+    "config_hash": "621565b152e241f23d9c64679eb3781e5bd52a5ce439cbeb12b53969427f183e",
+    "data_fingerprint": "e9270cc82863cd6132833dc21354608537e54377289102402e257acdf35445c9",
+    "model_fingerprint": "9f4c2a2d5676657a9a6376a456ae2c6aaa6cea9b414ff477f55c687785bacc1f",
+    "release_id": "1e5185bf32096e1884d88559d04dfe85cd619ba851d77fc5f0218b1f4b3fcced"
+  },
+  "metrics": {
+    "availability_gate_passed": true,
+    "concentration_gate_passed": true,
+    "dca_risk_accumulation_6m_auc": 0.39953216374269007,
+    "dca_risk_derisk_12m_auc": 0.527593085106383,
+    "dca_risk_derisk_6m_auc": 0.5085851648351648,
+    "dynamic_dca_max_drawdown": -0.23081240466539588,
+    "dynamic_dca_money_weighted_return": 0.14525130470869746,
+    "leakage_gate_passed": true,
+    "registered_sample_gate_passed": true
+  }
+}

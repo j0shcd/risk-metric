@@ -200,7 +200,10 @@ def _window_view(
 ) -> Dict[str, pd.DataFrame]:
     out: Dict[str, pd.DataFrame] = {"expanding": monthly}
     if recent_window_months > 0:
-        out["recent"] = monthly.tail(recent_window_months)
+        # Select the most recent resolved outcomes, not the final calendar
+        # rows whose forward labels are unresolved by construction.
+        resolved = monthly.dropna(subset=["label"]) if "label" in monthly.columns else monthly.dropna(how="all")
+        out["recent"] = resolved.tail(recent_window_months)
     return out
 
 
@@ -415,7 +418,8 @@ def evaluate_benchmark(
                     horizon_months=int(label["horizon_months"]),
                 )
 
-                resolved = y.dropna()
+                paired = pd.DataFrame({"score": score, "label": y}).dropna()
+                resolved = paired["label"]
                 n_obs = int(resolved.shape[0])
                 n_events = int((resolved.astype(int) == 1).sum())
                 n_non_events = int((resolved.astype(int) == 0).sum())
@@ -432,6 +436,8 @@ def evaluate_benchmark(
                         "n_obs": n_obs,
                         "n_events": n_events,
                         "n_non_events": n_non_events,
+                        "evaluation_start": paired.index.min() if not paired.empty else pd.NaT,
+                        "evaluation_end": paired.index.max() if not paired.empty else pd.NaT,
                         "auc": auc,
                         "pr_auc": pr_auc,
                         "lead_recall_at_alert_rate": recall_alert,

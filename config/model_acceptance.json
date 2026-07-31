@@ -1,0 +1,31 @@
+{
+  "policy_id": "dca-risk-acceptance-v1",
+  "primary": {
+    "metric": "dca_risk_accumulation_6m_auc",
+    "min_improvement": 0.01
+  },
+  "guardrails": [
+    {
+      "metric": "dca_risk_derisk_6m_auc",
+      "min_delta": -0.01
+    },
+    {
+      "metric": "dca_risk_derisk_12m_auc",
+      "min_delta": -0.01
+    },
+    {
+      "metric": "dynamic_dca_money_weighted_return",
+      "min_delta": -0.005
+    },
+    {
+      "metric": "dynamic_dca_max_drawdown",
+      "min_delta": -0.02
+    }
+  ],
+  "required_true": [
+    "registered_sample_gate_passed",
+    "leakage_gate_passed",
+    "availability_gate_passed",
+    "concentration_gate_passed"
+  ]
+}
