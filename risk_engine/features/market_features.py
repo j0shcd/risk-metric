@@ -4,22 +4,38 @@ import numpy as np
 import pandas as pd
 
 
-def _log_regression_deviation(series: pd.Series) -> pd.Series:
-    valid = series.dropna()
-    if len(valid) < 30:
-        return pd.Series(index=series.index, dtype=float)
+def _log_regression_deviation(series: pd.Series, min_periods: int = 30) -> pd.Series:
+    """Return a causal expanding power-law deviation.
 
-    # Deterministic power-law-like log fit using log(time) and log(price).
-    t = np.arange(len(valid), dtype=float) + 1.0
-    x = np.log(t)
-    y = np.log(valid.values)
-
-    slope, intercept = np.polyfit(x, y, deg=1)
-    y_hat = intercept + slope * x
-    model = np.exp(y_hat)
-
-    deviation = valid.values / model
+    Each fitted value uses only observations available on or before that date.
+    The cumulative-sum formulation keeps the expanding fit linear in the
+    number of observations rather than refitting every prefix independently.
+    """
+    numeric = pd.to_numeric(series, errors="coerce")
+    valid = numeric[numeric > 0.0].dropna()
     out = pd.Series(index=series.index, dtype=float)
+    if len(valid) < max(int(min_periods), 2):
+        return out
+
+    x = np.log(np.arange(1, len(valid) + 1, dtype=float))
+    y = np.log(valid.to_numpy(dtype=float))
+    count = np.arange(1, len(valid) + 1, dtype=float)
+    sum_x = np.cumsum(x)
+    sum_y = np.cumsum(y)
+    sum_xx = np.cumsum(x * x)
+    sum_xy = np.cumsum(x * y)
+    denominator = count * sum_xx - sum_x * sum_x
+
+    slope = np.divide(
+        count * sum_xy - sum_x * sum_y,
+        denominator,
+        out=np.full_like(count, np.nan),
+        where=np.abs(denominator) > 1e-12,
+    )
+    intercept = (sum_y - slope * sum_x) / count
+    fitted = np.exp(intercept + slope * x)
+    deviation = valid.to_numpy(dtype=float) / fitted
+    deviation[count < max(int(min_periods), 2)] = np.nan
     out.loc[valid.index] = deviation
     return out
 
@@ -59,6 +75,8 @@ def build_market_features(
     frame["total_drawdown_from_ath"] = _drawdown_from_ath(total_market_cap)
     frame["total_realized_vol_30d"] = _rolling_realized_volatility(total_market_cap, window=30)
 
-    frame["btc_dominance_proxy"] = (btc_price / btc_price.max()) / (total_market_cap / total_market_cap.max())
+    # A direct price/market-cap ratio is scale-equivalent for downstream
+    # normalization and remains stable when future rows are appended.
+    frame["btc_dominance_proxy"] = btc_price / total_market_cap.replace({0.0: np.nan})
 
     return frame
