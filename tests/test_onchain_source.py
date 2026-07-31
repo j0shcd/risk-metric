@@ -54,16 +54,19 @@ class OnchainSourceTests(unittest.TestCase):
             index = pd.date_range("2023-01-01", periods=420, freq="D")
             frame = load_onchain_metrics(cfg, index=index)
 
-            self.assertGreater(int(frame["mvrv_z_score"].notna().sum()), 0)
+            self.assertGreater(int(frame["mvrv_ratio_z_proxy"].notna().sum()), 0)
             self.assertGreater(int(frame["puell_multiple"].notna().sum()), 0)
-            self.assertGreater(int(frame["supply_in_profit"].notna().sum()), 0)
-            self.assertTrue(((frame["supply_in_loss"] >= 0.0) & (frame["supply_in_loss"] <= 1.0)).dropna().all())
+            profitability = frame["mvrv_implied_profitability_proxy"].dropna()
+            self.assertGreater(len(profitability), 0)
+            self.assertTrue(((profitability >= 0.0) & (profitability <= 1.0)).all())
+            self.assertNotIn("supply_in_profit", frame.columns)
+            self.assertNotIn("supply_in_loss", frame.columns)
 
             stored = pd.read_csv(root / "data" / "onchain_metrics.csv")
             self.assertGreaterEqual(len(stored), 400)
-            self.assertIn("mvrv_z_score", stored.columns)
+            self.assertIn("mvrv_ratio_z_proxy", stored.columns)
             self.assertIn("puell_multiple", stored.columns)
-            self.assertIn("supply_in_profit", stored.columns)
+            self.assertIn("mvrv_implied_profitability_proxy", stored.columns)
 
     @patch("risk_engine.sources.onchain.requests.get")
     def test_existing_store_preserved_when_fetch_unavailable(self, mocked_get) -> None:
@@ -86,9 +89,16 @@ class OnchainSourceTests(unittest.TestCase):
             index = pd.date_range("2024-01-01", periods=3, freq="D")
             frame = load_onchain_metrics(cfg, index=index)
 
-            self.assertEqual(float(frame.loc[pd.Timestamp("2024-01-02"), "mvrv_z_score"]), 1.2)
+            self.assertEqual(float(frame.loc[pd.Timestamp("2024-01-02"), "mvrv_ratio_z_proxy"]), 1.2)
+            self.assertEqual(
+                float(frame.loc[pd.Timestamp("2024-01-02"), "mvrv_implied_profitability_proxy"]),
+                0.61,
+            )
             stored = pd.read_csv(root / "data" / "onchain_metrics.csv")
             self.assertEqual(len(stored), 2)
+            self.assertIn("mvrv_ratio_z_proxy", stored.columns)
+            self.assertNotIn("mvrv_z_score", stored.columns)
+            self.assertNotIn("supply_in_profit", stored.columns)
 
 
 if __name__ == "__main__":

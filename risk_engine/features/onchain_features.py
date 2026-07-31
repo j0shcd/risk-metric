@@ -5,8 +5,6 @@ import pandas as pd
 
 def build_onchain_features(onchain_frame: pd.DataFrame) -> pd.DataFrame:
     frame = pd.DataFrame(index=onchain_frame.index)
-    frame["mvrv_z_score"] = onchain_frame.get("mvrv_z_score")
+    frame["mvrv_ratio_z_proxy"] = onchain_frame.get("mvrv_ratio_z_proxy")
     frame["puell_multiple"] = onchain_frame.get("puell_multiple")
-    frame["supply_in_profit"] = onchain_frame.get("supply_in_profit")
-    frame["supply_in_loss"] = onchain_frame.get("supply_in_loss")
     return frame

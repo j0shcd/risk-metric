@@ -26,10 +26,11 @@ class PipelineBehaviorTests(unittest.TestCase):
 
         self.onchain = pd.DataFrame(
             {
-                "mvrv_z_score": np.linspace(-1.0, 4.0, len(self.index)),
+                "mvrv_ratio_z_proxy": np.linspace(-1.0, 4.0, len(self.index)),
                 "puell_multiple": 1.0 + 0.5 * np.sin(np.arange(len(self.index)) / 45.0),
-                "supply_in_profit": np.clip(0.2 + np.linspace(0.0, 0.8, len(self.index)), 0.0, 1.0),
-                "supply_in_loss": np.clip(0.8 - np.linspace(0.0, 0.8, len(self.index)), 0.0, 1.0),
+                "mvrv_implied_profitability_proxy": np.clip(
+                    0.2 + np.linspace(0.0, 0.8, len(self.index)), 0.0, 1.0
+                ),
             },
             index=self.index,
         )
@@ -190,7 +191,13 @@ class PipelineBehaviorTests(unittest.TestCase):
         self.assertIn("effective_metric_weight_total", result.metric_breakdowns["btc"].columns)
         self.assertIn("btc_price", result.source_modes)
         self.assertIn("total_market_cap", result.source_modes)
-        self.assertIn("onchain::mvrv_z_score", result.source_modes)
+        self.assertIn("onchain::mvrv_ratio_z_proxy", result.source_modes)
+        self.assertIn("mvrv_implied_profitability_proxy", output.columns)
+        scored_metrics = set(result.metric_health["metric"].astype(str))
+        self.assertIn("mvrv_ratio_z_proxy", scored_metrics)
+        self.assertNotIn("mvrv_implied_profitability_proxy", scored_metrics)
+        self.assertNotIn("supply_in_profit", scored_metrics)
+        self.assertNotIn("supply_in_loss", scored_metrics)
         self.assertIn("social::youtube_interest", result.source_modes)
         self.assertIn("cycle::btc_volume_usd", result.source_modes)
         self.assertFalse(result.cycle_feature_snapshots.empty)

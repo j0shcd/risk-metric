@@ -9,7 +9,9 @@ import requests
 
 from ..config import RuntimeConfig
 
-CORE_METRICS = ["mvrv_z_score", "puell_multiple", "supply_in_profit"]
+MVRV_RATIO_Z_PROXY = "mvrv_ratio_z_proxy"
+PROFITABILITY_DISPLAY_PROXY = "mvrv_implied_profitability_proxy"
+CORE_METRICS = [MVRV_RATIO_Z_PROXY, "puell_multiple", PROFITABILITY_DISPLAY_PROXY]
 
 
 def _fetch_coinmetrics_asset_metrics(
@@ -60,7 +62,7 @@ def _fetch_coinmetrics_asset_metrics(
     return frame
 
 
-def _mvrv_z_from_ratio(ratio: pd.Series) -> pd.Series:
+def _mvrv_ratio_z_proxy(ratio: pd.Series) -> pd.Series:
     mean = ratio.expanding(min_periods=365).mean()
     std = ratio.expanding(min_periods=365).std(ddof=0).replace({0.0: np.nan})
     return (ratio - mean) / std
@@ -71,7 +73,7 @@ def _puell_from_issuance_usd(issuance_usd: pd.Series) -> pd.Series:
     return issuance_usd / denom
 
 
-def _supply_in_profit_proxy_from_mvrv_ratio(mvrv_ratio: pd.Series) -> pd.Series:
+def _profitability_display_proxy_from_mvrv_ratio(mvrv_ratio: pd.Series) -> pd.Series:
     centered = (mvrv_ratio - 1.0).clip(lower=-2.0, upper=4.0)
     proxy = 1.0 / (1.0 + np.exp(-2.2 * centered))
     return proxy.clip(lower=0.0, upper=1.0)
@@ -139,11 +141,15 @@ def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Data
     if coinmetrics is not None and "CapMVRVCur" in coinmetrics.columns:
         ratio = coinmetrics.set_index("Date")["CapMVRVCur"].dropna().astype(float)
         if not ratio.empty:
-            mvrv = pd.Series(_mvrv_z_from_ratio(ratio), name="mvrv_z_score")
+            mvrv = pd.Series(_mvrv_ratio_z_proxy(ratio), name=MVRV_RATIO_Z_PROXY)
     mvrv_mode = "coinmetrics_community" if mvrv is not None else None
-    local_mvrv = fallback_frame["mvrv_z_score"] if "mvrv_z_score" in fallback_frame.columns else None
-    series_map["mvrv_z_score"] = _merge_metric(local_mvrv, mvrv, "mvrv_z_score")
-    source_modes["mvrv_z_score"] = (
+    local_mvrv = (
+        fallback_frame[MVRV_RATIO_Z_PROXY]
+        if MVRV_RATIO_Z_PROXY in fallback_frame.columns
+        else fallback_frame.get("mvrv_z_score")
+    )
+    series_map[MVRV_RATIO_Z_PROXY] = _merge_metric(local_mvrv, mvrv, MVRV_RATIO_Z_PROXY)
+    source_modes[MVRV_RATIO_Z_PROXY] = (
         str(mvrv_mode)
         if mvrv_mode is not None
         else ("local_cache" if local_mvrv is not None and not local_mvrv.empty else "unavailable")
@@ -163,26 +169,35 @@ def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Data
         else ("local_cache" if local_puell is not None and not local_puell.empty else "unavailable")
     )
 
-    supply_profit = None
+    profitability_proxy = None
     if coinmetrics is not None and "CapMVRVCur" in coinmetrics.columns:
         ratio = coinmetrics.set_index("Date")["CapMVRVCur"].dropna().astype(float)
         if not ratio.empty:
-            supply_profit = pd.Series(
-                _supply_in_profit_proxy_from_mvrv_ratio(ratio),
-                name="supply_in_profit",
+            profitability_proxy = pd.Series(
+                _profitability_display_proxy_from_mvrv_ratio(ratio),
+                name=PROFITABILITY_DISPLAY_PROXY,
             )
-    supply_mode = "coinmetrics_community_proxy" if supply_profit is not None else None
-    local_supply = fallback_frame["supply_in_profit"] if "supply_in_profit" in fallback_frame.columns else None
-    series_map["supply_in_profit"] = _merge_metric(local_supply, supply_profit, "supply_in_profit")
-    source_modes["supply_in_profit"] = (
-        str(supply_mode)
-        if supply_mode is not None
-        else ("local_cache" if local_supply is not None and not local_supply.empty else "unavailable")
+    profitability_mode = "coinmetrics_community_proxy" if profitability_proxy is not None else None
+    local_profitability = (
+        fallback_frame[PROFITABILITY_DISPLAY_PROXY]
+        if PROFITABILITY_DISPLAY_PROXY in fallback_frame.columns
+        else fallback_frame.get("supply_in_profit")
+    )
+    series_map[PROFITABILITY_DISPLAY_PROXY] = _merge_metric(
+        local_profitability,
+        profitability_proxy,
+        PROFITABILITY_DISPLAY_PROXY,
+    )
+    source_modes[PROFITABILITY_DISPLAY_PROXY] = (
+        str(profitability_mode)
+        if profitability_mode is not None
+        else ("local_cache" if local_profitability is not None and not local_profitability.empty else "unavailable")
     )
 
     # Keep unknown local columns if user stored additional on-chain metrics.
+    legacy_columns = {"mvrv_z_score", "supply_in_profit", "supply_in_loss"}
     for col in fallback_frame.columns:
-        if col not in series_map:
+        if col not in series_map and col not in legacy_columns:
             series_map[col] = fallback_frame[col].astype(float)
 
     _save_onchain_store(store_path, series_map)
@@ -195,7 +210,5 @@ def load_onchain_metrics(cfg: RuntimeConfig, index: pd.DatetimeIndex) -> pd.Data
             continue
         out[name] = series.reindex(index)
 
-    out["supply_in_loss"] = 1.0 - out["supply_in_profit"]
-    source_modes["supply_in_loss"] = "derived_from_supply_in_profit"
     out.attrs["source_modes"] = source_modes
     return out

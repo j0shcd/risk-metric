@@ -132,10 +132,8 @@ def _metric_specs_extended(cfg: RuntimeConfig, include_total_market_fallback_pro
     specs = _metric_specs_free_stable(include_total_market_fallback_proxies=include_total_market_fallback_proxies)
     specs.extend(
         [
-            MetricSpec("mvrv_z_score", "onchain", "both", base_reliability=0.85, max_carry_days=5),
+            MetricSpec("mvrv_ratio_z_proxy", "onchain", "both", base_reliability=0.85, max_carry_days=5),
             MetricSpec("puell_multiple", "onchain", "both", base_reliability=0.85, max_carry_days=5),
-            MetricSpec("supply_in_profit", "onchain", "both", base_reliability=0.80, max_carry_days=5),
-            MetricSpec("supply_in_loss", "onchain", "both", base_reliability=0.80, max_carry_days=5, direction=-1.0),
             MetricSpec("youtube_interest", "social", "both", base_reliability=0.60, max_carry_days=14),
             MetricSpec(
                 "coinbase_app_rank_proxy",
@@ -213,8 +211,6 @@ def _source_mode_multiplier(mode: str) -> float:
 
 def _metric_source_modes(source_modes: Dict[str, str]) -> Dict[str, str]:
     total_mode = source_modes.get("total_market_cap", "unknown")
-    onchain_supply_mode = source_modes.get("onchain::supply_in_profit", "unknown")
-
     return {
         "btc_trend_extension_50d_350d": source_modes.get("btc_price", "unknown"),
         "btc_running_roi_1y": source_modes.get("btc_price", "unknown"),
@@ -227,10 +223,8 @@ def _metric_source_modes(source_modes: Dict[str, str]) -> Dict[str, str]:
         "total_drawdown_from_ath": total_mode,
         "total_realized_vol_30d": total_mode,
         "btc_dominance_proxy": total_mode,
-        "mvrv_z_score": source_modes.get("onchain::mvrv_z_score", "unknown"),
+        "mvrv_ratio_z_proxy": source_modes.get("onchain::mvrv_ratio_z_proxy", "unknown"),
         "puell_multiple": source_modes.get("onchain::puell_multiple", "unknown"),
-        "supply_in_profit": onchain_supply_mode,
-        "supply_in_loss": onchain_supply_mode,
         "youtube_interest": source_modes.get("social::youtube_interest", "unknown"),
         "google_trends_interest": source_modes.get("social::google_trends_interest", "unknown"),
         "coinbase_app_rank_proxy": source_modes.get("social::coinbase_app_rank_proxy", "unknown"),
@@ -561,6 +555,10 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
 
     output["btc_price"] = btc_price
     output["total_market_cap"] = total_market_cap
+    output["mvrv_implied_profitability_proxy"] = onchain_frame.get(
+        "mvrv_implied_profitability_proxy",
+        pd.Series(index=output.index, dtype=float),
+    ).reindex(output.index)
 
     cycle = build_cycle_model(
         cfg=runtime,

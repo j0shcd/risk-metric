@@ -76,7 +76,7 @@ def _backfill_onchain_only() -> None:
     else:
         print(f"No on-chain store found at {store_path}")
 
-    for column in ["mvrv_z_score", "puell_multiple", "supply_in_profit", "supply_in_loss"]:
+    for column in ["mvrv_ratio_z_proxy", "puell_multiple", "mvrv_implied_profitability_proxy"]:
         count = int(onchain[column].notna().sum()) if column in onchain.columns else 0
         print(f" - {column} points: {count}")
 
