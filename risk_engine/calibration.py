@@ -455,26 +455,33 @@ def _long_cycle_labels(
     fwd_frame = pd.DataFrame(index=monthly_price.index)
     for horizon in horizons:
         fwd_frame[f"h{horizon}"] = _future_return(monthly_price, horizon)
-    fwd_mean = fwd_frame.mean(axis=1, skipna=True)
-    resolved = fwd_mean.dropna()
-    q_low = float(resolved.quantile(0.20)) if not resolved.empty else np.nan
-    q_high = float(resolved.quantile(0.80)) if not resolved.empty else np.nan
+    # Require every declared horizon to resolve, then freeze each observation's
+    # outcome cutoffs from outcomes that were already known when that
+    # observation was made. Later cycles can no longer relabel earlier dates.
+    fwd_mean = fwd_frame.mean(axis=1, skipna=False).where(fwd_frame.notna().all(axis=1))
+    max_horizon = max(horizons)
+    min_cut_history = max(int(lookback_months), 12)
+    q_low = pd.Series(np.nan, index=monthly_price.index, dtype=float)
+    q_high = pd.Series(np.nan, index=monthly_price.index, dtype=float)
+    for i, date in enumerate(monthly_price.index):
+        resolved_end = i - max_horizon
+        if resolved_end < 0:
+            continue
+        known_outcomes = fwd_mean.iloc[: resolved_end + 1].dropna()
+        if len(known_outcomes) < min_cut_history:
+            continue
+        q_low.loc[date] = float(known_outcomes.quantile(0.20))
+        q_high.loc[date] = float(known_outcomes.quantile(0.80))
 
     past_max = monthly_price.rolling(int(max(lookback_months, 1)), min_periods=int(max(lookback_months, 1))).max()
     past_min = monthly_price.rolling(int(max(lookback_months, 1)), min_periods=int(max(lookback_months, 1))).min()
     top_extreme = monthly_price >= past_max
     bottom_extreme = monthly_price <= past_min
 
-    top = ((fwd_mean <= q_low) & top_extreme).astype(float).where(fwd_mean.notna() & past_max.notna(), np.nan)
-    bottom = ((fwd_mean >= q_high) & bottom_extreme).astype(float).where(fwd_mean.notna() & past_min.notna(), np.nan)
-
-    # Ensure enough events for walk-forward; if too sparse fallback to quantile-only labels.
-    top_events = int((top.dropna().astype(int) == 1).sum())
-    bottom_events = int((bottom.dropna().astype(int) == 1).sum())
-    if top_events < 3:
-        top = (fwd_mean <= q_low).astype(float).where(fwd_mean.notna(), np.nan)
-    if bottom_events < 3:
-        bottom = (fwd_mean >= q_high).astype(float).where(fwd_mean.notna(), np.nan)
+    top_valid = fwd_mean.notna() & q_low.notna() & past_max.notna()
+    bottom_valid = fwd_mean.notna() & q_high.notna() & past_min.notna()
+    top = ((fwd_mean <= q_low) & top_extreme).astype(float).where(top_valid, np.nan)
+    bottom = ((fwd_mean >= q_high) & bottom_extreme).astype(float).where(bottom_valid, np.nan)
     return top, bottom
 
 
@@ -608,13 +615,12 @@ def calibrate_primary_outputs(
 
     if "attention_score" in output.columns:
         output["attention_score"] = attention_daily.clip(0.0, 1.0)
-    if "headline_attention" in output.columns:
-        output["headline_attention"] = attention_daily.clip(0.0, 1.0)
 
     metadata: Dict[str, float | str] = {
         "calibration_applied": 1.0,
         "top_objective": "composite_long_cycle_label_and_financial",
         "calibration_horizons_months": ",".join([str(h) for h in horizons]),
+        "label_cut_policy": "expanding_resolved_outcomes_embargoed_by_max_horizon",
         "objective_label_weight": float(runtime.cycle_financial_label_weight if runtime is not None else 0.50),
         "objective_financial_weight": float(runtime.cycle_financial_kpi_weight if runtime is not None else 0.50),
         "top_mean_w_base": float(top_meta.get("mean_w_base", 1.0)),

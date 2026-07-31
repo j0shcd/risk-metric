@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from risk_engine.calibration import _financial_quality_from_position, calibrate_primary_outputs
+from risk_engine.calibration import _financial_quality_from_position, _long_cycle_labels, calibrate_primary_outputs
 
 
 class CalibrationWalkforwardTests(unittest.TestCase):
@@ -39,6 +39,19 @@ class CalibrationWalkforwardTests(unittest.TestCase):
         self.assertIn("top_reversal_risk", out.series.columns)
         vals = out.series["top_reversal_risk"].dropna()
         self.assertTrue(((vals >= 0.0) & (vals <= 1.0)).all())
+
+    def test_long_cycle_labels_are_stable_when_future_rows_are_appended(self) -> None:
+        idx = pd.date_range("2000-01-31", periods=180, freq=pd.offsets.MonthEnd())
+        x = np.arange(len(idx), dtype=float)
+        price = pd.Series(100.0 + 2.0 * x + 50.0 * np.sin(x / 7.0), index=idx)
+
+        prefix_top, prefix_bottom = _long_cycle_labels(price.iloc[:150], horizons_months=[12, 18])
+        full_top, full_bottom = _long_cycle_labels(price, horizons_months=[12, 18])
+
+        resolved_top = prefix_top.dropna()
+        resolved_bottom = prefix_bottom.dropna()
+        pd.testing.assert_series_equal(resolved_top, full_top.reindex(resolved_top.index))
+        pd.testing.assert_series_equal(resolved_bottom, full_bottom.reindex(resolved_bottom.index))
 
 
 if __name__ == "__main__":

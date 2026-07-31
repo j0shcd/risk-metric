@@ -60,6 +60,7 @@ class CalibrationTests(unittest.TestCase):
         self.assertTrue(
             ((calibrated["headline_attention"].dropna() >= 0.0) & (calibrated["headline_attention"].dropna() <= 1.0)).all()
         )
+        pd.testing.assert_series_equal(calibrated["headline_attention"], raw_attention, check_names=False)
 
         meta = calibrate_primary_outputs(frame).metadata
         self.assertEqual(meta.get("calibration_applied"), 1.0)
