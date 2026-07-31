@@ -10,7 +10,7 @@ import pandas as pd
 from .calibration import calibrate_primary_outputs
 from .benchmark import evaluate_benchmark
 from .config import RuntimeConfig, load_runtime_config
-from .cycle_model import build_cycle_model
+from .cycle_model import _build_backtest_report, _build_financial_benchmark_outputs, build_cycle_model
 from .diagnostics import build_metric_health, build_source_health
 from .features import build_market_features, build_onchain_features, build_social_sentiment_features
 from .normalization import build_feature_frame
@@ -32,6 +32,7 @@ DCA_COMPONENT_SPECS = {
     "dca_cycle_extension_component": ("cycle_extension_score", "low"),
     "dca_cycle_regime_component": ("cycle_frenzy_score", "low"),
 }
+DCA_MIN_COMPONENT_COVERAGE = 0.75
 
 
 def _expanding_minmax_risk(values: pd.Series, *, low_risk_when: str) -> pd.Series:
@@ -61,7 +62,12 @@ def add_dca_risk_columns(series: pd.DataFrame) -> pd.DataFrame:
         component_columns.append(component_column)
 
     output["dca_component_coverage"] = output[component_columns].notna().mean(axis=1)
-    output["dca_risk"] = output[component_columns].mean(axis=1, skipna=True).clip(0.0, 1.0)
+    output["dca_risk"] = (
+        output[component_columns]
+        .mean(axis=1, skipna=True)
+        .where(output["dca_component_coverage"] >= DCA_MIN_COMPONENT_COVERAGE)
+        .clip(0.0, 1.0)
+    )
     return output
 
 
@@ -571,7 +577,6 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     output["price_extremity_pct"] = cycle_extension["price_extremity_pct"].reindex(output.index)
     output["momentum_exhaustion_pct"] = cycle_extension["momentum_exhaustion_pct"].reindex(output.index)
 
-    output["trend_composite_score"] = output["cycle_extension_score"].fillna(output["trend_composite_score"]).clip(0.0, 1.0)
     output["top_reversal_risk"] = output.get("cycle_p_frenzy", output["btc_risk_signal"]).clip(0.0, 1.0)
     output["bottom_reversal_risk"] = output.get("cycle_p_accumulation", (1.0 - output["btc_risk_signal"])).clip(0.0, 1.0)
     output["attention_score"] = output["headline_attention"].clip(0.0, 1.0)
@@ -586,6 +591,18 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         + output["headline_total_market_mix_weight"] * output["total_market_risk_signal"]
     ).clip(0.0, 1.0)
     output = add_dca_risk_columns(output)
+
+    financial_benchmark_summary, financial_benchmark_curves = _build_financial_benchmark_outputs(
+        monthly_price=cycle.feature_snapshots["btc_price"],
+        decisions=cycle.signal_decisions,
+        dca_risk=output["dca_risk"].astype(float).resample(pd.offsets.MonthEnd()).last(),
+        cfg=runtime,
+    )
+    cycle_backtest_report = _build_backtest_report(
+        cycle.feature_snapshots["btc_price"],
+        cycle.signal_decisions,
+        financial_benchmark_summary,
+    )
 
     fallback_monthly_signal = output["btc_risk_signal"].astype(float).resample(pd.offsets.MonthEnd()).last()
     top_monthly = output["top_reversal_risk"].astype(float).resample(pd.offsets.MonthEnd()).last().fillna(fallback_monthly_signal)
@@ -652,7 +669,7 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
             metric_cols=["auc", "pr_auc", "lead_recall_at_alert_rate", "false_alarm_rate", "event_coverage"],
         ),
         "financial_summary": _delta_records(
-            cycle.financial_benchmark_summary,
+            financial_benchmark_summary,
             baseline_financial,
             key_cols=["strategy"],
             metric_cols=["cagr", "calmar", "max_drawdown", "total_return"],
@@ -772,9 +789,9 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         cycle_feature_snapshots=cycle.feature_snapshots,
         cycle_regime_scores=cycle.regime_scores,
         cycle_signal_decisions=cycle.signal_decisions,
-        cycle_backtest_report=cycle.backtest_report,
-        financial_benchmark_summary=cycle.financial_benchmark_summary,
-        financial_benchmark_curves=cycle.financial_benchmark_curves,
+        cycle_backtest_report=cycle_backtest_report,
+        financial_benchmark_summary=financial_benchmark_summary,
+        financial_benchmark_curves=financial_benchmark_curves,
         cycle_metric_audit=cycle.metric_audit,
         cycle_migration_plan=cycle.migration_plan,
         benchmark_summary=benchmark_result.summary,

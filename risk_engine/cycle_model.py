@@ -111,6 +111,63 @@ def _strategy_summary(name: str, equity: pd.Series, returns: pd.Series) -> Dict[
     }
 
 
+def _xirr(contributions: pd.Series, terminal_value: float) -> float:
+    """Annualized money-weighted return for dated external contributions."""
+    flows = contributions.astype(float).fillna(0.0).mul(-1.0)
+    if flows.empty or not np.isfinite(terminal_value):
+        return float("nan")
+    flows.iloc[-1] += float(terminal_value)
+    if not (bool((flows < 0.0).any()) and bool((flows > 0.0).any())):
+        return float("nan")
+
+    dates = pd.to_datetime(flows.index)
+    years = (dates - dates[0]).days.astype(float) / 365.2425
+
+    def npv(rate: float) -> float:
+        return float(np.sum(flows.to_numpy() / np.power(1.0 + rate, years)))
+
+    low = -0.9999
+    high = 1.0
+    low_value = npv(low)
+    high_value = npv(high)
+    while np.sign(low_value) == np.sign(high_value) and high < 1_000_000.0:
+        high *= 2.0
+        high_value = npv(high)
+    if np.sign(low_value) == np.sign(high_value):
+        return float("nan")
+
+    for _ in range(160):
+        mid = (low + high) / 2.0
+        mid_value = npv(mid)
+        if abs(mid_value) <= 1e-10:
+            return float(mid)
+        if np.sign(mid_value) == np.sign(low_value):
+            low = mid
+            low_value = mid_value
+        else:
+            high = mid
+    return float((low + high) / 2.0)
+
+
+def _dca_strategy_summary(name: str, ledger: pd.DataFrame) -> Dict[str, float | str]:
+    if ledger.empty:
+        return _strategy_summary(name, pd.Series(dtype=float), pd.Series(dtype=float))
+    summary = _strategy_summary(name, ledger["twr_equity"], ledger["twr_return"])
+    ending_value = float(ledger["equity"].iloc[-1])
+    total_contributed = float(ledger["total_contributed"].iloc[-1])
+    summary.update(
+        {
+            "money_weighted_return": _xirr(ledger["contribution"], ending_value),
+            "ending_value": ending_value,
+            "total_contributed": total_contributed,
+            "gain_on_contributions": (
+                ending_value / total_contributed - 1.0 if total_contributed > 0.0 else np.nan
+            ),
+        }
+    )
+    return summary
+
+
 def _halving_heuristic_position(index: pd.DatetimeIndex, hold_months: int = 30) -> pd.Series:
     halving_dates = [
         pd.Timestamp("2012-11-28"),
@@ -142,9 +199,11 @@ def _build_monthly_inputs(
     monthly = pd.DataFrame(index=_monthly_last(btc_price).index)
     monthly["btc_price"] = _monthly_last(btc_price)
     monthly["btc_volume_usd"] = _monthly_sum(_indexed_series(context_frame, "btc_volume_usd"))
-    monthly["mvrv_z_score"] = _monthly_last(_indexed_series(onchain_frame, "mvrv_z_score"))
+    monthly["mvrv_ratio_z_proxy"] = _monthly_last(_indexed_series(onchain_frame, "mvrv_ratio_z_proxy"))
     monthly["puell_multiple"] = _monthly_last(_indexed_series(onchain_frame, "puell_multiple"))
-    monthly["supply_in_profit"] = _monthly_last(_indexed_series(onchain_frame, "supply_in_profit"))
+    monthly["mvrv_implied_profitability_proxy"] = _monthly_last(
+        _indexed_series(onchain_frame, "mvrv_implied_profitability_proxy")
+    )
 
     monthly["google_trends_interest"] = _monthly_mean(
         _indexed_series(context_frame, "google_trends_interest")
@@ -202,13 +261,12 @@ def _build_feature_snapshot(monthly: pd.DataFrame, cfg: RuntimeConfig) -> pd.Dat
 
     oriented_features = {
         "pct_price_to_48m_trend": "price_to_48m_trend",
-        "pct_mvrv_z_score": "mvrv_z_score",
+        "pct_mvrv_ratio_z_proxy": "mvrv_ratio_z_proxy",
         "pct_puell_multiple": "puell_multiple",
         "pct_drawdown_recovery": "drawdown_from_ath",
         "pct_volume_accel_3m_12m": "volume_accel_3m_12m",
         "pct_abs_monthly_return": "abs_monthly_return",
         "pct_realized_vol_6m": "realized_vol_6m",
-        "pct_supply_in_profit": "supply_in_profit",
         "pct_vol_spread_3m_12m": "vol_spread_3m_12m",
         "pct_return_convexity_1_3": "return_convexity_1_3",
         "pct_volume_accel_log_1_12": "volume_accel_log_1_12",
@@ -226,11 +284,11 @@ def _build_feature_snapshot(monthly: pd.DataFrame, cfg: RuntimeConfig) -> pd.Dat
 
     frame["valuation_hot"] = _category_mean(
         frame,
-        ["pct_price_to_48m_trend", "pct_mvrv_z_score", "pct_puell_multiple", "pct_drawdown_recovery"],
+        ["pct_price_to_48m_trend", "pct_mvrv_ratio_z_proxy", "pct_puell_multiple", "pct_drawdown_recovery"],
     )
     frame["speculation_hot"] = _category_mean(
         frame,
-        ["pct_volume_accel_3m_12m", "pct_abs_monthly_return", "pct_realized_vol_6m", "pct_supply_in_profit"],
+        ["pct_volume_accel_3m_12m", "pct_abs_monthly_return", "pct_realized_vol_6m"],
     )
     frame["attention_hot"] = _category_mean(
         frame,
@@ -303,7 +361,7 @@ def _build_regime_scores(feature_frame: pd.DataFrame, cfg: RuntimeConfig) -> pd.
 
     raw_feature_columns = [
         "price_to_48m_trend",
-        "mvrv_z_score",
+        "mvrv_ratio_z_proxy",
         "puell_multiple",
         "volume_accel_3m_12m",
         "google_trends_3m",
@@ -370,13 +428,12 @@ def _build_signal_decisions(feature_frame: pd.DataFrame, regime_scores: pd.DataF
         decision = "HOLD"
         trigger = ""
 
-        if cooldown > 0:
-            cooldown -= 1
+        cooling_down = cooldown > 0
 
         can_buy = bool(buy_ready.loc[date]) if pd.notna(buy_ready.loc[date]) else False
         can_sell = bool(sell_ready.loc[date]) if pd.notna(sell_ready.loc[date]) else False
 
-        if cooldown == 0 and (can_buy or can_sell):
+        if not cooling_down and (can_buy or can_sell):
             if can_buy and can_sell:
                 buy_excess = float(regime_scores.loc[date, "p_accumulation"] - cfg.cycle_buy_threshold)
                 sell_excess = float(regime_scores.loc[date, "p_frenzy"] - cfg.cycle_sell_threshold)
@@ -394,6 +451,9 @@ def _build_signal_decisions(feature_frame: pd.DataFrame, regime_scores: pd.DataF
                 trigger = _top_trigger_categories(feature_frame.loc[date], suffix="hot")
                 cooldown = cfg.cycle_cooldown_months
 
+        if cooling_down:
+            cooldown -= 1
+
         decisions.loc[date, "regime"] = decision
         decisions.loc[date, "trigger_features"] = trigger
         decisions.loc[date, "cooldown_state"] = int(cooldown)
@@ -402,17 +462,83 @@ def _build_signal_decisions(feature_frame: pd.DataFrame, regime_scores: pd.DataF
     return decisions
 
 
+def _ledger_period_return(
+    previous_equity: float,
+    pre_contribution_equity: float,
+    contribution: float,
+    ending_equity: float,
+) -> float:
+    market_factor = pre_contribution_equity / previous_equity if previous_equity > 0.0 else 1.0
+    post_flow_equity = pre_contribution_equity + contribution
+    trading_factor = ending_equity / post_flow_equity if post_flow_equity > 0.0 else 1.0
+    return float(market_factor * trading_factor - 1.0)
+
+
+def _simulate_fixed_dca(price: pd.Series, cfg: RuntimeConfig) -> pd.DataFrame:
+    fee_and_slippage = max(
+        0.0,
+        float(cfg.cycle_dynamic_dca_fee_rate) + float(cfg.cycle_dynamic_dca_slippage_rate),
+    )
+    base_contribution = max(float(cfg.cycle_dynamic_dca_base_contribution), 0.0)
+    cash = 0.0
+    units = 0.0
+    previous_equity = 0.0
+    total_contributed = 0.0
+    twr_equity = 1.0
+    rows: List[Dict[str, float]] = []
+
+    for _, price_value in price.astype(float).dropna().items():
+        p = float(price_value)
+        pre_contribution_equity = cash + units * p
+        contribution = base_contribution
+        cash += contribution
+        total_contributed += contribution
+
+        buy_usd = cash if p > 0.0 else 0.0
+        trade_cost_usd = 0.0
+        if buy_usd > 0.0:
+            effective_price = p * (1.0 + fee_and_slippage)
+            units_bought = buy_usd / effective_price if effective_price > 0.0 else 0.0
+            cash -= buy_usd
+            units += units_bought
+            trade_cost_usd = buy_usd - units_bought * p
+
+        equity = cash + units * p
+        twr_return = _ledger_period_return(
+            previous_equity,
+            pre_contribution_equity,
+            contribution,
+            equity,
+        )
+        twr_equity *= 1.0 + twr_return
+        previous_equity = equity
+        rows.append(
+            {
+                "cash": cash,
+                "units": units,
+                "equity": equity,
+                "contribution": contribution,
+                "total_contributed": total_contributed,
+                "twr_return": twr_return,
+                "twr_equity": twr_equity,
+                "buy_usd": buy_usd,
+                "trade_cost_usd": trade_cost_usd,
+            }
+        )
+    return pd.DataFrame(rows, index=price.astype(float).dropna().index)
+
+
 def _simulate_dynamic_dca(
     price: pd.Series,
-    frenzy_score: pd.Series,
-    accumulation_score: pd.Series,
+    dca_risk: pd.Series,
     cfg: RuntimeConfig,
 ) -> pd.DataFrame:
     aligned = pd.DataFrame(
         {
             "price": price.astype(float),
-            "frenzy_score": frenzy_score.astype(float).reindex(price.index),
-            "accumulation_score": accumulation_score.astype(float).reindex(price.index),
+            # A risk score observed at a month close can only trade on the next
+            # monthly execution row.
+            "dca_risk": dca_risk.astype(float).reindex(price.index).shift(1),
         },
         index=price.index,
     ).dropna(subset=["price"])
@@ -420,8 +546,13 @@ def _simulate_dynamic_dca(
         return pd.DataFrame(index=price.index)
 
     fee_and_slippage = max(0.0, float(cfg.cycle_dynamic_dca_fee_rate) + float(cfg.cycle_dynamic_dca_slippage_rate))
-    buy_threshold = float(cfg.cycle_dynamic_dca_buy_threshold)
-    sell_threshold = float(cfg.cycle_dynamic_dca_sell_threshold)
+    # Keep the existing configuration compatible: the old accumulation-side
+    # threshold is mirrored into the low-risk side of the single indicator.
+    buy_risk_threshold = 1.0 - float(cfg.cycle_dynamic_dca_buy_threshold)
+    buy_risk_threshold = float(np.clip(buy_risk_threshold, 0.0, 1.0))
+    sell_risk_threshold = float(np.clip(cfg.cycle_dynamic_dca_sell_threshold, 0.0, 1.0))
+    if buy_risk_threshold >= sell_risk_threshold:
+        raise ValueError("dynamic DCA buy threshold must be below sell threshold")
     max_buy_multiplier = max(1.0, float(cfg.cycle_dynamic_dca_max_buy_multiplier))
     max_sell_fraction = min(max(float(cfg.cycle_dynamic_dca_max_sell_fraction), 0.0), 1.0)
     cash_buffer_ratio = min(max(float(cfg.cycle_dynamic_dca_cash_buffer_ratio), 0.0), 0.95)
@@ -429,29 +560,38 @@ def _simulate_dynamic_dca(
 
     cash = 0.0
     units = 0.0
+    previous_equity = 0.0
+    total_contributed = 0.0
+    twr_equity = 1.0
     rows: List[Dict[str, float]] = []
 
     for date, row in aligned.iterrows():
         p = float(row["price"])
-        frenzy = float(row["frenzy_score"]) if np.isfinite(row["frenzy_score"]) else np.nan
-        cold = float(row["accumulation_score"]) if np.isfinite(row["accumulation_score"]) else np.nan
+        risk = float(row["dca_risk"]) if np.isfinite(row["dca_risk"]) else np.nan
 
-        cash += base_contribution
+        pre_contribution_equity = cash + units * p
+        contribution = base_contribution
+        cash += contribution
+        total_contributed += contribution
 
         buy_strength = 0.0
         sell_strength = 0.0
-        if np.isfinite(cold):
-            denom = max(1e-9, 1.0 - buy_threshold)
-            buy_strength = float(np.clip((cold - buy_threshold) / denom, 0.0, 1.0))
-        if np.isfinite(frenzy):
-            denom = max(1e-9, 1.0 - sell_threshold)
-            sell_strength = float(np.clip((frenzy - sell_threshold) / denom, 0.0, 1.0))
+        buy_active = False
+        sell_active = False
+        if np.isfinite(risk) and buy_risk_threshold > 0.0:
+            buy_active = bool(risk <= buy_risk_threshold)
+            buy_strength = float(np.clip((buy_risk_threshold - risk) / buy_risk_threshold, 0.0, 1.0))
+        if np.isfinite(risk) and sell_risk_threshold < 1.0:
+            sell_active = bool(risk >= sell_risk_threshold)
+            sell_strength = float(
+                np.clip((risk - sell_risk_threshold) / (1.0 - sell_risk_threshold), 0.0, 1.0)
+            )
 
         buy_usd = 0.0
         sell_usd = 0.0
         trade_cost_usd = 0.0
 
-        if buy_strength >= sell_strength and buy_strength > 0.0 and p > 0.0:
+        if buy_active and (not sell_active or buy_strength >= sell_strength) and p > 0.0:
             desired_buy = base_contribution * (1.0 + buy_strength * (max_buy_multiplier - 1.0))
             pre_trade_equity = cash + units * p
             min_cash_buffer = cash_buffer_ratio * pre_trade_equity
@@ -463,10 +603,11 @@ def _simulate_dynamic_dca(
                 cash -= buy_usd
                 units += units_bought
                 trade_cost_usd = buy_usd - (units_bought * p)
-        elif sell_strength > buy_strength and sell_strength > 0.0 and p > 0.0 and units > 0.0:
-            sell_fraction = sell_strength * max_sell_fraction
-            units_to_sell = min(units, units * sell_fraction)
-            gross = units_to_sell * p
+        elif sell_active and p > 0.0 and units > 0.0:
+            maximum_sale = units * p * max_sell_fraction
+            desired_sale = max(base_contribution, maximum_sale * sell_strength)
+            gross = min(maximum_sale, desired_sale)
+            units_to_sell = gross / p
             net = gross * (1.0 - fee_and_slippage)
             units -= units_to_sell
             cash += net
@@ -474,18 +615,31 @@ def _simulate_dynamic_dca(
             trade_cost_usd = gross - net
 
         equity = cash + units * p
+        twr_return = _ledger_period_return(
+            previous_equity,
+            pre_contribution_equity,
+            contribution,
+            equity,
+        )
+        twr_equity *= 1.0 + twr_return
+        previous_equity = equity
         exposure = float((units * p) / equity) if equity > 0.0 else 0.0
         rows.append(
             {
                 "cash": cash,
                 "units": units,
                 "equity": equity,
+                "contribution": contribution,
+                "total_contributed": total_contributed,
+                "twr_return": twr_return,
+                "twr_equity": twr_equity,
                 "exposure": exposure,
                 "buy_usd": buy_usd,
                 "sell_usd": sell_usd,
                 "trade_cost_usd": trade_cost_usd,
                 "buy_strength": buy_strength,
                 "sell_strength": sell_strength,
+                "dca_risk_used": risk,
             }
         )
 
@@ -496,12 +650,11 @@ def _simulate_dynamic_dca(
 def _build_financial_benchmark_outputs(
     monthly_price: pd.Series,
     decisions: pd.DataFrame,
-    regime_scores: pd.DataFrame,
+    dca_risk: pd.Series | None,
     cfg: RuntimeConfig,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     price = monthly_price.astype(float).dropna()
     aligned_decisions = decisions.reindex(price.index)
-    aligned_regime = regime_scores.reindex(price.index)
     returns = price.pct_change(fill_method=None).fillna(0.0)
 
     cycle_position = aligned_decisions["position"].fillna(0.0)
@@ -511,47 +664,60 @@ def _build_financial_benchmark_outputs(
     buyhold_equity = (1.0 + returns).cumprod()
     buyhold_returns = buyhold_equity.pct_change(fill_method=None).fillna(0.0)
 
-    fixed_dca_units = (1.0 / price.replace({0.0: np.nan})).fillna(0.0)
-    fixed_dca_value = fixed_dca_units.cumsum() * price
-    fixed_dca_invested = pd.Series(np.arange(1, len(price) + 1, dtype=float), index=price.index)
-    fixed_dca_equity = fixed_dca_value / fixed_dca_invested
-    fixed_dca_returns = fixed_dca_equity.pct_change(fill_method=None).fillna(0.0)
+    fixed_dca = _simulate_fixed_dca(price, cfg)
+    fixed_dca_equity = fixed_dca["twr_equity"].reindex(price.index)
 
     halving_position = _halving_heuristic_position(price.index)
     halving_returns = halving_position.shift(1).fillna(0.0) * returns
     halving_equity = (1.0 + halving_returns).cumprod()
 
-    dynamic_dca = _simulate_dynamic_dca(
-        price=price,
-        frenzy_score=aligned_regime["frenzy_score"],
-        accumulation_score=aligned_regime["accumulation_score"],
-        cfg=cfg,
+    dynamic_dca = (
+        _simulate_dynamic_dca(price=price, dca_risk=dca_risk, cfg=cfg)
+        if dca_risk is not None
+        else pd.DataFrame(index=price.index)
     )
-    dynamic_equity = dynamic_dca.get("equity", pd.Series(index=price.index, dtype=float)).reindex(price.index)
-    dynamic_returns = dynamic_equity.pct_change(fill_method=None).fillna(0.0)
+    dynamic_equity = dynamic_dca.get("twr_equity", pd.Series(index=price.index, dtype=float)).reindex(price.index)
 
     summary_rows = [
         _strategy_summary("cycle_signal", cycle_equity, cycle_returns),
         _strategy_summary("buy_and_hold", buyhold_equity, buyhold_returns),
-        _strategy_summary("fixed_dca", fixed_dca_equity, fixed_dca_returns),
+        _dca_strategy_summary("fixed_dca", fixed_dca),
         _strategy_summary("halving_heuristic", halving_equity, halving_returns),
-        _strategy_summary("dynamic_dca", dynamic_equity, dynamic_returns),
     ]
+    if not dynamic_dca.empty:
+        summary_rows.append(_dca_strategy_summary("dynamic_dca", dynamic_dca))
     summary = pd.DataFrame(summary_rows)
+    summary["embedded_cost_bps"] = 0.0
+    summary.loc[
+        summary["strategy"].astype(str).isin({"fixed_dca", "dynamic_dca"}),
+        "embedded_cost_bps",
+    ] = 10000.0 * max(
+        0.0,
+        float(cfg.cycle_dynamic_dca_fee_rate) + float(cfg.cycle_dynamic_dca_slippage_rate),
+    )
     curves = pd.DataFrame(index=price.index)
     curves["price"] = price
     curves["cycle_position"] = cycle_position
     curves["cycle_equity"] = cycle_equity
     curves["buy_and_hold_equity"] = buyhold_equity
     curves["fixed_dca_equity"] = fixed_dca_equity
+    curves["fixed_dca_value"] = fixed_dca.get("equity", pd.Series(index=price.index, dtype=float))
+    curves["fixed_dca_total_contributed"] = fixed_dca.get(
+        "total_contributed", pd.Series(index=price.index, dtype=float)
+    )
     curves["halving_equity"] = halving_equity
     curves["dynamic_dca_equity"] = dynamic_equity
+    curves["dynamic_dca_value"] = dynamic_dca.get("equity", pd.Series(index=price.index, dtype=float))
+    curves["dynamic_dca_total_contributed"] = dynamic_dca.get(
+        "total_contributed", pd.Series(index=price.index, dtype=float)
+    )
     curves["dynamic_dca_cash"] = dynamic_dca.get("cash", pd.Series(index=price.index, dtype=float))
     curves["dynamic_dca_units"] = dynamic_dca.get("units", pd.Series(index=price.index, dtype=float))
     curves["dynamic_dca_exposure"] = dynamic_dca.get("exposure", pd.Series(index=price.index, dtype=float))
     curves["dynamic_dca_buy_usd"] = dynamic_dca.get("buy_usd", pd.Series(index=price.index, dtype=float))
     curves["dynamic_dca_sell_usd"] = dynamic_dca.get("sell_usd", pd.Series(index=price.index, dtype=float))
     curves["dynamic_dca_trade_cost_usd"] = dynamic_dca.get("trade_cost_usd", pd.Series(index=price.index, dtype=float))
+    curves["dynamic_dca_risk_used"] = dynamic_dca.get("dca_risk_used", pd.Series(index=price.index, dtype=float))
     return summary, curves
 
 
@@ -625,10 +791,9 @@ def _metric_audit_frame() -> pd.DataFrame:
         ("total_drawdown_from_ath", "drop", "Lower marginal value after explicit cycle position model."),
         ("total_realized_vol_30d", "drop", "Too reactive for multi-year regime decisions."),
         ("btc_dominance_proxy", "replace", "Replace with macro/liquidity block + attention breadth."),
-        ("mvrv_z_score", "keep", "Primary valuation anchor."),
+        ("mvrv_ratio_z_proxy", "keep", "Expanding z-score proxy derived from the MVRV ratio."),
         ("puell_multiple", "keep", "Primary miner-cycle valuation anchor."),
-        ("supply_in_profit", "keep", "Useful cycle saturation context."),
-        ("supply_in_loss", "recalibrate", "Derived counterpart; reduced standalone weight."),
+        ("mvrv_implied_profitability_proxy", "display_only", "Derived view; excluded from scoring."),
         ("youtube_interest", "drop", "Short-horizon and unstable availability."),
         ("google_trends_interest", "keep", "Core attention component."),
         ("coinbase_app_rank_proxy", "drop", "Experimental and noisy; keep only as optional diagnostic."),
@@ -672,7 +837,7 @@ def build_cycle_model(
     financial_benchmark_summary, financial_benchmark_curves = _build_financial_benchmark_outputs(
         monthly_price=feature_snapshots["btc_price"],
         decisions=signal_decisions,
-        regime_scores=regime_scores,
+        dca_risk=None,
         cfg=cfg,
     )
     backtest_report = _build_backtest_report(

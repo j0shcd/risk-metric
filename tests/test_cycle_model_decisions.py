@@ -42,6 +42,34 @@ class CycleModelDecisionTests(unittest.TestCase):
         self.assertEqual(len(buy_dates), 1)
         self.assertGreaterEqual(int(out.loc[buy_dates[0], "cooldown_state"]), 1)
 
+    def test_cooldown_blocks_the_configured_number_of_full_months(self) -> None:
+        idx = pd.date_range("2024-01-31", periods=5, freq=pd.offsets.MonthEnd())
+        regime = pd.DataFrame(
+            {
+                "p_accumulation": [0.9, 0.1, 0.1, 0.1, 0.1],
+                "p_frenzy": [0.1, 0.9, 0.9, 0.9, 0.9],
+            },
+            index=idx,
+        )
+        features = pd.DataFrame(
+            {
+                "valuation_cold": 0.9,
+                "speculation_cold": 0.8,
+                "attention_cold": 0.1,
+                "macro_cold": 0.2,
+                "valuation_hot": 0.9,
+                "speculation_hot": 0.8,
+                "attention_hot": 0.1,
+                "macro_hot": 0.2,
+            },
+            index=idx,
+        )
+        cfg = self._cfg(cycle_buy_threshold=0.75, cycle_sell_threshold=0.75, cycle_confirmation_months=1, cycle_cooldown_months=2)
+
+        out = _build_signal_decisions(features, regime, cfg)
+
+        self.assertEqual(out["regime"].tolist(), ["BUY", "HOLD", "HOLD", "SELL", "HOLD"])
+
 
 if __name__ == "__main__":
     unittest.main()

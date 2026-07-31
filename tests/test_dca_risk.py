@@ -45,6 +45,23 @@ class DcaRiskTests(unittest.TestCase):
         self.assertEqual(output.loc[index[0], "dca_bottom_reversal_component"], 0.5)
         self.assertEqual(output.loc[index[1], "dca_bottom_reversal_component"], 0.0)
 
+    def test_dca_risk_fails_closed_below_minimum_component_coverage(self) -> None:
+        index = pd.to_datetime(["2026-01-01", "2026-01-02"])
+        frame = pd.DataFrame(
+            {
+                "top_reversal_risk": [0.4, np.nan],
+                "bottom_reversal_risk": [0.6, np.nan],
+                "cycle_extension_score": [0.2, 0.4],
+                "cycle_frenzy_score": [0.3, 0.4],
+            },
+            index=index,
+        )
+
+        output = add_dca_risk_columns(frame)
+
+        self.assertEqual(output.loc[index[1], "dca_component_coverage"], 0.5)
+        self.assertTrue(np.isnan(output.loc[index[1], "dca_risk"]))
+
 
 if __name__ == "__main__":
     unittest.main()
