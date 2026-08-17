@@ -10,35 +10,9 @@ from typing import Any, Dict, Iterable, List
 from .schemas import AvailabilityRule, EvaluationConfig, MetricDefinition, RegisteredHypothesis, json_safe
 
 
-REGISTERED_DCA_HYPOTHESES: List[RegisteredHypothesis] = [
-    RegisteredHypothesis(
-        hypothesis_id="dca_risk_accumulation_6m",
-        signal="dca_risk",
-        label_id="wf_threshold_bottom_up50_h6",
-        expected_direction="lower_score_more_events",
-        horizon_months=6,
-        primary_statistic="auc",
-        endpoint="forward_max_return_at_least_50pct",
-    ),
-    RegisteredHypothesis(
-        hypothesis_id="dca_risk_derisk_6m",
-        signal="dca_risk",
-        label_id="wf_threshold_top_dd30_h6",
-        expected_direction="higher_score_more_events",
-        horizon_months=6,
-        primary_statistic="auc",
-        endpoint="forward_drawdown_at_least_30pct",
-    ),
-    RegisteredHypothesis(
-        hypothesis_id="dca_risk_derisk_12m",
-        signal="dca_risk",
-        label_id="wf_threshold_top_dd30_h12",
-        expected_direction="higher_score_more_events",
-        horizon_months=12,
-        primary_statistic="auc",
-        endpoint="forward_drawdown_at_least_30pct",
-    ),
-]
+# DCA Risk promotion is governed by the compact evidence suite rather than the
+# generic short-horizon label grid. The grid remains available for exploration.
+REGISTERED_DCA_HYPOTHESES: List[RegisteredHypothesis] = []
 
 
 DEFAULT_METRICS: List[MetricDefinition] = [
@@ -177,6 +151,12 @@ def build_evaluation_config(
     seed: int = 1729,
     cycle_dynamic_dca_buy_threshold: float = 0.75,
     cycle_dynamic_dca_sell_threshold: float = 0.75,
+    cycle_dynamic_dca_base_contribution: float = 1.0,
+    cycle_dynamic_dca_max_buy_multiplier: float = 3.0,
+    cycle_dynamic_dca_max_sell_fraction: float = 0.35,
+    cycle_dynamic_dca_cash_buffer_ratio: float = 0.10,
+    cycle_dynamic_dca_fee_rate: float = 0.001,
+    cycle_dynamic_dca_slippage_rate: float = 0.001,
 ) -> EvaluationConfig:
     normalized_profile = profile.strip().lower()
     if normalized_profile not in PROFILE_REQUIRED_COLUMNS:
@@ -193,6 +173,12 @@ def build_evaluation_config(
         smoke_mode=normalized_profile == "smoke",
         cycle_dynamic_dca_buy_threshold=float(cycle_dynamic_dca_buy_threshold),
         cycle_dynamic_dca_sell_threshold=float(cycle_dynamic_dca_sell_threshold),
+        cycle_dynamic_dca_base_contribution=float(cycle_dynamic_dca_base_contribution),
+        cycle_dynamic_dca_max_buy_multiplier=float(cycle_dynamic_dca_max_buy_multiplier),
+        cycle_dynamic_dca_max_sell_fraction=float(cycle_dynamic_dca_max_sell_fraction),
+        cycle_dynamic_dca_cash_buffer_ratio=float(cycle_dynamic_dca_cash_buffer_ratio),
+        cycle_dynamic_dca_fee_rate=float(cycle_dynamic_dca_fee_rate),
+        cycle_dynamic_dca_slippage_rate=float(cycle_dynamic_dca_slippage_rate),
         source_latency_days=dict(DEFAULT_SOURCE_LATENCY_DAYS),
         availability_rules=list(DEFAULT_AVAILABILITY_RULES),
     )

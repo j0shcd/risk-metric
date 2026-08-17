@@ -105,6 +105,12 @@ class EvaluationConfig:
     smoke_mode: bool = False
     cycle_dynamic_dca_buy_threshold: float = 0.75
     cycle_dynamic_dca_sell_threshold: float = 0.75
+    cycle_dynamic_dca_base_contribution: float = 1.0
+    cycle_dynamic_dca_max_buy_multiplier: float = 3.0
+    cycle_dynamic_dca_max_sell_fraction: float = 0.35
+    cycle_dynamic_dca_cash_buffer_ratio: float = 0.10
+    cycle_dynamic_dca_fee_rate: float = 0.001
+    cycle_dynamic_dca_slippage_rate: float = 0.001
     source_latency_days: Dict[str, int] = field(default_factory=dict)
     availability_rules: List[AvailabilityRule] = field(default_factory=list)
 

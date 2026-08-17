@@ -62,6 +62,37 @@ class DcaRiskTests(unittest.TestCase):
         self.assertEqual(output.loc[index[1], "dca_component_coverage"], 0.5)
         self.assertTrue(np.isnan(output.loc[index[1], "dca_risk"]))
 
+    def test_future_component_values_cannot_change_past_dca_risk(self) -> None:
+        index = pd.date_range("2025-01-01", periods=20, freq="D")
+        x = np.arange(len(index), dtype=float)
+        frame = pd.DataFrame(
+            {
+                "top_reversal_risk": 0.1 + 0.02 * x,
+                "bottom_reversal_risk": 0.9 - 0.02 * x,
+                "cycle_extension_score": 0.2 + 0.03 * x,
+                "cycle_frenzy_score": 0.8 - 0.03 * x,
+            },
+            index=index,
+        )
+        cutoff = index[11]
+        prefix_only = add_dca_risk_columns(frame.loc[:cutoff])
+
+        mutated = frame.copy()
+        mutated.loc[mutated.index > cutoff, :] = np.array([1.0, 0.0, 1.0, 0.0])
+        full_with_mutated_future = add_dca_risk_columns(mutated)
+
+        columns = [
+            "dca_risk",
+            "dca_top_reversal_component",
+            "dca_bottom_reversal_component",
+            "dca_cycle_extension_component",
+            "dca_cycle_regime_component",
+        ]
+        pd.testing.assert_frame_equal(
+            prefix_only[columns],
+            full_with_mutated_future.loc[:cutoff, columns],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

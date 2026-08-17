@@ -1511,6 +1511,81 @@ def summarize_dca_threshold_reachability(threshold_reachability: pd.DataFrame) -
     )
 
 
+def summarize_dca_evidence(
+    evidence_summary: pd.DataFrame,
+    causality_audit: pd.DataFrame,
+) -> EvaluationTestResult:
+    test_id = "practical.dca_evidence"
+    warnings: List[EvaluationWarning] = []
+    if evidence_summary.empty:
+        warnings.append(
+            _warning(
+                code="dca_evidence_unavailable",
+                severity="high",
+                message="DCA evidence could not be evaluated because price/risk overlap was insufficient.",
+                test_id=test_id,
+                blocks_dashboard=True,
+            )
+        )
+        return EvaluationTestResult(
+            test_id=test_id,
+            family="practical_usability",
+            status="fail",
+            severity="high",
+            summary="The compact DCA evidence suite was unavailable.",
+            result_type="diagnostic",
+            claim_scope="dca_risk_claims",
+            warnings=warnings,
+        )
+
+    statuses = evidence_summary.get("status", pd.Series("fail", index=evidence_summary.index)).astype(str)
+    failed_tests = evidence_summary.loc[~statuses.eq("pass"), "test"].astype(str).tolist()
+    if failed_tests:
+        warnings.append(
+            _warning(
+                code="dca_evidence_not_supported",
+                severity="high",
+                message=f"DCA evidence is not supported by: {', '.join(failed_tests)}.",
+                test_id=test_id,
+                blocks_dashboard=True,
+            )
+        )
+
+    causality_passes = bool(
+        not causality_audit.empty
+        and causality_audit.get(
+            "passes_causality_audit", pd.Series(False, index=causality_audit.index)
+        ).fillna(False).astype(bool).all()
+    )
+    if not causality_passes:
+        warnings.append(
+            _warning(
+                code="dca_strategy_causality_audit_failed",
+                severity="high",
+                message="Future signal mutations changed earlier DCA decisions or the execution lag invariant failed.",
+                test_id=test_id,
+                blocks_dashboard=True,
+            )
+        )
+
+    status = "fail" if any(warning.blocks_dashboard for warning in warnings) else "pass"
+    return EvaluationTestResult(
+        test_id=test_id,
+        family="practical_usability",
+        status=status,
+        severity="high" if status == "fail" else "info",
+        summary="Separated DCA evidence into accumulation-only value, de-risking value, and policy-independent signal value.",
+        result_type="diagnostic",
+        claim_scope="dca_risk_claims",
+        metrics={
+            "evidence_tests": int(evidence_summary.shape[0]),
+            "passing_evidence_tests": int(statuses.eq("pass").sum()),
+            "causality_audit_passes": causality_passes,
+        },
+        warnings=warnings,
+    )
+
+
 def summarize_strength_mapping(
     degraded_data: pd.DataFrame,
     regime_results: pd.DataFrame,

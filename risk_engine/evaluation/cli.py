@@ -132,6 +132,7 @@ def main(argv: list[str] | None = None) -> int:
             "robustness.strength_mapping",
             "practical.monthly_strategy_suite",
             "practical.dca_threshold_reachability",
+            "practical.dca_evidence",
             "validator.claim_gates",
         ]:
             print(test_id)
@@ -152,12 +153,21 @@ def main(argv: list[str] | None = None) -> int:
         output_dir = Path(args.output_dir).resolve() if args.output_dir else artifact_dir / "evaluation"
         dca_buy_threshold = 0.75
         dca_sell_threshold = 0.75
+        dca_policy_kwargs = {}
     else:
         runtime_cfg = load_runtime_config()
         result = run_pipeline(runtime_cfg)
         output_dir = Path(args.output_dir).resolve() if args.output_dir else runtime_cfg.output_dir / "evaluation"
         dca_buy_threshold = float(runtime_cfg.cycle_dynamic_dca_buy_threshold)
         dca_sell_threshold = float(runtime_cfg.cycle_dynamic_dca_sell_threshold)
+        dca_policy_kwargs = {
+            "cycle_dynamic_dca_base_contribution": runtime_cfg.cycle_dynamic_dca_base_contribution,
+            "cycle_dynamic_dca_max_buy_multiplier": runtime_cfg.cycle_dynamic_dca_max_buy_multiplier,
+            "cycle_dynamic_dca_max_sell_fraction": runtime_cfg.cycle_dynamic_dca_max_sell_fraction,
+            "cycle_dynamic_dca_cash_buffer_ratio": runtime_cfg.cycle_dynamic_dca_cash_buffer_ratio,
+            "cycle_dynamic_dca_fee_rate": runtime_cfg.cycle_dynamic_dca_fee_rate,
+            "cycle_dynamic_dca_slippage_rate": runtime_cfg.cycle_dynamic_dca_slippage_rate,
+        }
     eval_cfg = build_evaluation_config(
         output_dir=output_dir,
         profile=args.profile,
@@ -165,6 +175,7 @@ def main(argv: list[str] | None = None) -> int:
         seed=args.seed,
         cycle_dynamic_dca_buy_threshold=dca_buy_threshold,
         cycle_dynamic_dca_sell_threshold=dca_sell_threshold,
+        **dca_policy_kwargs,
     )
     evaluation = run_evaluation(result, eval_cfg)
     print(f"Evaluation run: {evaluation.manifest.run_id}")

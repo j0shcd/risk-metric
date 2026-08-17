@@ -22,6 +22,7 @@ from risk_engine.evaluation.checks import (
 from risk_engine.evaluation.cli import _load_artifact_risk_output, main as evaluation_cli_main
 from risk_engine.evaluation.config import config_hash
 from risk_engine.evaluation.data import dataframe_fingerprint
+from risk_engine.evaluation.dca_evidence import evaluate_dca_evidence
 from risk_engine.evaluation.practical import (
     _simulate_dca_cashflow,
     compute_threshold_reachability,
@@ -33,6 +34,7 @@ from risk_engine.evaluation.strength import evaluate_strength_mapping
 from risk_engine.evaluation.validity import evaluate_validity_diagnostics
 from risk_engine.evaluation.walkforward import _expanding_quantile_labels, evaluate_walkforward_benchmark
 from risk_engine.evaluation.web_summary import build_evaluation_web_summary
+from risk_engine.evaluation.schemas import RegisteredHypothesis
 from risk_engine.types import RiskOutput
 
 
@@ -327,7 +329,7 @@ class EvaluationHarnessTests(unittest.TestCase):
         self.assertAlmostEqual(float(summary["money_weighted_return"]), 0.0, places=8)
         self.assertAlmostEqual(float(curve["equity"].iloc[-1]), 1.0)
 
-    def test_walkforward_tags_registered_and_exploratory_hypotheses(self) -> None:
+    def test_generic_walkforward_does_not_promote_dca_hypotheses(self) -> None:
         index = pd.date_range("2010-01-31", periods=180, freq=pd.offsets.MonthEnd())
         x = np.arange(len(index), dtype=float)
         series = pd.DataFrame(
@@ -344,10 +346,13 @@ class EvaluationHarnessTests(unittest.TestCase):
 
         registered = result.by_label[result.by_label["evidence_tier"].astype(str) == "registered"]
         exploratory = result.by_label[result.by_label["evidence_tier"].astype(str) == "exploratory"]
-        self.assertEqual(set(registered["signal"].astype(str)), {"dca_risk"})
-        self.assertEqual(
-            set(registered["hypothesis_id"].astype(str)),
-            {item.hypothesis_id for item in cfg.registered_hypotheses},
+        self.assertTrue(registered.empty)
+        self.assertEqual(cfg.registered_hypotheses, [])
+        self.assertTrue(
+            result.by_label.loc[result.by_label["signal"].eq("dca_risk"), "evidence_tier"]
+            .astype(str)
+            .eq("exploratory")
+            .all()
         )
         self.assertFalse(exploratory["eligible_for_promotion"].fillna(False).any())
         self.assertTrue(
@@ -621,6 +626,17 @@ class EvaluationHarnessTests(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as tmp:
             cfg = build_evaluation_config(output_dir=Path(tmp), profile="smoke", run_id="wf")
+            cfg.registered_hypotheses.append(
+                RegisteredHypothesis(
+                    hypothesis_id="synthetic_top_reversal_12m",
+                    signal="top_reversal_risk",
+                    label_id="wf_threshold_top_dd30_h12",
+                    expected_direction="higher_score_more_events",
+                    horizon_months=12,
+                    primary_statistic="auc",
+                    endpoint="synthetic_test_endpoint",
+                )
+            )
             result = evaluate_walkforward_benchmark(series, cfg)
 
         self.assertFalse(result.by_label.empty)
@@ -701,6 +717,17 @@ class EvaluationHarnessTests(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as tmp:
             cfg = build_evaluation_config(output_dir=Path(tmp), profile="smoke", run_id="confirmatory-fdr")
+            cfg.registered_hypotheses.append(
+                RegisteredHypothesis(
+                    hypothesis_id="synthetic_top_reversal_12m",
+                    signal="top_reversal_risk",
+                    label_id="wf_threshold_top_dd30_h12",
+                    expected_direction="higher_score_more_events",
+                    horizon_months=12,
+                    primary_statistic="auc",
+                    endpoint="synthetic_test_endpoint",
+                )
+            )
             walkforward = evaluate_walkforward_benchmark(series, cfg)
             robustness = evaluate_walkforward_robustness(walkforward.by_fold, walkforward.by_label, cfg)
 
@@ -869,6 +896,87 @@ class EvaluationHarnessTests(unittest.TestCase):
                 }
             )
         )
+
+    def test_dca_evidence_is_cashflow_fair_and_causal(self) -> None:
+        index = pd.date_range("2014-01-31", periods=96, freq=pd.offsets.MonthEnd())
+        x = np.arange(len(index), dtype=float)
+        series = pd.DataFrame(
+            {
+                "btc_price": 1000.0 + 50.0 * x + 500.0 * np.sin(x / 5.0),
+                "dca_risk": (0.5 + 0.45 * np.sin(x / 8.0)).clip(0.0, 1.0),
+            },
+            index=index,
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = build_evaluation_config(output_dir=Path(tmp), profile="smoke", run_id="dca-evidence")
+            evidence = evaluate_dca_evidence(series, pd.DataFrame(), cfg)
+
+        self.assertEqual(
+            set(evidence.summary["test"].astype(str)),
+            {
+                "accumulation_only",
+                "derisking",
+                "signal_value",
+            },
+        )
+        self.assertTrue(evidence.accumulation_windows["same_external_cashflows"].astype(bool).all())
+        self.assertFalse(evidence.accumulation_windows["sales_allowed"].astype(bool).any())
+        self.assertTrue((evidence.accumulation_windows["deployment_deadline_months"] == 48).all())
+        self.assertGreaterEqual(int(evidence.accumulation_windows["months"].min()), 48)
+        self.assertEqual(
+            set(evidence.accumulation_windows["strategy"].astype(str)),
+            {"fixed_dca", "risk_accumulation", "price_only_accumulation"},
+        )
+        self.assertTrue((evidence.derisking_windows["initial_btc_units"] == 1.0).all())
+        self.assertTrue((evidence.derisking_windows["external_contributions"] == 0.0).all())
+        self.assertEqual(
+            set(evidence.policy_attribution_windows["strategy"].astype(str)),
+            {"fixed_dca", "risk_buys_only", "fixed_buys_risk_sells", "risk_buys_and_sells"},
+        )
+        self.assertTrue(evidence.policy_attribution_windows["same_external_cashflows"].astype(bool).all())
+        buys_only = evidence.policy_attribution_windows[
+            evidence.policy_attribution_windows["strategy"].eq("risk_buys_only")
+        ]
+        exit_only = evidence.policy_attribution_windows[
+            evidence.policy_attribution_windows["strategy"].eq("fixed_buys_risk_sells")
+        ]
+        self.assertTrue((buys_only["total_sold"] == 0.0).all())
+        self.assertTrue((exit_only["total_sold"] > 0.0).any())
+        self.assertEqual(
+            set(evidence.derisking_windows["strategy"].astype(str)),
+            {"hold", "risk_derisking", "price_only_derisking"},
+        )
+        self.assertEqual(set(evidence.signal_value["horizon_months"]), {48})
+        self.assertTrue(bool(evidence.causality_audit.iloc[0]["accumulation_prefix_unchanged"]))
+        self.assertTrue(bool(evidence.causality_audit.iloc[0]["derisking_prefix_unchanged"]))
+        self.assertTrue(bool(evidence.causality_audit.iloc[0]["exit_only_prefix_unchanged"]))
+        self.assertTrue(bool(evidence.causality_audit.iloc[0]["combined_policy_prefix_unchanged"]))
+        self.assertTrue(bool(evidence.causality_audit.iloc[0]["price_only_score_prefix_unchanged"]))
+        self.assertTrue(bool(evidence.causality_audit.iloc[0]["execution_uses_prior_month_dca_risk"]))
+        self.assertTrue(bool(evidence.causality_audit.iloc[0]["passes_causality_audit"]))
+
+    def test_dca_causality_audit_detects_no_future_suffix_dependency(self) -> None:
+        index = pd.date_range("2018-01-31", periods=72, freq=pd.offsets.MonthEnd())
+        series = pd.DataFrame(
+            {
+                "btc_price": np.geomspace(1000.0, 10000.0, len(index)),
+                "dca_risk": np.linspace(0.0, 1.0, len(index)),
+            },
+            index=index,
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = build_evaluation_config(output_dir=Path(tmp), profile="smoke", run_id="causality")
+            evidence = evaluate_dca_evidence(series, pd.DataFrame(), cfg)
+
+        audit = evidence.causality_audit.iloc[0]
+        self.assertTrue(bool(audit["first_execution_has_no_contemporaneous_signal"]))
+        self.assertTrue(bool(audit["accumulation_prefix_unchanged"]))
+        self.assertTrue(bool(audit["derisking_prefix_unchanged"]))
+        self.assertTrue(bool(audit["exit_only_prefix_unchanged"]))
+        self.assertTrue(bool(audit["combined_policy_prefix_unchanged"]))
+        self.assertTrue(bool(audit["price_only_score_prefix_unchanged"]))
+        self.assertTrue(bool(audit["execution_uses_prior_month_dca_risk"]))
+        self.assertTrue(bool(audit["passes_causality_audit"]))
 
     def test_web_summary_exports_blocked_claim_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

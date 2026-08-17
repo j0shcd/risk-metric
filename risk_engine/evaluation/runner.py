@@ -18,6 +18,7 @@ from .checks import (
     check_source_quality,
     check_source_availability_metadata,
     summarize_dca_threshold_reachability,
+    summarize_dca_evidence,
     summarize_existing_benchmark,
     summarize_academic_diagnostics,
     summarize_practical_strategies,
@@ -28,6 +29,7 @@ from .checks import (
     validate_claim_gates,
 )
 from .config import EvaluationConfig, config_hash, config_to_dict
+from .dca_evidence import evaluate_dca_evidence
 from .data import dataframe_fingerprint, file_fingerprint
 from .schemas import DataFingerprint, EvaluationManifest, EvaluationTestResult, EvaluationWarning, utc_now_iso
 from .storage import EvaluationStore
@@ -137,6 +139,7 @@ def run_evaluation(result: RiskOutput, config: EvaluationConfig) -> EvaluationRu
     academic = evaluate_academic_diagnostics(walkforward.by_fold, robustness.by_label, config)
     validity = evaluate_validity_diagnostics(walkforward.by_fold, academic.by_label, config)
     strength = evaluate_strength_mapping(result.series, walkforward.by_fold, validity.by_label, config)
+    dca_evidence = evaluate_dca_evidence(result.series, strength.by_label, config)
     practical = evaluate_practical_strategies(result.series, config)
     production_practical = evaluate_production_dynamic_dca(
         result.financial_benchmark_summary,
@@ -257,6 +260,36 @@ def run_evaluation(result: RiskOutput, config: EvaluationConfig) -> EvaluationRu
         "tables/threshold_reachability.csv",
         threshold_reachability,
     )
+    dca_evidence_summary_artifact = store.write_frame(
+        config.run_id,
+        "tables/dca_evidence_summary.csv",
+        dca_evidence.summary,
+    )
+    dca_accumulation_artifact = store.write_frame(
+        config.run_id,
+        "tables/dca_accumulation_windows.csv",
+        dca_evidence.accumulation_windows,
+    )
+    dca_derisking_artifact = store.write_frame(
+        config.run_id,
+        "tables/dca_derisking_windows.csv",
+        dca_evidence.derisking_windows,
+    )
+    dca_policy_attribution_artifact = store.write_frame(
+        config.run_id,
+        "tables/dca_policy_attribution_windows.csv",
+        dca_evidence.policy_attribution_windows,
+    )
+    dca_signal_value_artifact = store.write_frame(
+        config.run_id,
+        "tables/dca_signal_value.csv",
+        dca_evidence.signal_value,
+    )
+    dca_causality_audit_artifact = store.write_frame(
+        config.run_id,
+        "tables/dca_causality_audit.csv",
+        dca_evidence.causality_audit,
+    )
     degraded_data_artifact = store.write_frame(
         config.run_id,
         "tables/degraded_data.csv",
@@ -303,6 +336,7 @@ def run_evaluation(result: RiskOutput, config: EvaluationConfig) -> EvaluationRu
         ),
         summarize_practical_strategies(practical.results, practical.curves, practical.trades),
         summarize_dca_threshold_reachability(threshold_reachability),
+        summarize_dca_evidence(dca_evidence.summary, dca_evidence.causality_audit),
     ]
     tests_by_id = {test.test_id: test for test in tests}
     tests_by_id["data.availability_calendar"].artifacts.append(availability_artifact)
@@ -330,6 +364,16 @@ def run_evaluation(result: RiskOutput, config: EvaluationConfig) -> EvaluationRu
         [strategy_results_artifact, strategy_curves_artifact, strategy_trades_artifact]
     )
     tests_by_id["practical.dca_threshold_reachability"].artifacts.append(threshold_reachability_artifact)
+    tests_by_id["practical.dca_evidence"].artifacts.extend(
+        [
+            dca_evidence_summary_artifact,
+            dca_accumulation_artifact,
+            dca_derisking_artifact,
+            dca_policy_attribution_artifact,
+            dca_signal_value_artifact,
+            dca_causality_audit_artifact,
+        ]
+    )
     artifacts.extend(
         [
             availability_artifact,
@@ -348,6 +392,12 @@ def run_evaluation(result: RiskOutput, config: EvaluationConfig) -> EvaluationRu
             strategy_curves_artifact,
             strategy_trades_artifact,
             threshold_reachability_artifact,
+            dca_evidence_summary_artifact,
+            dca_accumulation_artifact,
+            dca_derisking_artifact,
+            dca_policy_attribution_artifact,
+            dca_signal_value_artifact,
+            dca_causality_audit_artifact,
             degraded_data_artifact,
             regime_results_artifact,
             rolling_stability_artifact,
