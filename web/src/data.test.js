@@ -108,9 +108,10 @@ describe("DCA helpers", () => {
       { startDate: "2026-01-01", monthlyContribution: 100 },
     );
 
-    expect(comparison.rows[1]).toMatchObject({ riskUsed: 0.25, buyAmount: 100 });
-    expect(comparison.rows[2].riskUsed).toBe(0.75);
-    expect(comparison.rows[2].sellAmount).toBeGreaterThan(0);
+    expect(comparison.rows[0].riskUsed).toBe(0.25);
+    expect(comparison.rows[0].buyAmount).toBeGreaterThan(0);
+    expect(comparison.rows[1].riskUsed).toBe(0.75);
+    expect(comparison.rows[1].sellAmount).toBeGreaterThan(0);
   });
 
   it("compares fixed and dynamic DCA with equal monthly external cashflows", () => {
@@ -123,9 +124,9 @@ describe("DCA helpers", () => {
       { startDate: "2026-01-01", monthlyContribution: 100 },
     );
 
-    expect(comparison.fixed.totalContributed).toBe(300);
-    expect(comparison.dynamic.totalContributed).toBe(300);
-    expect(comparison.rows.map((row) => row.contribution)).toEqual([100, 100, 100]);
+    expect(comparison.fixed.totalContributed).toBe(200);
+    expect(comparison.dynamic.totalContributed).toBe(200);
+    expect(comparison.rows.map((row) => row.contribution)).toEqual([100, 100]);
   });
 
   it("warns when scenario thresholds overlap", () => {
@@ -152,12 +153,26 @@ describe("DCA helpers", () => {
       { startDate: "2026-01-01", monthlyContribution: 100 },
     );
 
-    expect(comparison.rows[0].riskUsed).toBeNull();
-    expect(comparison.rows[0].buyAmount).toBe(0);
-    expect(comparison.rows[1].riskUsed).toBe(0.1);
-    expect(comparison.rows[1].buyAmount).toBeGreaterThan(0);
-    expect(comparison.rows[2].riskUsed).toBe(0.9);
-    expect(comparison.rows[2].sellAmount).toBeGreaterThan(0);
+    expect(comparison.rows[0].riskUsed).toBe(0.1);
+    expect(comparison.rows[0].buyAmount).toBeGreaterThan(0);
+    expect(comparison.rows[1].riskUsed).toBe(0.9);
+    expect(comparison.rows[1].sellAmount).toBeGreaterThan(0);
+  });
+
+  it("does not compare fixed DCA before the first actionable DCA Risk month", () => {
+    const comparison = simulateDcaComparison(
+      {
+        labels: ["2012-01-31", "2014-12-31", "2015-01-31", "2015-02-28"],
+        values: [null, 0.2, 0.8, 0.5],
+        priceValues: [5, 300, 250, 275],
+      },
+      { startDate: "2012-01-01", monthlyContribution: 100 },
+    );
+
+    expect(comparison.strategy.startDate).toBe("2015-01-01");
+    expect(comparison.rows[0]).toMatchObject({ date: "2015-01-31", riskUsed: 0.2 });
+    expect(comparison.fixed.totalContributed).toBe(comparison.dynamic.totalContributed);
+    expect(comparison.warnings[0]).toMatch(/moved to 2015-01-01/);
   });
 
   it("does not count deposits as time-weighted investment return", () => {
@@ -171,7 +186,7 @@ describe("DCA helpers", () => {
     );
 
     expect(comparison.dynamic.timeWeightedReturn).toBeCloseTo(0);
-    expect(comparison.dynamic.endingValue).toBe(300);
+    expect(comparison.dynamic.endingValue).toBe(200);
     expect(comparison.fixed.timeWeightedReturn).toBeLessThan(0);
   });
 });

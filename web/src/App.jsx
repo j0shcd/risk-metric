@@ -21,10 +21,12 @@ import {
   integerLabel,
   loadDashboardData,
   percentLabel,
+  scenarioAvailableFrom,
   simulateDcaComparison,
   valueLabel,
 } from "./data";
 import { CURATED_METRICS, METRIC_COPY } from "./copy";
+import { DCA_EVIDENCE } from "./dcaEvidence";
 
 ChartJS.register(
   CategoryScale,
@@ -57,7 +59,7 @@ const PRICE_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }
 const MONEY_FORMAT = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const DCA_STRATEGY_STORAGE_KEY = "riskMetricDcaStrategy.v1";
 const ACTIVE_TAB_STORAGE_KEY = "riskMetricActiveTab.v1";
-const TAB_KEYS = ["risk", "method", "scenarios", "evidence", "about"];
+const TAB_KEYS = ["risk", "scenarios", "evidence", "method", "about"];
 
 const hoverGuidePlugin = {
   id: "hoverGuide",
@@ -226,29 +228,20 @@ function CountCard({ label, value, tone = "amber", sub = "", highlight = false }
   );
 }
 
-function StatusTicker({ manifest, latestSnapshot, diagnostics, evaluationSummary }) {
+function StatusTicker({ manifest, latestSnapshot, diagnostics }) {
   const validation = validationState(diagnostics);
   const sourceIssues = criticalSourceIssues(diagnostics);
-  const claimsBlocked =
-    evaluationSummary?.claim_state?.status === "blocked" || evaluationSummary?.source_run?.status === "fail";
   const generatedAt = manifest?.generated_at ?? latestSnapshot?.generated_at;
   const scoreDate = latestSnapshot?.date ?? "n/a";
-  const isFailing = claimsBlocked || validation.passed === false || sourceIssues.length > 0;
-  const statusLabel = claimsBlocked
-    ? "CLAIMS BLOCKED"
-    : validation.passed === null
-      ? "UNVERIFIED"
-      : isFailing
-        ? "VALIDATION FAIL"
-        : "VALIDATED";
+  const isFailing = validation.passed === false || sourceIssues.length > 0;
+  const statusLabel = isFailing ? "DATA CHECK NEEDED" : "DATA CURRENT";
 
   return (
     <header className="bb-topbar">
       <span className={`bb-live-dot${isFailing ? " bb-live-dot--fail" : ""}`} aria-hidden="true" />
       <span className={`bb-meta bb-meta--status${isFailing ? " bb-meta--fail" : ""}`}>{statusLabel}</span>
-      <span className="bb-meta">SCORE DATE {scoreDate}</span>
-      <span className="bb-meta">ARTIFACT {formatDateTime(generatedAt)}</span>
-      <span className="bb-meta">SCHEMA {manifest?.schema_version ?? latestSnapshot?.schema_version ?? "n/a"}</span>
+      <span className="bb-meta">Reading {scoreDate}</span>
+      <span className="bb-meta bb-topbar__refresh">Refreshed {formatDateTime(generatedAt)}</span>
     </header>
   );
 }
@@ -941,6 +934,91 @@ function EvidencePanel({ evaluationSummary }) {
   );
 }
 
+function DcaEvidencePanel() {
+  return (
+    <section className="bb-research" aria-labelledby="dca-evidence-title">
+      <header className="bb-research-hero">
+        <div className="bb-research-hero__index" aria-hidden="true">
+          <span>01—03</span>
+          <strong>1</strong>
+          <small>promising result</small>
+        </div>
+        <div className="bb-research-hero__copy">
+          <p className="bb-panel__eyebrow">DCA Risk / evidence ledger</p>
+          <h1 id="dca-evidence-title">{DCA_EVIDENCE.headline}</h1>
+          <p>{DCA_EVIDENCE.summary}</p>
+          <dl className="bb-research-meta">
+            <div><dt>Evaluated</dt><dd>{DCA_EVIDENCE.evaluatedAt}</dd></div>
+            <div><dt>Historical data</dt><dd>{DCA_EVIDENCE.dataWindow}</dd></div>
+            <div><dt>Evidence type</dt><dd>Retrospective reconstruction</dd></div>
+          </dl>
+        </div>
+      </header>
+
+      <div className="bb-research-tests">
+        {DCA_EVIDENCE.tests.map((test) => (
+          <article className={`bb-research-test bb-research-test--${test.tone}`} key={test.id}>
+            <div className="bb-research-test__head">
+              <span className="bb-research-test__number">{test.number}</span>
+              <span className={`bb-research-verdict bb-research-verdict--${test.tone}`}>{test.verdict}</span>
+            </div>
+            <h2>{test.title}</h2>
+            <p className="bb-research-test__value">{test.featuredValue}</p>
+            <p className="bb-research-test__value-label">{test.featuredLabel}</p>
+            <p className="bb-research-test__explanation">{test.explanation}</p>
+            <dl className="bb-research-test__stats">
+              {test.stats.map(([label, value]) => (
+                <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+              ))}
+            </dl>
+          </article>
+        ))}
+      </div>
+
+      <div className="bb-research-lower">
+        <section className="bb-research-attribution" aria-labelledby="policy-attribution-title">
+          <div className="bb-research-section-head">
+            <p>What part of the policy helped?</p>
+            <h2 id="policy-attribution-title">Buying versus selling</h2>
+          </div>
+          <div className="bb-research-table-wrap">
+            <table className="bb-research-table">
+              <thead><tr><th>Policy</th><th>Median wealth vs Fixed DCA</th><th>Windows won</th></tr></thead>
+              <tbody>
+                {DCA_EVIDENCE.attribution.map(([policy, wealth, wins]) => (
+                  <tr key={policy}>
+                    <th>{policy}</th>
+                    <td className={wealth.startsWith("−") ? "bb-research-negative" : ""}>{wealth}</td>
+                    <td>{wins}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="bb-research-caption">
+            Same deposits and trading costs. Selling helped more than varying purchases, but none of
+            the risk-based cashflow policies beat Fixed DCA at the median.
+          </p>
+        </section>
+
+        <aside className="bb-research-guardrails" aria-labelledby="evidence-guardrails-title">
+          <p className="bb-research-guardrails__eyebrow">Anti-self-deception rules</p>
+          <h2 id="evidence-guardrails-title">What the test refuses to know</h2>
+          <ol>
+            {DCA_EVIDENCE.safeguards.map((safeguard) => <li key={safeguard}>{safeguard}</li>)}
+          </ol>
+          <p className="bb-research-run">Frozen run / {DCA_EVIDENCE.runId}</p>
+        </aside>
+      </div>
+
+      <p className="bb-research-disclaimer">
+        These results describe this frozen score and policy—not every possible price target, stop-loss,
+        or selling rule. Historical promise is not prospective proof or investment advice.
+      </p>
+    </section>
+  );
+}
+
 function StrategyField({ label, value, min = 0, max, step, onChange }) {
   return (
     <label className="bb-dca-field">
@@ -1094,7 +1172,7 @@ function RiskPanel({ historyCore, setActiveTab }) {
   const action = dcaActionForRisk(latestRisk, DEFAULT_DCA_STRATEGY);
   const hasBtcData = btcValues.some((value) => value !== null);
   const tone = action.side === "buy" ? "green" : action.side === "sell" ? "red" : "amber";
-  const zoneLabel = isDegraded ? "DCA RISK UNAVAILABLE" : action.side === "buy" ? "LOW-RISK HISTORICAL ALIGNMENT" : action.side === "sell" ? "HIGH-RISK HISTORICAL ALIGNMENT" : "MID-RANGE HISTORICAL ALIGNMENT";
+  const zoneLabel = isDegraded ? "READING UNAVAILABLE" : action.side === "buy" ? "HISTORICALLY LOWER RISK" : action.side === "sell" ? "HISTORICALLY HIGHER RISK" : "BETWEEN BUY AND SELL ZONES";
   const componentRows = dcaSeries.components.map((component) => ({
     ...component,
     latestValue: latestIndex >= 0 ? component.values[latestIndex] : null,
@@ -1168,24 +1246,26 @@ function RiskPanel({ historyCore, setActiveTab }) {
           <p className={`bb-risk-hero__zone bb-card__value--${tone}`}>{zoneLabel}</p>
         </div>
         <div className="bb-risk-hero__copy">
+          <h1>Put market risk beside your Bitcoin DCA.</h1>
           <p>
-            A descriptive long-horizon index of how current conditions align with historically
-            lower- and higher-risk cycle regimes. It is not a validated forecast or trading signal.
+            Risk Metric is a research dashboard for deciding when to accumulate, hold, or de-risk
+            Bitcoin over a long horizon.
           </p>
           <div className="bb-risk-hero__actions">
             <button type="button" className="bb-button bb-button--primary" disabled={isDegraded} onClick={() => setActiveTab("scenarios")}>
-              Test a strategy
+              Compare DCA approaches
             </button>
             <button type="button" className="bb-button" onClick={() => setActiveTab("method")}>
-              See how it is built
+              Understand the score
             </button>
           </div>
+          <p className="bb-risk-hero__caveat">Historical context, not a forecast or trading signal.</p>
         </div>
       </div>
 
       <section className="bb-panel bb-panel--focus">
         <div className="bb-panel__head">
-          <h2 className="bb-panel__title bb-panel__title--solo">DCA Risk History</h2>
+          <h2 className="bb-panel__title bb-panel__title--solo">Risk over time</h2>
           <div className="bb-panel__actions">
             {hasBtcData && (
               <select className="bb-select bb-select--compact" value={priceScaleType} onChange={(event) => setPriceScaleType(event.target.value)}>
@@ -1204,18 +1284,18 @@ function RiskPanel({ historyCore, setActiveTab }) {
           )}
         </div>
         <p className="bb-dca-note">
-          Lower readings indicate historically more accumulation-like conditions; higher readings
-          indicate increasingly heated conditions. Thresholds are policy choices, not guarantees.
+          0 is more accumulation-like. 1 is more heated. The green and red lines show the default
+          buy and sell zones; they are choices, not guarantees.
         </p>
       </section>
 
       <div className="bb-risk-components">
         <div className="bb-risk-components__head">
           <div>
-            <p className="bb-section-title">What is driving the reading</p>
-            <p className="bb-dca-note">Supporting components shown in the same low-to-high risk direction.</p>
+            <p className="bb-section-title">What shapes today&apos;s score</p>
+            <p className="bb-dca-note">Four components, all shown from lower to higher risk.</p>
           </div>
-          <button type="button" className="bb-link" onClick={() => setActiveTab("method")}>Full methodology →</button>
+          <button type="button" className="bb-link" onClick={() => setActiveTab("method")}>See the method →</button>
         </div>
         <div className="bb-card-grid bb-card-grid--dca">
           {componentRows.map((component) => (
@@ -1249,6 +1329,7 @@ function ComparisonScenarioPanel({ historyCore }) {
     () => simulateDcaComparison(simulationInput, strategyInput),
     [simulationInput, strategyInput],
   );
+  const availableFrom = useMemo(() => scenarioAvailableFrom(simulationInput), [simulationInput]);
   const strategy = comparison.strategy;
   const recentRows = comparison.rows.slice(-12).reverse();
   const latestIndex = dcaSeries.labels.length - 1;
@@ -1320,18 +1401,18 @@ function ComparisonScenarioPanel({ historyCore }) {
     <section aria-label="Scenarios">
       <div className="bb-scenario-intro">
         <div>
-          <p className="bb-risk-hero__eyebrow">ILLUSTRATIVE COMPARISON</p>
-          <h2>Same deposits. Different allocation policy.</h2>
+          <p className="bb-risk-hero__eyebrow">HISTORICAL SCENARIO</p>
+          <h2>Compare fixed DCA with a buy-and-sell policy.</h2>
         </div>
         <p>
-          Both ledgers receive the same external cashflow each month. Fixed DCA invests it immediately;
-          the dynamic ledger uses the prior month&apos;s DCA Risk reading, so no observation trades itself.
+          Both accounts receive the same monthly deposit. Fixed DCA buys and holds. The risk-aware
+          account may buy, hold cash, or sell using the prior month&apos;s reading.
         </p>
       </div>
 
       <section className="bb-panel bb-scenario-controls">
         <div className="bb-panel__head">
-          <h3 className="bb-panel__title bb-panel__title--solo">Scenario assumptions</h3>
+          <h3 className="bb-panel__title bb-panel__title--solo">Set the comparison</h3>
           <button type="button" className="bb-button" onClick={() => setStrategyInput(DEFAULT_DCA_STRATEGY)}>Reset</button>
         </div>
         <div className="bb-dca-controls bb-dca-controls--scenario">
@@ -1341,44 +1422,50 @@ function ComparisonScenarioPanel({ historyCore }) {
               className="bb-dca-input"
               type="date"
               value={strategy.startDate}
-              min={dcaSeries.labels[0] ?? undefined}
+              min={availableFrom || undefined}
               max={dcaSeries.labels.at(-1) ?? undefined}
               onChange={(event) => updateStrategy("startDate", event.target.value)}
             />
           </label>
           <StrategyField label="Monthly Deposit" value={strategy.monthlyContribution} step="25" onChange={(value) => updateStrategy("monthlyContribution", value)} />
-          <StrategyField label="Accumulate At / Below" value={strategyInput.buyStartRisk} max={1} step="0.01" onChange={(value) => updateStrategy("buyStartRisk", value)} />
-          <StrategyField label="De-risk At / Above" value={strategyInput.sellStartRisk} max={1} step="0.01" onChange={(value) => updateStrategy("sellStartRisk", value)} />
+          <StrategyField label="Buy when risk is at or below" value={strategyInput.buyStartRisk} max={1} step="0.01" onChange={(value) => updateStrategy("buyStartRisk", value)} />
+          <StrategyField label="Sell when risk is at or above" value={strategyInput.sellStartRisk} max={1} step="0.01" onChange={(value) => updateStrategy("sellStartRisk", value)} />
         </div>
         {comparison.warnings.length > 0 ? <p className="bb-dca-warning">{comparison.warnings.join(" ")}</p> : null}
         <p className="bb-dca-note">
-          Monthly close execution · 0.20% fee + slippage · up to 3× allocation in low-risk months ·
-          up to 35% de-risking in high-risk months · 10% cash buffer. Results are retrospective and illustrative,
-          not a forecast or investment advice.
+          Trades use monthly closes and the previous month&apos;s risk reading. Costs are 0.20% per trade.
+          Low-risk months can invest up to 3× the deposit; high-risk months can sell up to 35% of BTC.
+          The account keeps a 10% cash buffer.
         </p>
       </section>
 
       <div className="bb-scenario-results">
         {[
-          ["Fixed DCA", comparison.fixed, "blue"],
-          ["DCA Risk strategy", comparison.dynamic, "amber"],
+          ["Fixed DCA · hold to end", comparison.fixed, "blue"],
+          ["Risk-aware DCA · buy and sell", comparison.dynamic, "amber"],
         ].map(([label, result, tone]) => (
           <article className={`bb-scenario-result bb-scenario-result--${tone}`} key={label}>
             <p className="bb-card__label">{label}</p>
+            <p className="bb-scenario-result__caption">Ending account value</p>
             <p className={`bb-scenario-result__value bb-card__value--${tone}`}>{formatMoney(result.endingValue)}</p>
             <dl>
-              <div><dt>Deposited</dt><dd>{formatMoney(result.totalContributed)}</dd></div>
-              <div><dt>Gain / loss</dt><dd>{formatMoney(result.gain)}</dd></div>
-              <div><dt>Money-weighted</dt><dd>{percentLabel(result.moneyWeightedReturn)}</dd></div>
-              <div><dt>Time-weighted</dt><dd>{percentLabel(result.timeWeightedReturn)}</dd></div>
+              <div><dt>Total deposits</dt><dd>{formatMoney(result.totalContributed)}</dd></div>
+              <div><dt>Net gain / loss</dt><dd>{formatMoney(result.gain)}</dd></div>
+              <div><dt>Annualized investor return</dt><dd>{percentLabel(result.moneyWeightedReturn)}</dd></div>
+              <div><dt>Cash at end</dt><dd>{formatMoney(result.endingCash)}</dd></div>
+              <div><dt>Value sold</dt><dd>{formatMoney(result.totalSold)}</dd></div>
             </dl>
           </article>
         ))}
       </div>
+      <p className="bb-scenario-definitions">
+        Annualized investor return accounts for when each deposit was made. Sale proceeds remain as
+        cash in the account and are included in ending value.
+      </p>
 
       <section className="bb-panel bb-panel--focus">
         <div className="bb-panel__head">
-          <h3 className="bb-panel__title bb-panel__title--solo">Illustrative account value</h3>
+          <h3 className="bb-panel__title bb-panel__title--solo">Account value: Bitcoin plus cash</h3>
           <button type="button" className="bb-button" onClick={() => chartRef.current?.resetZoom?.()}>Reset Zoom</button>
         </div>
         <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="scenario-chart">
@@ -1389,7 +1476,7 @@ function ComparisonScenarioPanel({ historyCore }) {
       </section>
 
       <section className="bb-panel bb-panel--focus">
-        <div className="bb-panel__head"><h3 className="bb-panel__title bb-panel__title--solo">Recent monthly executions</h3></div>
+        <div className="bb-panel__head"><h3 className="bb-panel__title bb-panel__title--solo">Recent monthly decisions</h3></div>
         <table className="bb-table bb-table--dca">
           <thead><tr><th>Date</th><th>Prior risk used</th><th>Equal deposit</th><th>Dynamic action</th><th>Fixed value</th><th>Dynamic value</th></tr></thead>
           <tbody>
@@ -1546,7 +1633,7 @@ export default function App() {
     );
   }
 
-  const { latestSnapshot, historyCore, metricBtc, manifest, diagnostics, evaluationSummary } = payload;
+  const { latestSnapshot, historyCore, metricBtc, manifest, diagnostics } = payload;
 
   return (
     <div className="bb-app">
@@ -1554,29 +1641,34 @@ export default function App() {
         manifest={manifest}
         latestSnapshot={latestSnapshot}
         diagnostics={diagnostics}
-        evaluationSummary={evaluationSummary}
       />
 
       <main className="bb-main">
-        <div className="bb-tabs" role="tablist" aria-label="Dashboard Views">
-          {[
-            { key: "risk", label: "DCA Risk" },
-            { key: "method", label: "Method" },
-            { key: "scenarios", label: "Scenarios" },
-            { key: "evidence", label: "Evidence" },
-            { key: "about", label: "About" },
-          ].map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              className={`bb-tab${activeTab === key ? " bb-tab--active" : ""}`}
-              onClick={() => setActiveTab(key)}
-              role="tab"
-              aria-selected={activeTab === key}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="bb-navigation">
+          <button type="button" className="bb-brand" onClick={() => setActiveTab("risk")}>
+            <span className="bb-brand__mark" aria-hidden="true">◒</span>
+            <span>Risk Metric</span>
+          </button>
+          <div className="bb-tabs" role="tablist" aria-label="Primary navigation">
+            {[
+              { key: "risk", label: "Today" },
+              { key: "scenarios", label: "Scenarios" },
+              { key: "evidence", label: "Evidence" },
+              { key: "method", label: "Method" },
+              { key: "about", label: "About" },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                className={`bb-tab${activeTab === key ? " bb-tab--active" : ""}`}
+                onClick={() => setActiveTab(key)}
+                role="tab"
+                aria-selected={activeTab === key}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {activeTab === "risk" && <RiskPanel historyCore={historyCore} setActiveTab={setActiveTab} />}
@@ -1600,9 +1692,9 @@ export default function App() {
           </section>
         )}
 
-        {activeTab === "evidence" && <EvidencePanel evaluationSummary={evaluationSummary} />}
-
         {activeTab === "scenarios" && <ComparisonScenarioPanel historyCore={historyCore} />}
+
+        {activeTab === "evidence" && <DcaEvidencePanel />}
 
         {activeTab === "about" && (
           <section aria-label="About">

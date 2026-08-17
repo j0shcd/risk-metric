@@ -352,6 +352,19 @@ function parseDateLabel(dateLabel) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+export function scenarioAvailableFrom(dcaSeries) {
+  const labels = Array.isArray(dcaSeries?.labels) ? dcaSeries.labels : [];
+  const risks = Array.isArray(dcaSeries?.values) ? dcaSeries.values : [];
+  const firstRiskIndex = risks.findIndex((value) => toNumber(value) !== null);
+  if (firstRiskIndex < 0 || !labels[firstRiskIndex]) return "";
+
+  const firstRiskDate = parseDateLabel(labels[firstRiskIndex]);
+  if (!firstRiskDate) return labels[firstRiskIndex];
+  return new Date(Date.UTC(firstRiskDate.getUTCFullYear(), firstRiskDate.getUTCMonth() + 1, 1))
+    .toISOString()
+    .slice(0, 10);
+}
+
 function isScheduledDate(dateLabel, cadence, dayOfWeek) {
   if (cadence === "daily") return true;
 
@@ -372,14 +385,13 @@ function isScheduledDate(dateLabel, cadence, dayOfWeek) {
   return true;
 }
 
-function monthlyExecutionRows(dcaSeries, startDate) {
+function monthlyExecutionRows(dcaSeries) {
   const labels = Array.isArray(dcaSeries?.labels) ? dcaSeries.labels : [];
   const risks = Array.isArray(dcaSeries?.values) ? dcaSeries.values : [];
   const prices = Array.isArray(dcaSeries?.priceValues) ? dcaSeries.priceValues : [];
   const byMonth = new Map();
 
   labels.forEach((date, index) => {
-    if (startDate && date < startDate) return;
     const price = toNumber(prices[index]);
     if (price === null || price <= 0) return;
     byMonth.set(date.slice(0, 7), {
@@ -440,7 +452,8 @@ function xirr(contributions, terminalValue) {
 }
 
 function scenarioSummary(rows, contribution) {
-  const endingValue = rows.at(-1)?.value ?? 0;
+  const lastRow = rows.at(-1);
+  const endingValue = lastRow?.value ?? 0;
   const totalContributed = rows.length * contribution;
   return {
     endingValue,
@@ -452,14 +465,29 @@ function scenarioSummary(rows, contribution) {
       rows.map((row) => ({ date: row.date, amount: row.contribution })),
       endingValue,
     ),
+    endingCash: lastRow?.cash ?? 0,
+    endingBitcoinValue: lastRow?.bitcoinValue ?? endingValue,
+    totalSold: rows.reduce((sum, row) => sum + (toNumber(row.sellAmount) ?? 0), 0),
   };
 }
 
 export function simulateDcaComparison(dcaSeries, strategyInput = {}) {
-  const strategy = normalizeDcaStrategy(strategyInput, dcaSeries?.labels ?? []);
+  const availableFrom = scenarioAvailableFrom(dcaSeries);
+  const requestedStartDate = /^\d{4}-\d{2}-\d{2}$/.test(String(strategyInput.startDate || ""))
+    ? strategyInput.startDate
+    : availableFrom;
+  const strategy = normalizeDcaStrategy(
+    { ...strategyInput, startDate: availableFrom && requestedStartDate < availableFrom ? availableFrom : requestedStartDate },
+    dcaSeries?.labels ?? [],
+  );
   const contribution = positiveNumber(strategyInput.monthlyContribution, strategy.buyBaseAmount);
-  const executionRows = monthlyExecutionRows(dcaSeries, strategy.startDate);
+  const allExecutionRows = monthlyExecutionRows(dcaSeries);
+  const startIndex = allExecutionRows.findIndex((row) => row.date >= strategy.startDate);
+  const executionRows = startIndex >= 0 ? allExecutionRows.slice(startIndex) : [];
   const warnings = [];
+  if (availableFrom && requestedStartDate < availableFrom) {
+    warnings.push(`Start date moved to ${availableFrom}: DCA Risk has no prior-month reading before then.`);
+  }
   if (strategy.buyStartRisk >= strategy.sellStartRisk) {
     warnings.push("Buy threshold should be below sell threshold.");
     return {
@@ -479,7 +507,7 @@ export function simulateDcaComparison(dcaSeries, strategyInput = {}) {
   let dynamicUnits = 0;
   let dynamicPreviousValue = 0;
   let dynamicTwrEquity = 1;
-  let previousObservedRisk = null;
+  let previousObservedRisk = startIndex > 0 ? allExecutionRows[startIndex - 1].observedRisk : null;
   const rows = [];
 
   executionRows.forEach(({ date, price, observedRisk }) => {
@@ -541,11 +569,24 @@ export function simulateDcaComparison(dcaSeries, strategyInput = {}) {
     rows,
     warnings,
     fixed: scenarioSummary(
-      rows.map((row) => ({ ...row, value: row.fixedValue, twrEquity: row.fixedTwrEquity })),
+      rows.map((row) => ({
+        ...row,
+        value: row.fixedValue,
+        twrEquity: row.fixedTwrEquity,
+        cash: 0,
+        bitcoinValue: row.fixedValue,
+        sellAmount: 0,
+      })),
       contribution,
     ),
     dynamic: scenarioSummary(
-      rows.map((row) => ({ ...row, value: row.dynamicValue, twrEquity: row.dynamicTwrEquity })),
+      rows.map((row) => ({
+        ...row,
+        value: row.dynamicValue,
+        twrEquity: row.dynamicTwrEquity,
+        cash: row.dynamicCash,
+        bitcoinValue: row.dynamicUnits * row.price,
+      })),
       contribution,
     ),
     assumptions: {

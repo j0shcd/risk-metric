@@ -290,14 +290,15 @@ describe("App", () => {
   it("centers DCA Risk by default and supports tab switching", async () => {
     render(<App />);
 
-    expect(await screen.findByText(/CLAIMS BLOCKED/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/SCORE DATE 2026-04-24/i).length).toBeGreaterThan(0);
-    expect(await screen.findByText("DCA Risk History")).toBeInTheDocument();
-    expect(screen.getByText(/HISTORICAL ALIGNMENT|DCA RISK UNAVAILABLE/)).toBeInTheDocument();
+    expect(await screen.findByText(/DATA CURRENT/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Reading 2026-04-24/i).length).toBeGreaterThan(0);
+    expect(await screen.findByText("Put market risk beside your Bitcoin DCA.")).toBeInTheDocument();
+    expect(screen.getByText("Risk over time")).toBeInTheDocument();
+    expect(screen.getByText(/HISTORICALLY|BETWEEN BUY AND SELL ZONES|READING UNAVAILABLE/)).toBeInTheDocument();
     expect((await screen.findAllByText("Top Reversal Risk")).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("button", { name: /^Reset Zoom$/ }).length).toBeGreaterThan(0);
     await waitFor(() => {
-      expect(screen.getByText(/ARTIFACT 2026-04-24T06:00:00Z/i)).toBeInTheDocument();
+      expect(screen.getByText(/Refreshed 2026-04-24T06:00:00Z/i)).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("tab", { name: "About" }));
@@ -314,31 +315,29 @@ describe("App", () => {
 
     fireEvent.click(await screen.findByRole("tab", { name: "Scenarios" }));
 
-    expect(await screen.findByText("Same deposits. Different allocation policy.")).toBeInTheDocument();
-    expect(screen.getByText("Scenario assumptions")).toBeInTheDocument();
-    expect(screen.getByText("Fixed DCA")).toBeInTheDocument();
-    expect(screen.getByText("DCA Risk strategy")).toBeInTheDocument();
-    expect(screen.getAllByText("Deposited")).toHaveLength(2);
-    expect(screen.getAllByText("Money-weighted")).toHaveLength(2);
-    expect(screen.getByText("Recent monthly executions")).toBeInTheDocument();
-    expect(screen.getByText(/prior month.+DCA Risk/i)).toBeInTheDocument();
+    expect(await screen.findByText("Compare fixed DCA with a buy-and-sell policy.")).toBeInTheDocument();
+    expect(screen.getByText("Set the comparison")).toBeInTheDocument();
+    expect(screen.getByText(/Fixed DCA · hold to end/)).toBeInTheDocument();
+    expect(screen.getByText(/Risk-aware DCA · buy and sell/)).toBeInTheDocument();
+    expect(screen.getAllByText("Total deposits")).toHaveLength(2);
+    expect(screen.getAllByText("Annualized investor return")).toHaveLength(2);
+    expect(screen.getByText("Recent monthly decisions")).toBeInTheDocument();
+    expect(screen.getByText(/previous month.+risk reading/i)).toBeInTheDocument();
   });
 
-  it("renders the Evidence dashboard with blocked claim gates", async () => {
+  it("shows the focused DCA evidence ledger with honest verdicts", async () => {
     render(<App />);
 
     fireEvent.click(await screen.findByRole("tab", { name: "Evidence" }));
 
-    expect(await screen.findByText("Dashboard claims blocked")).toBeInTheDocument();
-    expect(screen.getByText(/Phase 2 produced evidence and blockers/i)).toBeInTheDocument();
-    expect(screen.getByText("Claim Blockers")).toBeInTheDocument();
-    expect(screen.getByText("walkforward_no_initial_robust_rows")).toBeInTheDocument();
-    expect(screen.getByText("Robustness Funnel")).toBeInTheDocument();
-    expect(screen.getByText("Future-shift failed labels")).toBeInTheDocument();
-    expect(screen.getByText("220 rows")).toBeInTheDocument();
-    expect(screen.getByText("Beat buy-and-hold after costs")).toBeInTheDocument();
-    expect(screen.getByText("Test Family Matrix")).toBeInTheDocument();
-    expect(screen.getByText("Best Practical Rows Still Do Not Clear Claims")).toBeInTheDocument();
+    expect(await screen.findByText("Useful for de-risking. Not proven for timing buys.")).toBeInTheDocument();
+    expect(screen.getByText("Accumulation only")).toBeInTheDocument();
+    expect(screen.getByText("De-risking one BTC")).toBeInTheDocument();
+    expect(screen.getByText("Four-year region test")).toBeInTheDocument();
+    expect(screen.getByText("Fixed buys + risk sells")).toBeInTheDocument();
+    expect(screen.getAllByText("Not supported")).toHaveLength(2);
+    expect(screen.getByText("Historically promising")).toBeInTheDocument();
+    expect(screen.getByText(/previous month’s risk reading/i)).toBeInTheDocument();
   });
 
   it("surfaces validation failures from diagnostics", async () => {
@@ -379,7 +378,7 @@ describe("App", () => {
 
     render(<App />);
 
-    expect(await screen.findByText("CLAIMS BLOCKED")).toBeInTheDocument();
+    expect(await screen.findByText("DATA CHECK NEEDED")).toBeInTheDocument();
     expect(screen.queryByLabelText(/Data status/i)).not.toBeInTheDocument();
   });
 
