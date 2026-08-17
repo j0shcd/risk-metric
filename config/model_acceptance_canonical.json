@@ -1,19 +1,17 @@
 {
   "identity": {
-    "config_hash": "621565b152e241f23d9c64679eb3781e5bd52a5ce439cbeb12b53969427f183e",
-    "data_fingerprint": "e9270cc82863cd6132833dc21354608537e54377289102402e257acdf35445c9",
-    "model_fingerprint": "9f4c2a2d5676657a9a6376a456ae2c6aaa6cea9b414ff477f55c687785bacc1f",
-    "release_id": "1e5185bf32096e1884d88559d04dfe85cd619ba851d77fc5f0218b1f4b3fcced"
+    "config_hash": "db8dba1a63017f52fa78fcf762742d795ee5851ea3fc594bdc3bce98d932dc03",
+    "data_fingerprint": "02ab928924278764adbe2a8a780891ef8155e17825bcdb4f89bdfa9ae4004f9c",
+    "model_fingerprint": "21a4b0160e184a67f141c57202b46e455ccc92791961430493c7d250ee5c053d",
+    "release_id": "bdd10956df08ed5cce7fdb80d2550f786c2b8c3909a981e1f72acca3224b89f5"
   },
   "metrics": {
+    "accumulation_terminal_wealth_delta_pct_vs_fixed": -0.21460619966488603,
     "availability_gate_passed": true,
-    "concentration_gate_passed": true,
-    "dca_risk_accumulation_6m_auc": 0.39953216374269007,
-    "dca_risk_derisk_12m_auc": 0.527593085106383,
-    "dca_risk_derisk_6m_auc": 0.5085851648351648,
-    "dynamic_dca_max_drawdown": -0.23081240466539588,
-    "dynamic_dca_money_weighted_return": 0.14525130470869746,
-    "leakage_gate_passed": true,
-    "registered_sample_gate_passed": true
+    "dca_causality_gate_passed": true,
+    "derisking_calmar_delta_vs_hold": 0.4031656231427323,
+    "fixed_buys_risk_sells_terminal_wealth_delta_pct_vs_fixed": -0.09225145298606019,
+    "signal_horizon_48m_gate_passed": true,
+    "signal_low_minus_high_forward_return_48m": -9.386119768757766
   }
 }

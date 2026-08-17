@@ -1,31 +1,26 @@
 {
-  "policy_id": "dca-risk-acceptance-v1",
+  "policy_id": "dca-risk-evidence-acceptance-v2",
   "primary": {
-    "metric": "dca_risk_accumulation_6m_auc",
+    "metric": "accumulation_terminal_wealth_delta_pct_vs_fixed",
     "min_improvement": 0.01
   },
   "guardrails": [
     {
-      "metric": "dca_risk_derisk_6m_auc",
-      "min_delta": -0.01
-    },
-    {
-      "metric": "dca_risk_derisk_12m_auc",
-      "min_delta": -0.01
-    },
-    {
-      "metric": "dynamic_dca_money_weighted_return",
-      "min_delta": -0.005
-    },
-    {
-      "metric": "dynamic_dca_max_drawdown",
+      "metric": "fixed_buys_risk_sells_terminal_wealth_delta_pct_vs_fixed",
       "min_delta": -0.02
+    },
+    {
+      "metric": "derisking_calmar_delta_vs_hold",
+      "min_delta": -0.05
+    },
+    {
+      "metric": "signal_low_minus_high_forward_return_48m",
+      "min_delta": -0.10
     }
   ],
   "required_true": [
-    "registered_sample_gate_passed",
-    "leakage_gate_passed",
-    "availability_gate_passed",
-    "concentration_gate_passed"
+    "dca_causality_gate_passed",
+    "signal_horizon_48m_gate_passed",
+    "availability_gate_passed"
   ]
 }

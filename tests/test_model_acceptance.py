@@ -60,38 +60,41 @@ class ModelAcceptanceTests(unittest.TestCase):
         self.assertIn("data_fingerprint_mismatch", report.failures)
         self.assertIn("non_inferiority_failed:guardrail", report.failures)
 
-    def test_produces_candidate_from_registered_evaluation_rows(self) -> None:
+    def test_produces_candidate_from_dca_evidence_rows(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "tables").mkdir()
             fields = [
-                "hypothesis_id", "auc", "eligible_for_aggregate",
-                "passes_shift_leakage_probe", "passes_regime_concentration_gate",
+                "test",
+                "median_terminal_wealth_delta_pct_vs_fixed",
+                "median_cashflow_delta_fixed_buys_risk_sells",
+                "median_calmar_delta_vs_hold",
+                "median_low_minus_high_forward_return",
             ]
-            with (root / "tables" / "walkforward_by_label.csv").open("w", newline="") as handle:
+            with (root / "tables" / "dca_evidence_summary.csv").open("w", newline="") as handle:
                 writer = csv.DictWriter(handle, fieldnames=fields)
                 writer.writeheader()
-                for hypothesis, auc in [
-                    ("dca_risk_accumulation_6m", 0.61),
-                    ("dca_risk_derisk_6m", 0.62),
-                    ("dca_risk_derisk_12m", 0.63),
-                ]:
-                    writer.writerow({
-                        "hypothesis_id": hypothesis,
-                        "auc": auc,
-                        "eligible_for_aggregate": "True",
-                        "passes_shift_leakage_probe": "True",
-                        "passes_regime_concentration_gate": "True",
-                    })
-            with (root / "tables" / "strategy_results.csv").open("w", newline="") as handle:
-                writer = csv.DictWriter(handle, fieldnames=[
-                    "strategy", "policy_family", "money_weighted_return", "max_drawdown",
-                ])
-                writer.writeheader()
                 writer.writerow({
-                    "strategy": "dynamic_dca", "policy_family": "production_dca_cashflow",
-                    "money_weighted_return": 0.2, "max_drawdown": -0.4,
+                    "test": "accumulation_only",
+                    "median_terminal_wealth_delta_pct_vs_fixed": -0.12,
                 })
+                writer.writerow({
+                    "test": "derisking",
+                    "median_cashflow_delta_fixed_buys_risk_sells": -0.04,
+                    "median_calmar_delta_vs_hold": 0.31,
+                })
+                writer.writerow({
+                    "test": "signal_value",
+                    "median_low_minus_high_forward_return": 0.8,
+                })
+            with (root / "tables" / "dca_causality_audit.csv").open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["passes_causality_audit"])
+                writer.writeheader()
+                writer.writerow({"passes_causality_audit": "True"})
+            with (root / "tables" / "dca_signal_value.csv").open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["horizon_months"])
+                writer.writeheader()
+                writer.writerow({"horizon_months": 48})
             with (root / "tables" / "availability_calendar.csv").open("w", newline="") as handle:
                 writer = csv.DictWriter(handle, fieldnames=["availability_assumption"])
                 writer.writeheader()
@@ -99,7 +102,9 @@ class ModelAcceptanceTests(unittest.TestCase):
 
             project = Path(__file__).resolve().parents[1]
             candidate = build_candidate_summary(root, project)
-            self.assertEqual(candidate["metrics"]["dca_risk_derisk_12m_auc"], 0.63)
+            self.assertEqual(candidate["metrics"]["derisking_calmar_delta_vs_hold"], 0.31)
+            self.assertTrue(candidate["metrics"]["dca_causality_gate_passed"])
+            self.assertTrue(candidate["metrics"]["signal_horizon_48m_gate_passed"])
             self.assertTrue(candidate["metrics"]["availability_gate_passed"])
 
     def test_model_change_detection_ignores_data_identity(self) -> None:

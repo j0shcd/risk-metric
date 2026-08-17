@@ -25,13 +25,6 @@ FROZEN_DATA_PATHS = (
     "data/youtube_interest.csv",
 )
 
-HYPOTHESIS_METRICS = {
-    "dca_risk_accumulation_6m": "dca_risk_accumulation_6m_auc",
-    "dca_risk_derisk_6m": "dca_risk_derisk_6m_auc",
-    "dca_risk_derisk_12m": "dca_risk_derisk_12m_auc",
-}
-
-
 @dataclass(frozen=True)
 class AcceptanceReport:
     passed: bool
@@ -107,52 +100,48 @@ def _bool(value: Any) -> bool:
 
 
 def build_candidate_summary(run_dir: Path, project_root: Path) -> Dict[str, Any]:
-    by_label = _read_csv_rows(run_dir / "tables" / "walkforward_by_label.csv")
-    strategies = _read_csv_rows(run_dir / "tables" / "strategy_results.csv")
-    registered: Dict[str, Dict[str, str]] = {}
-    for row in by_label:
-        hypothesis_id = row.get("hypothesis_id", "")
-        if hypothesis_id in HYPOTHESIS_METRICS:
-            registered[hypothesis_id] = row
-    missing = sorted(set(HYPOTHESIS_METRICS) - set(registered))
+    evidence_rows = _read_csv_rows(run_dir / "tables" / "dca_evidence_summary.csv")
+    evidence = {row.get("test", ""): row for row in evidence_rows}
+    required_tests = {"accumulation_only", "derisking", "signal_value"}
+    missing = sorted(required_tests - set(evidence))
     if missing:
-        raise ValueError(f"evaluation is missing registered hypotheses: {', '.join(missing)}")
+        raise ValueError(f"evaluation is missing DCA evidence tests: {', '.join(missing)}")
 
-    dynamic = next(
-        (
-            row
-            for row in strategies
-            if row.get("strategy") == "dynamic_dca"
-            and row.get("policy_family") == "production_dca_cashflow"
-        ),
-        None,
-    )
-    if dynamic is None:
-        raise ValueError("evaluation is missing the production dynamic_dca result")
+    accumulation = evidence["accumulation_only"]
+    derisking = evidence["derisking"]
+    signal = evidence["signal_value"]
+    causality = _read_csv_rows(run_dir / "tables" / "dca_causality_audit.csv")
+    if not causality:
+        raise ValueError("evaluation is missing the DCA causality audit")
+    signal_rows = _read_csv_rows(run_dir / "tables" / "dca_signal_value.csv")
+    if not signal_rows:
+        raise ValueError("evaluation is missing the DCA signal-value rows")
+    availability = _read_csv_rows(run_dir / "tables" / "availability_calendar.csv")
+    if not availability:
+        raise ValueError("evaluation is missing the availability calendar")
 
     metrics: Dict[str, Any] = {
-        metric: float(registered[hypothesis_id]["auc"])
-        for hypothesis_id, metric in HYPOTHESIS_METRICS.items()
+        "accumulation_terminal_wealth_delta_pct_vs_fixed": float(
+            accumulation["median_terminal_wealth_delta_pct_vs_fixed"]
+        ),
+        "fixed_buys_risk_sells_terminal_wealth_delta_pct_vs_fixed": float(
+            derisking["median_cashflow_delta_fixed_buys_risk_sells"]
+        ),
+        "derisking_calmar_delta_vs_hold": float(derisking["median_calmar_delta_vs_hold"]),
+        "signal_low_minus_high_forward_return_48m": float(
+            signal["median_low_minus_high_forward_return"]
+        ),
+        "dca_causality_gate_passed": all(
+            _bool(row.get("passes_causality_audit")) for row in causality
+        ),
+        "signal_horizon_48m_gate_passed": all(
+            float(row.get("horizon_months", "nan")) == 48.0 for row in signal_rows
+        ),
+        "availability_gate_passed": all(
+            row.get("availability_assumption", "") != "missing_rule"
+            for row in availability
+        ),
     }
-    metrics.update(
-        {
-            "dynamic_dca_money_weighted_return": float(dynamic["money_weighted_return"]),
-            "dynamic_dca_max_drawdown": float(dynamic["max_drawdown"]),
-            "registered_sample_gate_passed": all(
-                _bool(row.get("eligible_for_aggregate")) for row in registered.values()
-            ),
-            "leakage_gate_passed": all(
-                _bool(row.get("passes_shift_leakage_probe")) for row in registered.values()
-            ),
-            "availability_gate_passed": all(
-                row.get("availability_assumption", "") != "missing_rule"
-                for row in _read_csv_rows(run_dir / "tables" / "availability_calendar.csv")
-            ),
-            "concentration_gate_passed": all(
-                _bool(row.get("passes_regime_concentration_gate")) for row in registered.values()
-            ),
-        }
-    )
     return {"identity": current_identity(project_root), "metrics": metrics}
 
 
