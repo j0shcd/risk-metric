@@ -2,6 +2,13 @@
 
 Status: tranche 1 implemented; tranches 2-3 proposed (reviewed 2026-07-15)
 
+Update 2026-08-01: the compact evidence suite described in
+`docs/dca_evidence.md` now separates accumulation-only value, de-risking value,
+and policy-independent signal value. Each test uses rolling starts and causal
+price-only benchmarks, with future-suffix causality sentinels. The split avoids
+conflating the opportunity cost of deferred contributions with the value of
+selling and later re-entering.
+
 Goal: extend `risk_engine/evaluation/` so it can explain *why* the dynamic DCA strategy
 underperforms fixed DCA, not just that it does — the prerequisite to improving it for
 real-life-adjacent usage.

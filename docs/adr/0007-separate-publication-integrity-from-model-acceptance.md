@@ -1,5 +1,7 @@
 # Separate publication integrity from automated model acceptance
 
+Status: superseded for DCA acceptance metrics by ADR 0008.
+
 The system will have two automated binary gates and no claim-promotion or manual model-approval workflow. The Publication Integrity Gate blocks stale, incomplete, invalid, or internally inconsistent daily releases. The Model Acceptance Gate runs only when the model fingerprint changes and compares a Candidate Model with the Canonical Model on the same frozen data; the candidate passes only by meaningfully improving the frozen six-month DCA Risk objective while all registered accumulation, de-risking, strategy, leakage, availability, sample, and concentration guardrails remain within declared non-inferiority bounds.
 
 ## Consequences
