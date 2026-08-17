@@ -9,6 +9,50 @@ price-only benchmarks, with future-suffix causality sentinels. The split avoids
 conflating the opportunity cost of deferred contributions with the value of
 selling and later re-entering.
 
+## Session handoff (2026-08-17)
+
+Read this section first if you are picking up this work cold. Start by reading
+`docs/dca_evidence.md` (results) and `docs/adr/0008-align-dca-acceptance-with-investor-decisions.md`
+(decision) — this plan assumes both as background.
+
+**Shipped and committed this session** (backend engine → acceptance gate → docs →
+web, in that order): the three-test DCA evidence suite (`risk_engine/evaluation/dca_evidence.py`),
+the realigned model-acceptance policy (`config/model_acceptance.json`,
+`risk_engine/model_acceptance.py`), ADR 0008 and `docs/dca_evidence.md`, and the web
+Evidence tab (`web/src/dcaEvidence.js` + `DcaEvidencePanel` in `web/src/App.jsx`). All
+targeted Python tests (38) and JS tests (33) pass.
+
+**Central open question, not a bug — decide before doing more diagnostics work:**
+DCA Risk does not pass its own new acceptance gate as an accumulation-timing tool
+(Test 1: -21.46% vs Fixed DCA; Test 3: wrong-signed and not significant vs its
+timing placebo). Only Test 2 (de-risking an existing position) is promising, and
+it is *not* corroborated by Test 3. Before investing in tranches 2-3 below (which
+assume the goal is to fix a bidirectional dynamic-DCA strategy), decide whether
+the product should instead scope down to a de-risking-only recommendation — the
+diagnostics below are moot if the accumulation side is dropped rather than fixed.
+
+**Known cleanup needed (not fixed this session):**
+- `EvidencePanel` in `web/src/App.jsx` (the old `evaluationSummary`/`claim_state`-driven
+  component, ~245 lines) is now dead: the Evidence tab renders `DcaEvidencePanel`
+  instead and nothing else calls `EvidencePanel`. `evaluationSummary` is still fetched
+  in `web/src/data.js:loadDashboardData` and returned in `payload`, but `App()` no
+  longer destructures it. The matching `evaluation_summary.json` mock fixture in
+  `web/src/App.test.jsx` (the `claim_state`/`blocking_warnings`/`top_warnings` block)
+  is asserted against by nothing. Decide whether to delete `EvidencePanel` and the
+  dead fetch/fixture, or find them a home — don't leave them silently unused.
+- `web/src/dcaEvidence.js` is hand-authored, copied from the numbers in
+  `docs/dca_evidence.md` / `config/model_acceptance_canonical.json`. Nothing enforces
+  the three stay in sync. If the evaluation is rerun and canonical metrics change,
+  update all three together or the web copy will quietly go stale.
+- Environment only, pre-existing (not introduced this session): `.venv` runs Python
+  3.9.6; `tests/test_benchmark_gate.py` and `tests/test_social_source.py` fail to
+  *collect* (`str | None` needs 3.10+), so a bare `pytest` run errors before it starts.
+  Run targeted files (as above) or upgrade the venv interpreter.
+
+**Next step if continuing tranches 2-3 as planned below:** start at D3 (regime-conditional
+P&L decomposition) — it's the most likely to explain *why* Test 1 failed, which is the
+prerequisite the rest of tranche 3 (D5-D9) builds on.
+
 Goal: extend `risk_engine/evaluation/` so it can explain *why* the dynamic DCA strategy
 underperforms fixed DCA, not just that it does — the prerequisite to improving it for
 real-life-adjacent usage.
