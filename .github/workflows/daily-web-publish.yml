@@ -129,10 +129,13 @@ jobs:
         if: steps.detect_changes.outputs.changed != 'true'
         run: echo "No data/web/v2 changes detected."
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+      - name: Setup Node 22 (policy-compliant)
+        run: |
+          curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          node --version
+          npm --version
+          test "$(node -p 'process.versions.node.split(`.`)[0]')" = "22"
 
       - name: Send risk alerts
         env:
