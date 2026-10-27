@@ -6,8 +6,17 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  dependency-security:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/dependency-security.yml
+
   test-and-benchmark-gate:
+    needs: dependency-security
     runs-on: ubuntu-latest
     env:
       REFRESH_API_SOURCES: "false"
@@ -15,15 +24,18 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.11"
+          python-version-file: .python-version
+          check-latest: true
 
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: 'pip install --require-hashes --only-binary=:all: -r requirements.txt'
 
       - name: Run unit tests
         run: python -m unittest discover -s tests
@@ -67,29 +79,21 @@ jobs:
             --foundation config/ci_benchmark_foundation.json
 
   web-test-and-build:
+    needs: dependency-security
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Setup Node 22 (policy-compliant)
-        run: |
-          curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-          sudo apt-get install -y nodejs
-          NODE_BIN="$RUNNER_TEMP/node22-bin"
-          mkdir -p "$NODE_BIN"
-          ln -sf /usr/bin/node /usr/bin/npm /usr/bin/npx "$NODE_BIN/"
-          export PATH="$NODE_BIN:$PATH"
-          echo "$NODE_BIN" >> "$GITHUB_PATH"
-          hash -r
-          node --version
-          npm --version
-          node -e 'const [major, minor, patch] = process.versions.node.split(".").map(Number); if (major !== 22 || minor < 23 || (minor === 23 && patch < 4)) { console.error("Node 22.23.4 or newer 22.x is required"); process.exit(1); }'
+      - name: Setup verified Node 22
+        uses: ./.github/actions/setup-node
 
       - name: Install web dependencies
         working-directory: web
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run alert core tests
         run: node --test scripts/lib/alerts-core.test.mjs web/functions/api/_lib/validate.test.mjs
