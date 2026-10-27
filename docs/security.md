@@ -139,9 +139,89 @@ version PRs are disabled with `open-pull-requests-limit: 0`. Security updates
 have their own GitHub limit and bypass cooldown. Actions version checks remain
 weekly because bundled-library fixes may arrive without an advisory against
 the action itself. Routine Actions updates have a seven-day cooldown. There is
-no automatic merge. CI rejects Python lock upgrades outside `requirements.in`. The existing daily Codex security/software-updates automation also
+no automatic merge for routine updates. The guarded security-patch policy below
+is authorized, but is not active until its configuration and GitHub settings
+are deployed. CI rejects Python lock upgrades outside `requirements.in`.
+The existing daily Codex security/software-updates automation also
 tracks runtime releases, residual Actions findings and cloud-monitor health.
 That is a local-app monitor, separate from GitHub's cloud schedule.
+
+### Guarded security-patch auto-merge
+
+Josh authorized automatic merging of narrowly eligible security patches on
+2026-10-27. The implementation is in `scripts/lib/dependabot-policy.mjs` and
+`scripts/dependabot-auto-merge.mjs`; the privileged workflow is
+`.github/workflows/dependabot-auto-merge.yml`.
+
+Only a completed, successful `CI Quality And Benchmark` pull-request run can
+start it. The job checks out **main only**, does not install dependencies, and
+never executes PR code or downloads PR artifacts/caches. It uses the built-in
+GitHub token only; no PAT, app key, application secret or new service is needed.
+
+Every condition must hold:
+
+- An open, non-draft, same-repository Dependabot PR targets main. Author IDs and
+  all commit signatures are checked; human-authored follow-up commits deny it.
+- The exact current head/base pair passed all three canonical CI jobs, with no
+  missing, skipped, stale or failing job: `dependency-security / scan`,
+  `test-and-benchmark-gate`, and `web-test-and-build`.
+- Only `web/package.json` plus `web/package-lock.json`, or only
+  `requirements.txt`, changed. Every resolved upgrade is a strict X.Y.Z patch
+  increase within the same major/minor. No added/removed packages, source-bound
+  changes, script/engine changes, registry changes, or same-version hash changes
+  are accepted. npm integrity and Python distribution hashes stay mandatory.
+- OSV confirms at least one reviewed vulnerability affected an old version and
+  no known finding affects any proposed changed version. Labels and PR wording
+  are not security evidence. Known malware needs incident review and cannot
+  auto-merge. Missing/malformed/incomplete responses or service errors deny it.
+- Repository **Allow auto-merge** is enabled, and main has a classic branch
+  protection rule requiring the three checks, up-to-date branches, and admin
+  enforcement. Missing or unreadable protection data denies merging; there is
+  no permission-broadening fallback.
+
+The sole write is GitHub's squash-merge mutation with `expectedHeadOid` set to
+that verified head. GitHub enforces its current protections and reviews; the
+job never approves a PR, forces a merge, or bypasses a rule. It does not leave a
+native auto-merge request queued against a PR that may later change. If a review
+or deployment requirement is still outstanding, merge is withheld; rerun CI
+once those requirements are satisfied to reevaluate. Minor/major/prerelease
+updates, Actions/runtime changes, new dependencies and ambiguous cases remain
+manual. Security updates that require them are still reported, not discarded.
+
+Limits: these guards do not prove a new package release is free of undisclosed
+malware. Candidate code runs only in the existing unprivileged CI jobs with
+install scripts disabled. Validation allows at most two dependency files,
+1 MiB per file, 12 changed packages, 20 signed commits and 40 unique advisory
+lookups. Requests time out after 20 seconds; the workflow is bounded to ten
+minutes. Failures withhold the write. GitHub-token merges do not themselves
+start other Actions push workflows; the next scheduled scan remains important.
+
+Activation status (2026-10-27): **implemented and locally tested, not yet
+active**. GitHub currently reports `allow_auto_merge=false` and main
+`protected=false`. The connected GitHub app cannot edit these administrative
+settings. After the reviewed configuration is pushed:
+
+1. Fix the existing exact-Action allowlist and get a successful CI run.
+2. Enable **Allow auto-merge** in repository General settings.
+3. Protect main: require the three check names above (GitHub Actions as their
+   source), require branches up to date, and enable **Do not allow bypassing the
+   above settings**. Keep force pushes disabled. The guard currently supports
+   classic branch protection; a ruleset-only setup needs explicit support.
+4. Observe a real advisory-backed patch after green CI. Existing routine
+   upgrade PRs are not eligible; never create a vulnerable production PR as a
+   demonstration. Disable Allow auto-merge to disarm the guard immediately.
+
+Verification: Node fixtures exercise successful guarded merging, dry-run
+withholding, identity/signature checks, every policy rejection and API errors.
+Workflow sentinels protect the trusted checkout and single SHA-guarded merge
+sink. Live OSV metadata accepted Vitest 4.1.9 → 4.1.12 as a known security patch
+(655 ms), and refused Requests 2.32.4 because newer findings still affect it.
+All 80 Node tests passed (56 guard cases plus 24 existing tests), along with
+two privileged-workflow sentinels and four Node setup regressions. Deliberately
+removing bot validation, security evidence, the expected-head binding, or
+malformed-result rejection made the regressions fail; all were restored.
+Independent review rechecked the production boundary and final fixtures.
+No production PR has been merged by this implementation.
 
 Selected approach: GitHub-native Dependabot plus open-source OSV avoids an
 additional commercial integration for this public repository. Alternatives

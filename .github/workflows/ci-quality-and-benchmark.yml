@@ -96,7 +96,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Run alert core tests
-        run: node --test scripts/lib/alerts-core.test.mjs web/functions/api/_lib/validate.test.mjs
+        run: node --test scripts/lib/*.test.mjs web/functions/api/_lib/*.test.mjs
 
       - name: Run web tests
         working-directory: web

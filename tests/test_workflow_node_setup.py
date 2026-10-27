@@ -109,7 +109,7 @@ class WorkflowNodeSetupTests(unittest.TestCase):
                 elif re.search(r"\b(?:node|npm)\s", step):
                     self.assertTrue(seen_setup, f"{workflow.name}: {step.splitlines()[0]}")
             self.assertNotIn("deb.nodesource.com", workflow.read_text())
-        self.assertEqual(consumers, 2)
+        self.assertEqual(consumers, 3)
 
 
 if __name__ == "__main__":
