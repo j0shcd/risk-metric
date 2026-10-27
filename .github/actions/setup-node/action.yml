@@ -14,5 +14,6 @@ runs:
           --output "$node_dir/node.tar.xz"
         echo "1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce  $node_dir/node.tar.xz" | sha256sum --check -
         tar -xJf "$node_dir/node.tar.xz" -C "$node_dir"
-        echo "$node_dir/node-v22.23.4-linux-x64/bin" >> "$GITHUB_PATH"
         "$node_dir/node-v22.23.4-linux-x64/bin/node" --version
+        test "$("$node_dir/node-v22.23.4-linux-x64/bin/node" --version)" = "v$(cat web/.node-version)"
+        echo "$node_dir/node-v22.23.4-linux-x64/bin" >> "$GITHUB_PATH"
