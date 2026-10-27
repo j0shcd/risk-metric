@@ -33,6 +33,15 @@ public APIs ──► risk_engine (Python) ──► data/web/v2/*.json ──�
 
 ## Release and alert operations
 
+Both GitHub workflows install the latest NodeSource Node 22 package and require
+at least [22.23.4, the October 21 security release](https://nodejs.org/en/blog/release/v22.23.4).
+They prepend a directory containing only Node/npm/npx symlinks to the current
+step's `PATH` and subsequent steps via `GITHUB_PATH`. This selects the patched
+runtime without overriding the configured Python interpreter.
+Daily publishing sets up Node before syncing or validating release artifacts.
+The shell regression tests in `tests/test_workflow_node_setup.py` simulate a
+runner with Node 24 ahead of the installed Node 22.
+
 Each web publish has a `release_id`. Every JSON artifact carries that ID, and
 `manifest.json` records each artifact's SHA-256 digest and byte size. The daily
 workflow validates both the source and copied web release before staging it;

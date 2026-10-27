@@ -41,6 +41,20 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Setup Node 22 (policy-compliant)
+        run: |
+          curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          NODE_BIN="$RUNNER_TEMP/node22-bin"
+          mkdir -p "$NODE_BIN"
+          ln -sf /usr/bin/node /usr/bin/npm /usr/bin/npx "$NODE_BIN/"
+          export PATH="$NODE_BIN:$PATH"
+          echo "$NODE_BIN" >> "$GITHUB_PATH"
+          hash -r
+          node --version
+          npm --version
+          node -e 'const [major, minor, patch] = process.versions.node.split(".").map(Number); if (major !== 22 || minor < 23 || (minor === 23 && patch < 4)) { console.error("Node 22.23.4 or newer 22.x is required"); process.exit(1); }'
+
       - name: Ensure BTC daily store exists
         run: python backfill.py --target btc-price
 
@@ -128,14 +142,6 @@ jobs:
       - name: No artifact changes
         if: steps.detect_changes.outputs.changed != 'true'
         run: echo "No data/web/v2 changes detected."
-
-      - name: Setup Node 22 (policy-compliant)
-        run: |
-          curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-          sudo apt-get install -y nodejs
-          node --version
-          npm --version
-          test "$(node -p 'process.versions.node.split(`.`)[0]')" = "22"
 
       - name: Send risk alerts
         env:
