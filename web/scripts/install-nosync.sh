@@ -23,9 +23,14 @@ trap 'rm -rf "$TMP"' EXIT
 
 cp package.json "$TMP"/
 [ -f package-lock.json ] && cp package-lock.json "$TMP"/
+cp .npmrc "$TMP"/
 
 echo "[install-nosync] installing in $TMP (outside iCloud)..."
-( cd "$TMP" && npm install "$@" )
+if [ "$#" -gt 0 ]; then
+  ( cd "$TMP" && npm install --package-lock-only --ignore-scripts "$@" )
+fi
+bash ../scripts/security-check.sh --lockfile="$TMP/package-lock.json"
+( cd "$TMP" && npm ci --ignore-scripts )
 
 # Bring back any lockfile/manifest changes npm made (e.g. when adding packages).
 cp "$TMP/package.json" ./package.json
