@@ -82,10 +82,10 @@ An upgrade alone cannot close that incident.
    reproducibly rebuilt fork. Close only with verified bundle versions and a
    passing cloud run. No vulnerability suppression was added to hide them.
 2. **Local runtime.** The ambient Node was 24.16.0, below the October security
-   floor. Verification used an official, SHA-256-checked Node 22.23.4 in a
-   temporary directory. This does not upgrade the globally selected Node or
-   running processes. The selected runtime is managed by Volta. Update that installation, then reopen
-   shells/restart affected development processes and verify `node --version`.
+   floor. With explicit approval, the shared Volta default was upgraded to
+   24.22.1 and verified with `node --version` and `volta which node`. Existing
+   processes still require restart. Tests also used an official, SHA-256-checked
+   Node 22.23.4 in a temporary directory.
    Supported floors are 22.23.4, 24.22.1 and 26.12.1. CI now downloads the exact
    patched Node archive with a pinned checksum, without sudo or curl-to-shell.
 3. **Python trust store.** CI requests Python 3.11.18 explicitly. It must fail
@@ -94,15 +94,22 @@ An upgrade alone cannot close that incident.
    installation is not the audited runtime. The Python floor and certifi pin
    include the eMudhra/emSign CA response. Verify actual CI and Pages build
    runtimes after rollout; local configuration is not deployment proof.
-4. **Cloud activation.** Changes are local until pushed and merged into the
-   default branch. Verify the Dependency security run and normal CI, then the
-   next daily publish. Check Pages root-directory/version overrides: the
+4. **Cloud activation.** The rollout was pushed to `main` at `8213969`.
+   Cloudflare serves JavaScript byte-identical to the tested patched build
+   (`index-m-8lZCEt.js`, SHA-256
+   `5030091624d58459bdad0c4f2edf6ef47e5fb7f44b7e36c2d3f04717fe874e30`).
+   GitHub rejected Dependency security and CI at startup because its exact-pin
+   allowlist still permits only the two older Actions. Josh approved updating
+   those two pins and chose to make the account-settings changes himself.
+   After he updates the allowlist, rerun the failed security/CI runs and verify
+   the next scheduled publish; do not dispatch alert sending as a test. Check Pages root-directory/version overrides: the
    frontend's `.node-version` requests 22.23.4, but account settings can
    override it. Cloudflare manages the separate Workers runtime; a Node build
    pin does not establish Workers patch status. Enable dependency graph,
    Dependabot alerts, security updates, and the separate malware-alert option.
    Require the security check through branch protection and enable failure
-   notifications. These account settings were not inspected or changed.
+   notifications. The Actions rejection was verified in GitHub
+   annotations; the Dependabot settings remain for Josh to enable/verify.
 
 Runtime sources: [Node October security release](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases),
 [Python 3.11.18 security release](https://www.python.org/downloads/release/python-31118/),
@@ -127,9 +134,12 @@ versions to OSV; npm audit sends dependency metadata to npm. No application
 data or secrets are needed. Known-advisory checks cannot detect undisclosed
 malware or prove that a correctly signed package is safe.
 
-Dependabot checks npm and Python daily and Actions weekly. Routine updates
-have a seven-day cooldown; security updates bypass it. There is no automatic
-merge. The existing daily Codex security/software-updates automation also
+Dependabot is configured for security-update PRs for npm and Python; routine
+version PRs are disabled with `open-pull-requests-limit: 0`. Security updates
+have their own GitHub limit and bypass cooldown. Actions version checks remain
+weekly because bundled-library fixes may arrive without an advisory against
+the action itself. Routine Actions updates have a seven-day cooldown. There is
+no automatic merge. CI rejects Python lock upgrades outside `requirements.in`. The existing daily Codex security/software-updates automation also
 tracks runtime releases, residual Actions findings and cloud-monitor health.
 That is a local-app monitor, separate from GitHub's cloud schedule.
 
@@ -167,12 +177,16 @@ The 2026-10-27 run verified zero known findings in both application inventories,
 malware/CVE canary rejection, checksum rejection, 42 frontend tests, the
 production build and 24 alert/release tests, using Node 22.23.4. The full Python suite
 passed 138 tests on Python 3.12.16; the final security-policy file separately
-passed four checks. Regression checks were deliberately made to fail by
+passed four checks. The deployed UI without unrelated local edits passed 33
+frontend tests and its production build; four integrated Node setup regressions
+also passed. Regression checks were deliberately made to fail by
 restoring old Vite/Requests versions, disabling scanner checksum validation,
 and suppressing trusted frontend preparation, then restored and rerun.
 Independent review checked workflow syntax, install ordering and package setup
-behavior. Cloud execution remains unverified until
-rollout. These results are local verification, not a production deployment.
+behavior. The application deployment is verified; GitHub scans remain blocked
+by the account allowlist until its approved update is applied.
 The existing daily security automation was updated and remains ACTIVE; its
-Risk Metric coverage is confirmed in the saved automation prompt. Repository
-changes require explicit push/rollout before the cloud checks can run.
+Risk Metric coverage is confirmed in the saved automation prompt. Dependabot
+version-update jobs ran on GitHub and created six routine PRs; npm/Python
+configuration was then narrowed to security fixes. Account-level security
+updates and malware alerts still need their settings verified.

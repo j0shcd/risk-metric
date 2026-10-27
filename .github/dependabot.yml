@@ -6,7 +6,8 @@ updates:
       interval: daily
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 5
+    # Disable routine version PRs; security-update PRs stay enabled.
+    open-pull-requests-limit: 0
   - package-ecosystem: pip
     directory: /
     schedule:
@@ -15,7 +16,8 @@ updates:
       default-days: 7
     allow:
       - dependency-type: all
-    open-pull-requests-limit: 5
+    # Disable routine version PRs; security-update PRs stay enabled.
+    open-pull-requests-limit: 0
   - package-ecosystem: github-actions
     directory: /
     schedule:

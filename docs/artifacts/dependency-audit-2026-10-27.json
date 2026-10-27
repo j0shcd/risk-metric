@@ -644,6 +644,14 @@
       "bypassed scanner checksum",
       "suppressed trusted frontend preparation"
     ],
-    "cloud_execution": "not verified; local commits require rollout"
+    "cloud_execution": "Startup failure: exact action allowlist still permits old SHAs; Josh approved new pins and will apply settings",
+    "shared_volta_node_after": "24.22.1",
+    "integrated_frontend_tests": 33,
+    "integrated_node_setup_tests": 4,
+    "python_source_bounds_mutation": "pandas 3 lock rejected while requirements.in requires pandas 2",
+    "deployed_commit": "821396926efb466e1990e4dd879788a92efb4b5c",
+    "production_js_sha256": "5030091624d58459bdad0c4f2edf6ef47e5fb7f44b7e36c2d3f04717fe874e30",
+    "security_run_url": "https://github.com/j0shcd/risk-metric/actions/runs/40523633640",
+    "ci_run_url": "https://github.com/j0shcd/risk-metric/actions/runs/40523631613"
   }
 }

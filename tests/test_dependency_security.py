@@ -26,6 +26,22 @@ class DependencySecurityTests(unittest.TestCase):
         self.assertTrue({"numpy", "pandas", "requests", "urllib3"} <= pins.keys())
         self.assertGreaterEqual(pins["requests"], (2, 34, 2))
         self.assertGreaterEqual(pins["urllib3"], (2, 8, 0))
+        # Keep generated pins within the supported source bounds.
+        for source in (ROOT / "requirements.in").read_text().splitlines():
+            source = source.strip()
+            if not source or source.startswith("#"):
+                continue
+            match = re.fullmatch(r"([\w-]+)(.+)", source)
+            self.assertIsNotNone(match, source)
+            self.assertIn(match[1], pins)
+            for constraint in match[2].split(","):
+                bound = re.fullmatch(r"(>=|<)([\d.]+)", constraint)
+                self.assertIsNotNone(bound, constraint)
+                expected = tuple(map(int, bound[2].split(".")))
+                if bound[1] == ">=":
+                    self.assertGreaterEqual(pins[match[1]], expected, source)
+                else:
+                    self.assertLess(pins[match[1]], expected, source)
 
     def test_npm_artifacts_have_registry_urls_and_integrity(self):
         manifest = json.loads((ROOT / "web/package.json").read_text())
