@@ -69,12 +69,17 @@ only during migration and are cleared when used or rotated.
 
 ## Run it locally
 
+Use a patched runtime: the project pins Python 3.11.18 and Node 22.23.4.
+See [security maintenance](docs/security.md) for the audit, remaining upstream
+risks, monitoring activation, and dependency-update procedure.
+
 ```bash
+bash scripts/security-check.sh
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install --require-hashes --only-binary=:all: -r requirements.txt
 python publish_web.py
 
-cd web && npm install && npm run dev
+cd web && npm run reinstall && npm run dev
 ```
 
 Without API keys the pipeline falls back to a `free_stable` profile (fewer signals, no auth required). The deployed dashboard runs the broader `extended` profile — see `.env.example` for the keys involved (FRED, YouTube, Wikimedia).
