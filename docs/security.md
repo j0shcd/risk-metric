@@ -5,6 +5,66 @@ Update it when an audit, runtime change, or monitoring activation changes the
 facts below. The [dated inventory](artifacts/dependency-audit-2026-10-27.json)
 retains the exact package versions and advisory IDs from this audit.
 
+## Operational status on 2026-10-28
+
+**Setup is not complete.** Read this section before changing security settings
+or claiming that cloud monitoring or automatic merging is active. The audit
+below is historical evidence; this section owns the current activation status.
+
+| Control | Verified state | Remaining work |
+| --- | --- | --- |
+| Application dependencies | Both locked inventories passed a fresh local scan on October 28: 182 npm packages and 11 Python pins; vulnerability and malware canaries passed | Keep scanning the complete locks before installs and updates |
+| Repository configuration | Security fixes, Dependabot configuration and the guarded merger are pushed to main at `e594313` | Verify execution in GitHub |
+| Cloud CI and scanning | Latest [manual CI run](https://github.com/j0shcd/risk-metric/actions/runs/40645974867) failed at startup; no successful first cloud scan has been verified | Read its startup annotation, correct the reported cause, then start a fresh CI run |
+| Main protection | GitHub reports main protected and status-check enforcement applies to everyone, including admins | Required-check lists are still empty; select the three checks and verify strict, up-to-date enforcement |
+| Guarded auto-merge | Repository Allow auto-merge is enabled; the guard refuses merges while the required protection is incomplete | Complete protection, pass cloud CI, and observe an eligible real security patch |
+| Dependabot service | Update/graph jobs have run; npm/Python routine updates are disabled in configuration | Verify dependency graph, vulnerability alerts, security-update PRs and the separate malware-alert setting in GitHub |
+| Supplemental monitor | Daily security and software updates heartbeat is ACTIVE and its saved prompt includes Risk Metric | This local-app monitor does not establish that GitHub's cloud schedule works |
+| Upstream Actions | Bundled Undici findings remain open in the October 27 audit | Follow the upstream-release and November 3 escalation plan below |
+
+### Next bounded steps and ownership
+
+Josh owns the GitHub settings changes because the connected app has no
+administration access and browser control was declined. Agents own local
+patches, verification and this runbook. Do not widen access, relax protection,
+or add a privileged token to work around an unavailable setting.
+
+1. Read **Summary → Annotations** on the latest failed CI run above. October 27
+   annotations identified the old exact-Action allowlist; the October 28 run
+   also failed at startup, but its annotation has not been retrieved. Confirm
+   the current reason before changing code. The API refused to retry the old
+   startup-failed run. Use **Run workflow** on the
+   [CI workflow](https://github.com/j0shcd/risk-metric/actions/workflows/ci-quality-and-benchmark.yml),
+   on main, after correcting the reported setting.
+2. If the annotation still identifies the Action allowlist, retain the
+   full-SHA requirement and owner restriction, and allow these reviewed pins:
+
+   ```text
+   actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+   actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+   ```
+
+3. In **Settings → Branches → classic main protection**, require
+   `dependency-security / scan`, `test-and-benchmark-gate` and
+   `web-test-and-build`, with GitHub Actions as their source. Require branches
+   up to date and **Do not allow bypassing the above settings**. Keep force
+   pushes and deletions disabled. `.github/dependabot.yml` is not the required
+   dependency-security check. If the real checks are absent from the selector,
+   get CI running first, then refresh the protection form.
+4. Verify dependency graph, Dependabot vulnerability alerts, security updates,
+   malware alerts and failure notifications in GitHub. Successful routine
+   Dependabot jobs and a YAML file do not prove these settings are enabled.
+5. Record a successful cloud CI run, a successful first and next scheduled
+   security scan, and actual CI/Pages runtime versions. Observe the guard on a
+   real eligible patch when one exists; never introduce a vulnerable production
+   dependency to manufacture proof. Until then, live merging remains unproven.
+
+After each step, refresh this table from live evidence and link the successful
+run or remaining error. Agent restart point: inspect the latest startup
+annotation, rather than repeat the dependency audit or rebuild the merger.
+There is no open design decision; activation and provider-setting verification
+are the remaining work.
+
 ## Audit on 2026-10-27
 
 Scope: this repository's npm runtime, build, test and optional dependencies;
@@ -98,11 +158,11 @@ An upgrade alone cannot close that incident.
    Cloudflare serves JavaScript byte-identical to the tested patched build
    (`index-m-8lZCEt.js`, SHA-256
    `5030091624d58459bdad0c4f2edf6ef47e5fb7f44b7e36c2d3f04717fe874e30`).
-   GitHub rejected Dependency security and CI at startup because its exact-pin
-   allowlist still permits only the two older Actions. Josh approved updating
-   those two pins and chose to make the account-settings changes himself.
-   After he updates the allowlist, rerun the failed security/CI runs and verify
-   the next scheduled publish; do not dispatch alert sending as a test. Check Pages root-directory/version overrides: the
+   October 27 startup annotations identified an exact-pin allowlist permitting
+   only the older Actions. Josh approved updating those pins and chose to make
+   the settings changes himself. Current activation evidence and the next
+   steps are in the operational status section above. Verify the next scheduled
+   publish; do not dispatch alert sending as a test. Check Pages root-directory/version overrides: the
    frontend's `.node-version` requests 22.23.4, but account settings can
    override it. Cloudflare manages the separate Workers runtime; a Node build
    pin does not establish Workers patch status. Enable dependency graph,
@@ -118,7 +178,7 @@ Runtime sources: [Node October security release](https://nodejs.org/en/blog/vuln
 
 ## Monitoring and safe updates
 
-`.github/workflows/dependency-security.yml` runs daily at 05:17 UTC, on pull
+`.github/workflows/dependency-security.yml` is configured to run daily at 05:17 UTC, on pull
 requests and main pushes, and on manual dispatch. CI and daily publishing
 call it before installing project dependencies. It needs only read access
 and no application secrets. Scanner download failures, checksum mismatches,
@@ -140,8 +200,8 @@ have their own GitHub limit and bypass cooldown. Actions version checks remain
 weekly because bundled-library fixes may arrive without an advisory against
 the action itself. Routine Actions updates have a seven-day cooldown. There is
 no automatic merge for routine updates. The guarded security-patch policy below
-is authorized, but is not active until its configuration and GitHub settings
-are deployed. CI rejects Python lock upgrades outside `requirements.in`.
+is pushed and authorized, but remains inactive until branch protection is
+complete and cloud CI is verified. CI rejects Python lock upgrades outside `requirements.in`.
 The existing daily Codex security/software-updates automation also
 tracks runtime releases, residual Actions findings and cloud-monitor health.
 That is a local-app monitor, separate from GitHub's cloud schedule.
@@ -196,20 +256,10 @@ lookups. Requests time out after 20 seconds; the workflow is bounded to ten
 minutes. Failures withhold the write. GitHub-token merges do not themselves
 start other Actions push workflows; the next scheduled scan remains important.
 
-Activation status (2026-10-27): **implemented and locally tested, not yet
-active**. GitHub currently reports `allow_auto_merge=false` and main
-`protected=false`. The connected GitHub app cannot edit these administrative
-settings. After the reviewed configuration is pushed:
-
-1. Fix the existing exact-Action allowlist and get a successful CI run.
-2. Enable **Allow auto-merge** in repository General settings.
-3. Protect main: require the three check names above (GitHub Actions as their
-   source), require branches up to date, and enable **Do not allow bypassing the
-   above settings**. Keep force pushes disabled. The guard currently supports
-   classic branch protection; a ruleset-only setup needs explicit support.
-4. Observe a real advisory-backed patch after green CI. Existing routine
-   upgrade PRs are not eligible; never create a vulnerable production PR as a
-   demonstration. Disable Allow auto-merge to disarm the guard immediately.
+Activation status is owned by the operational status section above. The guard
+currently supports classic branch protection; a ruleset-only setup needs
+explicit support. Existing routine upgrade PRs are not eligible. Disable
+**Allow auto-merge** to disarm the guard immediately.
 
 Verification: Node fixtures exercise successful guarded merging, dry-run
 withholding, identity/signature checks, every policy rejection and API errors.
@@ -263,8 +313,8 @@ also passed. Regression checks were deliberately made to fail by
 restoring old Vite/Requests versions, disabling scanner checksum validation,
 and suppressing trusted frontend preparation, then restored and rerun.
 Independent review checked workflow syntax, install ordering and package setup
-behavior. The application deployment is verified; GitHub scans remain blocked
-by the account allowlist until its approved update is applied.
+behavior. The application deployment was verified. GitHub scans had not passed
+their first cloud run; see the operational status section for current evidence.
 The existing daily security automation was updated and remains ACTIVE; its
 Risk Metric coverage is confirmed in the saved automation prompt. Dependabot
 version-update jobs ran on GitHub and created six routine PRs; npm/Python

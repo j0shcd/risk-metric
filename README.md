@@ -33,7 +33,7 @@ public APIs ──► risk_engine (Python) ──► data/web/v2/*.json ──�
 
 ## Release and alert operations
 
-Both GitHub workflows use a checksum-verified official Node 22.23.4 archive
+CI and daily publishing use a checksum-verified official Node 22.23.4 archive
 in an isolated runner directory. The shared local action checks its version
 and prepends its bin directory through `GITHUB_PATH`, preserving the configured
 Python interpreter. Daily publishing sets up Node before syncing or validating
