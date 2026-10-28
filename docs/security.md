@@ -15,7 +15,7 @@ below is historical evidence; this section owns the current activation status.
 | --- | --- | --- |
 | Application dependencies | Both locked inventories passed a fresh local scan on October 28: 182 npm packages and 11 Python pins; vulnerability and malware canaries passed | Keep scanning the complete locks before installs and updates |
 | Repository configuration | Security fixes, Dependabot configuration and the guarded merger are pushed to main at `e594313` | Verify execution in GitHub |
-| Cloud CI and scanning | Latest [manual CI run](https://github.com/j0shcd/risk-metric/actions/runs/40645974867) failed at startup; no successful first cloud scan has been verified | Read its startup annotation, correct the reported cause, then start a fresh CI run |
+| Cloud CI and scanning | [Manual CI run](https://github.com/j0shcd/risk-metric/actions/runs/40656218719/workflow) rejected both Actions at startup; Josh supplied the annotation showing their pins combined into one space-separated allowlist pattern | Separate the two patterns with a comma, save and start a fresh CI run; no successful first cloud scan has been verified |
 | Main protection | GitHub reports main protected and status-check enforcement applies to everyone, including admins | Required-check lists are still empty; select the three checks and verify strict, up-to-date enforcement |
 | Guarded auto-merge | Repository Allow auto-merge is enabled; the guard refuses merges while the required protection is incomplete | Complete protection, pass cloud CI, and observe an eligible real security patch |
 | Dependabot service | Update/graph jobs have run; npm/Python routine updates are disabled in configuration | Verify dependency graph, vulnerability alerts, security-update PRs and the separate malware-alert setting in GitHub |
@@ -29,20 +29,22 @@ administration access and browser control was declined. Agents own local
 patches, verification and this runbook. Do not widen access, relax protection,
 or add a privileged token to work around an unavailable setting.
 
-1. Read **Summary → Annotations** on the latest failed CI run above. October 27
-   annotations identified the old exact-Action allowlist; the October 28 run
-   also failed at startup, but its annotation has not been retrieved. Confirm
-   the current reason before changing code. The API refused to retry the old
+1. The startup annotation supplied by Josh confirms that GitHub interpreted
+   the two space-separated Action pins as one pattern. Correct the separator
+   below before changing workflow code. The API refused to retry the old
    startup-failed run. Use **Run workflow** on the
    [CI workflow](https://github.com/j0shcd/risk-metric/actions/workflows/ci-quality-and-benchmark.yml),
    on main, after correcting the reported setting.
-2. If the annotation still identifies the Action allowlist, retain the
-   full-SHA requirement and owner restriction, and allow these reviewed pins:
+2. Retain the full-SHA requirement and owner restriction. The Action allowlist
+   field requires **commas between patterns**; whitespace or newlines alone
+   do not separate them. Paste these reviewed pins as one comma-separated line:
 
    ```text
-   actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-   actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+   actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1, actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
    ```
+
+   Save, then start a fresh CI run. GitHub documents this delimiter in its
+   [Action allowlist instructions](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#allowing-select-actions-and-reusable-workflows-to-run).
 
 3. In **Settings → Branches → classic main protection**, require
    `dependency-security / scan`, `test-and-benchmark-gate` and
@@ -60,8 +62,8 @@ or add a privileged token to work around an unavailable setting.
    dependency to manufacture proof. Until then, live merging remains unproven.
 
 After each step, refresh this table from live evidence and link the successful
-run or remaining error. Agent restart point: inspect the latest startup
-annotation, rather than repeat the dependency audit or rebuild the merger.
+run or remaining error. Agent restart point: verify the corrected comma-separated
+allowlist and a fresh CI run, then finish required checks on main.
 There is no open design decision; activation and provider-setting verification
 are the remaining work.
 
