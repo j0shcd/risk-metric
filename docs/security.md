@@ -31,6 +31,28 @@ Dependabot, upstream bundled-Undici and notification gaps are not cleared.
 Do not rerun a deployment solely for monitoring. No GitHub settings, runtime
 defaults, deployment or automatic-merge behavior were changed by this check.
 
+### Refreshed bundled-action advisory matches
+
+The 30 October re-query confirms additional matches for the existing bundled
+Undici copies: Checkout v7.0.1's lock records 6.27.0 and Setup Python v7.1.0's
+records 6.29.0. Their immutable package locks were fetched again; compiled
+Checkout code also contains Undici. Latest upstream Action releases remain
+unchanged, so an application lockfile update cannot patch these CI copies.
+
+The October 27 inventory omits three IDs now returned for both versions:
+[GHSA-2m5v-pch6-74hx](https://github.com/advisories/GHSA-2m5v-pch6-74hx)
+(CVE-2026-109383, high, function-valued TLS callbacks lost by Agent),
+[GHSA-9fm3-97px-rjf6](https://github.com/advisories/GHSA-9fm3-97px-rjf6)
+(CVE-2026-109932, moderate, WebSocket PONG buffering), and
+[GHSA-qrxm-fqhp-jwvm](https://github.com/advisories/GHSA-qrxm-fqhp-jwvm)
+(CVE-2026-87018, high, client crash during TLS 1.2 renegotiation).
+All three were published upstream October 15 and indexed October 27; this is
+expanded matching in an already-known vulnerable toolchain, not a new October
+30 disclosure. These version matches do not prove the affected API/options are
+used by these workflows or establish exploitation. Keep the existing constrained
+CI exposure and November 3 replacement review; do not waive the findings or
+claim that SHA pins or a clean application scan clear them.
+
 ## Historical operational status on 2026-10-28
 
 **Setup is not complete.** Read this section before changing security settings
