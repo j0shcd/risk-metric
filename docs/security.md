@@ -5,7 +5,33 @@ Update it when an audit, runtime change, or monitoring activation changes the
 facts below. The [dated inventory](artifacts/dependency-audit-2026-10-27.json)
 retains the exact package versions and advisory IDs from this audit.
 
-## Operational status on 2026-10-28
+## Operational status on 2026-10-30
+
+The first successful hosted dependency scan is now verified. Manual
+[Dependency security run 40873564794](https://github.com/j0shcd/risk-metric/actions/runs/40873564794)
+passed on 29 October at main `02b93dc398de7595f7c311a769116772673395d8`, including
+Checkout, dependency-policy checks and the locked vulnerability/malware scan.
+Manual [Daily Web Publish run 40873616507](https://github.com/j0shcd/risk-metric/actions/runs/40873616507)
+also passed on that revision. These establish actual execution; do not keep
+reporting that no hosted scan has succeeded.
+
+The latest observed scheduled runs on 29 October still precede those manual
+runs and failed at startup: security `40866562491` and publish `40870883646`.
+A successful post-repair scheduled scan has not yet been observed. The latest
+normal CI run visible in the checked run list is still the older startup
+failure, so full normal CI is not verified. The successful manual runs show
+that those two workflows can execute; the current Actions allowlist itself
+and notification delivery were not independently read.
+
+Next bounded step: verify the next actual scheduled dependency scan and a fresh
+normal CI run, then inspect effective required checks and guarded-merge access.
+The October 28 table below is historical. Its statement that no first hosted
+scan has succeeded is superseded by this section; its remaining protection,
+Dependabot, upstream bundled-Undici and notification gaps are not cleared.
+Do not rerun a deployment solely for monitoring. No GitHub settings, runtime
+defaults, deployment or automatic-merge behavior were changed by this check.
+
+## Historical operational status on 2026-10-28
 
 **Setup is not complete.** Read this section before changing security settings
 or claiming that cloud monitoring or automatic merging is active. The audit
