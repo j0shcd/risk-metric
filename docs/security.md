@@ -5,31 +5,63 @@ Update it when an audit, runtime change, or monitoring activation changes the
 facts below. The [dated inventory](artifacts/dependency-audit-2026-10-27.json)
 retains the exact package versions and advisory IDs from this audit.
 
-## Operational status on 2026-10-30
+## Operational status on 2026-11-03
 
-The first successful hosted dependency scan is now verified. Manual
-[Dependency security run 40873564794](https://github.com/j0shcd/risk-metric/actions/runs/40873564794)
-passed on 29 October at main `02b93dc398de7595f7c311a769116772673395d8`, including
-Checkout, dependency-policy checks and the locked vulnerability/malware scan.
-Manual [Daily Web Publish run 40873616507](https://github.com/j0shcd/risk-metric/actions/runs/40873616507)
-also passed on that revision. These establish actual execution; do not keep
-reporting that no hosted scan has succeeded.
+Scheduled dependency scans now execute successfully. The latest verified
+[scheduled scan 41454649581](https://github.com/j0shcd/risk-metric/actions/runs/41454649581)
+passed on 2 November at `b2a3cb20c1fea668c98f242d54850bc0f48d1456`.
+[Scheduled publish 41463216546](https://github.com/j0shcd/risk-metric/actions/runs/41463216546)
+also passed. These supersede the earlier startup failures and missing scheduled
+execution gap. Full normal CI, effective protection, notification delivery and
+the first qualifying guarded merge remain unverified. Do not dispatch publishing
+or alert sending just to test monitoring.
 
-The latest observed scheduled runs on 29 October still precede those manual
-runs and failed at startup: security `40866562491` and publish `40870883646`.
-A successful post-repair scheduled scan has not yet been observed. The latest
-normal CI run visible in the checked run list is still the older startup
-failure, so full normal CI is not verified. The successful manual runs show
-that those two workflows can execute; the current Actions allowlist itself
-and notification delivery were not independently read.
+The current remote main is `ee703e39f9a3856b0a1be617493dcb64ffcba886`.
+Its inspected CI workflow still pins Checkout v7.0.1 and Setup Python v7.1.0.
+Local application scans pass: checksum-verified OSV-Scanner, vulnerable-package
+and malware canaries, 182 locked npm entries and 11 hashed Python pins.
+Application results do not clear the separate bundled-action findings.
 
-Next bounded step: verify the next actual scheduled dependency scan and a fresh
-normal CI run, then inspect effective required checks and guarded-merge access.
-The October 28 table below is historical. Its statement that no first hosted
-scan has succeeded is superseded by this section; its remaining protection,
-Dependabot, upstream bundled-Undici and notification gaps are not cleared.
-Do not rerun a deployment solely for monitoring. No GitHub settings, runtime
-defaults, deployment or automatic-merge behavior were changed by this check.
+### Bootstrap replacement review: 3 November 2026
+
+The dated replacement review is complete; remediation is not implemented.
+Upstream latest releases remain
+[Checkout v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1) and
+[Setup Python v7.1.0](https://github.com/actions/setup-python/releases/tag/v7.1.0).
+Re-querying their immutable production locks returns 11 and six known advisory
+matches respectively. Setup Python also includes minimatch 10.2.5 affected by
+[GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249).
+These are version matches; affected call paths and exploitation are not proved.
+
+Recommended next bounded implementation: replace Checkout in the read-only
+scan and test jobs first with a small Git bootstrap that checks out the exact
+expected commit. It must validate repository/ref inputs, limit authentication
+to the fetch, avoid persisted credentials and hooks, and fail on a moved or
+mismatched head. Test pull-request merge refs as well as push/schedule refs.
+Bootstrap code must be inline or available before checkout; a repository-local
+composite action cannot bootstrap its own first checkout.
+
+For Python, evaluate a checksum-pinned official `actions/python-versions`
+artifact for a fixed supported Ubuntu image and exact 3.11.18 interpreter.
+Verify the artifact checksum before executing any installation script, keep
+runtime paths isolated, and fail if that exact platform build is unavailable.
+Do not substitute the runner's ambient Python. This candidate has not been
+installed or validated on a Linux runner.
+
+A rebuilt fork would retain the Actions dependency graph plus a separate bundle
+and release maintenance obligation; it is not the preferred first repair.
+Do not apply a generic shallow checkout to the daily publisher, which needs
+history and an authenticated push, or to the privileged guard, which must read
+trusted main rather than a PR checkout. Those jobs need separate validation of
+their trust and credential boundaries. Current workflows remain unchanged.
+
+Acceptance before publication: mutation tests must reject wrong commit/checksum,
+missing artifacts and persisted credentials; workflow-aware validation and local
+fixtures must pass; then obtain named push approval and verify exact-head hosted
+scan and normal CI. Review the prototype by 6 November if upstream remains
+unpatched. No new suppression, repository setting or deployment is authorized
+by this review. Preserve unrelated frontend edits and the existing unpublished
+documentation commits; remote main has advanced independently.
 
 ### Refreshed bundled-action advisory matches
 
@@ -189,8 +221,9 @@ An upgrade alone cannot close that incident.
    downloads. Track upstream releases daily; replace the pins as soon as their
    shipped dependencies are patched. If no fix is available by 2026-11-03,
    review a bounded replacement of the affected bootstrap actions or a
-   reproducibly rebuilt fork. Close only with verified bundle versions and a
-   passing cloud run. No vulnerability suppression was added to hide them.
+   reproducibly rebuilt fork. That review is now recorded above; its next step
+   is a read-only checkout prototype, with a 6 November checkpoint. Close only
+   with verified replacement dependencies and a passing cloud run. No vulnerability suppression was added to hide them.
 2. **Local runtime.** The ambient Node was 24.16.0, below the October security
    floor. With explicit approval, the shared Volta default was upgraded to
    24.22.1 and verified with `node --version` and `volta which node`. Existing
