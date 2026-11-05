@@ -38,8 +38,7 @@ detection succeeded and correctly skipped candidate evaluation for the
 unchanged canonical model; the nonblocking legacy benchmark diagnostic also
 passed. [Standalone security scan 42039383865](https://github.com/j0shcd/risk-metric/actions/runs/42039383865)
 passed on the same commit. Effective protection, notification delivery and the
-first qualifying guarded merge remain unverified. Do not dispatch publishing
-or alert sending just to test monitoring.
+first qualifying guarded merge remain unverified. Do not dispatch publishing just to test monitoring.
 
 The verified functional revision is `084fe417869b102f25ca21d8c7cdd05fd0119e16`.
 Its inspected CI workflow still pins Checkout v7.0.1 and Setup Python v7.1.0.
@@ -331,10 +330,9 @@ An upgrade alone cannot close that incident.
    only the older Actions. Josh approved updating those pins and chose to make
    the settings changes himself. Current activation evidence and the next
    steps are in the operational status section above. Verify the next scheduled
-   publish; do not dispatch alert sending as a test. Check Pages root-directory/version overrides: the
+   publish. Check Pages root-directory/version overrides: the
    frontend's `.node-version` requests 22.23.4, but account settings can
-   override it. Cloudflare manages the separate Workers runtime; a Node build
-   pin does not establish Workers patch status. Enable dependency graph,
+   override it. The site serves static files with no server runtime. Enable dependency graph,
    Dependabot alerts, security updates, and the separate malware-alert option.
    Require the security check through branch protection and enable failure
    notifications. The Actions rejection was verified in GitHub
@@ -467,7 +465,7 @@ Cloudflare must retain this `.npmrc` in its build root.
 To refresh Python pins, use the command recorded at the top of
 `requirements.txt`, on Python 3.11, with `--upgrade` when deliberately updating
 existing pins. Scan the result before installing it. Review lock diffs, run
-backend tests, frontend tests/build and alert/release tests, then commit the
+backend tests, frontend tests/build and script tests, then commit the
 bounded update. Do not push or deploy as a side effect of a routine audit.
 
 ## Verification record
@@ -489,3 +487,14 @@ Risk Metric coverage is confirmed in the saved automation prompt. Dependabot
 version-update jobs ran on GitHub and created six routine PRs; npm/Python
 configuration was then narrowed to security fixes. Account-level security
 updates and malware alerts still need their settings verified.
+
+## Public data boundary
+
+[Today](https://risk-metric.pages.dev/api/v1/latest.json) and
+[History](https://risk-metric.pages.dev/api/v1/history.json) contain only public
+market readings, four component sub-scores, and release identity. Version 1
+fields only get added, never renamed; see [the contract](../README.md#public-json).
+They are generated with the dashboard's pure functions during the static build.
+There is no server code or user data. Cross-origin reads are public, require no
+key, and are cached for one hour. No application credentials are needed to
+publish these files.

@@ -71,10 +71,6 @@ A deliberately compact record containing the frozen score, normalized model inpu
 _Avoid_: Full source backup, web artifact mirror
 
 
-**Alert Delivery**:
-A durable record of one subscriber's threshold-zone notification for one Release. Its identity is the subscriber, release, and entered zone—not an individual send attempt.
-_Avoid_: Email attempt, current subscriber zone
-
 **Component Metric**:
 An underlying model input or intermediate indicator used to construct or explain the DCA Risk Indicator. Component metrics are supporting evidence rather than the product's primary output.
 _Avoid_: Headline metric, primary score
@@ -86,3 +82,15 @@ _Avoid_: MVRV Z-score, supply profitability evidence
 **Derived Profitability View**:
 A display-only hot/cold transformation of the MVRV Ratio Proxy used for intuitive explanation. It carries no independent model weight and is not corroborating evidence.
 _Avoid_: Supply in profit, supply in loss, independent on-chain metric
+
+## Public JSON
+
+Version 1 exposes [Today](https://risk-metric.pages.dev/api/v1/latest.json) and
+[History](https://risk-metric.pages.dev/api/v1/history.json) as static build
+artifacts with no server code or user data. The 0–100 reading and four
+sub-scores (`looks_like_past_peaks`, `unlike_past_bottoms`, `price_stretch`,
+`speculation_and_hype`) describe the market against history. Fields only get
+added, never renamed. Users choose their own rules; we send no notifications.
+See [public JSON](README.md#public-json) for availability and publication rules
+and [the replacement decision](docs/adr/0006-replace-email-alerts-with-public-json.md)
+for the rationale.

@@ -1,5 +1,9 @@
 # Use a lightweight alert delivery ledger
 
+Status: Superseded by 0006
+
+See [the replacement decision](0006-replace-email-alerts-with-public-json.md).
+
 Threshold alerts will use a small D1 delivery ledger keyed uniquely by subscriber, Release, and entered zone. The scheduled dispatcher creates a pending Alert Delivery, sends with the matching deterministic Resend idempotency key, records the provider identifier and outcome, then advances subscriber zone state. Explicit retry rules handle pending or failed deliveries; no queue, dedicated worker, provider-webhook system, or exactly-once claim is warranted for this side project.
 
 ## Security and safety boundary
