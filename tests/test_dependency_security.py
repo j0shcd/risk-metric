@@ -59,6 +59,14 @@ class DependencySecurityTests(unittest.TestCase):
             self.assertGreaterEqual(tuple(map(int, version.split("."))), floor)
         self.assertIn("ignore-scripts=true", (ROOT / "web/.npmrc").read_text().splitlines())
 
+    def test_react_runtimes_resolve_to_matching_versions(self):
+        packages = json.loads((ROOT / "web/package-lock.json").read_text())["packages"]
+        self.assertEqual(
+            packages["node_modules/react"]["version"],
+            packages["node_modules/react-dom"]["version"],
+            "React and React DOM must resolve to the same version",
+        )
+
     def test_scanner_rejects_untrusted_binary_without_executing_or_modifying_it(self):
         with tempfile.TemporaryDirectory(prefix="risk security $(not-a-command) ") as directory:
             binary = Path(directory) / "scanner"
