@@ -5,22 +5,88 @@ Update it when an audit, runtime change, or monitoring activation changes the
 facts below. The [dated inventory](artifacts/dependency-audit-2026-10-27.json)
 retains the exact package versions and advisory IDs from this audit.
 
-## Operational status on 2026-11-03
+## Operational status on 2026-11-05
 
 Scheduled dependency scans now execute successfully. The latest verified
-[scheduled scan 41454649581](https://github.com/j0shcd/risk-metric/actions/runs/41454649581)
-passed on 2 November at `b2a3cb20c1fea668c98f242d54850bc0f48d1456`.
-[Scheduled publish 41463216546](https://github.com/j0shcd/risk-metric/actions/runs/41463216546)
-also passed. These supersede the earlier startup failures and missing scheduled
-execution gap. Full normal CI, effective protection, notification delivery and
-the first qualifying guarded merge remain unverified. Do not dispatch publishing
-or alert sending just to test monitoring.
+[scheduled scan 42034459852](https://github.com/j0shcd/risk-metric/actions/runs/42034459852)
+passed on 5 November at `4e1603468ff5ad39f86481d0fb79b90f2c855810`.
+[Scheduled publish 41840172323](https://github.com/j0shcd/risk-metric/actions/runs/41840172323)
+passed on 4 November. These supersede the earlier startup failures and missing
+scheduled execution gap.
 
-The current remote main is `ee703e39f9a3856b0a1be617493dcb64ffcba886`.
+A fresh CI-only [manual run 42036754997](https://github.com/j0shcd/risk-metric/actions/runs/42036754997)
+started on 5 November at the same `4e16034` commit. Dependency scanning and the
+web job passed, including 80 Node tests, 33 frontend tests and the production
+build. The Python job ran 144 tests and failed twice because the hashed model
+identity requires the intentionally ignored `config/runtime.json`.
+
+Local fix `9915cd0` prepares that path from the tracked, credential-free
+`config/model_acceptance_runtime.json`. Its bytes reproduce the existing
+canonical model/configuration hashes; no model code, canonical metrics or gate
+thresholds changed. The clean-checkout regression executes the workflow setup,
+checks data-only versus runtime changes, and permits future model candidates to
+reach the acceptance gate. Removing the setup made it fail. All 147 backend
+tests passed in a clean temporary checkout on Python 3.12.16; the changed-model
+CLI returned `false`. Hosted verification on the pinned Python 3.11.18 remains
+pending push approval. Effective protection, notification delivery and the first
+qualifying guarded merge remain unverified. Do not dispatch publishing or alert
+sending just to test monitoring.
+
+The inspected remote main is `4e1603468ff5ad39f86481d0fb79b90f2c855810`.
 Its inspected CI workflow still pins Checkout v7.0.1 and Setup Python v7.1.0.
-Local application scans pass: checksum-verified OSV-Scanner, vulnerable-package
-and malware canaries, 182 locked npm entries and 11 hashed Python pins.
+The hosted application scan passed with 182 locked npm entries and 11 hashed
+Python pins. The final local scan passed with 172 npm entries after the Vitest
+graph update and the same 11 Python pins. Both used checksum-verified
+OSV-Scanner and passed vulnerability/malware canaries.
 Application results do not clear the separate bundled-action findings.
+
+### PR and worktree triage: 5 November 2026
+
+All six open Dependabot PRs failed at startup on 27 October before tests ran,
+during the recorded Actions allowlist incident. GitHub refused to retry the old
+startup-failed main run, so the manual CI run above checks the current code.
+The failures do not establish that any proposed upgrade works or fails tests.
+
+These PRs predate the security-only npm/Python update policy. That policy governs
+automatic updates and does not prohibit tested manual upgrades. Assess each PR
+on compatibility. Current disposition:
+
+| PR | Proposed upgrade | Compatibility and next step |
+| --- | --- | --- |
+| [1](https://github.com/j0shcd/risk-metric/pull/1), [3](https://github.com/j0shcd/risk-metric/pull/3) | React and React DOM 19.3.1 | Prepared together in `513a1f7`, including matching manifest floors and a mismatch regression. PR 1 alone resolves incompatible runtime versions |
+| [2](https://github.com/j0shcd/risk-metric/pull/2) | Vitest 5.0.5 | Prepared in `3140bf9`; existing tests required no migration |
+| [4](https://github.com/j0shcd/risk-metric/pull/4) | Testing Library React 16.3.3 | Prepared in `e78e519` |
+| [5](https://github.com/j0shcd/risk-metric/pull/5) | NumPy 2.5.4 | Requires Python 3.12+, incompatible with the project's Python 3.11 pin |
+| [6](https://github.com/j0shcd/risk-metric/pull/6) | pandas 3.0.6 | Conflicts with the explicit pandas-2 compatibility policy |
+
+The `fix-ci-node-path` and `security-rollout` worktrees were clean and idle.
+Their heads (`53a83dc` and `e594313`) are ancestors of remote main. Both checkouts
+and the merged local `codex/fix-ci-node-path` branch were removed; no matching
+remote worktree branches existed. No implementation remains in either checkout.
+Local main also merged the seven remote data-refresh commits, preserving three
+unpublished security-documentation commits and unrelated uncommitted frontend
+work. No push has been performed. Local verification passed six workflow
+regressions, five dependency-policy tests and all 80 Node tests. Actionlint
+1.7.12 passed. Three empty
+iCloud conflict directories were removed with the repository cleanup script.
+Node 24.22.2 satisfies the declared engine range (checked with semver); the
+preflight script's warning for the compound engine range is a false positive.
+
+The dependency policy now asserts matching resolved React/React DOM versions
+before dependency installation. The regression passed on main and deliberately
+failed against the actual mismatched PR-1 lockfile. Each frontend upgrade and
+their combined graph passed security scanning, policy checks, all 33 committed
+frontend tests and the production build. A separate copy of the uncommitted
+frontend passed 42 tests and its build with the same combined dependencies;
+those source edits remain uncommitted and are excluded from publication.
+
+No PR has been closed or merged. Next: obtain approval for the exact local
+commits, push, verify normal hosted CI and scanning on that head, then close
+PRs 1–4 as superseded by their landed upgrades. Keep PRs 5–6 open for separate
+Python/model compatibility work unless Josh chooses to defer them by closure.
+The subsequent security implementation remains the bootstrap replacement below.
+PR cleanup does not clear bundled-action findings or establish that branch
+protection and guarded auto-merge are active.
 
 ### Bootstrap replacement review: 3 November 2026
 
@@ -53,7 +119,7 @@ and release maintenance obligation; it is not the preferred first repair.
 Do not apply a generic shallow checkout to the daily publisher, which needs
 history and an authenticated push, or to the privileged guard, which must read
 trusted main rather than a PR checkout. Those jobs need separate validation of
-their trust and credential boundaries. Current workflows remain unchanged.
+their trust and credential boundaries. Bootstrap Actions remain unchanged.
 
 Acceptance before publication: mutation tests must reject wrong commit/checksum,
 missing artifacts and persisted credentials; workflow-aware validation and local
@@ -87,9 +153,9 @@ claim that SHA pins or a clean application scan clear them.
 
 ## Historical operational status on 2026-10-28
 
-**Setup is not complete.** Read this section before changing security settings
-or claiming that cloud monitoring or automatic merging is active. The audit
-below is historical evidence; this section owns the current activation status.
+This section records the original activation blockers. The operational status
+above owns current execution evidence; protection and automatic-merging gaps
+remain open unless explicitly superseded there.
 
 | Control | Verified state | Remaining work |
 | --- | --- | --- |
