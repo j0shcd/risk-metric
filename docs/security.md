@@ -94,6 +94,11 @@ also passed against that installation. Test/build preparation prunes historical
 `web/public/data/releases` directories; the 585 resulting tracked-file deletions
 were restored after verification. Follow-up: reconcile release retention with
 tracked release history so local verification leaves those inputs unchanged.
+The final documentation push integrated scheduled refresh `1615b0d` after main
+advanced. Seventeen ignored iCloud conflict copies from `data/web/v2` were moved
+to `data/.icloud-conflicts.nosync/20261105T142129Z/`; both the source and copied
+refreshed release then passed integrity validation. No conflict copies were
+published or deleted.
 
 PRs 1–4 are closed after their upgrades landed and hosted CI passed. Their bot
 commits were superseded rather than merged, so their unmerged remote branches
