@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  alertPreview,
   buildDcaRiskSeries,
   chartData,
   formatDateTick,
@@ -171,42 +170,5 @@ describe("reading context", () => {
 
   it("returns null when nothing finite has been published", () => {
     expect(readingSummary({ labels: ["2015-01-01"], values: [null] })).toBeNull();
-  });
-});
-
-describe("alertPreview", () => {
-  // Enters low once, leaves, re-enters: two low crossings, one high crossing.
-  const series = {
-    labels: ["2015-01-01", "2015-01-02", "2015-01-03", "2015-01-04", "2015-01-05"],
-    values: [0.2, 0.2, 0.8, 0.5, 0.1],
-  };
-
-  it("counts entries into a zone, not days spent inside it", () => {
-    expect(alertPreview(series, { watch: "low" }).count).toBe(2);
-    expect(alertPreview(series, { watch: "high" }).count).toBe(1);
-    expect(alertPreview(series, { watch: "both" }).count).toBe(3);
-  });
-
-  it("reports the most recent crossing", () => {
-    expect(alertPreview(series, { watch: "both" }).lastEntry).toEqual({
-      date: "2015-01-05",
-      zone: "low",
-    });
-  });
-
-  it("respects custom thresholds", () => {
-    expect(alertPreview(series, { watch: "high", high: 0.4 }).count).toBe(1);
-    expect(alertPreview(series, { watch: "low", low: 0.05 }).count).toBe(0);
-  });
-});
-
-describe("alertPreview window", () => {
-  it("quotes the first scored date, not the first padded row", () => {
-    const preview = alertPreview({
-      labels: ["2012-01-01", "2014-12-31", "2015-01-01"],
-      values: [null, 0.5, 0.2],
-    });
-    expect(preview.since).toBe("2014-12-31");
-    expect(preview.count).toBe(1);
   });
 });

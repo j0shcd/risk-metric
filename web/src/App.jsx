@@ -14,8 +14,8 @@ import zoomPlugin from "chartjs-plugin-zoom";
 import { Line } from "react-chartjs-2";
 
 import {
-  alertPreview,
   buildDcaRiskSeries,
+  isReadingAvailable,
   chartData,
   formatDateTick,
   formatPriceTick,
@@ -717,182 +717,54 @@ function TrackRecordPanel() {
   );
 }
 
-function StrategyField({ label, value, min = 0, max, step, onChange, inputRef, invalid, describedBy }) {
-  return (
-    <label className="bb-dca-field">
-      <span>{label}</span>
-      <input
-        ref={inputRef}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
-        className="bb-dca-input"
-        type="number"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </label>
-  );
-}
+function PublicDataRow({ label, path }) {
+  const origin = typeof window !== "undefined" && /^https?:$/.test(window.location.protocol)
+    ? window.location.origin : "https://risk-metric.pages.dev";
+  const url = `${origin}${path}`;
+  const codeRef = useRef(null);
+  const timerRef = useRef(null);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const WATCH_OPTIONS = [
-  { key: "both", label: "Either way" },
-  { key: "high", label: "Only when it gets high" },
-  { key: "low", label: "Only when it gets low" },
-];
-
-export function AlertsSignupPanel({ dcaSeries }) {
-  const [email, setEmail] = useState("");
-  const [watch, setWatch] = useState("both");
-  const [buyInput, setBuyInput] = useState(scoreLabel(LOW_MARK));
-  const [sellInput, setSellInput] = useState(scoreLabel(HIGH_MARK));
-  const [website, setWebsite] = useState("");
-  const [status, setStatus] = useState("idle");
-  const [message, setMessage] = useState("");
-
-  const [thresholdsOpen, setThresholdsOpen] = useState(false);
-  const [thresholdError, setThresholdError] = useState(null);
-  const lowRef = useRef(null);
-  const highRef = useRef(null);
-  useEffect(() => {
-    if (thresholdError) (thresholdError === "low" ? lowRef : highRef).current?.focus();
-  }, [thresholdError, thresholdsOpen]);
-
-  const low = Number(buyInput);
-  const high = Number(sellInput);
-  const watchLow = watch !== "high";
-  const watchHigh = watch !== "low";
-  const validMark = (input) => input.trim() !== "" && Number.isInteger(Number(input)) && Number(input) >= 0 && Number(input) <= 100;
-  const invalidSide = watchLow && !validMark(buyInput) ? "low" : watchHigh && !validMark(sellInput) ? "high" : null;
-  const overlap = watch === "both" && low >= high;
-  const preview = dcaSeries && !invalidSide && !overlap
-    ? alertPreview(dcaSeries, { low: low / 100, high: high / 100, watch }) : null;
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    if (!EMAIL_PATTERN.test(email.trim())) {
-      setStatus("error");
-      setMessage("That email address does not look right.");
-      return;
-    }
-    if (invalidSide || overlap) {
-      setStatus("error");
-      setMessage(invalidSide ? "Use a whole number from 0 to 100." : "The low mark has to sit below the high mark.");
-      setThresholdError(invalidSide ?? "low");
-      setThresholdsOpen(true);
-      return;
-    }
-    setThresholdError(null);
-    setStatus("submitting");
-    setMessage("");
+  async function copyUrl() {
     try {
-      const response = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          watch,
-          // An unwatched side's field is hidden and may hold anything, so the
-          // default mark is sent in its place.
-          buyThreshold: watchLow ? low / 100 : LOW_MARK,
-          sellThreshold: watchHigh ? high / 100 : HIGH_MARK,
-          website,
-        }),
-      });
-      const data = await response.json().catch(() => null);
-      if (response.ok && data?.ok) {
-        setStatus("success");
-        setMessage(data.message ?? "Check your inbox to confirm.");
-      } else {
-        setStatus("error");
-        setMessage(data?.error ?? "That did not go through. Try again later.");
-      }
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
-      setStatus("error");
-      setMessage("That did not go through. Try again later.");
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(codeRef.current);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
     }
   }
 
   return (
-    <section className="bb-panel bb-alerts" id="alerts">
-      <div className="bb-panel__head">
-        <h2 className="bb-panel__title bb-panel__title--solo">Get an email when it moves</h2>
+    <div className="bb-data-row">
+      <div className="bb-data-url">
+        <span>{label}</span>
+        <a href={url}><code ref={codeRef}>{url}</code></a>
       </div>
+      <button type="button" className="bb-button" onClick={copyUrl} aria-label={`${copied ? "Copied" : "Copy"} ${label} URL`}>
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
+  );
+}
 
-      <form className="bb-alerts-form" onSubmit={handleSubmit} noValidate>
-        <fieldset className="bb-choice">
-          <legend className="bb-choice__legend">Tell me</legend>
-          <div className="bb-choice__options">
-            {WATCH_OPTIONS.map((option) => (
-              <label key={option.key} className="bb-choice__label">
-                <input type="radio" name="watch" value={option.key} checked={watch === option.key}
-                  onChange={() => { setWatch(option.key); setThresholdError(null); setMessage(""); }} />
-                <span className="bb-choice__option">{option.label}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        {preview && (
-          <p className="bb-alerts-preview" role="status" data-testid="alert-preview">
-            <strong>{preview.count}</strong>{" "}
-            {preview.count === 1 ? "email" : "emails"} since {formatDay(preview.since)} at these
-            settings{preview.lastEntry ? `, the last on ${formatDay(preview.lastEntry.date)}` : ""}.
-          </p>
-        )}
-
-        <div className="bb-alerts-row">
-          <label className="bb-dca-field bb-alerts-email">
-            <span>Email</span>
-            <input
-              className="bb-dca-input"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </label>
-          <button type="submit" className="bb-button bb-button--primary bb-alerts-submit" disabled={status === "submitting"}>
-            {status === "submitting" ? "Sending…" : "Email me"}
-          </button>
-        </div>
-
-        <input
-          className="bb-alerts-honeypot"
-          type="text"
-          name="website"
-          tabIndex={-1}
-          autoComplete="off"
-          aria-hidden="true"
-          value={website}
-          onChange={(event) => setWebsite(event.target.value)}
-        />
-
-        <details className="bb-alerts-advanced" open={thresholdsOpen} onToggle={(event) => setThresholdsOpen(event.currentTarget.open)}>
-          <summary>Change the thresholds</summary>
-          <div className="bb-dca-controls">
-            {watchLow && <StrategyField label="Low at or below" value={buyInput} max={100} step="1" onChange={(v) => { setBuyInput(v); setThresholdError(null); setMessage(""); }} inputRef={lowRef} invalid={thresholdError === "low"} describedBy={thresholdError === "low" ? "threshold-error" : undefined} />}
-            {watchHigh && <StrategyField label="High at or above" value={sellInput} max={100} step="1" onChange={(v) => { setSellInput(v); setThresholdError(null); setMessage(""); }} inputRef={highRef} invalid={thresholdError === "high"} describedBy={thresholdError === "high" ? "threshold-error" : undefined} />}
-          </div>
-        </details>
-      </form>
-
-      {message && (
-        <p id={thresholdError ? "threshold-error" : undefined} className={`bb-alerts-status bb-alerts-status--${status}`} role="status" data-testid="alert-message">
-          {message}
-        </p>
-      )}
-
-      <p className="bb-dca-note">
-        Checked once a day after the data refresh. You confirm by email, and every email has an
-        unsubscribe link. Nothing here touches your money.
-      </p>
+export function PublicDataPanel() {
+  return (
+    <section className="bb-panel bb-data" id="data">
+      <div className="bb-panel__head">
+        <h2 className="bb-panel__title bb-panel__title--solo">Use the numbers yourself</h2>
+      </div>
+      <p className="bb-data-intro">The reading and its four sub-scores are published as JSON after each daily refresh. Point a script, spreadsheet or automation tool at them and set your own rules.</p>
+      <PublicDataRow label="Today" path="/api/v1/latest.json" />
+      <PublicDataRow label="Every day since 2014" path="/api/v1/history.json" />
+      <p className="bb-dca-note">Free to use, no key needed. Values run 0 to 100. Fields only get added, never renamed. It describes the market against history and is not a signal to buy or sell.</p>
     </section>
   );
 }
@@ -1005,8 +877,7 @@ function RiskPanel({ historyCore, setActiveTab }) {
   const summary = useMemo(() => readingSummary(dcaSeries), [dcaSeries]);
 
   const latestIndex = dcaSeries.labels.length - 1;
-  const latestCoverage = latestIndex >= 0 ? Number(dcaSeries.coverageValues?.[latestIndex]) : 0;
-  const isDegraded = latestCoverage < 0.75 || !summary;
+  const isDegraded = !isReadingAvailable(dcaSeries);
 
   const componentRows = dcaSeries.components.map((component) => ({
     ...component,
@@ -1160,7 +1031,7 @@ function RiskPanel({ historyCore, setActiveTab }) {
 
       <DriverBars components={componentRows} setActiveTab={setActiveTab} />
 
-      <AlertsSignupPanel dcaSeries={dcaSeries} />
+      <PublicDataPanel />
     </section>
   );
 }

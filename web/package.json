@@ -12,7 +12,7 @@
     "test": "npm run prepare:web && vitest run",
     "test:watch": "npm run prepare:web && vitest",
     "reinstall": "bash scripts/install-nosync.sh",
-    "prepare:web": "npm run clean:icloud && node scripts/sync-web-data.mjs"
+    "prepare:web": "npm run clean:icloud && node scripts/sync-web-data.mjs && node scripts/build-public-api.mjs"
   },
   "dependencies": {
     "chart.js": "^4.5.0",

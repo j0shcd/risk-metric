@@ -66,7 +66,9 @@ jobs:
         run: python publish_web.py
 
       - name: Sync web public artifacts from data contract
-        run: node web/scripts/sync-web-data.mjs
+        run: |
+          node web/scripts/sync-web-data.mjs
+          node web/scripts/build-public-api.mjs
 
       - name: Validate release and append prospective archive
         env:
@@ -97,6 +99,7 @@ jobs:
             git add -f "web/public/data/v2/$artifact"
             git add -f "web/public/data/releases/$RELEASE_ID/$artifact"
           done
+          git add -f web/public/api/v1/latest.json web/public/api/v1/history.json
           if [ -e data/web/archive/release_snapshots.ndjson ]; then
             git add -f data/web/archive/release_snapshots.ndjson
           fi

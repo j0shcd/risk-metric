@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { forwardRef, useImperativeHandle } from "react";
 import { vi } from "vitest";
 
-import App from "./App";
+import App, { PublicDataPanel } from "./App";
 import { METRIC_COPY } from "./copy";
 import { readFileSync } from "node:fs";
 const styles = readFileSync(`${process.cwd()}/src/styles.css`, "utf8");
@@ -429,7 +429,7 @@ describe("App", () => {
     const history = fixtures["history_core.json"];
     const fetchOriginal = global.fetch;
     global.fetch = vi.fn(async (url) => String(url).endsWith("history_core.json") ? {
-      ok: true, json: async () => ({ ...history, columns: { dca_risk: hasPrior ? [0.19, null, null] : [null, null, null] } }),
+      ok: true, json: async () => ({ ...history, columns: { dca_risk: hasPrior ? [0.19, null, null] : [null, null, null], dca_component_coverage: [1, 1, 1] } }),
     } : fetchOriginal(url));
     render(<App />);
     expect(await screen.findByRole("heading", { level: 1, name: "No reading today" })).toBeInTheDocument();
@@ -574,8 +574,47 @@ describe("App", () => {
     expect(sizes.length).toBeGreaterThan(20);
     expect(Math.min(...sizes)).toBeGreaterThanOrEqual(.75);
     expect(styles).toMatch(/:where\(button, a, select, input, summary\):focus-visible/);
-    expect(styles).toMatch(/input:focus-visible \+ \.bb-choice__option/);
+    expect(styles).toMatch(/\.bb-dca-warning\s*\{[^}]*color: var\(--bb-red\)/);
     expect(styles).toMatch(/\.bb-research,\s*\.bb-blink\s*\{ animation: none; \}/);
   });
 
+});
+
+describe("PublicDataPanel", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    window.getSelection()?.removeAllRanges();
+  });
+
+  it("renders both absolute URLs as links", () => {
+    render(<PublicDataPanel />);
+    expect(screen.getByRole("heading", { name: "Use the numbers yourself" })).toBeInTheDocument();
+    for (const file of ["latest", "history"]) {
+      const url = `${window.location.origin}/api/v1/${file}.json`;
+      expect(screen.getByRole("link", { name: url })).toHaveAttribute("href", url);
+    }
+  });
+
+  it("copies the right URL and resets the success label after two seconds", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    render(<PublicDataPanel />);
+    fireEvent.click(screen.getByRole("button", { name: "Copy Today URL" }));
+    await screen.findByRole("button", { name: "Copied Today URL" });
+    expect(writeText).toHaveBeenLastCalledWith(`${window.location.origin}/api/v1/latest.json`);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Copy Today URL" })).toBeInTheDocument(), { timeout: 2500 });
+    fireEvent.click(screen.getByRole("button", { name: "Copy Every day since 2014 URL" }));
+    await screen.findByRole("button", { name: "Copied Every day since 2014 URL" });
+    expect(writeText).toHaveBeenLastCalledWith(`${window.location.origin}/api/v1/history.json`);
+  });
+
+  it.each([undefined, { writeText: vi.fn().mockRejectedValue(new Error("denied")) }])("selects the URL without throwing if clipboard fails (%s)", async (clipboard) => {
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: clipboard });
+    render(<PublicDataPanel />);
+    fireEvent.click(screen.getByRole("button", { name: "Copy Today URL" }));
+    await waitFor(() => expect(window.getSelection().toString()).toBe(`${window.location.origin}/api/v1/latest.json`));
+    expect(screen.getByRole("button", { name: "Copy Today URL" })).toHaveTextContent("Copy");
+  });
 });

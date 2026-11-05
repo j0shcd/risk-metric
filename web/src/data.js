@@ -294,8 +294,8 @@ export function scoreLabel(value) {
 export function regionForRisk(value) {
   const num = toNumber(value);
   if (num === null) return null;
-  if (num <= 0.25) return RISK_REGIONS[0];
-  if (num >= 0.75) return RISK_REGIONS[2];
+  if (num <= RISK_REGIONS[0].max) return RISK_REGIONS[0];
+  if (num >= RISK_REGIONS[2].min) return RISK_REGIONS[2];
   return RISK_REGIONS[1];
 }
 
@@ -373,40 +373,9 @@ export function readingSummary(dcaSeries) {
   };
 }
 
-// Counts entries into a watched region, matching how the alert sender fires:
-// once on the crossing, not once per day spent inside.
-export function alertPreview(dcaSeries, { low = 0.25, high = 0.75, watch = "both" } = {}) {
-  const labels = dcaSeries?.labels ?? [];
-  const values = dcaSeries?.values ?? [];
-  const watchLow = watch === "low" || watch === "both";
-  const watchHigh = watch === "high" || watch === "both";
-
-  const entries = [];
-  let insideLow = false;
-  let insideHigh = false;
-  let scored = 0;
-  // The series is padded with nulls before the score existed, so the window the
-  // preview quotes has to start at the first real reading, not the first row.
-  let since = null;
-
-  for (let idx = 0; idx < values.length; idx += 1) {
-    const value = toNumber(values[idx]);
-    if (value === null) continue;
-    if (since === null) since = labels[idx];
-    scored += 1;
-    const isLow = value <= low;
-    const isHigh = value >= high;
-    if (watchLow && isLow && !insideLow) entries.push({ date: labels[idx], zone: "low" });
-    if (watchHigh && isHigh && !insideHigh) entries.push({ date: labels[idx], zone: "high" });
-    insideLow = isLow;
-    insideHigh = isHigh;
-  }
-
-  const years = Math.max(1, scored / 365);
-  return {
-    count: entries.length,
-    lastEntry: entries.at(-1) ?? null,
-    perYear: entries.length / years,
-    since,
-  };
+// This is also the Today panel's publication boundary. A previous finite value
+// must never stand in for a missing reading on the newest observation.
+export function isReadingAvailable(series) {
+  const index = series.labels.length - 1;
+  return index >= 0 && Number.isFinite(series.values[index]) && series.coverageValues?.[index] >= 0.75;
 }
