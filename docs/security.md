@@ -27,12 +27,21 @@ thresholds changed. The clean-checkout regression executes the workflow setup,
 checks data-only versus runtime changes, and permits future model candidates to
 reach the acceptance gate. Removing the setup made it fail. All 147 backend
 tests passed in a clean temporary checkout on Python 3.12.16; the changed-model
-CLI returned `false`. Hosted verification on the pinned Python 3.11.18 remains
-pending push approval. Effective protection, notification delivery and the first
-qualifying guarded merge remain unverified. Do not dispatch publishing or alert
-sending just to test monitoring.
+CLI returned `false`.
 
-The inspected remote main is `4e1603468ff5ad39f86481d0fb79b90f2c855810`.
+The approved repairs and upgrades are pushed to main at
+`084fe417869b102f25ca21d8c7cdd05fd0119e16`.
+[Hosted CI 42039383720](https://github.com/j0shcd/risk-metric/actions/runs/42039383720)
+passed all three jobs: dependency scanning, 147 backend tests on Python 3.11.18,
+80 Node tests, 33 frontend tests and the production build. Model-change
+detection succeeded and correctly skipped candidate evaluation for the
+unchanged canonical model; the nonblocking legacy benchmark diagnostic also
+passed. [Standalone security scan 42039383865](https://github.com/j0shcd/risk-metric/actions/runs/42039383865)
+passed on the same commit. Effective protection, notification delivery and the
+first qualifying guarded merge remain unverified. Do not dispatch publishing
+or alert sending just to test monitoring.
+
+The verified functional revision is `084fe417869b102f25ca21d8c7cdd05fd0119e16`.
 Its inspected CI workflow still pins Checkout v7.0.1 and Setup Python v7.1.0.
 The hosted application scan passed with 182 locked npm entries and 11 hashed
 Python pins. The final local scan passed with 172 npm entries after the Vitest
@@ -53,9 +62,9 @@ on compatibility. Current disposition:
 
 | PR | Proposed upgrade | Compatibility and next step |
 | --- | --- | --- |
-| [1](https://github.com/j0shcd/risk-metric/pull/1), [3](https://github.com/j0shcd/risk-metric/pull/3) | React and React DOM 19.3.1 | Prepared together in `513a1f7`, including matching manifest floors and a mismatch regression. PR 1 alone resolves incompatible runtime versions |
-| [2](https://github.com/j0shcd/risk-metric/pull/2) | Vitest 5.0.5 | Prepared in `3140bf9`; existing tests required no migration |
-| [4](https://github.com/j0shcd/risk-metric/pull/4) | Testing Library React 16.3.3 | Prepared in `e78e519` |
+| [1](https://github.com/j0shcd/risk-metric/pull/1), [3](https://github.com/j0shcd/risk-metric/pull/3) | React and React DOM 19.3.1 | Landed together in `513a1f7`, including matching manifest floors and a mismatch regression. Both PRs closed as superseded after hosted CI passed |
+| [2](https://github.com/j0shcd/risk-metric/pull/2) | Vitest 5.0.5 | Landed in `3140bf9`; existing tests required no migration. PR closed as superseded |
+| [4](https://github.com/j0shcd/risk-metric/pull/4) | Testing Library React 16.3.3 | Landed in `e78e519`; PR closed as superseded |
 | [5](https://github.com/j0shcd/risk-metric/pull/5) | NumPy 2.5.4 | Requires Python 3.12+, incompatible with the project's Python 3.11 pin |
 | [6](https://github.com/j0shcd/risk-metric/pull/6) | pandas 3.0.6 | Conflicts with the explicit pandas-2 compatibility policy |
 
@@ -64,8 +73,8 @@ Their heads (`53a83dc` and `e594313`) are ancestors of remote main. Both checkou
 and the merged local `codex/fix-ci-node-path` branch were removed; no matching
 remote worktree branches existed. No implementation remains in either checkout.
 Local main also merged the seven remote data-refresh commits, preserving three
-unpublished security-documentation commits and unrelated uncommitted frontend
-work. No push has been performed. Local verification passed six workflow
+security-documentation commits and unrelated uncommitted frontend work. The nine
+approved commits were pushed through `084fe41`. Local verification passed six workflow
 regressions, five dependency-policy tests and all 80 Node tests. Actionlint
 1.7.12 passed. Three empty
 iCloud conflict directories were removed with the repository cleanup script.
@@ -79,11 +88,17 @@ their combined graph passed security scanning, policy checks, all 33 committed
 frontend tests and the production build. A separate copy of the uncommitted
 frontend passed 42 tests and its build with the same combined dependencies;
 those source edits remain uncommitted and are excluded from publication.
+The local dependency installation was refreshed with `npm run reinstall` and
+now matches the pushed lock. All 42 working-tree frontend tests and the build
+also passed against that installation. Test/build preparation prunes historical
+`web/public/data/releases` directories; the 585 resulting tracked-file deletions
+were restored after verification. Follow-up: reconcile release retention with
+tracked release history so local verification leaves those inputs unchanged.
 
-No PR has been closed or merged. Next: obtain approval for the exact local
-commits, push, verify normal hosted CI and scanning on that head, then close
-PRs 1–4 as superseded by their landed upgrades. Keep PRs 5–6 open for separate
-Python/model compatibility work unless Josh chooses to defer them by closure.
+PRs 1–4 are closed after their upgrades landed and hosted CI passed. Their bot
+commits were superseded rather than merged, so their unmerged remote branches
+were retained. PRs 5–6 remain open for separate Python/model compatibility work
+unless Josh chooses to defer them by closure.
 The subsequent security implementation remains the bootstrap replacement below.
 PR cleanup does not clear bundled-action findings or establish that branch
 protection and guarded auto-merge are active.
