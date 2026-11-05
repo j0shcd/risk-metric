@@ -17,11 +17,17 @@ npx wrangler d1 execute risk-metric-subscribers --file infra/d1/schema.sql --rem
 ```
 
 For a database created with the earlier subscriber-only schema, apply the
-one-time migration instead:
+one-time migrations in order (skip any already applied):
 
 ```sh
 npx wrangler d1 execute risk-metric-subscribers --file infra/d1/migrations/0002_release_alert_safety.sql --remote
+npx wrangler d1 execute risk-metric-subscribers --file infra/d1/migrations/0003_alert_watch.sql --remote
 ```
+
+Apply 0003 before deploying the Pages functions: subscribe and confirm write
+`watch` and fail without it. The alert sender adds missing columns itself
+(`ensureAlertSchema`), so a missed migration delays signups but never stops
+daily alerts.
 
 ## 2. Bind D1 to Cloudflare Pages
 

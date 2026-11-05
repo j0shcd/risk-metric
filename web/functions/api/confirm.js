@@ -1,3 +1,4 @@
+import { watchClause } from "./_lib/alert-copy.mjs";
 import { hashToken } from "./_lib/tokens.mjs";
 import { legacyTokenCandidate } from "./_lib/token-compat.mjs";
 
@@ -48,7 +49,7 @@ export async function onRequestPost({ request, env }) {
   const legacyToken = legacyTokenCandidate(env, token);
 
   const subscriber = await env.DB.prepare(
-    `SELECT id, status, buy_threshold, sell_threshold, pending_buy_threshold, pending_sell_threshold
+    `SELECT id, status, buy_threshold, sell_threshold, watch, pending_buy_threshold, pending_sell_threshold, pending_watch
      FROM subscribers
      WHERE (confirm_token_hash = ? OR confirm_token = ?) AND status IN ('pending', 'active')`,
   )
@@ -60,17 +61,18 @@ export async function onRequestPost({ request, env }) {
   const hasPending = subscriber.pending_buy_threshold !== null && subscriber.pending_sell_threshold !== null;
   const buyThreshold = hasPending ? subscriber.pending_buy_threshold : subscriber.buy_threshold;
   const sellThreshold = hasPending ? subscriber.pending_sell_threshold : subscriber.sell_threshold;
+  const watch = (hasPending ? subscriber.pending_watch : null) ?? subscriber.watch ?? "both";
   const confirmedAt = new Date().toISOString();
 
   if (hasPending) {
     const result = await env.DB.prepare(
       `UPDATE subscribers
-       SET buy_threshold = ?, sell_threshold = ?, pending_buy_threshold = NULL, pending_sell_threshold = NULL,
+       SET buy_threshold = ?, sell_threshold = ?, watch = ?, pending_buy_threshold = NULL, pending_sell_threshold = NULL, pending_watch = NULL,
            last_zone = NULL, status = 'active', confirmed_at = COALESCE(confirmed_at, ?),
            confirm_token = NULL, confirm_token_hash = NULL
        WHERE id = ? AND (confirm_token_hash = ? OR (confirm_token_hash IS NULL AND confirm_token = ?))`,
     )
-      .bind(buyThreshold, sellThreshold, confirmedAt, subscriber.id, tokenHash, legacyToken)
+      .bind(buyThreshold, sellThreshold, watch, confirmedAt, subscriber.id, tokenHash, legacyToken)
       .run();
     if ((result.meta?.changes ?? 0) === 0) return invalid(siteUrl);
   } else {
@@ -86,6 +88,6 @@ export async function onRequestPost({ request, env }) {
 
   const heading = subscriber.status === "active" && hasPending ? "Thresholds updated" : "You're subscribed";
   return html(
-    `<h1>${heading}</h1><p>You'll get an email when risk crosses ${escapeHtml(buyThreshold)} / ${escapeHtml(sellThreshold)}.</p><p><a href="${escapeHtml(siteUrl)}">Back to Risk Metric</a></p>`,
+    `<h1>${heading}</h1><p>You'll get an email when the reading ${escapeHtml(watchClause(watch, buyThreshold, sellThreshold))}.</p><p><a href="${escapeHtml(siteUrl)}">Back to Risk Metric</a></p>`,
   );
 }

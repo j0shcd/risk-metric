@@ -153,7 +153,7 @@ async function main() {
   await d1Query(process.env, "DELETE FROM alert_deliveries WHERE created_at < ?", [retentionCutoff()]);
   const subscribers = await d1Query(
     process.env,
-    `SELECT id, email, buy_threshold, sell_threshold, last_zone
+    `SELECT id, email, buy_threshold, sell_threshold, watch, last_zone
      FROM subscribers
      WHERE status = 'active'`,
   );

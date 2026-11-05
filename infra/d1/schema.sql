@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS subscribers (
   email TEXT NOT NULL UNIQUE,
   buy_threshold REAL NOT NULL,
   sell_threshold REAL NOT NULL,
+  watch TEXT NOT NULL DEFAULT 'both' CHECK (watch IN ('both','high','low')),
+  pending_watch TEXT,
   pending_buy_threshold REAL,
   pending_sell_threshold REAL,
   status TEXT NOT NULL DEFAULT 'pending',

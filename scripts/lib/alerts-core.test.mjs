@@ -30,35 +30,47 @@ test("evaluateTransition sends only on changed buy or sell zones", () => {
   assert.equal(evaluateTransition("sell", "sell").changed, false);
 });
 
-test("buildAlertEmail includes threshold, dashboard, and unsubscribe link", () => {
-  const subscriber = {
-    buy_threshold: 0.25,
-    sell_threshold: 0.75,
-    unsubscribe_token: "unsubscribe-token",
-  };
+test("computeZone respects the watched side at both endpoints", async () => {
+  assert.equal(computeZone(0, 0.25, 0.75, "high"), "neutral");
+  assert.equal(computeZone(1, 0.25, 0.75, "low"), "neutral");
+  assert.equal(computeZone(0, 0.25, 0.75, "both"), "buy");
+  assert.equal(computeZone(1, 0.25, 0.75, "both"), "sell");
+  assert.equal(computeZone(0.75, 0.25, 0.75, "high"), "sell");
+  assert.equal(computeZone(0.25, 0.25, 0.75, "low"), "buy");
+  for (const [watch, risk] of [["high", 0], ["low", 1]]) {
+    let sends = 0;
+    const result = await dispatchAlerts({
+      risk,
+      subscribers: [{ id: 1, watch, buy_threshold: 0.25, sell_threshold: 0.75, last_zone: null }],
+      siteUrl: "https://example.com",
+      send: async () => { sends += 1; },
+      now: () => "2026-11-05T06:00:00Z",
+    });
+    assert.equal(sends, 0);
+    assert.equal(result.emailsSent, 0);
+    assert.deepEqual(result.updates, []);
+  }
+});
 
-  const buy = buildAlertEmail({
-    subscriber,
-    risk: 0.18,
-    date: "2026-07-15",
-    zone: "buy",
-    siteUrl: "https://example.com/",
-  });
-  assert.match(buy.subject, /0\.18/);
-  assert.match(buy.subject, /0\.25/);
-  assert.match(buy.html, /2026-07-15/);
-  assert.match(buy.html, /https:\/\/example\.com\/api\/unsubscribe\?token=unsubscribe-token/);
-
-  const sell = buildAlertEmail({
-    subscriber,
-    risk: 0.8,
-    date: "2026-07-15",
-    zone: "sell",
-    siteUrl: "https://example.com",
-  });
-  assert.match(sell.subject, /0\.80/);
-  assert.match(sell.subject, /0\.75/);
-  assert.match(sell.html, /sell threshold/);
+test("buildAlertEmail uses whole-number readings and low/high marks", () => {
+  const subscriber = { buy_threshold: 0.25, sell_threshold: 0.75, unsubscribe_token: "unsubscribe-token" };
+  for (const [zone, risk, n, direction, mark, threshold] of [
+    ["buy", 0.184, 18, "at or below", "low", 25],
+    ["sell", 0.806, 81, "at or above", "high", 75],
+  ]) {
+    const email = buildAlertEmail({ subscriber, risk, date: "2026-07-15", zone, siteUrl: "https://example.com/" });
+    assert.equal(email.subject, `Bitcoin risk reading is ${n}, ${direction} your ${mark} mark of ${threshold}`);
+    assert.match(email.html, new RegExp(`<p>The Bitcoin risk reading for 2026-07-15 is ${n} out of 100.</p>`));
+    assert.ok(email.html.includes(`<p>That is ${direction} the ${mark} mark of ${threshold} you asked to hear about.</p>`));
+    assert.ok(email.html.includes("<p>The reading describes how today compares with history. It is not a signal to buy or sell.</p>"));
+    assert.match(email.html, />Open Risk Metric<\/a>/);
+    assert.match(email.html, /https:\/\/example\.com\/api\/unsubscribe\?token=unsubscribe-token/);
+    assert.doesNotMatch(email.subject + email.html, /dca_risk|accumulate|sell threshold|0\.25|0\.75|0\.18|0\.80/);
+  }
+  const noDate = buildAlertEmail({ subscriber, risk: 0.18, zone: "buy", siteUrl: "https://example.com" });
+  assert.ok(noDate.html.includes("<p>The Bitcoin risk reading is 18 out of 100.</p>"));
+  const escaped = buildAlertEmail({ subscriber, risk: 0.18, date: '<bad & "date">', zone: "buy", siteUrl: "https://example.com" });
+  assert.ok(escaped.html.includes("&lt;bad &amp; &quot;date&quot;&gt;"));
 });
 
 test("dispatchAlerts keeps last_zone unchanged when a send fails so the next run retries", async () => {

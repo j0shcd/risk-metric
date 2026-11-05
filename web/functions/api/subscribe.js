@@ -1,3 +1,4 @@
+import { watchClause } from "./_lib/alert-copy.mjs";
 import { sendEmail } from "./_lib/resend.mjs";
 import { generateToken, hashToken } from "./_lib/tokens.mjs";
 import { validateSubscribeInput } from "./_lib/validate.mjs";
@@ -21,7 +22,7 @@ function escapeHtml(value) {
   });
 }
 
-function confirmationEmailHtml({ siteUrl, token, buyThreshold, sellThreshold, isUpdate }) {
+function confirmationEmailHtml({ siteUrl, token, buyThreshold, sellThreshold, watch, isUpdate }) {
   const confirmUrl = `${siteUrl}/api/confirm?token=${encodeURIComponent(token)}`;
   const intro = isUpdate
     ? "<p>Confirm the new thresholds for your Bitcoin risk alerts.</p>"
@@ -32,7 +33,7 @@ function confirmationEmailHtml({ siteUrl, token, buyThreshold, sellThreshold, is
     : "<p>If you did not sign up, you can ignore this email.</p>";
   return `
     ${intro}
-    <p>You asked to receive alerts when dca_risk is at or below ${escapeHtml(buyThreshold)} and at or above ${escapeHtml(sellThreshold)}.</p>
+    <p>You asked for an email when the Bitcoin risk reading (0 to 100) ${escapeHtml(watchClause(watch, buyThreshold, sellThreshold))}.</p>
     <p><a href="${escapeHtml(confirmUrl)}">${action}</a></p>
     ${ignore}
   `;
@@ -118,14 +119,15 @@ export async function onRequestPost({ request, env }) {
   } else {
     const inserted = await env.DB.prepare(
       `INSERT OR IGNORE INTO subscribers
-        (email, buy_threshold, sell_threshold, status, confirm_token_hash, unsubscribe_token_hash,
+        (email, buy_threshold, sell_threshold, watch, status, confirm_token_hash, unsubscribe_token_hash,
          confirmation_claimed_at, created_at)
-       VALUES (?, ?, ?, 'pending', ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
     )
       .bind(
         validated.email,
         validated.buyThreshold,
         validated.sellThreshold,
+        validated.watch,
         confirmTokenHash,
         unsubscribeTokenHash,
         now,
@@ -154,10 +156,10 @@ export async function onRequestPost({ request, env }) {
     // require the same email confirmation as a new signup.
     await env.DB.prepare(
       `UPDATE subscribers
-       SET pending_buy_threshold = ?, pending_sell_threshold = ?, confirm_token_hash = ?, confirm_token = NULL
+       SET pending_buy_threshold = ?, pending_sell_threshold = ?, pending_watch = ?, confirm_token_hash = ?, confirm_token = NULL
        WHERE id = ?`,
     )
-      .bind(validated.buyThreshold, validated.sellThreshold, confirmTokenHash, existing.id)
+      .bind(validated.buyThreshold, validated.sellThreshold, validated.watch, confirmTokenHash, existing.id)
       .run();
 
     sent = await sendConfirmation({
@@ -170,13 +172,13 @@ export async function onRequestPost({ request, env }) {
   } else {
     await env.DB.prepare(
       `UPDATE subscribers
-       SET buy_threshold = ?, sell_threshold = ?, pending_buy_threshold = NULL, pending_sell_threshold = NULL,
+       SET buy_threshold = ?, sell_threshold = ?, watch = ?, pending_buy_threshold = NULL, pending_sell_threshold = NULL, pending_watch = NULL,
            status = 'pending', confirm_token = NULL,
            confirm_token_hash = ?, unsubscribe_token = NULL, unsubscribe_token_hash = ?,
            last_zone = NULL, confirmed_at = NULL
        WHERE id = ?`,
     )
-      .bind(validated.buyThreshold, validated.sellThreshold, confirmTokenHash, unsubscribeTokenHash, existing.id)
+      .bind(validated.buyThreshold, validated.sellThreshold, validated.watch, confirmTokenHash, unsubscribeTokenHash, existing.id)
       .run();
 
     sent = await sendConfirmation({

@@ -7,18 +7,22 @@ export function retentionCutoff(now = new Date(), retentionDays = 365) {
 }
 
 const REQUIRED_SUBSCRIBER_COLUMNS = [
-  "confirm_token_hash",
-  "unsubscribe_token_hash",
-  "last_confirmation_sent_at",
-  "confirmation_claimed_at",
+  ["confirm_token_hash", "TEXT"],
+  ["unsubscribe_token_hash", "TEXT"],
+  ["last_confirmation_sent_at", "TEXT"],
+  ["confirmation_claimed_at", "TEXT"],
+  // Migration 0003. The sender selects `watch`, so a database that missed the
+  // migration must gain it here rather than stop sending alerts.
+  ["watch", "TEXT NOT NULL DEFAULT 'both' CHECK (watch IN ('both','high','low'))"],
+  ["pending_watch", "TEXT"],
 ];
 
 export async function ensureAlertSchema(query, env) {
   const subscriberColumns = await query(env, "PRAGMA table_info(subscribers)");
   const existingSubscriberColumns = new Set(subscriberColumns.map((row) => row.name));
-  for (const column of REQUIRED_SUBSCRIBER_COLUMNS) {
+  for (const [column, definition] of REQUIRED_SUBSCRIBER_COLUMNS) {
     if (!existingSubscriberColumns.has(column)) {
-      await query(env, `ALTER TABLE subscribers ADD COLUMN ${column} TEXT`);
+      await query(env, `ALTER TABLE subscribers ADD COLUMN ${column} ${definition}`);
     }
   }
 

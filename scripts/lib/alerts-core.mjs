@@ -1,6 +1,6 @@
-export function computeZone(risk, buyThreshold, sellThreshold) {
-  if (risk <= buyThreshold) return "buy";
-  if (risk >= sellThreshold) return "sell";
+export function computeZone(risk, buyThreshold, sellThreshold, watch = "both") {
+  if ((watch === "both" || watch === "low") && risk <= buyThreshold) return "buy";
+  if ((watch === "both" || watch === "high") && risk >= sellThreshold) return "sell";
   return "neutral";
 }
 
@@ -16,7 +16,7 @@ export function evaluateTransition(lastZone, newZone) {
 }
 
 export function formatRisk(risk) {
-  return Number(risk).toFixed(2);
+  return String(Math.round(Number(risk) * 100));
 }
 
 export function buildAlertEmail({ subscriber, risk, date, zone, siteUrl }) {
@@ -24,24 +24,17 @@ export function buildAlertEmail({ subscriber, risk, date, zone, siteUrl }) {
   const unsubscribeUrl = `${dashboardUrl}/api/unsubscribe?token=${encodeURIComponent(subscriber.unsubscribe_token)}`;
   const riskText = formatRisk(risk);
 
-  if (zone === "buy") {
-    return {
-      subject: `Risk alert: dca_risk ${riskText} - at/below your accumulate threshold (${subscriber.buy_threshold})`,
-      html: `
-        <p>dca_risk is ${riskText}${date ? ` for ${escapeHtml(date)}` : ""}.</p>
-        <p>It is at or below your accumulate threshold of ${escapeHtml(subscriber.buy_threshold)}.</p>
-        <p><a href="${escapeHtml(dashboardUrl)}">Open the dashboard</a></p>
-        <p><a href="${escapeHtml(unsubscribeUrl)}">Unsubscribe</a></p>
-      `,
-    };
-  }
-
+  const low = zone === "buy";
+  const direction = low ? "at or below" : "at or above";
+  const mark = low ? "low" : "high";
+  const threshold = formatRisk(low ? subscriber.buy_threshold : subscriber.sell_threshold);
   return {
-    subject: `Risk alert: dca_risk ${riskText} - at/above your sell threshold (${subscriber.sell_threshold})`,
+    subject: `Bitcoin risk reading is ${riskText}, ${direction} your ${mark} mark of ${threshold}`,
     html: `
-      <p>dca_risk is ${riskText}${date ? ` for ${escapeHtml(date)}` : ""}.</p>
-      <p>It is at or above your sell threshold of ${escapeHtml(subscriber.sell_threshold)}.</p>
-      <p><a href="${escapeHtml(dashboardUrl)}">Open the dashboard</a></p>
+      <p>The Bitcoin risk reading${date ? ` for ${escapeHtml(date)}` : ""} is ${escapeHtml(riskText)} out of 100.</p>
+      <p>That is ${direction} the ${mark} mark of ${escapeHtml(threshold)} you asked to hear about.</p>
+      <p>The reading describes how today compares with history. It is not a signal to buy or sell.</p>
+      <p><a href="${escapeHtml(dashboardUrl)}">Open Risk Metric</a></p>
       <p><a href="${escapeHtml(unsubscribeUrl)}">Unsubscribe</a></p>
     `,
   };
@@ -61,7 +54,7 @@ export async function dispatchAlerts({ risk, date, subscribers, siteUrl, prepare
   let emailsSent = 0;
 
   for (const subscriber of subscribers) {
-    const zone = computeZone(risk, subscriber.buy_threshold, subscriber.sell_threshold);
+    const zone = computeZone(risk, subscriber.buy_threshold, subscriber.sell_threshold, subscriber.watch);
     const transition = evaluateTransition(subscriber.last_zone, zone);
 
     if (!transition.changed) continue;

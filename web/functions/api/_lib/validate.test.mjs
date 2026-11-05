@@ -21,6 +21,11 @@ test("threshold validation accepts boundaries and ordering", () => {
 
 test("threshold validation rejects equal, out-of-range, and non-numeric values", () => {
   assert.equal(validateThresholds(0.5, 0.5).ok, false);
+  // Ordering only binds when both sides are watched.
+  assert.equal(validateThresholds(0.25, 0.1, "high").ok, true);
+  assert.equal(validateThresholds(0.9, 0.75, "low").ok, true);
+  assert.equal(validateThresholds(0.25, 0.1, "both").ok, false);
+  assert.equal(validateThresholds(0.25, 1.1, "high").ok, false);
   assert.equal(validateThresholds(-0.1, 0.5).ok, false);
   assert.equal(validateThresholds(0.5, 1.1).ok, false);
   assert.equal(validateThresholds("abc", 0.75).ok, false);

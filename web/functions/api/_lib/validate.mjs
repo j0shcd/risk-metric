@@ -15,7 +15,9 @@ export function parseThreshold(value) {
   return Number.NaN;
 }
 
-export function validateThresholds(buyThreshold, sellThreshold) {
+// The two marks only need to be ordered when both are watched. A high-only
+// subscriber may set the high mark below the (ignored) low mark, and vice versa.
+export function validateThresholds(buyThreshold, sellThreshold, watch = "both") {
   const buy = parseThreshold(buyThreshold);
   const sell = parseThreshold(sellThreshold);
 
@@ -23,8 +25,12 @@ export function validateThresholds(buyThreshold, sellThreshold) {
     return { ok: false, error: "Thresholds must be finite numbers." };
   }
 
-  if (!(buy >= 0 && buy < sell && sell <= 1)) {
-    return { ok: false, error: "Thresholds must satisfy 0 <= buyThreshold < sellThreshold <= 1." };
+  if (!(buy >= 0 && buy <= 1 && sell >= 0 && sell <= 1)) {
+    return { ok: false, error: "Thresholds must be between 0 and 1." };
+  }
+
+  if (watch === "both" && !(buy < sell)) {
+    return { ok: false, error: "Thresholds must satisfy buyThreshold < sellThreshold." };
   }
 
   return { ok: true, buyThreshold: buy, sellThreshold: sell };
@@ -40,11 +46,17 @@ export function validateSubscribeInput(input) {
     return { ok: false, error: "Enter a valid email address." };
   }
 
-  const thresholds = validateThresholds(input.buyThreshold, input.sellThreshold);
+  const watch = input.watch === undefined ? "both" : input.watch;
+  if (!["both", "high", "low"].includes(watch)) {
+    return { ok: false, error: 'Watch must be "both", "high", or "low".' };
+  }
+
+  const thresholds = validateThresholds(input.buyThreshold, input.sellThreshold, watch);
   if (!thresholds.ok) return thresholds;
 
   return {
     ok: true,
+    watch,
     email,
     buyThreshold: thresholds.buyThreshold,
     sellThreshold: thresholds.sellThreshold,

@@ -61,8 +61,9 @@ state changes, a 15-minute per-address confirmation cooldown, and an atomic
 50-send hourly global ceiling. Alert deliveries are unique by subscriber,
 release, and zone; Resend receives a deterministic idempotency key and D1 keeps
 pending/sent/failed retry state for about one year. Existing D1 databases must
-apply `infra/d1/migrations/0002_release_alert_safety.sql` before deploying the
-new Pages functions or alert sender. Legacy plaintext tokens remain readable
+apply `infra/d1/migrations/0002_release_alert_safety.sql` and
+`0003_alert_watch.sql` (adds the watched side, `watch`/`pending_watch`) before
+deploying the new Pages functions or alert sender. Legacy plaintext tokens remain readable
 only during migration and are cleared when used or rotated.
 
 ## Run it locally

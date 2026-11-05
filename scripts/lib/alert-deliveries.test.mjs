@@ -25,4 +25,6 @@ test("ensureAlertSchema adds only missing migration columns", async () => {
   assert(statements.some((sql) => sql.includes("ADD COLUMN unsubscribe_token_hash")));
   assert(!statements.some((sql) => sql.includes("ADD COLUMN confirm_token_hash")));
   assert(statements.some((sql) => sql.includes("ADD COLUMN unsubscribe_token_nonce")));
+  assert(statements.some((sql) => sql.includes("ADD COLUMN watch TEXT NOT NULL DEFAULT 'both'")));
+  assert(statements.some((sql) => sql.includes("ADD COLUMN pending_watch TEXT")));
 });
