@@ -1,11 +1,49 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  alertPreview,
   buildDcaRiskSeries,
   chartData,
-  dcaActionForRisk,
-  simulateDcaComparison,
+  formatDateTick,
+  formatPriceTick,
+  readingSummary,
+  regionForRisk,
+  scoreLabel,
 } from "./data";
+
+describe("chart axis labels", () => {
+  it("labels only 1, 2 and 5 times powers of ten on the log price axis", () => {
+    expect([1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 20000, 100000]
+      .map((value) => formatPriceTick(value, true)))
+      .toEqual(["1", "2", "5", "10", "20", "50", "100", "200", "500", "1k", "2k", "5k", "20k", "100k"]);
+    expect([0, 3, 4, 6, 9, 4000, 58000, 59000, 60000, 80000, 99999]
+      .map((value) => formatPriceTick(value, true)))
+      .toEqual(Array(11).fill(""));
+    expect(formatPriceTick(0.2, true)).toBe("0.2");
+  });
+
+  it("labels every whole mantissa when the log axis spans less than a decade", () => {
+    expect([58000, 60000, 70000, 90000, 100000, 130000]
+      .map((value) => formatPriceTick(value, true, 130000 / 58000)))
+      .toEqual(["", "60k", "70k", "90k", "100k", ""]);
+  });
+
+  it("uses compact prices without the log filter on linear axes", () => {
+    expect([0, 500, 1000, 5000, 20000, 60000, 100000, 125000]
+      .map((value) => formatPriceTick(value)))
+      .toEqual(["0", "500", "1k", "5k", "20k", "60k", "100k", "125k"]);
+    expect(formatPriceTick(1250)).toBe("1.25k");
+    expect(formatPriceTick(NaN)).toBe("");
+  });
+
+  it("formats date ticks as month and year in UTC", () => {
+    expect(formatDateTick("2024-11-01")).toBe("Nov 2024");
+    expect(formatDateTick("2024-11-30")).toBe("Nov 2024");
+    expect(formatDateTick("2025-01-01")).toBe("Jan 2025");
+    expect(formatDateTick("")).toBe("");
+    expect(formatDateTick("invalid")).toBe("");
+  });
+});
 
 describe("chartData", () => {
   it("trims leading null values to first available datapoint", () => {
@@ -93,100 +131,82 @@ describe("DCA helpers", () => {
     expect(series.values[1]).not.toBeNull();
   });
 
-  it("includes exact threshold values as base actions", () => {
-    expect(dcaActionForRisk(0.3, { buyStartRisk: 0.3, buyStep: 0.1, buyBaseAmount: 1, sellStartRisk: 0.6, sellStep: 0.1, sellBaseAmount: 1 })).toMatchObject({ side: "buy", amount: 1 });
-    expect(dcaActionForRisk(0.6, { buyStartRisk: 0.3, buyStep: 0.1, buyBaseAmount: 1, sellStartRisk: 0.6, sellStep: 0.1, sellBaseAmount: 1 })).toMatchObject({ side: "sell", amount: 1 });
+
+});
+
+describe("reading context", () => {
+  const series = {
+    labels: ["2015-01-01", "2015-06-30", "2015-12-01", "2015-12-25", "2016-01-01"],
+    values: [0.1, 0.9, 0.5, 0.4, 0.3],
+  };
+
+  it("scores 0-1 as a 0-100 integer", () => {
+    expect(scoreLabel(0.191)).toBe("19");
+    expect(scoreLabel(0.996)).toBe("100");
+    expect(scoreLabel(null)).toBe("—");
   });
 
-  it("executes base actions when lagged scenario risk equals a threshold", () => {
-    const comparison = simulateDcaComparison(
-      {
-        labels: ["2026-01-31", "2026-02-28", "2026-03-31"],
-        values: [0.25, 0.75, 0.5],
-        priceValues: [100, 100, 100],
-      },
-      { startDate: "2026-01-01", monthlyContribution: 100 },
-    );
-
-    expect(comparison.rows[0].riskUsed).toBe(0.25);
-    expect(comparison.rows[0].buyAmount).toBeGreaterThan(0);
-    expect(comparison.rows[1].riskUsed).toBe(0.75);
-    expect(comparison.rows[1].sellAmount).toBeGreaterThan(0);
+  it("maps values onto the model's own frozen regions", () => {
+    expect(regionForRisk(0.25).key).toBe("low");
+    expect(regionForRisk(0.2501).key).toBe("middle");
+    expect(regionForRisk(0.75).key).toBe("high");
   });
 
-  it("compares fixed and dynamic DCA with equal monthly external cashflows", () => {
-    const comparison = simulateDcaComparison(
-      {
-        labels: ["2026-01-31", "2026-02-28", "2026-03-31"],
-        values: [0.1, 0.9, 0.5],
-        priceValues: [100, 100, 100],
-      },
-      { startDate: "2026-01-01", monthlyContribution: 100 },
-    );
-
-    expect(comparison.fixed.totalContributed).toBe(200);
-    expect(comparison.dynamic.totalContributed).toBe(200);
-    expect(comparison.rows.map((row) => row.contribution)).toEqual([100, 100]);
+  it("places the latest reading in its own history", () => {
+    const summary = readingSummary(series);
+    expect(summary.latest).toBe(0.3);
+    expect(summary.latestDate).toBe("2016-01-01");
+    expect(summary.region.key).toBe("middle");
+    // 0.1 is the only earlier value below 0.3, out of four earlier readings.
+    expect(summary.percentileBelow).toBeCloseTo(0.25);
   });
 
-  it("warns when scenario thresholds overlap", () => {
-    const comparison = simulateDcaComparison(
-      { labels: ["2026-01-31"], values: [0.5], priceValues: [100] },
-      { buyStartRisk: 0.7, sellStartRisk: 0.6 },
-    );
+  it("reads comparisons from the nearest earlier date, not a fixed row offset", () => {
+    const summary = readingSummary(series);
+    const byLabel = Object.fromEntries(summary.comparisons.map((c) => [c.label, c.value]));
+    expect(byLabel).not.toHaveProperty("Now");
+    expect(byLabel["A week ago"]).toBe(0.4);
+    expect(byLabel["A year ago"]).toBe(0.1);
+  });
 
-    expect(comparison.warnings).toContain("Buy threshold should be below sell threshold.");
-    expect(comparison.rows).toEqual([]);
-    expect(dcaActionForRisk(0.5, { buyStartRisk: 0.7, sellStartRisk: 0.6 })).toMatchObject({
-      side: "hold",
-      label: "Invalid thresholds",
+  it("returns null when nothing finite has been published", () => {
+    expect(readingSummary({ labels: ["2015-01-01"], values: [null] })).toBeNull();
+  });
+});
+
+describe("alertPreview", () => {
+  // Enters low once, leaves, re-enters: two low crossings, one high crossing.
+  const series = {
+    labels: ["2015-01-01", "2015-01-02", "2015-01-03", "2015-01-04", "2015-01-05"],
+    values: [0.2, 0.2, 0.8, 0.5, 0.1],
+  };
+
+  it("counts entries into a zone, not days spent inside it", () => {
+    expect(alertPreview(series, { watch: "low" }).count).toBe(2);
+    expect(alertPreview(series, { watch: "high" }).count).toBe(1);
+    expect(alertPreview(series, { watch: "both" }).count).toBe(3);
+  });
+
+  it("reports the most recent crossing", () => {
+    expect(alertPreview(series, { watch: "both" }).lastEntry).toEqual({
+      date: "2015-01-05",
+      zone: "low",
     });
   });
 
-  it("uses each DCA Risk observation only on the next monthly execution", () => {
-    const comparison = simulateDcaComparison(
-      {
-        labels: ["2026-01-31", "2026-02-28", "2026-03-31"],
-        values: [0.1, 0.9, 0.5],
-        priceValues: [100, 100, 100],
-      },
-      { startDate: "2026-01-01", monthlyContribution: 100 },
-    );
-
-    expect(comparison.rows[0].riskUsed).toBe(0.1);
-    expect(comparison.rows[0].buyAmount).toBeGreaterThan(0);
-    expect(comparison.rows[1].riskUsed).toBe(0.9);
-    expect(comparison.rows[1].sellAmount).toBeGreaterThan(0);
+  it("respects custom thresholds", () => {
+    expect(alertPreview(series, { watch: "high", high: 0.4 }).count).toBe(1);
+    expect(alertPreview(series, { watch: "low", low: 0.05 }).count).toBe(0);
   });
+});
 
-  it("does not compare fixed DCA before the first actionable DCA Risk month", () => {
-    const comparison = simulateDcaComparison(
-      {
-        labels: ["2012-01-31", "2014-12-31", "2015-01-31", "2015-02-28"],
-        values: [null, 0.2, 0.8, 0.5],
-        priceValues: [5, 300, 250, 275],
-      },
-      { startDate: "2012-01-01", monthlyContribution: 100 },
-    );
-
-    expect(comparison.strategy.startDate).toBe("2015-01-01");
-    expect(comparison.rows[0]).toMatchObject({ date: "2015-01-31", riskUsed: 0.2 });
-    expect(comparison.fixed.totalContributed).toBe(comparison.dynamic.totalContributed);
-    expect(comparison.warnings[0]).toMatch(/moved to 2015-01-01/);
-  });
-
-  it("does not count deposits as time-weighted investment return", () => {
-    const comparison = simulateDcaComparison(
-      {
-        labels: ["2026-01-31", "2026-02-28", "2026-03-31"],
-        values: [0.5, 0.5, 0.5],
-        priceValues: [100, 100, 100],
-      },
-      { startDate: "2026-01-01", monthlyContribution: 100 },
-    );
-
-    expect(comparison.dynamic.timeWeightedReturn).toBeCloseTo(0);
-    expect(comparison.dynamic.endingValue).toBe(200);
-    expect(comparison.fixed.timeWeightedReturn).toBeLessThan(0);
+describe("alertPreview window", () => {
+  it("quotes the first scored date, not the first padded row", () => {
+    const preview = alertPreview({
+      labels: ["2012-01-01", "2014-12-31", "2015-01-01"],
+      values: [null, 0.5, 0.2],
+    });
+    expect(preview.since).toBe("2014-12-31");
+    expect(preview.count).toBe(1);
   });
 });

@@ -15,58 +15,31 @@ const UNAVAILABLE_MODES = new Set([
   "future_upgrade_local_cache",
 ]);
 
-export const DEFAULT_DCA_STRATEGY = {
-  buyStartRisk: 0.25,
-  buyStep: 0.1,
-  buyBaseAmount: 100,
-  sellStartRisk: 0.75,
-  sellStep: 0.1,
-  sellBaseAmount: 100,
-  startDate: "",
-  cadence: "weekly",
-  dayOfWeek: "monday",
-};
-
-const SCENARIO_FEE_AND_SLIPPAGE = 0.002;
-const SCENARIO_MAX_BUY_MULTIPLIER = 3;
-const SCENARIO_MAX_SELL_FRACTION = 0.35;
-const SCENARIO_CASH_BUFFER_RATIO = 0.1;
-
-const DAY_INDEX = {
-  sunday: 0,
-  monday: 1,
-  tuesday: 2,
-  wednesday: 3,
-  thursday: 4,
-  friday: 5,
-  saturday: 6,
-};
-
 const DCA_COMPONENTS = [
   {
     key: "top_reversal_risk",
-    label: "Top Reversal Risk",
+    label: "Looks like past peaks",
     column: "top_reversal_risk",
     derivedColumn: "dca_top_reversal_component",
     lowRiskWhen: "low",
   },
   {
     key: "bottom_reversal_risk",
-    label: "Bottom Reversal Risk",
+    label: "Unlike past bottoms",
     column: "bottom_reversal_risk",
     derivedColumn: "dca_bottom_reversal_component",
     lowRiskWhen: "high",
   },
   {
     key: "cycle_extension_score",
-    label: "Cycle Extension",
+    label: "Price stretch",
     column: "cycle_extension_score",
     derivedColumn: "dca_cycle_extension_component",
     lowRiskWhen: "low",
   },
   {
     key: "cycle_regime_index",
-    label: "Cycle Frenzy Score",
+    label: "Speculation and hype",
     column: "cycle_frenzy_score",
     derivedColumn: "dca_cycle_regime_component",
     lowRiskWhen: "low",
@@ -85,19 +58,6 @@ async function fetchArtifact(name, root = ARTIFACT_ROOT) {
   }
 }
 
-async function fetchOptionalArtifact(name, fallback = null, root = ARTIFACT_ROOT) {
-  const response = await fetch(`${root}/${name}`);
-  if (!response.ok) {
-    return fallback;
-  }
-  try {
-    return await response.json();
-  } catch {
-    // Static hosts commonly rewrite missing files to index.html with a 200 status.
-    return fallback;
-  }
-}
-
 function toNumber(value) {
   if (value === null || value === undefined) {
     return null;
@@ -112,18 +72,34 @@ function clamp01(value) {
   return Math.min(1, Math.max(0, num));
 }
 
-function lastFinite(values = []) {
-  for (let idx = values.length - 1; idx >= 0; idx -= 1) {
-    const num = toNumber(values[idx]);
-    if (num !== null) {
-      return num;
-    }
-  }
-  return null;
-}
-
 function hasFinite(values = []) {
   return Array.isArray(values) && values.some((value) => toNumber(value) !== null);
+}
+
+// Axis labels stay compact; tooltip prices retain their full precision in App.
+// A log axis spanning a decade or more labels only 1, 2 and 5 x 10^n. A narrower
+// span (e.g. two years of price) would then show a single label, so it labels
+// every whole mantissa instead. Off-grid bounds such as 58,000 never get one.
+export function formatPriceTick(value, logarithmic = false, span = Infinity) {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) return "";
+  if (logarithmic) {
+    if (num === 0) return "";
+    const mantissa = num / (10 ** Math.floor(Math.log10(num)));
+    const allowed = span >= 10 ? [1, 2, 5] : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    if (!allowed.some((candidate) => Math.abs(mantissa - candidate) < 1e-9)) return "";
+  }
+  return num >= 1000 ? `${Number((num / 1000).toFixed(2))}k` : String(Number(num.toFixed(2)));
+}
+
+const MONTH_YEAR_FORMAT = new Intl.DateTimeFormat("en-US", {
+  month: "short", year: "numeric", timeZone: "UTC",
+});
+
+export function formatDateTick(value) {
+  if (!value) return "";
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? "" : MONTH_YEAR_FORMAT.format(date);
 }
 
 export function valueLabel(value, digits = 3) {
@@ -132,37 +108,6 @@ export function valueLabel(value, digits = 3) {
     return "n/a";
   }
   return num.toFixed(digits);
-}
-
-export function percentLabel(value, digits = 1) {
-  const num = toNumber(value);
-  if (num === null) {
-    return "n/a";
-  }
-  return `${(num * 100).toFixed(digits)}%`;
-}
-
-export function integerLabel(value) {
-  const num = toNumber(value);
-  if (num === null) {
-    return "n/a";
-  }
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(num);
-}
-
-export function pickLatestContributions(columnarPayload, limit = 12) {
-  const columns = columnarPayload?.columns ?? {};
-  const names = Object.keys(columns).filter((name) => name.endsWith("_signal_contribution"));
-
-  const entries = names
-    .map((name) => ({
-      name,
-      value: lastFinite(columns[name]),
-    }))
-    .filter((item) => item.value !== null)
-    .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
-
-  return entries.slice(0, limit);
 }
 
 function extractSeries(columnarPayload, column) {
@@ -214,13 +159,6 @@ export function chartData(columnarPayload, column, options = {}) {
   const overlayValues = labels.map((label) => overlayMap.get(label) ?? null);
 
   return { labels, values, overlayValues };
-}
-
-export function listColumns(columnarPayload) {
-  if (!columnarPayload?.columns) {
-    return [];
-  }
-  return Object.keys(columnarPayload.columns);
 }
 
 function expandingMinMaxRisk(values, lowRiskWhen) {
@@ -276,328 +214,6 @@ export function buildDcaRiskSeries(historyCore) {
   return { labels, values, components, coverageValues };
 }
 
-function positiveNumber(value, fallback) {
-  const num = Number(value);
-  return Number.isFinite(num) && num > 0 ? num : fallback;
-}
-
-function thresholdNumber(value, fallback) {
-  const num = Number(value);
-  return Number.isFinite(num) ? Math.min(1, Math.max(0, num)) : fallback;
-}
-
-export function normalizeDcaStrategy(strategy = {}, labels = []) {
-  const merged = { ...DEFAULT_DCA_STRATEGY, ...strategy };
-  const firstLabel = labels.find(Boolean) ?? "";
-  const cadence = ["daily", "weekly", "monthly"].includes(merged.cadence) ? merged.cadence : DEFAULT_DCA_STRATEGY.cadence;
-  const dayOfWeek = Object.prototype.hasOwnProperty.call(DAY_INDEX, merged.dayOfWeek)
-    ? merged.dayOfWeek
-    : DEFAULT_DCA_STRATEGY.dayOfWeek;
-
-  return {
-    buyStartRisk: thresholdNumber(merged.buyStartRisk, DEFAULT_DCA_STRATEGY.buyStartRisk),
-    buyStep: positiveNumber(merged.buyStep, DEFAULT_DCA_STRATEGY.buyStep),
-    buyBaseAmount: positiveNumber(merged.buyBaseAmount, DEFAULT_DCA_STRATEGY.buyBaseAmount),
-    sellStartRisk: thresholdNumber(merged.sellStartRisk, DEFAULT_DCA_STRATEGY.sellStartRisk),
-    sellStep: positiveNumber(merged.sellStep, DEFAULT_DCA_STRATEGY.sellStep),
-    sellBaseAmount: positiveNumber(merged.sellBaseAmount, DEFAULT_DCA_STRATEGY.sellBaseAmount),
-    startDate: /^\d{4}-\d{2}-\d{2}$/.test(String(merged.startDate || "")) ? merged.startDate : firstLabel,
-    cadence,
-    dayOfWeek,
-  };
-}
-
-export function dcaActionForRisk(risk, strategy = DEFAULT_DCA_STRATEGY) {
-  if (strategy.buyStartRisk >= strategy.sellStartRisk) {
-    return { side: "hold", multiplier: 0, amount: 0, label: "Invalid thresholds" };
-  }
-  const value = toNumber(risk);
-  if (value === null) {
-    return { side: "hold", multiplier: 0, amount: 0, label: "Hold" };
-  }
-
-  if (value <= strategy.buyStartRisk) {
-    const multiplier = Math.max(1, Math.ceil((strategy.buyStartRisk - value) / strategy.buyStep));
-    const amount = multiplier * strategy.buyBaseAmount;
-    return { side: "buy", multiplier, amount, label: `Buy ${multiplier}x` };
-  }
-
-  if (value >= strategy.sellStartRisk) {
-    const multiplier = Math.max(1, Math.ceil((value - strategy.sellStartRisk) / strategy.sellStep));
-    const amount = multiplier * strategy.sellBaseAmount;
-    return { side: "sell", multiplier, amount, label: `Sell ${multiplier}x` };
-  }
-
-  return { side: "hold", multiplier: 0, amount: 0, label: "Hold" };
-}
-
-function cadenceKey(dateLabel, cadence) {
-  if (cadence === "daily") return dateLabel;
-
-  const date = new Date(`${dateLabel}T00:00:00Z`);
-  if (Number.isNaN(date.getTime())) return dateLabel;
-
-  if (cadence === "monthly") {
-    return dateLabel.slice(0, 7);
-  }
-
-  const start = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  const dayOfYear = Math.floor((date - start) / 86400000) + 1;
-  const week = Math.ceil((dayOfYear + start.getUTCDay()) / 7);
-  return `${date.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
-}
-
-function parseDateLabel(dateLabel) {
-  const date = new Date(`${dateLabel}T00:00:00Z`);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-export function scenarioAvailableFrom(dcaSeries) {
-  const labels = Array.isArray(dcaSeries?.labels) ? dcaSeries.labels : [];
-  const risks = Array.isArray(dcaSeries?.values) ? dcaSeries.values : [];
-  const firstRiskIndex = risks.findIndex((value) => toNumber(value) !== null);
-  if (firstRiskIndex < 0 || !labels[firstRiskIndex]) return "";
-
-  const firstRiskDate = parseDateLabel(labels[firstRiskIndex]);
-  if (!firstRiskDate) return labels[firstRiskIndex];
-  return new Date(Date.UTC(firstRiskDate.getUTCFullYear(), firstRiskDate.getUTCMonth() + 1, 1))
-    .toISOString()
-    .slice(0, 10);
-}
-
-function isScheduledDate(dateLabel, cadence, dayOfWeek) {
-  if (cadence === "daily") return true;
-
-  const date = parseDateLabel(dateLabel);
-  if (!date) return true;
-  if (date.getUTCDay() !== DAY_INDEX[dayOfWeek]) return false;
-
-  if (cadence === "weekly") return true;
-
-  const month = date.getUTCMonth();
-  const year = date.getUTCFullYear();
-  for (let day = 1; day < date.getUTCDate(); day += 1) {
-    const candidate = new Date(Date.UTC(year, month, day));
-    if (candidate.getUTCDay() === DAY_INDEX[dayOfWeek]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function monthlyExecutionRows(dcaSeries) {
-  const labels = Array.isArray(dcaSeries?.labels) ? dcaSeries.labels : [];
-  const risks = Array.isArray(dcaSeries?.values) ? dcaSeries.values : [];
-  const prices = Array.isArray(dcaSeries?.priceValues) ? dcaSeries.priceValues : [];
-  const byMonth = new Map();
-
-  labels.forEach((date, index) => {
-    const price = toNumber(prices[index]);
-    if (price === null || price <= 0) return;
-    byMonth.set(date.slice(0, 7), {
-      date,
-      price,
-      observedRisk: toNumber(risks[index]),
-    });
-  });
-  return [...byMonth.values()];
-}
-
-function periodReturn(previousValue, preFlowValue, contribution, endingValue) {
-  const marketFactor = previousValue > 0 ? preFlowValue / previousValue : 1;
-  const postFlowValue = preFlowValue + contribution;
-  const tradingFactor = postFlowValue > 0 ? endingValue / postFlowValue : 1;
-  return marketFactor * tradingFactor - 1;
-}
-
-function xirr(contributions, terminalValue) {
-  if (!contributions.length || !Number.isFinite(terminalValue)) return null;
-  const origin = parseDateLabel(contributions[0].date);
-  if (!origin) return null;
-  const flows = contributions.map(({ date, amount }) => {
-    const parsed = parseDateLabel(date);
-    return {
-      years: parsed ? (parsed - origin) / (365.2425 * 86400000) : 0,
-      amount: -amount,
-    };
-  });
-  flows[flows.length - 1].amount += terminalValue;
-  if (!flows.some((flow) => flow.amount < 0) || !flows.some((flow) => flow.amount > 0)) return null;
-
-  const npv = (rate) => flows.reduce(
-    (sum, flow) => sum + flow.amount / ((1 + rate) ** flow.years),
-    0,
-  );
-  let low = -0.9999;
-  let high = 1;
-  let lowValue = npv(low);
-  let highValue = npv(high);
-  while (Math.sign(lowValue) === Math.sign(highValue) && high < 1_000_000) {
-    high *= 2;
-    highValue = npv(high);
-  }
-  if (Math.sign(lowValue) === Math.sign(highValue)) return null;
-  for (let iteration = 0; iteration < 160; iteration += 1) {
-    const mid = (low + high) / 2;
-    const midValue = npv(mid);
-    if (Math.abs(midValue) <= 1e-10) return mid;
-    if (Math.sign(midValue) === Math.sign(lowValue)) {
-      low = mid;
-      lowValue = midValue;
-    } else {
-      high = mid;
-    }
-  }
-  return (low + high) / 2;
-}
-
-function scenarioSummary(rows, contribution) {
-  const lastRow = rows.at(-1);
-  const endingValue = lastRow?.value ?? 0;
-  const totalContributed = rows.length * contribution;
-  return {
-    endingValue,
-    totalContributed,
-    gain: endingValue - totalContributed,
-    gainOnContributions: totalContributed > 0 ? endingValue / totalContributed - 1 : null,
-    timeWeightedReturn: rows.length ? rows.at(-1).twrEquity - 1 : null,
-    moneyWeightedReturn: xirr(
-      rows.map((row) => ({ date: row.date, amount: row.contribution })),
-      endingValue,
-    ),
-    endingCash: lastRow?.cash ?? 0,
-    endingBitcoinValue: lastRow?.bitcoinValue ?? endingValue,
-    totalSold: rows.reduce((sum, row) => sum + (toNumber(row.sellAmount) ?? 0), 0),
-  };
-}
-
-export function simulateDcaComparison(dcaSeries, strategyInput = {}) {
-  const availableFrom = scenarioAvailableFrom(dcaSeries);
-  const requestedStartDate = /^\d{4}-\d{2}-\d{2}$/.test(String(strategyInput.startDate || ""))
-    ? strategyInput.startDate
-    : availableFrom;
-  const strategy = normalizeDcaStrategy(
-    { ...strategyInput, startDate: availableFrom && requestedStartDate < availableFrom ? availableFrom : requestedStartDate },
-    dcaSeries?.labels ?? [],
-  );
-  const contribution = positiveNumber(strategyInput.monthlyContribution, strategy.buyBaseAmount);
-  const allExecutionRows = monthlyExecutionRows(dcaSeries);
-  const startIndex = allExecutionRows.findIndex((row) => row.date >= strategy.startDate);
-  const executionRows = startIndex >= 0 ? allExecutionRows.slice(startIndex) : [];
-  const warnings = [];
-  if (availableFrom && requestedStartDate < availableFrom) {
-    warnings.push(`Start date moved to ${availableFrom}: DCA Risk has no prior-month reading before then.`);
-  }
-  if (strategy.buyStartRisk >= strategy.sellStartRisk) {
-    warnings.push("Buy threshold should be below sell threshold.");
-    return {
-      strategy: { ...strategy, monthlyContribution: contribution },
-      rows: [],
-      warnings,
-      fixed: scenarioSummary([], contribution),
-      dynamic: scenarioSummary([], contribution),
-      assumptions: {},
-    };
-  }
-
-  let fixedUnits = 0;
-  let fixedPreviousValue = 0;
-  let fixedTwrEquity = 1;
-  let dynamicCash = 0;
-  let dynamicUnits = 0;
-  let dynamicPreviousValue = 0;
-  let dynamicTwrEquity = 1;
-  let previousObservedRisk = startIndex > 0 ? allExecutionRows[startIndex - 1].observedRisk : null;
-  const rows = [];
-
-  executionRows.forEach(({ date, price, observedRisk }) => {
-    const fixedPreFlow = fixedUnits * price;
-    const fixedEffectivePrice = price * (1 + SCENARIO_FEE_AND_SLIPPAGE);
-    fixedUnits += contribution / fixedEffectivePrice;
-    const fixedValue = fixedUnits * price;
-    const fixedReturn = periodReturn(fixedPreviousValue, fixedPreFlow, contribution, fixedValue);
-    fixedTwrEquity *= 1 + fixedReturn;
-    fixedPreviousValue = fixedValue;
-
-    const dynamicPreFlow = dynamicCash + dynamicUnits * price;
-    dynamicCash += contribution;
-    let buyAmount = 0;
-    let sellAmount = 0;
-    const riskUsed = previousObservedRisk;
-    if (riskUsed !== null && riskUsed <= strategy.buyStartRisk && strategy.buyStartRisk > 0) {
-      const strength = Math.min(1, Math.max(0, (strategy.buyStartRisk - riskUsed) / strategy.buyStartRisk));
-      const target = contribution * (1 + (SCENARIO_MAX_BUY_MULTIPLIER - 1) * strength);
-      const equityBeforeTrade = dynamicCash + dynamicUnits * price;
-      const spendable = Math.max(0, dynamicCash - SCENARIO_CASH_BUFFER_RATIO * equityBeforeTrade);
-      buyAmount = Math.min(target, spendable);
-      dynamicCash -= buyAmount;
-      dynamicUnits += buyAmount / (price * (1 + SCENARIO_FEE_AND_SLIPPAGE));
-    } else if (riskUsed !== null && riskUsed >= strategy.sellStartRisk && strategy.sellStartRisk < 1) {
-      const strength = Math.min(1, Math.max(0, (riskUsed - strategy.sellStartRisk) / (1 - strategy.sellStartRisk)));
-      const maximumSale = dynamicUnits * price * SCENARIO_MAX_SELL_FRACTION;
-      sellAmount = Math.min(maximumSale, Math.max(contribution, maximumSale * strength));
-      const unitsSold = sellAmount / price;
-      dynamicUnits = Math.max(0, dynamicUnits - unitsSold);
-      dynamicCash += sellAmount * (1 - SCENARIO_FEE_AND_SLIPPAGE);
-    }
-    const dynamicValue = dynamicCash + dynamicUnits * price;
-    const dynamicReturn = periodReturn(dynamicPreviousValue, dynamicPreFlow, contribution, dynamicValue);
-    dynamicTwrEquity *= 1 + dynamicReturn;
-    dynamicPreviousValue = dynamicValue;
-
-    rows.push({
-      date,
-      price,
-      observedRisk,
-      riskUsed,
-      contribution,
-      fixedValue,
-      fixedUnits,
-      fixedTwrEquity,
-      dynamicValue,
-      dynamicCash,
-      dynamicUnits,
-      dynamicTwrEquity,
-      buyAmount,
-      sellAmount,
-    });
-    previousObservedRisk = observedRisk;
-  });
-
-  return {
-    strategy: { ...strategy, monthlyContribution: contribution },
-    rows,
-    warnings,
-    fixed: scenarioSummary(
-      rows.map((row) => ({
-        ...row,
-        value: row.fixedValue,
-        twrEquity: row.fixedTwrEquity,
-        cash: 0,
-        bitcoinValue: row.fixedValue,
-        sellAmount: 0,
-      })),
-      contribution,
-    ),
-    dynamic: scenarioSummary(
-      rows.map((row) => ({
-        ...row,
-        value: row.dynamicValue,
-        twrEquity: row.dynamicTwrEquity,
-        cash: row.dynamicCash,
-        bitcoinValue: row.dynamicUnits * row.price,
-      })),
-      contribution,
-    ),
-    assumptions: {
-      feeAndSlippage: SCENARIO_FEE_AND_SLIPPAGE,
-      maxBuyMultiplier: SCENARIO_MAX_BUY_MULTIPLIER,
-      maxSellFraction: SCENARIO_MAX_SELL_FRACTION,
-      cashBufferRatio: SCENARIO_CASH_BUFFER_RATIO,
-    },
-  };
-}
-
 function buildDegradedSummary(latestSnapshot, diagnostics) {
   const sourceModes = Array.isArray(diagnostics?.source_modes) ? diagnostics.source_modes : [];
   const modeValues = sourceModes.map((item) => String(item.mode || "unknown"));
@@ -634,32 +250,163 @@ export async function loadDashboardData() {
   if (!releaseId) throw new Error("Published manifest is missing release_id");
   const immutableRoot = `/data/releases/${encodeURIComponent(releaseId)}`;
 
-  const [latestSnapshot, historyCore, categoryBtc, categoryTotal, metricBtc, metricTotal, diagnostics] =
-    await Promise.all([
-      fetchArtifact("latest_snapshot.json", immutableRoot),
-      fetchArtifact("history_core.json", immutableRoot),
-      fetchArtifact("category_breakdowns_btc.json", immutableRoot),
-      fetchArtifact("category_breakdowns_total_market.json", immutableRoot),
-      fetchArtifact("metric_breakdowns_btc.json", immutableRoot),
-      fetchArtifact("metric_breakdowns_total_market.json", immutableRoot),
-      fetchArtifact("diagnostics.json", immutableRoot),
-    ]);
-  const evaluationSummary = await fetchOptionalArtifact("evaluation_summary.json", null, immutableRoot);
-  const releaseArtifacts = [latestSnapshot, historyCore, categoryBtc, categoryTotal, metricBtc, metricTotal, diagnostics];
-  if (releaseArtifacts.some((artifact) => artifact?.release_id !== releaseId)) {
+  const [latestSnapshot, historyCore, diagnostics] = await Promise.all([
+    fetchArtifact("latest_snapshot.json", immutableRoot),
+    fetchArtifact("history_core.json", immutableRoot),
+    fetchArtifact("diagnostics.json", immutableRoot),
+  ]);
+  if ([latestSnapshot, historyCore, diagnostics].some((artifact) => artifact?.release_id !== releaseId)) {
     throw new Error("Published artifacts contain inconsistent release_id values");
   }
-
   return {
     manifest,
     latestSnapshot,
     historyCore,
-    categoryBtc,
-    categoryTotal,
-    metricBtc,
-    metricTotal,
     diagnostics,
-    evaluationSummary,
     degraded: buildDegradedSummary(latestSnapshot, diagnostics),
+  };
+}
+
+// Method uses the same immutable release as Today, even if the manifest changes later.
+export async function loadMethodData(releaseId) {
+  if (!releaseId) throw new Error("Method data requires release_id");
+  const data = await fetchArtifact("metric_breakdowns_btc.json", `/data/releases/${encodeURIComponent(releaseId)}`);
+  if (data?.release_id !== releaseId) throw new Error("Published artifacts contain inconsistent release_id values");
+  return data;
+}
+
+// --- Reading context -------------------------------------------------------
+// The three regions below are the model's own frozen thresholds (<=0.25 low,
+// >=0.75 high) that the evidence suite tests against. They are not display
+// conveniences: changing them invalidates the published evidence.
+
+export const RISK_REGIONS = [
+  { key: "low", label: "Low", min: 0, max: 0.25 },
+  { key: "middle", label: "Middle", min: 0.25, max: 0.75 },
+  { key: "high", label: "High", min: 0.75, max: 1 },
+];
+
+export function scoreLabel(value) {
+  const num = clamp01(value);
+  return num === null ? "—" : String(Math.round(num * 100));
+}
+
+export function regionForRisk(value) {
+  const num = toNumber(value);
+  if (num === null) return null;
+  if (num <= 0.25) return RISK_REGIONS[0];
+  if (num >= 0.75) return RISK_REGIONS[2];
+  return RISK_REGIONS[1];
+}
+
+function lastFiniteIndex(values = []) {
+  for (let idx = values.length - 1; idx >= 0; idx -= 1) {
+    if (toNumber(values[idx]) !== null) return idx;
+  }
+  return -1;
+}
+
+function shiftIsoDate(iso, days) {
+  const date = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return null;
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+// Labels are ascending ISO dates, so the newest entry not after `target` is the
+// closest earlier reading.
+function indexAtOrBefore(labels, target) {
+  for (let idx = labels.length - 1; idx >= 0; idx -= 1) {
+    if (labels[idx] <= target) return idx;
+  }
+  return -1;
+}
+
+export function readingSummary(dcaSeries) {
+  const labels = dcaSeries?.labels ?? [];
+  const values = dcaSeries?.values ?? [];
+  const latestIndex = lastFiniteIndex(values);
+  if (latestIndex < 0) return null;
+
+  const latest = toNumber(values[latestIndex]);
+  const latestDate = labels[latestIndex];
+  const history = values.slice(0, latestIndex + 1).map(toNumber).filter((v) => v !== null);
+  const belowCount = history.filter((value) => value < latest).length;
+
+  const comparisons = [
+    { label: "A week ago", offset: -7 },
+    { label: "A month ago", offset: -30 },
+    { label: "A year ago", offset: -365 },
+  ]
+    .map(({ label, offset }) => {
+      const target = offset === 0 ? latestDate : shiftIsoDate(latestDate, offset);
+      const idx = target ? indexAtOrBefore(labels, target) : -1;
+      const value = idx >= 0 ? toNumber(values[idx]) : null;
+      return { label, value, region: regionForRisk(value) };
+    })
+    .filter((entry) => entry.value !== null);
+
+  const region = regionForRisk(latest);
+  let daysInRegion = 0;
+  for (let idx = latestIndex; idx >= 0; idx -= 1) {
+    if (regionForRisk(values[idx])?.key !== region?.key) break;
+    daysInRegion += 1;
+  }
+
+  const regionShares = RISK_REGIONS.map((entry) => ({
+    ...entry,
+    share: history.length
+      ? history.filter((value) => regionForRisk(value)?.key === entry.key).length / history.length
+      : 0,
+  }));
+
+  return {
+    latest,
+    latestDate,
+    region,
+    daysInRegion,
+    observations: history.length,
+    percentileBelow: history.length > 1 ? belowCount / (history.length - 1) : null,
+    firstDate: labels[firstFiniteIndex(values.map(toNumber))] ?? labels[0],
+    comparisons,
+    regionShares,
+  };
+}
+
+// Counts entries into a watched region, matching how the alert sender fires:
+// once on the crossing, not once per day spent inside.
+export function alertPreview(dcaSeries, { low = 0.25, high = 0.75, watch = "both" } = {}) {
+  const labels = dcaSeries?.labels ?? [];
+  const values = dcaSeries?.values ?? [];
+  const watchLow = watch === "low" || watch === "both";
+  const watchHigh = watch === "high" || watch === "both";
+
+  const entries = [];
+  let insideLow = false;
+  let insideHigh = false;
+  let scored = 0;
+  // The series is padded with nulls before the score existed, so the window the
+  // preview quotes has to start at the first real reading, not the first row.
+  let since = null;
+
+  for (let idx = 0; idx < values.length; idx += 1) {
+    const value = toNumber(values[idx]);
+    if (value === null) continue;
+    if (since === null) since = labels[idx];
+    scored += 1;
+    const isLow = value <= low;
+    const isHigh = value >= high;
+    if (watchLow && isLow && !insideLow) entries.push({ date: labels[idx], zone: "low" });
+    if (watchHigh && isHigh && !insideHigh) entries.push({ date: labels[idx], zone: "high" });
+    insideLow = isLow;
+    insideHigh = isHigh;
+  }
+
+  const years = Math.max(1, scored / 365);
+  return {
+    count: entries.length,
+    lastEntry: entries.at(-1) ?? null,
+    perYear: entries.length / years,
+    since,
   };
 }

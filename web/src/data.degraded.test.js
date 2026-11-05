@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { loadDashboardData } from "./data";
+import { loadDashboardData, loadMethodData } from "./data";
 
 const base = {
   "manifest.json": { version: "v2", release_id: "release-1" },
@@ -14,23 +14,23 @@ const base = {
 };
 
 describe("loadDashboardData degraded summary", () => {
-  it("ignores a non-JSON SPA fallback for the optional evaluation summary", async () => {
-    global.fetch = vi.fn(async (url) => {
-      const key = String(url).split("/").pop();
-      if (key === "evaluation_summary.json") {
-        return {
-          ok: true,
-          json: async () => {
-            throw new SyntaxError("Unexpected token '<'");
-          },
-        };
-      }
-      return { ok: true, json: async () => base[key] };
-    });
-
+  it("loads only the four initial artifacts", async () => {
+    global.fetch = vi.fn(async (url) => ({ ok: true, json: async () => base[String(url).split("/").pop()] }));
     const out = await loadDashboardData();
-    expect(out.evaluationSummary).toBeNull();
-    expect(out.latestSnapshot.release_id).toBe("release-1");
+    expect(global.fetch.mock.calls.map(([url]) => url)).toEqual([
+      "/data/v2/manifest.json",
+      "/data/releases/release-1/latest_snapshot.json",
+      "/data/releases/release-1/history_core.json",
+      "/data/releases/release-1/diagnostics.json",
+    ]);
+    expect(Object.keys(out).sort()).toEqual(["degraded", "diagnostics", "historyCore", "latestSnapshot", "manifest"]);
+  });
+
+  it("loads Method from the requested immutable release and rejects a mixed release", async () => {
+    global.fetch = vi.fn(async () => ({ ok: true, json: async () => base["metric_breakdowns_btc.json"] }));
+    expect((await loadMethodData("release-1")).release_id).toBe("release-1");
+    expect(global.fetch).toHaveBeenCalledWith("/data/releases/release-1/metric_breakdowns_btc.json");
+    await expect(loadMethodData("release-2")).rejects.toThrow(/inconsistent release_id/);
   });
 
   it("reports a useful error when a required artifact is not JSON", async () => {

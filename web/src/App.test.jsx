@@ -1,13 +1,19 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { forwardRef } from "react";
+import { forwardRef, useImperativeHandle } from "react";
 import { vi } from "vitest";
 
 import App from "./App";
+import { METRIC_COPY } from "./copy";
+import { readFileSync } from "node:fs";
+const styles = readFileSync(`${process.cwd()}/src/styles.css`, "utf8");
+const charts = vi.hoisted(() => ({ props: [], reset: vi.fn() }));
 
 vi.mock("react-chartjs-2", () => ({
-  Line: forwardRef(({ data }, ref) => (
-    <div ref={ref} data-testid="chart">{data?.datasets?.[0]?.label || "chart"}</div>
-  )),
+  Line: forwardRef((props, ref) => {
+    charts.props.push(props);
+    useImperativeHandle(ref, () => ({ resetZoom: charts.reset }));
+    return <canvas role={props.role} aria-label={props["aria-label"]} data-testid="chart" />;
+  }),
 }));
 
 const baseColumnar = {
@@ -270,6 +276,9 @@ const fixtures = {
 
 describe("App", () => {
   beforeEach(() => {
+    charts.props.length = 0;
+    charts.reset.mockClear();
+    window.localStorage.clear();
     global.fetch = vi.fn(async (url) => {
       const key = String(url).split("/").pop();
       if (!key || !(key in fixtures)) {
@@ -287,57 +296,48 @@ describe("App", () => {
     vi.restoreAllMocks();
   });
 
-  it("centers DCA Risk by default and supports tab switching", async () => {
+  it("leads with the reading and its context, then switches tabs", async () => {
     render(<App />);
 
-    expect(await screen.findByText(/DATA CURRENT/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Reading 2026-04-24/i).length).toBeGreaterThan(0);
-    expect(await screen.findByText("Put market risk beside your Bitcoin DCA.")).toBeInTheDocument();
-    expect(screen.getByText("Risk over time")).toBeInTheDocument();
-    expect(screen.getByText(/HISTORICALLY|BETWEEN BUY AND SELL ZONES|READING UNAVAILABLE/)).toBeInTheDocument();
-    expect((await screen.findAllByText("Top Reversal Risk")).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: /^Reset Zoom$/ }).length).toBeGreaterThan(0);
-    await waitFor(() => {
-      expect(screen.getByText(/Refreshed 2026-04-24T06:00:00Z/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByText("How heated does the Bitcoin market look today?")).toBeInTheDocument();
+    expect(screen.getByText(/Updated daily|days behind/)).toBeInTheDocument();
+    expect(screen.getByText(/Higher than \d+% of days since/)).toBeInTheDocument();
+    expect(screen.getByText("Risk against price")).toBeInTheDocument();
+    expect(screen.getByText("you are here")).toBeInTheDocument();
+    expect(screen.getByText("What is moving it")).toBeInTheDocument();
+    expect(screen.getByText("Looks like past peaks")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "About" }));
+    fireEvent.click(screen.getByRole("button", { name: "Method" }));
 
-    expect(await screen.findByText("Headline Indices")).toBeInTheDocument();
-    expect(screen.getByText(/Scoring methodology/i)).toBeInTheDocument();
+    expect(await screen.findByText("The four sub-scores")).toBeInTheDocument();
+    expect(screen.getByText(/How the reading is built/i)).toBeInTheDocument();
     expect(screen.getByText("MVRV Ratio Z Proxy")).toBeInTheDocument();
-    expect(screen.getByText("MVRV-implied Profitability View")).toBeInTheDocument();
     expect(screen.getByText(/Display only — excluded from scoring/i)).toBeInTheDocument();
   });
 
-  it("renders the scenario planner with configurable strategy controls", async () => {
+  it("shows only the three product tabs", async () => {
     render(<App />);
+    await screen.findByText("How heated does the Bitcoin market look today?");
 
-    fireEvent.click(await screen.findByRole("tab", { name: "Scenarios" }));
-
-    expect(await screen.findByText("Compare fixed DCA with a buy-and-sell policy.")).toBeInTheDocument();
-    expect(screen.getByText("Set the comparison")).toBeInTheDocument();
-    expect(screen.getByText(/Fixed DCA · hold to end/)).toBeInTheDocument();
-    expect(screen.getByText(/Risk-aware DCA · buy and sell/)).toBeInTheDocument();
-    expect(screen.getAllByText("Total deposits")).toHaveLength(2);
-    expect(screen.getAllByText("Annualized investor return")).toHaveLength(2);
-    expect(screen.getByText("Recent monthly decisions")).toBeInTheDocument();
-    expect(screen.getByText(/previous month.+risk reading/i)).toBeInTheDocument();
+    expect(Array.from(screen.getByRole("navigation", { name: "Primary" }).querySelectorAll("button")).map((tab) => tab.textContent)).toEqual([
+      "Today",
+      "Track record",
+      "Method",
+    ]);
   });
 
-  it("shows the focused DCA evidence ledger with honest verdicts", async () => {
+  it("shows the track record with its failures stated first", async () => {
     render(<App />);
 
-    fireEvent.click(await screen.findByRole("tab", { name: "Evidence" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Track record" }));
 
-    expect(await screen.findByText("Useful for de-risking. Not proven for timing buys.")).toBeInTheDocument();
-    expect(screen.getByText("Accumulation only")).toBeInTheDocument();
-    expect(screen.getByText("De-risking one BTC")).toBeInTheDocument();
-    expect(screen.getByText("Four-year region test")).toBeInTheDocument();
-    expect(screen.getByText("Fixed buys + risk sells")).toBeInTheDocument();
+    expect(await screen.findByText("We tested the score three ways. It passed once.")).toBeInTheDocument();
+    expect(screen.getByText("What it cannot do")).toBeInTheDocument();
+    expect(screen.getByText("Does it help you buy?")).toBeInTheDocument();
+    expect(screen.getByText("Does it help you sell?")).toBeInTheDocument();
+    expect(screen.getByText("Is the score itself any good?")).toBeInTheDocument();
     expect(screen.getAllByText("Not supported")).toHaveLength(2);
     expect(screen.getByText("Historically promising")).toBeInTheDocument();
-    expect(screen.getByText(/previous month’s risk reading/i)).toBeInTheDocument();
   });
 
   it("surfaces validation failures from diagnostics", async () => {
@@ -378,7 +378,7 @@ describe("App", () => {
 
     render(<App />);
 
-    expect(await screen.findByText("DATA CHECK NEEDED")).toBeInTheDocument();
+    expect(await screen.findByText("Data check needed")).toBeInTheDocument();
     expect(screen.queryByLabelText(/Data status/i)).not.toBeInTheDocument();
   });
 
@@ -413,8 +413,169 @@ describe("App", () => {
     });
 
     render(<App />);
-    fireEvent.click(await screen.findByRole("tab", { name: "Method" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Method" }));
 
     expect((await screen.findAllByText("Trend Extension (50d/350d)")).length).toBeGreaterThan(0);
   });
+  it("renders Today when storage reads and writes throw", async () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("blocked"); });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("blocked"); });
+    render(<App />);
+    expect(await screen.findByRole("heading", { level: 1, name: "How heated does the Bitcoin market look today?" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Today" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it.each([true, false])("explains a degraded reading, with prior reading available: %s", async (hasPrior) => {
+    const history = fixtures["history_core.json"];
+    const fetchOriginal = global.fetch;
+    global.fetch = vi.fn(async (url) => String(url).endsWith("history_core.json") ? {
+      ok: true, json: async () => ({ ...history, columns: { dca_risk: hasPrior ? [0.19, null, null] : [null, null, null] } }),
+    } : fetchOriginal(url));
+    render(<App />);
+    expect(await screen.findByRole("heading", { level: 1, name: "No reading today" })).toBeInTheDocument();
+    expect(screen.getByText("Too many of the underlying sources are missing to publish a number. It comes back once they recover.")).toBeInTheDocument();
+    if (hasPrior) expect(screen.getByText("The last published reading was 19 on 22 Apr 2026.")).toBeInTheDocument();
+    else expect(screen.queryByText(/The last published reading/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/on the chart under Method/)).not.toBeInTheDocument();
+  });
+
+  it("keeps region descriptions muted and left aligned, and technical values scoped", async () => {
+    const style = document.createElement("style");
+    style.textContent = styles;
+    document.head.appendChild(style);
+    try {
+      render(<App />);
+      const desc = await screen.findByText("Quiet, well below the peaks of past cycles.");
+      expect(getComputedStyle(desc).textAlign).toBe("left");
+      expect(styles).not.toMatch(/\.bb-table td:last-child\s*\{/);
+      expect(styles).toMatch(/\.bb-table--technical td:last-child\s*\{/);
+      expect(screen.getByText("Share of days")).toBeInTheDocument();
+      expect(screen.getByText(/Shares count every day since/)).toBeInTheDocument();
+      expect(styles).toMatch(/\.bb-regions tr\s*\{[^}]*display: block/);
+    } finally { style.remove(); }
+  });
+
+  it("loads raw inputs only on Method, shows loading, and caches across tab switches", async () => {
+    let resolveMethod;
+    const fetchOriginal = global.fetch;
+    global.fetch = vi.fn((url) => String(url).endsWith("metric_breakdowns_btc.json")
+      ? new Promise((resolve) => { resolveMethod = () => resolve({ ok: true, json: async () => fixtures["metric_breakdowns_btc.json"] }); })
+      : fetchOriginal(url));
+    render(<App />);
+    await screen.findByRole("heading", { level: 1 });
+    expect(global.fetch).toHaveBeenCalledTimes(4);
+    fireEvent.click(screen.getByRole("button", { name: "Method" }));
+    expect(await screen.findByText("Loading the raw inputs…")).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(document.querySelectorAll(".bb-card-grid .bb-card")).toHaveLength(4);
+    expect(screen.getByRole("heading", { name: "Context, not part of the reading" })).toBeInTheDocument();
+    resolveMethod();
+    expect(await screen.findByLabelText("Raw input")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Today" }));
+    fireEvent.click(screen.getByRole("button", { name: "Method" }));
+    expect(global.fetch.mock.calls.filter(([url]) => String(url).endsWith("metric_breakdowns_btc.json"))).toHaveLength(1);
+  });
+
+  it("renders Method immediately even when raw inputs fail", async () => {
+    const fetchOriginal = global.fetch;
+    global.fetch = vi.fn(async (url) => String(url).endsWith("metric_breakdowns_btc.json") ? { ok: false, status: 503 } : fetchOriginal(url));
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Method" }));
+    expect(await screen.findByText("The raw inputs did not load. Reload to try again.")).toBeInTheDocument();
+    expect(screen.getByText("The four sub-scores over time")).toBeInTheDocument();
+  });
+
+  it("uses whole score ticks and tooltips, ctrl-wheel zoom, named canvases and range reset", async () => {
+    render(<App />);
+    await screen.findByRole("img", { name: /Risk reading and Bitcoin price/ });
+    const risk = charts.props.at(-1);
+    expect([0, .25, .5, .75, 1].map(risk.options.scales.y.ticks.callback)).toEqual(["0", "25", "50", "75", "100"]);
+    expect(risk.options.scales.y.ticks.stepSize).toBe(.25);
+    expect(risk.options.plugins.tooltip.callbacks.label({ dataset: { label: "Risk" }, parsed: { y: .191 } })).toBe("Risk: 19");
+    expect(risk.options.plugins.zoom.zoom.wheel).toEqual({ enabled: true, modifierKey: "ctrl" });
+    expect(risk.data.datasets.find((d) => d.label === "Low, 25").data.every((v) => v === .25)).toBe(true);
+    expect(risk.data.datasets.find((d) => d.label === "High, 75").data.every((v) => v === .75)).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(charts.reset).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("button", { name: "Method" }));
+    await screen.findByLabelText("Raw input");
+    const overview = charts.props.findLast((props) => props["aria-label"]?.startsWith("Sub-scores"));
+    expect(overview.options.scales.y.ticks.callback(.75)).toBe("75");
+    expect(overview.options.plugins.tooltip.callbacks.label({ dataset: { label: "Price stretch" }, parsed: { y: .31 } })).toBe("Price stretch: 31");
+    expect(Array.from(document.querySelectorAll(".bb-card__value")).map((card) => card.textContent)).toEqual(["58", "41", "31", "68"]);
+    const raw = charts.props.at(-1);
+    expect(raw.options.scales.y).not.toHaveProperty("min");
+    expect(raw.options.scales.y.ticks).not.toHaveProperty("callback");
+    expect(screen.getByRole("img", { name: /Sub-scores over time, shown:/ })).toBeInTheDocument();
+  });
+
+  it("shares compact price axes and responsive unrotated date ticks across all charts", async () => {
+    render(<App />);
+    await screen.findByRole("img", { name: /Risk reading and Bitcoin price/ });
+    const risk = charts.props.at(-1);
+    fireEvent.click(screen.getByRole("button", { name: "Method" }));
+    await screen.findByLabelText("Raw input");
+    const overview = charts.props.findLast((props) => props["aria-label"]?.startsWith("Sub-scores"));
+    const raw = charts.props.at(-1);
+    for (const { options } of [risk, overview, raw]) {
+      const priceTicks = options.scales.yPrice.ticks;
+      expect(priceTicks.callback(100000)).toBe("100k");
+      expect(priceTicks.callback(59000)).toBe("");
+      expect(priceTicks.maxTicksLimit).toBe(6);
+      expect(priceTicks.autoSkip).toBe(true);
+      expect(priceTicks.autoSkipPadding).toBeGreaterThanOrEqual(12);
+      const dateTicks = options.scales.x.ticks;
+      expect(dateTicks.maxRotation).toBe(0);
+      expect(dateTicks.autoSkip).toBe(true);
+      // Chart.js does not resolve a scriptable maxTicksLimit; label width plus
+      // padding is what thins dates on narrow charts.
+      expect(dateTicks.maxTicksLimit).toBe(8);
+      expect(dateTicks.autoSkipPadding).toBeGreaterThanOrEqual(24);
+      expect(dateTicks.callback.call({ getLabelForValue: () => "2024-11-05" }, 0)).toBe("Nov 2024");
+      expect(options.plugins.tooltip.callbacks.title([{ label: "2024-11-05" }])).toBe("Date: 2024-11-05");
+      expect(options.plugins.tooltip.callbacks.label({ dataset: { label: "BTC", yAxisID: "yPrice" }, parsed: { y: 59000 } })).toBe("BTC: 59,000");
+    }
+    fireEvent.change(screen.getAllByLabelText("Price scale").at(-1), { target: { value: "linear" } });
+    expect(charts.props.at(-1).options.scales.yPrice.type).toBe("linear");
+    expect(charts.props.at(-1).options.scales.yPrice.ticks.callback(59000)).toBe("59k");
+  });
+
+  it("gives the calculation its own named section outside the sub-scores", async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Method" }));
+    const calculation = screen.getByRole("region", { name: "The calculation, step by step" });
+    expect(calculation.querySelectorAll("ol li")).toHaveLength(METRIC_COPY.scoring.steps.length);
+    expect(calculation).not.toContainElement(screen.getByRole("heading", { name: "The four sub-scores" }));
+    expect(calculation.previousElementSibling).toContainElement(screen.getByRole("heading", { name: "The four sub-scores" }));
+  });
+
+  it("keeps legacy names out of reader-facing metric copy", () => {
+    for (const copy of Object.values(METRIC_COPY)) {
+      for (const field of ["shortName", "description", "oneLiner", "notMeaning"]) {
+        expect(copy[field] ?? "").not.toMatch(/Cycle Extension|Top Reversal Risk|Bottom Reversal Risk|Signal Agreement|Cycle Frenzy|dca_risk|DCA Risk/i);
+      }
+    }
+  });
+
+  it("labels the mobile research table values with their column meanings", async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Track record" }));
+    const rows = document.querySelectorAll(".bb-research-table tbody tr");
+    expect(rows.length).toBeGreaterThan(0);
+    rows.forEach((row) => {
+      expect(row.querySelector("th")).toHaveTextContent(/.+/);
+      expect(row.querySelectorAll("td")[0]).toHaveAttribute("data-label", "Money at the end");
+      expect(row.querySelectorAll("td")[1]).toHaveAttribute("data-label", "Start dates it won");
+    });
+  });
+
+  it("keeps the CSS type floor, keyboard focus and steady reduced-motion cursor", () => {
+    const sizes = Array.from(styles.matchAll(/font-size:\s*(0\.\d+)rem/g), (match) => Number(match[1]));
+    expect(sizes.length).toBeGreaterThan(20);
+    expect(Math.min(...sizes)).toBeGreaterThanOrEqual(.75);
+    expect(styles).toMatch(/:where\(button, a, select, input, summary\):focus-visible/);
+    expect(styles).toMatch(/input:focus-visible \+ \.bb-choice__option/);
+    expect(styles).toMatch(/\.bb-research,\s*\.bb-blink\s*\{ animation: none; \}/);
+  });
+
 });

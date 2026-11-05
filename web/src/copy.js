@@ -3,7 +3,7 @@ export const METRIC_COPY = {
     shortName: "Trend Composite",
     oneLiner: "A broad background composite across structure, sentiment, and on-chain signals.",
     description:
-      "Trend Composite is a broad 0-1 blend of structural, on-chain, and sentiment signals. It is useful as regime context, but it is intentionally less specific than the top and bottom reversal models. Use it as a backdrop signal rather than a standalone decision trigger.",
+      "Trend Composite is a broad 0–100 blend of structural, on-chain, and sentiment signals. It is useful as regime context, but it is intentionally less specific than the top and bottom reversal models. Use it as a backdrop signal rather than a standalone decision trigger.",
     notMeaning:
       "Trend Composite does not directly estimate top or bottom reversal probability.",
     technicalRows: [
@@ -13,12 +13,12 @@ export const METRIC_COPY = {
     ],
   },
   cycle_extension: {
-    shortName: "Cycle Extension",
-    oneLiner: "How far price structure is extended versus long-run moving-average anchors.",
+    shortName: "Price stretch",
+    oneLiner: "How far above its own long-run averages the price is sitting.",
     description:
-      "Cycle Extension is a 0-1 structural risk index built from expanding-history percentiles of four moving-average relationships. Each input is ranked against its full prior history (so a value of 1.0 means today is the most extended reading ever observed). The four percentiles are then combined with fixed weights. High values mean price structure is historically stretched to the upside.",
+      "Built from three moving-average relationships and the past year's return. Each input is ranked against its full prior history, so 100 means today is the most stretched reading ever seen. The four ranks are blended with fixed weights.",
     notMeaning:
-      "Cycle Extension is not a direct reversal-probability model and should be read together with top/bottom reversal risk.",
+      "a reversal model on its own. Read it next to the peaks and bottoms scores.",
     technicalRows: [
       {
         label: "Inputs",
@@ -37,12 +37,12 @@ export const METRIC_COPY = {
     ],
   },
   top_reversal_risk: {
-    shortName: "Top Reversal Risk",
-    oneLiner: "Bounded historical-alignment score for top-side reversal conditions.",
+    shortName: "Looks like past peaks",
+    oneLiner: "How much today resembles the run-ups into past cycle peaks.",
     description:
-      "Top Reversal Risk takes the cycle model's raw top-side score (p_frenzy, a logistic mapping of upper-cycle valuation, speculation, attention, and macro scores) and aligns it against historical top-side labels using a walk-forward objective. The objective rewards early recall of true top regimes while penalizing false alarms and drawdown-equivalent costs. The output is a 0-1 historical-alignment score, not a validated probability.",
+      "Past cycle peaks are marked out after the fact, using only returns that had already resolved at the time. This score measures how closely today's valuation, speculation, attention and macro readings line up with the months that preceded those peaks. It is a similarity score, not a probability.",
     notMeaning:
-      "A high reading is not an immediate sell signal and is not currently promoted as a validated probability — timing can stay elevated for long stretches.",
+      "a sell signal. Readings can stay high for many months before anything happens.",
     technicalRows: [
       { label: "Base input", value: "p_frenzy (cycle-model logistic on upper-cycle scores) + cycle structural features" },
       {
@@ -61,12 +61,12 @@ export const METRIC_COPY = {
     ],
   },
   bottom_reversal_risk: {
-    shortName: "Bottom Reversal Risk",
-    oneLiner: "Bounded historical-alignment score for bottom-side reversal conditions.",
+    shortName: "Looks like past bottoms",
+    oneLiner: "How much today resembles the stretches around past cycle bottoms.",
     description:
-      "Bottom Reversal Risk applies the same historical-alignment pipeline as Top Reversal Risk but with the cycle model's accumulation-side score (p_accumulation) as its base, and forward-recovery labels as targets. The output is a 0-1 score for bottom/accumulation-like conditions, not a validated probability.",
+      "The same method as the peaks score, pointed the other way: how closely today lines up with the months that preceded past recoveries. Also a similarity score, not a probability.",
     notMeaning:
-      "A high reading is not an immediate buy signal and does not guarantee local price lows; accumulation regimes can persist for many months.",
+      "a buy signal, and it does not mark the low. These stretches can last a year or more.",
     technicalRows: [
       { label: "Base input", value: "p_accumulation (cycle-model logistic on lower-cycle scores) + cycle structural features" },
       {
@@ -85,12 +85,12 @@ export const METRIC_COPY = {
     ],
   },
   headline_attention: {
-    shortName: "Signal Agreement",
-    oneLiner: "How broadly and strongly the underlying inputs agree with each other right now.",
+    shortName: "Signals agreeing",
+    oneLiner: "How many of the inputs are saying the same thing right now.",
     description:
-      "Signal Agreement measures how concentrated and emphatic the evidence is across the underlying inputs (price structure, on-chain, sentiment, social, market context). High values mean many inputs are pointing the same direction with reliable signals; low values mean inputs are mixed or quiet. It is a 'how loud is the chorus' meter, not a directional buy/sell.",
+      "High when many inputs are at historical extremes and pointing the same way. Low when they are mixed or quiet. It says how loud the evidence is, not which direction it points.",
     notMeaning:
-      "Signal Agreement is not a directional signal. High Signal Agreement can accompany either extreme fear or extreme euphoria — it only says the inputs are speaking emphatically.",
+      "directional. A high reading happens in panics and in manias alike.",
     technicalRows: [
       { label: "Inputs", value: "Price structure, on-chain, fear/greed, social, total market context" },
       {
@@ -116,12 +116,12 @@ export const METRIC_COPY = {
     ],
   },
   cycle_regime: {
-    shortName: "Cycle Frenzy Score",
-    oneLiner: "Where the market appears to sit in the multi-year Bitcoin cycle.",
+    shortName: "Speculation and hype",
+    oneLiner: "How much froth is showing up in valuation, volume and attention.",
     description:
-      "The Cycle Frenzy Score is a monthly 0-1 composite of upper-cycle valuation, speculation, attention, and macro percentiles. Higher readings indicate stronger historical alignment with frenzy-like conditions. It is a component of DCA Risk, not a complete cycle-position index.",
+      "A monthly blend of four percentile readings: valuation, speculation, attention, and macro conditions. Higher means more of the froth that showed up near past peaks.",
     notMeaning:
-      "The score does not time entries or exits and does not predict how long a regime will last. It is a descriptive component, not a trading signal.",
+      "a timing tool. It describes conditions; it says nothing about how long they last.",
     technicalRows: [
       {
         label: "cycle_frenzy_score",
@@ -274,9 +274,9 @@ export const METRIC_COPY = {
       "Category weights are reliability- and coverage-adjusted and re-normalized each day, so missing inputs don't silently bias the headline.",
       "cycle_extension_score = expanding-percentile blend of (50d/350d, price/200d, price/200w, 1y ROI) with weights 0.30, 0.20, 0.35, 0.15.",
       "trend_composite_score = confidence-aware blend of BTC signal (70%) and total market signal (30%); used as context only.",
-      "headline_attention (= Signal Agreement) = 0.70 × BTC attention + 0.30 × total-market attention, after the per-category consensus/dispersion boosts.",
+      "Signals agreeing = 0.70 × BTC attention + 0.30 × total-market attention, after the per-category consensus/dispersion boosts.",
       "confidence_score = 0.7 × btc_confidence + 0.3 × total_market_confidence, where each confidence = mean of coverage and reliability.",
-      "Top/Bottom Reversal Risk align cycle p_frenzy / p_accumulation scores against long-horizon labels; the latest Phase 2 evidence blocks promoted probability, leakage-sensitive, and live-style claims until the gates pass.",
+      "The peaks and bottoms scores align cycle p_frenzy / p_accumulation scores against long-horizon labels; the latest Phase 2 evidence blocks promoted probability, leakage-sensitive, and live-style claims until the gates pass.",
     ],
   },
 };
