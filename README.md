@@ -84,7 +84,14 @@ Without API keys the pipeline falls back to a `free_stable` profile (fewer signa
 
 ## Tests
 
+CI prepares the ignored `config/runtime.json` from the credential-free
+`config/model_acceptance_runtime.json` before testing. This fixture reproduces
+the frozen canonical model/configuration hashes. Preserve its bytes when moving
+it; changing it is a model change. In a fresh checkout, initialize it only when
+no local runtime override exists:
+
 ```bash
+test -e config/runtime.json || cp config/model_acceptance_runtime.json config/runtime.json
 python -m unittest discover -s tests
 cd web && npm test
 ```

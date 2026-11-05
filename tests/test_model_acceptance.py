@@ -1,10 +1,43 @@
 import csv
+from contextlib import contextmanager
 import json
+import re
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
-from risk_engine.model_acceptance import build_candidate_summary, compare_model_summaries, model_changed
+from risk_engine.model_acceptance import (
+    FROZEN_DATA_PATHS, build_candidate_summary, compare_model_summaries,
+    current_identity, model_changed,
+)
+
+
+@contextmanager
+def portable_project():
+    """Exercise the real CI setup with tracked inputs and no local overrides."""
+    project = Path(__file__).resolve().parents[1]
+    workflow = (project / ".github/workflows/ci-quality-and-benchmark.yml").read_text()
+    steps = re.split(r"(?m)^      - name: ", workflow)[1:]
+    prepare = next((step for step in steps if step.startswith("Prepare model acceptance runtime\n")), None)
+    assert prepare is not None, "Missing model acceptance runtime setup"
+    unit_tests = next(step for step in steps if step.startswith("Run unit tests\n"))
+    assert steps.index(prepare) < steps.index(unit_tests), "Runtime must exist before tests and acceptance"
+    command = re.search(r"^        run: (.+)$", prepare, re.MULTILINE).group(1)
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        shutil.copytree(project / "risk_engine", root / "risk_engine", ignore=shutil.ignore_patterns("__pycache__"))
+        (root / "config").mkdir()
+        for name in ("model_acceptance.json", "model_acceptance_runtime.json", "model_acceptance_canonical.json"):
+            shutil.copy2(project / "config" / name, root / "config" / name)
+        for name in FROZEN_DATA_PATHS:
+            target = root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(project / name, target)
+        assert not (root / "config/runtime.json").exists()
+        subprocess.run(["bash", "-eu", "-c", command], cwd=root, check=True)
+        yield root
 
 
 POLICY = {
@@ -100,23 +133,41 @@ class ModelAcceptanceTests(unittest.TestCase):
                 writer.writeheader()
                 writer.writerow({"availability_assumption": "daily close available next day"})
 
-            project = Path(__file__).resolve().parents[1]
-            candidate = build_candidate_summary(root, project)
+            with portable_project() as project:
+                candidate = build_candidate_summary(root, project)
             self.assertEqual(candidate["metrics"]["derisking_calmar_delta_vs_hold"], 0.31)
             self.assertTrue(candidate["metrics"]["dca_causality_gate_passed"])
             self.assertTrue(candidate["metrics"]["signal_horizon_48m_gate_passed"])
             self.assertTrue(candidate["metrics"]["availability_gate_passed"])
 
     def test_model_change_detection_ignores_data_identity(self) -> None:
+        with portable_project() as project:
+            candidate = build_identity_summary(project)
+            data = project / FROZEN_DATA_PATHS[0]
+            data.write_bytes(data.read_bytes() + b"\n")
+            self.assertNotEqual(current_identity(project)["data_fingerprint"], candidate["identity"]["data_fingerprint"])
+            self.assertFalse(model_changed(candidate, project))
+
+    def test_ci_runtime_produces_identity_in_clean_checkout(self) -> None:
+        with portable_project() as project:
+            identity = current_identity(project)
+            # A future candidate must reach the acceptance gate, so do not bind
+            # unit tests to the repository's current canonical fingerprint.
+            canonical = {"identity": identity, "metrics": {}}
+            self.assertFalse(model_changed(canonical, project))
+            runtime = project / "config/runtime.json"
+            runtime.write_bytes(runtime.read_bytes() + b"\n")
+            self.assertTrue(model_changed(canonical, project))
+
+    def test_ci_runtime_contains_no_credentials(self) -> None:
         project = Path(__file__).resolve().parents[1]
-        candidate = build_identity_summary(project)
-        candidate["identity"]["data_fingerprint"] = "new-data"
-        self.assertFalse(model_changed(candidate, project))
+        runtime = json.loads((project / "config/model_acceptance_runtime.json").read_text())
+        for key, value in runtime.items():
+            if key.endswith("_api_key") or "token" in key or "secret" in key:
+                self.assertFalse(value, key)
 
 
 def build_identity_summary(project: Path) -> dict:
-    from risk_engine.model_acceptance import current_identity
-
     return {"identity": current_identity(project), "metrics": {}}
 
 

@@ -1,0 +1,63 @@
+{
+  "data_dir": "data",
+  "output_dir": "output",
+  "cache_dir": "data",
+  "start_date": "2012-01-01",
+  "end_date": null,
+  "data_profile": "extended",
+  "enable_paid_sources": false,
+  "enable_optional_social_sources": false,
+
+  "glassnode_api_key": null,
+  "youtube_api_key": null,
+  "youtube_channel_ids": "",
+  "google_trends_api_key": null,
+  "google_trends_api_url": null,
+
+  "cmc_api_key": null,
+  "coingecko_api_key": null,
+  "coinmetrics_api_key": null,
+
+  "google_trends_terms": "bitcoin",
+  "reddit_subreddits": "Bitcoin,CryptoCurrency",
+
+  "total_marketcap_csv": "data/total_marketcap.csv",
+  "onchain_fallback_csv": "data/onchain_metrics.csv",
+  "youtube_fallback_csv": "data/youtube_interest.csv",
+  "google_trends_csv": "data/google_trends_interest.csv",
+  "coinbase_rank_csv": "data/coinbase_app_rank.csv",
+  "coingecko_btc_market_csv": "data/btc_market_coingecko.csv",
+  "wikipedia_pageviews_csv": "data/wikipedia_pageviews_btc.csv",
+  "reddit_posts_csv": "data/reddit_post_volume.csv",
+  "fred_dxy_csv": "data/fred_dxy.csv",
+  "fred_real_yield_csv": "data/fred_real_yield_10y.csv",
+  "fred_walcl_csv": "data/fred_walcl.csv",
+  "fred_rrp_csv": "data/fred_rrpontsyd.csv",
+
+  "apple_app_store_country": "us",
+  "coinbase_ios_app_id": "886427730",
+  "enable_coinbase_app_rank": false,
+
+  "request_timeout_seconds": 20,
+
+  "category_weights": {
+    "onchain": 0.3,
+    "price_structure": 0.3,
+    "total_market_context": 0.2,
+    "social": 0.15,
+    "fear_greed": 0.05
+  },
+
+  "cycle_category_weights": {
+    "valuation": 0.35,
+    "speculation": 0.25,
+    "attention": 0.25,
+    "macro": 0.15
+  },
+
+  "cycle_confirmation_months": 2,
+  "cycle_cooldown_months": 3,
+  "cycle_buy_threshold": 0.75,
+  "cycle_sell_threshold": 0.75,
+  "cycle_min_history_months": 24
+}

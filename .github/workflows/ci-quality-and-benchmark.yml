@@ -37,6 +37,9 @@ jobs:
       - name: Install Python dependencies
         run: 'pip install --require-hashes --only-binary=:all: -r requirements.txt'
 
+      - name: Prepare model acceptance runtime
+        run: cp config/model_acceptance_runtime.json config/runtime.json
+
       - name: Run unit tests
         run: python -m unittest discover -s tests
 
