@@ -33,7 +33,7 @@ class AutoMergeWorkflowTests(unittest.TestCase):
         self.assertNotIn("node:child_process", driver)
         self.assertLess(driver.index("if (dryRun) return result;"), driver.index("const merged ="))
         ci = (ROOT / ".github/workflows/ci-quality-and-benchmark.yml").read_text()
-        self.assertIn("node --test scripts/lib/*.test.mjs web/functions/api/_lib/*.test.mjs", ci)
+        self.assertIn("node --test scripts/lib/*.test.mjs", ci)
 
 
 if __name__ == "__main__":

@@ -84,10 +84,3 @@ export function validateRelease(root) {
   if (manifest.release_id !== expectedReleaseId) throw new Error("release_id does not match canonical release basis");
   return manifest;
 }
-
-export function loadValidatedAlertRelease(root, now = new Date()) {
-  const manifest = validateRelease(root);
-  const snapshot = JSON.parse(fs.readFileSync(path.join(root, "latest_snapshot.json"), "utf8"));
-  if (snapshot.release_id !== manifest.release_id) throw new Error("alert snapshot release_id mismatch");
-  return { manifest, snapshot, now };
-}
