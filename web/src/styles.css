@@ -1,3 +1,28 @@
+/* IBM Plex Mono is self-hosted (SIL OFL 1.1, public/fonts/OFL.txt) so no visitor request goes to a third party. */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/ibm-plex-mono-latin-700-normal.woff2') format('woff2');
+}
+
 :root {
   --bb-bg: #0a0a0a;
   --bb-surface: #111111;
