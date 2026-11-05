@@ -498,3 +498,21 @@ They are generated with the dashboard's pure functions during the static build.
 There is no server code or user data. Cross-origin reads are public, require no
 key, and are cached for one hour. No application credentials are needed to
 publish these files.
+
+### Response headers and rate limiting
+
+`web/public/_headers` sets a strict content security policy (same-origin only,
+no framing, no plugins), HSTS, a permissions policy and immutable caching for
+fingerprinted assets and fonts; `web/src/headers.test.js` fails if a protection
+is dropped. Fonts are self-hosted, so pages make no third-party requests.
+
+There is no rate limiting, deliberately. Static requests on Pages are free,
+unlimited and outside the account's shared Workers quota, so there is no cost
+or capacity to protect, and WAF rate-limiting rules cannot be attached to a
+`*.pages.dev` hostname (they need a custom domain in an owned zone). Revisit if
+the site gains server code or a custom domain.
+
+Dashboard settings outside the repo (owner: Josh): restrict automatic preview
+deployments to `main` or none, or protect previews with Cloudflare Access, since
+previews are public by default; and keep two-factor authentication on the
+GitHub and Cloudflare accounts.
