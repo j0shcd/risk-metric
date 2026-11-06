@@ -1,0 +1,50 @@
+{
+  "candidate_csv_sha256": "b12c03efde36f240de8241c6b880fb432bf26908600ed5ebdfea0dc6ca1bf20d",
+  "column": "swing_b_adaptive",
+  "decision": "exploratory finalist; no broad improvement and no Pareto dominance; retain original preferred model for stronger directional ordering",
+  "development_cutoff": "2022-12-31",
+  "entrypoint": "generate(frame: Date/Price daily DataFrame) -> monthly DataFrame",
+  "finalist": "swing_b_adaptive",
+  "generator": "research/candidates/swing_b/generator.py",
+  "generator_sha256": "7fb62c01c1bcb08dd186b0add0c10e5da9a2dc1b3d3e4b877c779cd5a706b861",
+  "historical_deployment": false,
+  "locked_evaluator_commit": "0cb4129",
+  "outer_accessed": false,
+  "parameter_selection_date": "2026-11-07",
+  "parameters": {
+    "alpha": 0.08,
+    "beta": 0.004,
+    "correction_scales": 4,
+    "damping": 0.98,
+    "initial_scale": 0.25,
+    "initial_slope": 0.0,
+    "scale_ew_alpha": 0.041666666666666664,
+    "scale_floor": 0.05,
+    "score_innovation_scales": 4
+  },
+  "portable_artifact": "research/candidates/swing_b/development_trials.zip",
+  "portable_artifact_sha256": "c6655ee36d68b597ae922b6d76a4df9b99c822e63fa7eb6e02fd1143e3473c3e",
+  "source_commit": "8837516",
+  "status": "preregistered_before_outer_replay",
+  "trained_parameters": false,
+  "trials": [
+    {
+      "attempt": 1,
+      "candidate": "swing_b_adaptive",
+      "candidate_id": "e41a6c4fa07a7781fc49e389bad95a172bfc311525b82ab1f78c5aa7f8cfccbb",
+      "trial_sha256": "3891ab3271d14af3bb4f2372d5a0bd89707a1cf948d21a4d6ca68cedaea8db59"
+    },
+    {
+      "attempt": 2,
+      "candidate": "swing_b_slow",
+      "candidate_id": "cee1ddc14f513a9b92e5d790e6108ee531d1d2707109c329457f7d3e88e3e626",
+      "trial_sha256": "6b330faafd5f6f27bf3a467ae8201537603d4353efebe4d6bad265c488d1c364"
+    },
+    {
+      "attempt": 3,
+      "candidate": "swing_b_fast",
+      "candidate_id": "a322cc0c9ed27effe404bff866723caae0fb226b9a66e07bd684518814c52d01",
+      "trial_sha256": "1e4a016b8967c4658417723da61b33c9bde4da2c996db936fac027ddbe150a29"
+    }
+  ]
+}
