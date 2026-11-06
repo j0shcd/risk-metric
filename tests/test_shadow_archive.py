@@ -12,7 +12,7 @@ from unittest.mock import patch
 from research.shadow_archive import append, initialize, main, verify
 
 NOW = datetime(2026, 11, 7, 12, tzinfo=timezone.utc)
-LATER = datetime(2027, 11, 8, 12, tzinfo=timezone.utc)
+LATER = datetime(2027, 11, 9, 12, tzinfo=timezone.utc)
 
 
 def observation():
@@ -23,13 +23,14 @@ def observation():
             'score': .4, 'features': {'trend': -.1}, 'forecasts': [{
                 'target': 'terminal_log_return', 'horizon_months': 12,
                 'atoms': [-.3, .4], 'weights': [.5, .5],
-                'label_end_at': '2027-11-07T11:00:00Z', 'label_available_at': '2027-11-08T11:00:00Z'}]}
+                'entry_at': '2026-11-08T00:00:00Z',
+                'label_end_at': '2027-11-08T00:00:00Z', 'label_available_at': '2027-11-09T00:00:00Z'}]}
 
 
 def resolution(identity):
     return {'forecast_id': identity, 'target': 'terminal_log_return', 'horizon_months': 12,
             'outcome': .2, 'source_outcome_sha256': 'c'*64,
-            'source_outcome_as_of': '2027-11-07T11:00:00Z', 'provenance': 'synthetic fixture'}
+            'source_outcome_as_of': '2027-11-08T00:00:00Z', 'provenance': 'synthetic fixture'}
 
 
 class ShadowArchiveTests(unittest.TestCase):
@@ -58,7 +59,7 @@ class ShadowArchiveTests(unittest.TestCase):
     def test_prematurity_rejected_without_writing(self):
         receipt = append(self.root, 'observation', observation())
         # Endpoint exists, but publication is still one hour in the future.
-        before_publication = datetime(2027, 11, 8, 10, tzinfo=timezone.utc)
+        before_publication = datetime(2027, 11, 8, 23, tzinfo=timezone.utc)
         with patch('research.shadow_archive._now', return_value=before_publication):
             with self.assertRaisesRegex(ValueError, 'not yet available'):
                 append(self.root, 'resolution', resolution(receipt['event_id']))
@@ -72,6 +73,7 @@ class ShadowArchiveTests(unittest.TestCase):
         self.assertIn('unknown_source_vintage', receipt['classification']['reasons'])
         old = observation(); old['decision_at'] = '2026-07-30T12:00:00Z'
         old['source']['as_of'] = '2026-07-30T10:00:00Z'; old['source']['published_at'] = '2026-07-30T11:00:00Z'
+        old['forecasts'][0].update(entry_at='2026-07-31T00:00:00Z', label_end_at='2027-07-31T00:00:00Z', label_available_at='2027-08-01T00:00:00Z')
         receipt = append(self.root, 'observation', old)
         self.assertEqual(receipt['classification']['reasons'], ['historical_decision_reconstruction','stale_source_as_of'])
 
@@ -118,6 +120,47 @@ class ShadowArchiveTests(unittest.TestCase):
             with ThreadPoolExecutor(max_workers=4) as pool: results = list(pool.map(resolve, range(4)))
         self.assertEqual(sum(r is not None for r in results), 1)
         self.assertEqual(verify(self.root)['resolution_count'], 1)
+
+    def test_horizon_cannot_mature_early_and_calendar_matches_benchmark(self):
+        from research.shadow_archive import label_calendar
+        import pandas as pd
+        for date, months in [('2023-01-30', 1), ('2024-01-30', 1), ('2024-02-28', 12), ('2026-11-07', 48)]:
+            decision = datetime.fromisoformat(date).replace(tzinfo=timezone.utc)
+            entry, end, available = label_calendar(decision, months)
+            self.assertEqual(pd.Timestamp(end), pd.Timestamp(entry) + pd.DateOffset(months=months))
+            self.assertEqual((available-end).days, 1)
+        wrong = observation()
+        wrong['forecasts'][0].update(horizon_months=48, label_end_at='2026-11-08T00:00:00Z',
+                                    label_available_at='2026-11-09T00:00:00Z')
+        with self.assertRaisesRegex(ValueError, 'calendar horizon'):
+            append(self.root, 'observation', wrong)
+        self.assertEqual(verify(self.root)['event_count'], 0)
+
+    def test_path_loss_atoms_and_resolved_values_nonnegative(self):
+        for index, target in enumerate(('entry_adverse_log_loss', 'peak_drawdown_log_loss')):
+            request = observation(); request['forecasts'][0]['target'] = target
+            request['identity']['config_sha256'] = f'{index:064x}'
+            with self.assertRaisesRegex(ValueError, 'atoms must be nonnegative'):
+                append(self.root, 'observation', request)
+            request['forecasts'][0]['atoms'] = [0., .4]
+            receipt = append(self.root, 'observation', request)
+            outcome = resolution(receipt['event_id']); outcome.update(target=target, outcome=-.1)
+            with patch('research.shadow_archive._now', return_value=LATER):
+                with self.assertRaisesRegex(ValueError, 'losses must be nonnegative'):
+                    append(self.root, 'resolution', outcome)
+        self.assertEqual(verify(self.root)['resolution_count'], 0)
+
+    def test_event_and_byte_caps_leave_existing_prefix_unchanged(self):
+        receipt = append(self.root, 'observation', observation())
+        before = verify(self.root)
+        another = observation(); another['identity']['config_sha256'] = 'd'*64
+        with patch('research.shadow_archive.MAX_EVENTS', 1):
+            with self.assertRaisesRegex(ValueError, 'event limit reached'):
+                append(self.root, 'observation', another)
+        with patch('research.shadow_archive.MAX_ARCHIVE_BYTES', before['archive_bytes'] + 1):
+            with self.assertRaisesRegex(ValueError, 'byte limit exceeded'):
+                append(self.root, 'observation', another)
+        self.assertEqual(verify(self.root, receipt['event_id']), before)
 
     def test_cli_synthetic_e2e_and_no_fabricated_clock(self):
         request = Path(self.temp.name)/'request.json'; request.write_text(json.dumps(observation()))

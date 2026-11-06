@@ -6,12 +6,16 @@ from an independently retained receipt. Runtime UTC time cannot be supplied by C
 A local chain detects corruption; trusted external heads are needed to detect
 adversarial tail deletion or a complete rewrite. Hashes identify, not authenticate,
 source/producers. Publication claims must be verified by the caller.
+Entry/end/availability follow label_calendar, not caller-selected maturity.
+A full-chain scan verifies each append; bounded to 2,048 events, 128 KiB per
+event and 16 MiB total. Start a separately registered archive at that boundary.
 """
 from __future__ import annotations
 
 import argparse
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import calendar
 import fcntl
 import hashlib
 import json
@@ -23,6 +27,9 @@ from .market_dataset import canonical_bytes, TARGETS
 from .scorecard_artifacts import publish, safe_path
 
 SCHEMA = 'research-shadow-archive-v1'
+MAX_EVENTS = 2048
+MAX_EVENT_BYTES = 128 * 1024
+MAX_ARCHIVE_BYTES = 16 * 1024 * 1024
 
 
 def _now():
@@ -69,6 +76,19 @@ def _positive_int(value):
         raise ValueError('horizon must be a positive integer')
 
 
+def label_calendar(decision, months):
+    """Next UTC calendar-day entry; calendar-month endpoint; next-day availability.
+
+    Calendar addition clamps to the last valid day of the destination month,
+    matching pandas DateOffset (including leap years). All endpoints are 00:00 UTC.
+    """
+    entry = decision.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    month_index = entry.year * 12 + entry.month - 1 + months
+    year, month = divmod(month_index, 12); month += 1
+    end = entry.replace(year=year, month=month, day=min(entry.day, calendar.monthrange(year, month)[1]))
+    return entry, end, end + timedelta(days=1)
+
+
 def _validate_observation(request, now):
     _keys(request, ('decision_at', 'source', 'identity', 'score', 'features', 'forecasts'))
     decision = _time(request['decision_at'])
@@ -107,15 +127,16 @@ def _validate_observation(request, now):
         raise ValueError('nonempty forecasts required')
     seen = set()
     for forecast in forecasts:
-        _keys(forecast, ('target', 'horizon_months', 'atoms', 'weights', 'label_end_at', 'label_available_at'))
+        _keys(forecast, ('target', 'horizon_months', 'atoms', 'weights', 'entry_at', 'label_end_at', 'label_available_at'))
         _positive_int(forecast['horizon_months'])
         key = (forecast['target'], forecast['horizon_months'])
         if forecast['target'] not in TARGETS or key in seen:
             raise ValueError('forecast target/horizon must be supported and unique')
         seen.add(key)
         end, available = _time(forecast['label_end_at']), _time(forecast['label_available_at'])
-        if not decision < end <= available:
-            raise ValueError('label end/availability must follow decision in order')
+        expected_entry, expected_end, expected_available = label_calendar(decision, forecast['horizon_months'])
+        if (_time(forecast['entry_at']), end, available) != (expected_entry, expected_end, expected_available):
+            raise ValueError('entry/end/availability must match the declared calendar horizon')
         if available <= now and 'already_mature_at_observation' not in reasons:
             reasons.append('already_mature_at_observation')
         if end <= now and 'outcome_endpoint_already_observed' not in reasons:
@@ -124,6 +145,8 @@ def _validate_observation(request, now):
         if not isinstance(atoms, list) or not isinstance(weights, list) or not atoms or len(atoms) != len(weights):
             raise ValueError('nonempty equal-sized atom/weight vectors required')
         for value in atoms + weights: _finite(value)
+        if forecast['target'] != 'terminal_log_return' and min(atoms) < 0:
+            raise ValueError('path loss atoms must be nonnegative')
         if min(weights) < 0 or not math.isclose(sum(weights), 1., rel_tol=0., abs_tol=1e-12):
             raise ValueError('weights must be nonnegative and sum to one')
     return {'prospective_eligibility': not reasons,
@@ -131,10 +154,15 @@ def _validate_observation(request, now):
             'reasons': reasons}
 
 
-def _ensure_new_observation(request, observations):
-    if any(_time(old['decision_at']) == _time(request['decision_at']) and old['identity'] == request['identity']
-           for old in observations.values()):
+def _observation_key(request):
+    return (_time(request['decision_at']), tuple(sorted(request['identity'].items())))
+
+
+def _ensure_new_observation(request, keys):
+    key = _observation_key(request)
+    if key in keys:
         raise ValueError('decision/producer identity already observed; use a new decision or model identity')
+    return key
 
 
 def _validate_resolution(request, now, observations, resolutions):
@@ -142,6 +170,8 @@ def _validate_resolution(request, now, observations, resolutions):
                     'source_outcome_sha256', 'source_outcome_as_of', 'provenance'))
     _sha(request['forecast_id']); _sha(request['source_outcome_sha256'])
     _positive_int(request['horizon_months']); _finite(request['outcome'])
+    if request['target'] != 'terminal_log_return' and request['outcome'] < 0:
+        raise ValueError('resolved path losses must be nonnegative')
     if not isinstance(request['provenance'], str) or not request['provenance'].strip():
         raise ValueError('outcome provenance required')
     key = (request['forecast_id'], request['target'], request['horizon_months'])
@@ -180,17 +210,26 @@ def initialize(root):
 
 
 def _read(root, expected_head=None):
-    manifest_bytes = safe_path(root/'manifest.json').read_bytes()
+    manifest_path = safe_path(root/'manifest.json')
+    if manifest_path.stat().st_size > MAX_EVENT_BYTES: raise ValueError('manifest byte limit exceeded')
+    manifest_bytes = manifest_path.read_bytes()
     manifest = json.loads(manifest_bytes)
     _keys(manifest, ('schema', 'created_at', 'archive_code_sha256'))
     if manifest['schema'] != SCHEMA: raise ValueError('unsupported archive schema')
     _sha(manifest['archive_code_sha256']); previous_time = _time(manifest['created_at'])
-    head = _hash(manifest_bytes); observations, resolutions = {}, set()
+    head = _hash(manifest_bytes); observations, resolutions, observation_keys = {}, set(), set()
     names = sorted(p.name for p in root.iterdir() if p.name not in ('manifest.json', 'archive.lock'))
+    if len(names) > MAX_EVENTS: raise ValueError('archive event limit exceeded')
+    total_bytes = len(manifest_bytes)
     for sequence, name in enumerate(names, 1):
         if not re.fullmatch(rf'{sequence:08d}_[0-9a-f]{{64}}\.json', name):
             raise ValueError('event sequence gap or unexpected file')
-        payload = safe_path(root/name).read_bytes()
+        event_path = safe_path(root/name)
+        size = event_path.stat().st_size
+        total_bytes += size
+        if size > MAX_EVENT_BYTES or total_bytes > MAX_ARCHIVE_BYTES:
+            raise ValueError('archive byte limit exceeded')
+        payload = event_path.read_bytes()
         if name != f'{sequence:08d}_{_hash(payload)}.json': raise ValueError('event content hash mismatch')
         event = json.loads(payload)
         _keys(event, ('sequence', 'previous_sha256', 'observed_at', 'kind', 'request', 'classification', 'archive_code_sha256'))
@@ -202,7 +241,7 @@ def _read(root, expected_head=None):
         event_hash = _hash(payload)
         if event['kind'] == 'observation':
             classification = _validate_observation(event['request'], now)
-            _ensure_new_observation(event['request'], observations)
+            observation_keys.add(_ensure_new_observation(event['request'], observation_keys))
             if event['classification'] != classification: raise ValueError('eligibility classification mismatch')
             observations[event_hash] = event['request']
         elif event['kind'] == 'resolution':
@@ -212,7 +251,7 @@ def _read(root, expected_head=None):
         head, previous_time = event_hash, now
     if expected_head is not None and head != expected_head: raise ValueError('trusted head mismatch')
     return {'head_sha256': head, 'event_count': len(names), 'observation_count': len(observations),
-            'resolution_count': len(resolutions)}, observations, resolutions, previous_time
+            'resolution_count': len(resolutions), 'archive_bytes': total_bytes}, observations, resolutions, previous_time
 
 
 def verify(root, expected_head=None):
@@ -222,14 +261,17 @@ def verify(root, expected_head=None):
 
 def append(root, kind, request):
     # Round-trip rejects non-JSON/nonfinite values and isolates caller mutation.
-    request = json.loads(canonical_bytes(request))
+    request_bytes = canonical_bytes(request)
+    if len(request_bytes) > MAX_EVENT_BYTES: raise ValueError('request byte limit exceeded')
+    request = json.loads(request_bytes)
     with _lock(root) as root:
         receipt, observations, resolutions, previous_time = _read(root)
+        if receipt['event_count'] >= MAX_EVENTS: raise ValueError('archive event limit reached')
         now = _now()
         if now < previous_time: raise ValueError('observation clock moved backwards')
         if kind == 'observation':
             classification = _validate_observation(request, now)
-            _ensure_new_observation(request, observations)
+            _ensure_new_observation(request, {_observation_key(old) for old in observations.values()})
         elif kind == 'resolution':
             _validate_resolution(request, now, observations, resolutions); classification = None
         else: raise ValueError('unsupported event kind')
@@ -237,6 +279,8 @@ def append(root, kind, request):
                  'observed_at': _stamp(now), 'kind': kind, 'request': request, 'classification': classification,
                  'archive_code_sha256': _hash(Path(__file__).read_bytes())}
         payload = canonical_bytes(event)
+        if len(payload) > MAX_EVENT_BYTES or receipt['archive_bytes'] + len(payload) > MAX_ARCHIVE_BYTES:
+            raise ValueError('archive byte limit exceeded')
         publish(root/f"{event['sequence']:08d}_{_hash(payload)}.json", payload)
         return {'event_id': _hash(payload), 'sequence': event['sequence'], 'observed_at': event['observed_at'],
                 'classification': classification, 'previous_sha256': receipt['head_sha256']}
@@ -251,6 +295,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.operation in ('observe', 'resolve'):
         if args.input is None or args.expected_head is not None: parser.error('observe/resolve require --input only')
+        if args.input.stat().st_size > MAX_EVENT_BYTES: raise ValueError('request byte limit exceeded')
         result = append(args.archive, 'observation' if args.operation == 'observe' else 'resolution', json.loads(args.input.read_bytes()))
     elif args.operation == 'init':
         if args.input is not None or args.expected_head is not None: parser.error('init takes no input/head')
