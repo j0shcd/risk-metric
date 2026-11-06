@@ -67,12 +67,12 @@ PYTHONDONTWRITEBYTECODE=1 /private/tmp/risk-pr-review-wcp0ax41/python/bin/python
 
 The local Python runtime has numpy 2.4.6 and pandas 2.3.3. Frontend dependencies and
 .env are absent in this isolated checkout; neither is needed or installed. No
-services, secrets or network sources were accessed. Next bounded step: use parent's
-locked evaluator for all three frozen variants, log every attempt, freeze one
-finalist (or explicitly reject the approach). Until then performance is unmeasured.
+services, secrets or network sources were accessed. The three frozen variants have now been scored. See `RESULT.md` for the negative
+family result and `finalist.json` for the no-memory diagnostic finalist. Parent
+owns the next bounded step: frozen outer replay or archive; no promotion is recommended.
 
-Brief vs delivered: predictive monthly Bitcoin indicator as briefed; all outcomes,
-comparisons and uncertainty remain unanswered until parent contract is supplied.
+Brief vs delivered: predictive monthly Bitcoin indicator as briefed; development outcomes/comparisons are recorded in `RESULT.md`; market uncertainty
+and financial suitability remain unestablished.
 No shared/product documentation changes are needed for this isolated prototype.
 Skill harvest/self-review: no global skill change justified by this bounded run.
 
