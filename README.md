@@ -100,8 +100,8 @@ Without API keys the pipeline falls back to a `free_stable` profile (fewer signa
 The [indicator benchmark plan](docs/metric_evaluation_plan.md) describes the
 proposed information-first evaluation and next implementation slice.
 [DCA evidence](docs/dca_evidence.md) records the current historical results.
-The primary market benchmark remains a proposal. Its offline synthetic
-qualification pilot is implemented; the existing acceptance gate remains unchanged.
+The primary market benchmark remains unqualified. Its offline IID and adversarial
+qualification pilots are implemented; the existing acceptance gate remains unchanged.
 
 CI prepares the ignored `config/runtime.json` from the credential-free
 `config/model_acceptance_runtime.json` before testing. This fixture reproduces

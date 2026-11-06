@@ -1,6 +1,6 @@
 # Indicator benchmark and evaluation plan
 
-Status: benchmark design under review; synthetic qualification pilot implemented.
+Status: two research pilots implemented; long-horizon market benchmark unqualified.
 Updated 2026-11-06.
 
 This is the canonical plan for the next benchmark. Current implemented results
@@ -26,13 +26,12 @@ not by themselves. Withdraw the horizon average and ordinal rank score as the
 proposed primary leaderboard; retain them as candidate diagnostics. Capital
 normalization is necessary for comparison but does not validate an objective.
 
-The next design check is a small conditional-forecast comparison against simple
-references, not approval of arbitrary horizons. First establish the indicator's
-specific informational claim and whether mature data supports its evaluation.
-Before freezing a search score, test the whole selection procedure on no-signal
-and planted-signal worlds: does it reject lucky search winners and detect increasing
-information? These tests validate behavior under their declared generators, not
-real-market generalization.
+The research pilots now demonstrate why the current IID threshold and one
+location-only readout cannot serve as a long-horizon market gate. Settle the
+indicator's specific informational claim before market scoring. Qualification
+must test the entire selection procedure against no-signal and planted-signal
+worlds; simulation results remain conditional on their generators, not evidence
+of real-market generalization.
 
 ## Decision served and scope
 
@@ -123,8 +122,8 @@ counts, not independent samples or sufficient calibration data. Exact month-clos
 rows are required; July 30 is not relabeled July 31 and missing closes are not
 filled from earlier prices. As-of source/input vintages remain unverified.
 
-Verification: 18 focused pilot/readout tests pass; the complete backend suite
-passes 165 tests. Eight deliberate defects were caught in isolated copies: removing
+At the v1 verification junction, 18 focused pilot/readout tests and the then-
+complete 165-test backend suite passed. Current verification is recorded below. Eight deliberate defects were caught in isolated copies: removing
 the CRPS pair term, clipping a constrained slope without refitting context,
 allowing unresolved labels, accepting the wrong direction, carrying a missing
 month-close price, selecting the winner using audit outcomes, using development
@@ -139,9 +138,78 @@ campaigns per family, 96 fit/48 later-phase rows) preceded the registered-size r
 Repeated full-size runs used identical seeds and trial recipes while report
 metadata was hardened; they are duplicate simulations, not new evidence.
 
-Next bounded step: the falsification experiments specified below, before broader
-market-model search. Separately settle the indicator's informational claim before
-market scoring. Do not use this pilot as the production acceptance gate.
+These v1 results motivated the falsification experiments below. Their results
+now determine the next bounded work; the IID pilot is not the production gate.
+The indicator's informational claim remains unsettled before market scoring.
+
+## Implemented falsification experiments
+
+```bash
+python -m research.forecast_falsification --output-dir output/forecast-falsification-new-run
+```
+
+The [retained result](artifacts/forecast-falsification-2026-11-06.json) records
+configuration, source/reference hashes and uncertainty. Full local records are
+in `output/forecast-falsification-2026-11-06/` (about 17 MB, ignored by Git).
+Both pilots use the same exclusive, manifest-bound output writer. The v1 source
+files and 0.53481558-point threshold remain unchanged; it is tested, not refitted.
+
+The registered seed was 20261106 with 200 independent worlds per family. The
+long overlap null uses one continuous 720-step log-price path with IID Gaussian
+increments (standard deviation 0.04), 48-step outcomes starting after execution,
+24 correlated irrelevant indicators with stationary AR(1) persistence 0.95, and
+past-price context. Fit/calibration/development/audit sizes remain 192/96/96/96;
+phase gaps derive from actual label-resolution times. Repeating the minimal
+24-row phases on one 140-step path is a separate deterministic feasibility check.
+
+| Test | Observed result | Interpretation |
+| --- | --- | --- |
+| Dependent no-edge histories | 75/200 flags at the frozen IID threshold: 37.5%, 95% Wilson interval 31.1–44.4% | The old threshold fails joint transfer to these conditions |
+| Short 140-step history, 24-row phase minimums | Calibration has only 4 eligible rows; insufficient evidence | This sequential protocol is infeasible there; not a theorem about every method |
+| Leading versus lagging state | Median audit skill +29.05 (95% world-bootstrap interval 28.81–29.19) versus 0 | The control distinguishes information about returns after entry from an irrelevant lagging state |
+| Retrospectively revised state | All 200 worlds ineligible before scoring | Supplied late-publication metadata is rejected; undocumented real revisions are not thereby detected |
+| Equal-mean tail state | Location decoder median skill 0; registered state bins +19.49 (19.29–19.75); population oracle 20 | A location-readout failure is not absence of useful distributional information |
+| Deterministic price-context transform | Augmented decoder median gain +21.49 (21.11–22.21) against weak context; context-oracle loss delta exactly 0 with/without the indicator | Learnability over a restricted reference is not new information conditional on the underlying context |
+
+Intervals resample independent complete worlds, not overlapping ticket rows; the
+flag interval conditions on one fixed threshold. Overlap, persistence, context
+and interphase gaps change jointly, so this falsifies transfer without isolating
+a single causal mechanism. It is not an estimate of BTC false-positive rates.
+
+Timing controls share one price path. State at t predicts r_(t+2), after entry at
+t+1; a move included in the entry price cannot earn predictive skill for that
+holding-period outcome. Observation, publication, decision, execution, outcome
+end and label availability are all retained. Feature publication exactly at the
+decision cutoff is usable; model-fitting phases begin strictly after prior
+labels resolve.
+
+The tail law is known: state0 gives ±1 and state1 gives ±3, equally likely, both
+with mean zero. Population CRPS is 1.25 pooled versus 1.0 conditional. State bins
+use calibration labels only, with 12 observations per state required and a pooled
+fallback retaining all audit rows. The bins know the registered binary partition;
+the oracle knows the population law. Neither is an adopted market model.
+
+The redundancy law is `Y=-2*C²+epsilon`, with `epsilon~N(0,0.5²)` and `S=C²`.
+An exact Gaussian context oracle already knows everything in S. The restricted
+location decoder gains from S as a basis function; reporting this as novel
+information beyond all price inputs would be wrong. Do not endlessly strengthen
+the reference after observing results to erase legitimate representation gains.
+
+These are qualification counterexamples, not new acceptance criteria. The next
+bounded experiment is whole-path error calibration with independent generator
+families and repeated threshold-calibration uncertainty. Preserve these failures
+as frozen controls. Market target/horizon preferences remain unaccepted.
+
+Verification: all 178 backend tests pass, including 13 new scenario/runner tests
+(31 research tests in total). Six deliberate defects were caught in isolated
+copies: including the pre-entry return, accepting late publication, partitioning
+on decision time instead of label maturity, fitting state bins to audit outcomes,
+using an incorrect Gaussian CRPS formula and modifying the frozen threshold.
+The Gaussian oracle was independently checked against numerical integration of
+its CDF loss. Terra reviewed the implementation and saved evidence without a
+substantive correctness finding. Source/reference/output hashes and local links
+were verified. Checks ran locally on Python 3.12.16, not hosted CI.
+
 
 ## Scientific interpretation and competing designs
 
@@ -199,7 +267,9 @@ they are not automatically repaired by another fitted weight.
 
 ### Prioritized falsification experiments
 
-These are proposals for the next research slice, not completed experiments.
+Experiments 1–4 are implemented in the falsification runner and summarized
+below. Experiments 5–6 remain proposals. The descriptions define the scientific
+questions, not claims that their outcomes qualify a market benchmark.
 
 1. **Dependence without edge.** Generate short chronological price paths with
    persistent irrelevant indicators and overlapping long-horizon outcomes. Preserve
@@ -237,9 +307,11 @@ These are proposals for the next research slice, not completed experiments.
    benchmark must show preference/dependence sensitivity rather than label one
    universally better. This can falsify the one-dimensional opportunity claim.
 
-The next minimum qualification tranche is experiments 1–4, using oracle
-references and explicit ineligible/insufficient-evidence states. Predeclare
-new generators/parameters and hold out generator families, not only seeds.
+The first qualification tranche implements experiments 1–4, with oracle
+references and explicit ineligible/insufficient-evidence states. Next, compare a
+new whole-path-calibrated error rule against the frozen IID rule using separate
+calibration/evaluation generator families. Predeclare parameters and hold out
+families, not only seeds; do not tune the old threshold to the observed failures.
 Repeat complete threshold calibration plus search/audit on independent worlds;
 report both conditional and across-calibration uncertainty, modest-effect power
 and chance of at least one false declaration over the planned campaign schedule.
@@ -626,11 +698,11 @@ model generation. Its current three-test results are faithfully recorded in
 | Fixed-notional multi-horizon outcome table | Not implemented as the primary benchmark | Common timestamps, executable dates, complete outcomes and named loss conventions |
 | Ordinal information diagnostics | Existing region diagnostics only | Continuous fixed-direction ranks, ties, invariance tests and paired baselines; not the primary leaderboard |
 | Forecast readout and skill | Implemented for synthetic pilot only | Market-target decision, dependent-data qualification and real readout feasibility remain open |
-| Chronological benchmark | Partial walk-forward label/threshold sidecar | Audit complete model fitting, candidate selection and online updates |
+| Chronological benchmark | Existing sidecar plus synthetic observation/publication/execution/resolution audits | Real input-vintage reconstruction and complete market-fitting/update audit remain open |
 | Baseline identity | File hashes and canonical summary exist | Immutable retained dataset; incumbent rerun on identical bytes |
 | Experiment registry | Existing run index; pilot logs every synthetic attempt and selected audit prediction | General candidate lineage, market prediction state and restricted audit access remain open |
 | Prospective archive | Release records and inputs exist | Candidate/readout/update-state lineage and outcome-resolution evaluator |
-| Synthetic / external suite | Independent Gaussian qualification worlds implemented | Dependent/overlapping paths, regime breaks and cross-asset tests remain open |
+| Synthetic / external suite | IID pilot and four falsification experiments implemented | Whole-path threshold calibration, regime breaks and cross-asset tests remain open |
 | Supporting policy accounting | Implemented but multiple variants remain | One explicit contract per test; capital/exposure controls and reporting |
 
 Verified issues to resolve before policy/outcome optimization:
@@ -694,8 +766,8 @@ Verified issues to resolve before policy/outcome optimization:
 
 ## Verification and handoff
 
-This task specifies the benchmark and implements its first synthetic qualification
-pilot; it does not demonstrate a better market indicator. No new market dataset
+This task specifies the benchmark and implements the IID and adversarial
+qualification pilots; it does not demonstrate a better market indicator. No new market dataset
 was downloaded and no market model was trained. The Astra medium collaborator
 reviewed the design and implementation independently. Its two recommended test
 additions, frozen forecast quantiles and a non-extreme threshold order statistic,
@@ -709,7 +781,8 @@ The pilot measures declaration rates only under its specified synthetic generato
 The strongest alternative explanation for an apparent future leaderboard gain
 will be adaptive fitting to a few shared market eras. Keep that risk visible.
 
-The production model fingerprint remains unchanged. Core scorer/readout controls
-are committed in `349b973`; the runner, tests, portable pilot result and this
-status are one subsequent research slice. Local commits require push approval;
-no publication or deployment is implied by local test results.
+The production model fingerprint remains unchanged. The v1 scorer/pilot are
+committed in `349b973` and `fe04721`; timed counterexamples/oracles are committed
+in `e5d71b1`. The falsification runner, its tests, retained results and this
+reconciliation form the next research slice. Josh explicitly requested keeping
+all commits local; no push or deployment is authorized.

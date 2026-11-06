@@ -1,0 +1,462 @@
+{
+  "code_sha256": {
+    "forecast_falsification.py": "0ce91b35d7e8c0820dbaed9be751e49a60edab6ac73cd53be7c81718c4273ed7",
+    "forecast_oracles.py": "9257cbbb93af7a5fd7de8912b33ed97cbdeda48065def422eabd6995d2a6bdea",
+    "forecast_pilot.py": "3d11fd3505ed322487492bb6c16f7c27836144175fd1f3562b5930cfaec488bb",
+    "forecast_readout.py": "28e1bf2e49e65c44f26b489c484542af129a59f8423a8edc8f0f56a8aae9b168",
+    "forecast_scenarios.py": "2f5971c5c1bea13de9438926413c4776e49c8aa10fb6cc73bd0862ad72bcaaa9"
+  },
+  "config": {
+    "control_steps": 560,
+    "horizon": 48,
+    "long_steps": 720,
+    "persistence": 0.95,
+    "seed": 20261106,
+    "short_steps": 140,
+    "worlds": 200
+  },
+  "families": {
+    "lagging": {
+      "eligible": 200,
+      "metrics": {
+        "audit_skill": {
+          "median": 0.0,
+          "median_bootstrap_95": [
+            0.0,
+            0.0
+          ],
+          "quartiles": [
+            -0.007696294464737408,
+            0.0
+          ]
+        },
+        "candidate_mean_crps": {
+          "median": 0.6468626067718575,
+          "median_bootstrap_95": [
+            0.642770186783743,
+            0.6510833634462627
+          ],
+          "quartiles": [
+            0.6294775025524566,
+            0.6665640011849086
+          ]
+        },
+        "development_skill": {
+          "median": 0.0,
+          "median_bootstrap_95": [
+            0.0,
+            0.0
+          ],
+          "quartiles": [
+            0.0,
+            0.014477159392328742
+          ]
+        },
+        "reference_mean_crps": {
+          "median": 0.6466552410336128,
+          "median_bootstrap_95": [
+            0.6417278710950106,
+            0.6513375920848058
+          ],
+          "quartiles": [
+            0.6293248409617507,
+            0.6665640011849086
+          ]
+        }
+      },
+      "reasons": [],
+      "status_counts": {
+        "eligible": 200
+      },
+      "worlds": 200
+    },
+    "leading": {
+      "eligible": 200,
+      "metrics": {
+        "audit_skill": {
+          "median": 29.04582302044063,
+          "median_bootstrap_95": [
+            28.810522234363475,
+            29.194739986495282
+          ],
+          "quartiles": [
+            27.9312606408967,
+            29.98808942081132
+          ]
+        },
+        "candidate_mean_crps": {
+          "median": 0.45859334390536866,
+          "median_bootstrap_95": [
+            0.4541078510720925,
+            0.46335113495678837
+          ],
+          "quartiles": [
+            0.44277846077154087,
+            0.47585254704305086
+          ]
+        },
+        "development_skill": {
+          "median": 28.85005685257171,
+          "median_bootstrap_95": [
+            28.714532468527857,
+            29.103469461633402
+          ],
+          "quartiles": [
+            28.030300335028553,
+            30.304691833042916
+          ]
+        },
+        "oracle_mean_crps": {
+          "median": 0.27759150833375856,
+          "median_bootstrap_95": [
+            0.2750192208536866,
+            0.28108298262604253
+          ],
+          "quartiles": [
+            0.2654399318392364,
+            0.29267193672994773
+          ]
+        },
+        "reference_mean_crps": {
+          "median": 0.6466552410336128,
+          "median_bootstrap_95": [
+            0.6417188819982804,
+            0.6515790973247145
+          ],
+          "quartiles": [
+            0.6293248409617507,
+            0.6665640011849086
+          ]
+        }
+      },
+      "reasons": [],
+      "status_counts": {
+        "eligible": 200
+      },
+      "worlds": 200
+    },
+    "overlap_long": {
+      "eligible": 200,
+      "flag_rate": 0.375,
+      "flag_rate_wilson_95": [
+        0.31085436858409826,
+        0.44385696301021843
+      ],
+      "flags_at_frozen_iid_threshold": 75,
+      "metrics": {
+        "audit_skill": {
+          "median": 0.0,
+          "median_bootstrap_95": [
+            0.0,
+            0.0
+          ],
+          "quartiles": [
+            -2.203047290153759,
+            2.8294066367999413
+          ]
+        },
+        "candidate_mean_crps": {
+          "median": 0.1645941679992548,
+          "median_bootstrap_95": [
+            0.1563335945688511,
+            0.18060878849316475
+          ],
+          "quartiles": [
+            0.11993820978176159,
+            0.2299193421632444
+          ]
+        },
+        "development_skill": {
+          "median": 4.292705014157239,
+          "median_bootstrap_95": [
+            3.026097248001025,
+            4.981349277592131
+          ],
+          "quartiles": [
+            0.6074071673379283,
+            8.496532920958193
+          ]
+        },
+        "oracle_mean_crps": {
+          "median": 0.13507493198364198,
+          "median_bootstrap_95": [
+            0.1271836240931833,
+            0.14397963246645595
+          ],
+          "quartiles": [
+            0.10934642145178634,
+            0.17294476018964589
+          ]
+        },
+        "reference_mean_crps": {
+          "median": 0.16901885164123392,
+          "median_bootstrap_95": [
+            0.1546196874483836,
+            0.18456140923616374
+          ],
+          "quartiles": [
+            0.12305532420715799,
+            0.22124130454421212
+          ]
+        }
+      },
+      "reasons": [],
+      "status_counts": {
+        "eligible": 200
+      },
+      "worlds": 200
+    },
+    "overlap_short_min24": {
+      "eligible": 0,
+      "metrics": {},
+      "reasons": [
+        "calibration_needs_24_has_4"
+      ],
+      "status_counts": {
+        "insufficient_evidence": 1
+      },
+      "worlds": 1
+    },
+    "redundant": {
+      "eligible": 200,
+      "metrics": {
+        "audit_skill": {
+          "median": 21.486415530979496,
+          "median_bootstrap_95": [
+            21.110464843546463,
+            22.206512232223496
+          ],
+          "quartiles": [
+            19.97679313263182,
+            23.76203390050818
+          ]
+        },
+        "candidate_mean_crps": {
+          "median": 0.34914228772140127,
+          "median_bootstrap_95": [
+            0.3425426181452459,
+            0.35342256785681153
+          ],
+          "quartiles": [
+            0.3296695185528388,
+            0.3670616834202763
+          ]
+        },
+        "context_oracle_mean_crps": {
+          "median": 0.27985701510855165,
+          "median_bootstrap_95": [
+            0.27680938054721743,
+            0.2842933917904566
+          ],
+          "quartiles": [
+            0.26738562946809047,
+            0.29637454411434705
+          ]
+        },
+        "context_plus_indicator_oracle_loss_delta": {
+          "median": 0.0,
+          "median_bootstrap_95": [
+            0.0,
+            0.0
+          ],
+          "quartiles": [
+            0.0,
+            0.0
+          ]
+        },
+        "development_skill": {
+          "median": 21.491417442658623,
+          "median_bootstrap_95": [
+            20.928949698894083,
+            21.813422937478187
+          ],
+          "quartiles": [
+            19.801479710117277,
+            23.303772821207932
+          ]
+        },
+        "oracle_skill_vs_weak_reference": {
+          "median": 36.728263334566435,
+          "median_bootstrap_95": [
+            36.03921802297667,
+            37.29169223410798
+          ],
+          "quartiles": [
+            33.80496202973842,
+            39.493403138442105
+          ]
+        },
+        "reference_mean_crps": {
+          "median": 0.44763105269383585,
+          "median_bootstrap_95": [
+            0.439112825536562,
+            0.4530783476411516
+          ],
+          "quartiles": [
+            0.4243216602930271,
+            0.4652944508192516
+          ]
+        }
+      },
+      "reasons": [],
+      "status_counts": {
+        "eligible": 200
+      },
+      "worlds": 200
+    },
+    "revised": {
+      "eligible": 0,
+      "metrics": {},
+      "reasons": [
+        "indicator_not_available_at_decision"
+      ],
+      "status_counts": {
+        "ineligible": 200
+      },
+      "worlds": 200
+    },
+    "tail": {
+      "eligible": 200,
+      "metrics": {
+        "audit_skill": {
+          "median": 0.0,
+          "median_bootstrap_95": [
+            0.0,
+            0.0
+          ],
+          "quartiles": [
+            0.0,
+            0.0
+          ]
+        },
+        "candidate_mean_crps": {
+          "median": 1.257486979166666,
+          "median_bootstrap_95": [
+            1.2496687545895904,
+            1.2674696180555556
+          ],
+          "quartiles": [
+            1.2237334663237287,
+            1.294367988825956
+          ]
+        },
+        "development_skill": {
+          "median": 0.0,
+          "median_bootstrap_95": [
+            0.0,
+            0.0
+          ],
+          "quartiles": [
+            0.0,
+            0.0
+          ]
+        },
+        "oracle_mean_crps": {
+          "median": 1.0,
+          "median_bootstrap_95": [
+            0.9895833333333334,
+            1.0104166666666667
+          ],
+          "quartiles": [
+            0.96875,
+            1.0416666666666667
+          ]
+        },
+        "oracle_skill_vs_population_pooled": {
+          "median": 19.999999999999996,
+          "median_bootstrap_95": [
+            19.834710743801654,
+            20.168067226890752
+          ],
+          "quartiles": [
+            19.354838709677423,
+            20.512820512820518
+          ]
+        },
+        "reference_mean_crps": {
+          "median": 1.2573784722222223,
+          "median_bootstrap_95": [
+            1.249674479166667,
+            1.2667100694444444
+          ],
+          "quartiles": [
+            1.22412109375,
+            1.2966579861111107
+          ]
+        },
+        "state_bin_fallback_rows": {
+          "median": 0.0,
+          "median_bootstrap_95": [
+            0.0,
+            0.0
+          ],
+          "quartiles": [
+            0.0,
+            0.0
+          ]
+        },
+        "state_bin_mean_crps": {
+          "median": 1.015709302223334,
+          "median_bootstrap_95": [
+            1.0053122222300397,
+            1.0237307260266633
+          ],
+          "quartiles": [
+            0.9723369486045031,
+            1.057497962017445
+          ]
+        },
+        "state_bin_skill_vs_calibration_pooled": {
+          "median": 19.49082568580452,
+          "median_bootstrap_95": [
+            19.289021355980424,
+            19.749008092280654
+          ],
+          "quartiles": [
+            18.4558536631792,
+            20.44714438034982
+          ]
+        }
+      },
+      "reasons": [],
+      "status_counts": {
+        "eligible": 200
+      },
+      "worlds": 200
+    }
+  },
+  "frozen_iid_threshold": 0.5348155795482312,
+  "limitations": [
+    "The frozen IID threshold is a transfer falsification target, not a newly calibrated market gate.",
+    "Overlap, predictor persistence and phase gaps change together; this tests joint transfer, not a causal attribution to one mechanism.",
+    "Overlapping rows are dependent; intervals resample independent whole worlds, not ticket rows.",
+    "One fixed v1 threshold does not include uncertainty across fresh threshold calibrations or repeated campaigns.",
+    "Tail/state-bin and redundant-context oracles know the synthetic laws; fitted-readout comparison is model-specific.",
+    "Controls are diagnostic readout comparisons, not candidate searches; only the overlap null uses the full v1 search family.",
+    "Generator seeds and audit results are exposed. No future BTC behavior or investor objective is validated."
+  ],
+  "oracle_population_checks": {
+    "redundant_indicator_additional_information_given_context": 0.0,
+    "tail_conditional_crps": 1.0,
+    "tail_pooled_crps": 1.25,
+    "tail_skill_percent": 20.0
+  },
+  "protocol": "forecast-falsification-v1",
+  "real_market_models_evaluated": false,
+  "reference_config": {
+    "alpha": 0.05,
+    "calibration_worlds": 200,
+    "candidates": 24,
+    "evaluation_worlds": 200,
+    "fit_rows": 192,
+    "phase_rows": 96,
+    "ridge": 0.1,
+    "seed": 1729
+  },
+  "reference_sha256": "1bdf69046bdcc33f779d4be02fc4b4629904e395f62a7508283f7e2ef4a5caeb",
+  "runtime": {
+    "numpy": "2.4.6",
+    "python": "3.12.16"
+  },
+  "status": "synthetic_falsification_not_market_validation"
+}
