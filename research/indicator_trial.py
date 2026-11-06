@@ -2,15 +2,21 @@
 
 Consumes a hash-bound bundle ending in 2022. It cannot score outer labels and
 does not select a finalist, assert market significance, or change production.
+
+Input-capture revision: parse the same source/candidate bytes that are hashed.
+Prior frozen packets retain their original trial_code_sha256 and committed source;
+this harness change does not relabel them or alter the frozen dataset module.
 """
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 from pathlib import Path
 import subprocess
+import tempfile
 
 import numpy as np
 import pandas as pd
@@ -27,14 +33,23 @@ def run_trial(bundle: Path, candidate_path: Path, column: str, name: str, proven
     manifest_bytes = (bundle/"manifest.json").read_bytes()
     manifest = json.loads(manifest_bytes)
     source = bundle/"development_scores.csv"
-    source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+    source_bytes = source.read_bytes()
+    source_hash = hashlib.sha256(source_bytes).hexdigest()
     if manifest["cutoff"] != CUTOFF or manifest["sources"][source.name]["development_sha256"] != source_hash:
         raise ValueError("development bundle cutoff/hash mismatch")
-    snapshot = load_snapshot(source)
+    # The frozen loader accepts a path. Give it a private read-only captured copy,
+    # never the mutable submitted path. Its returned hash binds the parsed bytes.
+    with tempfile.TemporaryDirectory(prefix="indicator-trial-input-") as temporary:
+        captured = Path(temporary)/"captured.csv"
+        captured.write_bytes(source_bytes)
+        captured.chmod(0o400)
+        snapshot = load_snapshot(captured)
+    if snapshot["source_sha256"] != source_hash:
+        raise ValueError("captured source changed during loading")
     if snapshot["daily"][-1]["date"] > CUTOFF:
         raise ValueError("development replay cannot consume post-cutoff observations")
     payload = candidate_path.read_bytes()
-    frame = pd.read_csv(candidate_path, index_col=0, parse_dates=True)
+    frame = pd.read_csv(io.BytesIO(payload), index_col=0, parse_dates=True)
     if (not isinstance(frame.index, pd.DatetimeIndex) or frame.index.has_duplicates or not frame.index.is_monotonic_increasing
             or frame.index.tz is not None or not frame.index.equals(frame.index.normalize())
             or any(d != d+pd.offsets.MonthEnd(0) for d in frame.index)
