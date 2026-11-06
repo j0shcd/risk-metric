@@ -1,6 +1,13 @@
 # Dynamic DCA Weakness Diagnostics — Design Plan
 
-Status: tranche 1 implemented; tranches 2-3 proposed (reviewed 2026-07-15)
+Status: historical strategy-diagnostics backlog; not the current build order.
+
+The [indicator benchmark plan](metric_evaluation_plan.md) now owns evaluation
+priorities (2026-11-06). Josh clarified that broad indicator information, tested
+on identical investment opportunities, is the primary objective. The policy
+analyses below remain optional supporting diagnostics. Their historical 'next
+step' instructions and implementation-status notes must not direct new work
+without checking the live checkout.
 
 Update 2026-08-01: the compact evidence suite described in
 `docs/dca_evidence.md` now separates accumulation-only value, de-risking value,

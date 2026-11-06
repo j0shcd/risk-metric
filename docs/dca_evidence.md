@@ -4,6 +4,13 @@ Status: three-test design implemented
 Reference data window: 2014-12-31 through 2026-07-31  
 Last evaluated: 2026-08-01
 
+The [indicator benchmark redesign](metric_evaluation_plan.md) is the current plan
+for future evaluation. It moves primary optimization from one contribution policy
+to information value on identical fixed-notional opportunities. This page records
+the implemented historical suite, not that proposed benchmark. Its policy cash
+'deadline' and entry-relative drawdown naming have limitations recorded in the
+plan; the historical numbers below have not been regenerated under new semantics.
+
 ## What is being tested
 
 The suite separates three questions that the previous combined strategy test could not distinguish:

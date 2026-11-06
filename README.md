@@ -97,6 +97,11 @@ Without API keys the pipeline falls back to a `free_stable` profile (fewer signa
 
 ## Tests
 
+The [indicator benchmark plan](docs/metric_evaluation_plan.md) describes the
+proposed information-first evaluation and next implementation slice.
+[DCA evidence](docs/dca_evidence.md) records the current historical results.
+The redesign is a specification; the existing acceptance gate remains unchanged.
+
 CI prepares the ignored `config/runtime.json` from the credential-free
 `config/model_acceptance_runtime.json` before testing. This fixture reproduces
 the frozen canonical model/configuration hashes. Preserve its bytes when moving
