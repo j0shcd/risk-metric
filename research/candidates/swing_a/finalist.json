@@ -1,0 +1,40 @@
+{
+  "artifacts": {
+    "RESULT.md": "c1c39298d59507187340361470fe6f88fe60cc714da1a6e2d993155a16899b37",
+    "attempts.jsonl": "35d2565e9e734f986be18c4d1e3766dcdee83f06079c4508ccac2f05bba8d146",
+    "development_trials.zip": "7fb4d69a8c678d460a31fbf2ba817c9bcd537fe237badbc7309fae661e7346f2",
+    "generate.py": "35c24398ae8a0035a6b5f7274cda326665cbe9157c085fcee794c3417aea2e9c",
+    "indicator.py": "94b96ecd7a856fc6ac953687a9966613b06c07dcd4e08b1e2da1095e98f754ac",
+    "monthly_scores.csv": "92c1c3f790617ef08fedc8a4bd2d856f52bf58fcdd43f6670769c25a41ac54c2"
+  },
+  "attempt_count": 3,
+  "callable": "research.candidates.swing_a.indicator.generate_indicator",
+  "candidate_id": "a847d87367ffe6c7f2d738c8763bd47ff3ffddf597d93a0af2ded88572565cf3",
+  "candidate_name": "swing_a_memory_0",
+  "dataset_id": "7b1e1a124e1fbc18932530aba5fa0a4a23198d1e4ad197c436781b6fb6723e69",
+  "development_cutoff": "2022-12-31",
+  "evaluator_commit": "0cb4129",
+  "fixed_rules": {
+    "initial_memory": 0.0,
+    "log_displacement_scale": 1.0,
+    "observation_lag_days": 1,
+    "prehistory_score": 0.5
+  },
+  "input_bundle_manifest_sha256": "f46f8af3b7070da5943e618d34b295437972ff86f1d522f52cadbe14a88917b8",
+  "kwargs": {
+    "anchor_halflife_days": 365.0,
+    "memory_halflife_days": 180.0,
+    "memory_weight": 0.0
+  },
+  "outer_data_inspected": false,
+  "producer_commit": "ac9010d",
+  "raw_price_sha256": "d6e0e23e4d84e32690cea42cc0bf69f44ddfe9d954939b54ba499635431ed04c",
+  "recommendation": "diagnostic_only_no_broad_improvement_do_not_promote",
+  "selection_reason": "lowest 12m and 24m return CRPS among three predeclared variants; opportunity is primary; memory hypothesis rejected",
+  "status": "preregistered_before_parent_outer_replay",
+  "trial_sha256": {
+    "1": "0680876a2fd3ceaa14a23490f60e006f6a6910f3b5abf636cc52136d34179cf1",
+    "2": "8c7d9c7b1abbf1a38a9792b0662439c16fa1946c4679d17eb0ff05649f1b028c",
+    "3": "a31196b6f65557dc069df54bdc4d05e0fe6baaeee17501b6236e01bfbaab3ba3"
+  }
+}
