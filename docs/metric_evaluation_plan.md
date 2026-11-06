@@ -1222,14 +1222,64 @@ to the unconditional baseline, despite some one-year downside gains. No default
 production model changes are authorized from these results. Candidate research
 can be retained as evidence even when its trading hypothesis fails.
 
-Next bounded work: independently review and execute the registered panel test;
-mechanically replay the three frozen finalists on the reserved chronological
-origins; retain every regression and compare both conditional and unconditional
-baselines. Then diagnose decoder capacity, novelty and fixed-direction usefulness
-separately before declaring another search batch. A prospective append-only
-archive and capital/exposure/cost-controlled policy probes are still required
-for professional-use claims. Synthetic qualification cannot supply missing
-multi-year market outcomes, verified vintages or economic validation.
+The frozen [outer replay packet](artifacts/indicator-outer-replay-2026-11-07.zip)
+(SHA256 `258a3f1a40b39b0106c104071450d3e6f5969e50466d0c41422ebb7d090b02a0`)
+contains all three finalists, declarations, full source and every reference.
+`python -m research.indicator_outer_replay --help` documents exact portable replay.
+Every finalist loses every outer outcome cell to at least one fixed reference.
+All three lose all one-year cells and two-year peak drawdown to unconditional;
+only two-year return and entry loss improve unconditional. Candidate B's two-year
+return CRPS is .280957 versus unconditional .304205, context .276072 and best
+fixed .256821. Its entry loss is .123800 versus context .146430 and best fixed
+.097276. These are separate descriptive comparisons, not a broad winner.
+Independent raw-price/atom/maturity/quadratic-CRPS replay checked all 1,593 scored
+candidate records (maximum difference 1.33e-15) and 756 unscored records. Archived
+development losses reproduce exactly; B/C serialized score values differ by at
+most 1.42e-14 from CSV rounding. No retuning followed the outer look.
+
+A separately frozen development-only 2x2 readout study (`research/readout_study.py`)
+compares indicator-only/combined with median/rank decoding on identical 24-label
+pools, all thirteen references and frozen candidate B. Rank distance uses eight
+nearest training-percentile observations, fractional boundary ties and half
+uniform mass. Its full packet is in `research/candidates/swing_b/readout_study/`.
+There is no general improvement: B's two-year combined return loss improves
+.450009 to .424059, still worse than unconditional .331074; all one-year combined
+losses regress. Nominal 80% return intervals cover only 37.5–39.6% of one-year
+outcomes, versus 91.7% at two years. These empirical distributions are not
+calibrated. Coverage, Brier events, atom-range violations, cell mass, weight
+concentration and same-scored-origin Spearman alignment are descriptive reports.
+Spearman is a separate implemented rank diagnostic; the earlier Kendall proposal
+is not implemented. Concentration is not an effective independent sample count.
+
+The frozen rank study also exposes a representation limitation: duplicating one
+context coordinate reweights its distance contribution and can improve loss
+without adding information. Its results therefore measure representation plus
+readout, not conditional novelty. Keep this source/result unchanged; the next
+version must collapse exact training-and-query rank-equivalent coordinates and
+mechanically test duplication, monotone copies, permutation and broken query
+relationships. This only controls exact rank redundancy, not arbitrary nonlinear
+functions of context. The 13-reference envelope is descriptive, not a causal
+per-origin model selector; trend and volatility are context-duplicate controls.
+
+Supporting self-financing policy probes are implemented, not yet market-tested,
+in `research/policy_probes.py`. Both start with capital 1, no contributions or
+cash yield, next-calendar-day execution, daily BTC/cash holdings, and separate
+0/25/50bps per-leg costs. Exactly 24 prior monthly scores define the percentile;
+continuous weight 1-percentile and 20/80 hysteresis (initial 50%, full BTC <=20%,
+cash >=80%, otherwise hold) remain separate probes. Buyhold, cash and monthly
+50/50 share first eligible execution and final mark. An explicitly ex-post
+constant-allocation comparator matches realized time-average exposure; it is
+neither causal nor a match for pathwise risk. Missing daily/monthly dates reject;
+warmup/pending orders are explicit. Terminal liquidation is a separate diagnostic.
+No policy defines the indicator winner.
+
+Next bounded work: finish the reserved panel run and verify its full receipt;
+version/test the duplicate-invariant rank boundary without rewriting earlier
+results; independently verify supporting policy accounting before one frozen
+market replay; implement an append-only shadow archive. The expanded user goal
+is unmet: no candidate has demonstrated broad incremental market information or
+professional-use reliability. Synthetic qualification cannot supply missing
+multi-year outcomes, verified vintages or economic validation.
 
 ## Verification and handoff
 
