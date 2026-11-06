@@ -1,8 +1,8 @@
 # Indicator benchmark and evaluation plan
 
-Status: retrospective measurement verified; continuous single-path search failed
-sensitivity; independent-world panel qualification pending; seven development
-indicator variants frozen. No broad market improvement or production promotion.
+Status: finite known-law panel qualification passes; earlier single-path searches
+remain failed. Seven indicator variants and two readout studies show no broad
+market improvement. One supporting policy lead remains unvalidated. No promotion.
 Updated 2026-11-07.
 
 This is the canonical plan for the next benchmark. Current implemented results
@@ -1132,7 +1132,7 @@ drawdown loss improves 5.32% (interval 2.91–7.62%). This distinguishes average
 forecast usefulness from a single trajectory's discovery power; it does not
 repair the failed qualification or add independent Bitcoin cycles.
 
-### Registered panel experiment, before evaluation seed use
+### Registered panel experiment and completed qualification
 
 `research/panel_benchmark.py` reserves seed **20270417**. Each family-specific panel
 has 128 independent development worlds and 128 new audit worlds. Each world has
@@ -1168,9 +1168,27 @@ reference losses for inactive features. Without it, floating point residuals of
 a constant such as 23 can be standardized into a false feature. The older frozen
 experiment source is unchanged; its failure is not rewritten. Conditional sampler
 tests compare exact multivariate Gaussian conditioning and Monte Carlo moments.
-Evaluation results must be appended without retuning the reserved experiment.
-Even a pass would qualify this finite known-law panel procedure, not unlimited
-adaptive market search or all endpoints simultaneously.
+The [registered results](artifacts/panel-benchmark-2026-11-07.json) and complete
+[portable packet](artifacts/panel-benchmark-2026-11-07.zip) bind all 1,909 panels
+and unchanged source hashes. Runtime was 381 seconds with four workers. All
+registered criteria pass:
+
+| Family | Declarations | Relevant one-sided bound |
+| --- | ---: | ---: |
+| IID Gaussian null | 9/500 | Upper 3.539% |
+| Clustered t3 null | 9/500 | Upper 3.539% |
+| Autocorrelated-location null | 6/500 | Upper 2.727% |
+| Leading location | 200/200 | Lower 98.513% |
+| Leading scale | 198/200 | Lower 96.886% |
+| Three deterministic sentinels | 0/9 | Every p=1 |
+
+Independent verification recomputed every selection, pooled gain, rank p-value
+and binomial bound, and checked disjoint world IDs and receipt/source hashes.
+Thirty-six CRT rejections had negative gains and were correctly blocked; scale
+panel 110 has p=.01 but gain -.01075265. Statistical unusualness alone is not
+useful forecasting. This pass qualifies the finite known-law panel procedure,
+not unlimited adaptation, Bitcoin significance, population economic benefit or
+all endpoints simultaneously.
 
 ### Chronological market hill-climb contract
 
@@ -1254,15 +1272,20 @@ is not implemented. Concentration is not an effective independent sample count.
 The frozen rank study also exposes a representation limitation: duplicating one
 context coordinate reweights its distance contribution and can improve loss
 without adding information. Its results therefore measure representation plus
-readout, not conditional novelty. Keep this source/result unchanged; the next
-version must collapse exact training-and-query rank-equivalent coordinates and
-mechanically test duplication, monotone copies, permutation and broken query
-relationships. This only controls exact rank redundancy, not arbitrary nonlinear
-functions of context. The 13-reference envelope is descriptive, not a causal
+readout, not conditional novelty. The original source/result is unchanged.
+Implemented `research/readout_study_v2.py` collapses exact training-and-query
+rank-equivalent coordinates. Tests cover duplication, monotone copies, permutation
+and broken query relationships; disabling collapse fails the oracle. The single
+v2 development study changes only twelve context-duplicate reference cells; all
+432 duplicate-control forecasts now equal context-only exactly. Candidate B and
+best-reference gaps are unchanged. Both packets and all 25,488 predictions were
+independently audited. This is an additional representation trial, not independent
+validation. It controls exact rank redundancy, not arbitrary nonlinear functions
+of context. The 13-reference envelope is descriptive, not a causal
 per-origin model selector; trend and volatility are context-duplicate controls.
 
-Supporting self-financing policy probes are implemented, not yet market-tested,
-in `research/policy_probes.py`. Both start with capital 1, no contributions or
+Supporting self-financing policy probes in `research/policy_probes.py` have one
+fixed historical replay. Both start with capital 1, no contributions or
 cash yield, next-calendar-day execution, daily BTC/cash holdings, and separate
 0/25/50bps per-leg costs. Exactly 24 prior monthly scores define the percentile;
 continuous weight 1-percentile and 20/80 hysteresis (initial 50%, full BTC <=20%,
@@ -1273,10 +1296,24 @@ neither causal nor a match for pathwise risk. Missing daily/monthly dates reject
 warmup/pending orders are explicit. Terminal liquidation is a separate diagnostic.
 No policy defines the indicator winner.
 
-Next bounded work: finish the reserved panel run and verify its full receipt;
-version/test the duplicate-invariant rank boundary without rewriting earlier
-results; independently verify supporting policy accounting before one frozen
-market replay; implement an append-only shadow archive. The expanded user goal
+The [fixed replay](artifacts/policy-probes-2026-11-07.json) and
+[full ledgers](artifacts/policy-probes-2026-11-07.zip) use all three finalists plus
+all five higher-risk fixed references. Decisions start 2023-01-31 after exactly
+24 prior months; all policies execute first on 2023-02-01 and end 2026-07-30.
+Independently recomputed all 214,368 ledger rows, fees, holdings, post-fee targets
+and matched exposures. At 25bps candidate C's hysteresis ends at 2.4046 versus
+its ex-post exposure-matched comparator 1.7565 (36.90% higher), with drawdown
+-29.17% versus -28.41%. The relative advantage is 37.39% at zero costs and 36.41%
+at 50bps. However, **three trades drive this result**. Its continuous rule loses
+to its matched comparator (1.6206 versus 1.8025), and its forecast comparisons
+remain weak. Buyhold ends at 2.7236 with full exposure and -52.97% drawdown;
+these are different risk/exposure outcomes. This is a narrow research lead,
+not an established timing edge or professional-use validation. Do not select
+the successful rule after seeing this table or reset its trial history.
+
+Next bounded work: integrate and independently review the append-only shadow
+archive; assess an external-market falsification design and the shared attempt
+ledger gap before another model batch. The expanded user goal
 is unmet: no candidate has demonstrated broad incremental market information or
 professional-use reliability. Synthetic qualification cannot supply missing
 multi-year outcomes, verified vintages or economic validation.
@@ -1337,11 +1374,11 @@ additional global skill change necessary.
 
 | Requirement | Current authoritative evidence | Status |
 | --- | --- | --- |
-| Detect useful information under dependent worlds | Observed-score Gaussian oracle, independent conditioning/covariance tests and exposed-world replay | Known-law capability demonstrated; fitted-search sensitivity still fails |
+| Detect useful information under dependent worlds | Gaussian oracle and registered panel test, 398/400 positive declarations | Pass in finite known-law panel scope; previous single-path searches still fail |
 | Control false promotion under declared dependent nulls | Whole-path CRT exchangeability under exact Q, full-search equivalence tests, 1,500 fresh null campaigns | Pass within the declared one-campaign synthetic scope |
 | Chronological/provenance integrity | Strict longest-label boundaries, causal filter prefix tests, immutable data/results and unchanged source fingerprints | Verified mechanics; historical market vintages explicitly unverified |
 | Safe adaptive-search scope | Full 216-cell algorithm rerun per matrix; local custom ledger; documented correction/access limits | Finite scope defined; unlimited human adaptation not qualified |
-| Local-only changes | Atomic commits on local main; frozen receipts and portable evidence | No push/deployment; user hold persists |
+| Local-only changes | Atomic research branch commits; frozen receipts and portable evidence | Local-main integration pending; no push/deployment; user hold persists |
 
 Do not mark the goal complete while useful-signal sensitivity or the expanded
 market-improvement objective remains unmet. Panel qualification, honest market
