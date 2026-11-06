@@ -53,8 +53,32 @@ python -m unittest tests.test_swing_c
 python research/candidates/swing_c/generate.py --input-dir INPUT_BUNDLE --output OUTPUT.csv
 ```
 
-Four causal/domain tests pass. First candidate is implemented, not yet scored.
-Next bounded step: run the locked common evaluator exactly once, record the result
-(including failure), and compare per-horizon/per-outcome vectors without aggregating
-away regressions. No production-suitability or financial-performance claim is made.
+Eighteen candidate and locked-evaluator tests pass. Exactly one preregistered trial
+completed. The finalist is frozen unchanged for the root-owned outer replay; no
+additional variants were tried. `development_trial.zip` preserves the complete
+report, trial, request, receipt and candidate CSV; `attempts.jsonl` binds hashes.
+Next bounded step: root reviews and replays the frozen producer, then determines
+whether the narrow downside-information result survives. No production-suitability
+or financial-performance claim is made.
 Skill-harvest review found no new reusable skill or existing-skill change warranted.
+
+## Locked development result
+
+Lower CRPS is better. The candidate beats all fixed references for 12-month
+entry loss and peak drawdown, but loses all other supported cells to at least one
+reference. This is a narrow downside-information lead, not broad or Pareto
+superiority. In particular, 24-month return forecasts lose substantially to the
+unconditional CDF. Positive ordering alignment does not establish forecast skill.
+There are zero mature 48-month development forecast queries.
+
+| Months | Outcome | Forecast n | Candidate CRPS | Context CRPS | Unconditional CRPS | Best fixed reference | Alignment |
+|---:|---|---:|---:|---:|---:|---|---:|
+| 12 | terminal_log_return | 48 | 0.858303 | 0.854808 | 0.858520 | calendar_cycle_cos_4y (0.810894) | 0.476582 |
+| 12 | entry_adverse_log_loss | 48 | 0.343475 | 0.353230 | 0.361899 | calendar_cycle_sin_4y (0.351166) | 0.275567 |
+| 12 | peak_drawdown_log_loss | 48 | 0.243514 | 0.263792 | 0.282293 | calendar_cycle_sin_4y (0.260172) | 0.420999 |
+| 24 | terminal_log_return | 24 | 0.461353 | 0.453800 | 0.331074 | time_years_since_2012 (0.411880) | 0.575728 |
+| 24 | entry_adverse_log_loss | 24 | 0.242418 | 0.238338 | 0.249353 | price_drawdown_12m (0.227048) | 0.361170 |
+| 24 | peak_drawdown_log_loss | 24 | 0.300288 | 0.297130 | 0.300568 | price_ath_drawdown (0.274003) | 0.262633 |
+| 48 | terminal_log_return | 0 | — | — | — | — | 0.232848 |
+| 48 | entry_adverse_log_loss | 0 | — | — | — | — | 0.463560 |
+| 48 | peak_drawdown_log_loss | 0 | — | — | — | — | -0.131089 |

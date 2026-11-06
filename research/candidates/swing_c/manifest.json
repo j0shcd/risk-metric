@@ -5,10 +5,16 @@
   "generator": "research.candidates.swing_c.generate:generate",
   "input": "btc_daily.csv:Date,Price",
   "output": "monthly completed month-end score; higher means higher hypothesized risk",
-  "parameters": {"window_months": 24, "minimum_returns": 2, "neutral": 50},
+  "parameters": {
+    "window_months": 24,
+    "minimum_returns": 2,
+    "neutral": 50
+  },
   "training_cutoff": "2022-12-31",
   "training": "none; fixed unsupervised reconstruction",
   "online_update": "append completed-month log return; drop returns beyond trailing 24",
-  "status": "preregistered_unscored",
-  "provenance": "cropped reconstructed cache; vintages/publication/UTC-close unverified"
+  "status": "frozen_after_one_development_trial",
+  "provenance": "cropped reconstructed cache; vintages/publication/UTC-close unverified",
+  "candidate_csv_sha256": "4a852d465ffff845b8ec44320b79de5e2ef514801462b27511ab705046e9c9da",
+  "attempt_count": 1
 }
