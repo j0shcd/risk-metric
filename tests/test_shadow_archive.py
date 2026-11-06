@@ -65,7 +65,7 @@ class ShadowArchiveTests(unittest.TestCase):
                 append(self.root, 'resolution', resolution(receipt['event_id']))
         self.assertEqual(verify(self.root)['event_count'], 1)
 
-    def test_unknown_stale_and_historical_never_prospective(self):
+    def test_unknown_and_historical_never_prospective(self):
         request = observation(); request['source']['availability'] = 'unknown_vintage'
         request['source']['published_at'] = None
         receipt = append(self.root, 'observation', request)
@@ -75,7 +75,29 @@ class ShadowArchiveTests(unittest.TestCase):
         old['source']['as_of'] = '2026-07-30T10:00:00Z'; old['source']['published_at'] = '2026-07-30T11:00:00Z'
         old['forecasts'][0].update(entry_at='2026-07-31T00:00:00Z', label_end_at='2027-07-31T00:00:00Z', label_available_at='2027-08-01T00:00:00Z')
         receipt = append(self.root, 'observation', old)
-        self.assertEqual(receipt['classification']['reasons'], ['historical_decision_reconstruction','stale_source_as_of'])
+        self.assertEqual(receipt['classification']['reasons'], ['historical_decision_reconstruction'])
+        self.assertEqual(receipt['classification']['quality_flags'], ['older_source_as_of'])
+
+    def test_known_older_input_today_is_prospective_with_age_disclosed(self):
+        request = observation()
+        request['source']['as_of'] = '2026-10-07T09:00:00Z'
+        # The previous-month observation was published today, before today's decision.
+        receipt = append(self.root, 'observation', request)
+        classification = receipt['classification']
+        self.assertTrue(classification['prospective_eligibility'])
+        self.assertEqual(classification['reasons'], [])
+        self.assertEqual(classification['quality_flags'], ['older_source_as_of'])
+        self.assertEqual(classification['source_age_seconds'], (NOW-datetime(2026,10,7,9,tzinfo=timezone.utc)).total_seconds())
+        self.assertEqual(verify(self.root)['observation_count'], 1)
+
+    def test_old_schema_is_rejected_not_reclassified(self):
+        manifest_path = self.root/'manifest.json'
+        manifest = json.loads(manifest_path.read_text())
+        manifest['schema'] = 'research-shadow-archive-v1'
+        from research.market_dataset import canonical_bytes
+        manifest_path.write_bytes(canonical_bytes(manifest))
+        with self.assertRaisesRegex(ValueError, 'unsupported archive schema'):
+            verify(self.root)
 
     def test_duplicate_decision_identity_cannot_rewrite(self):
         append(self.root, 'observation', observation())
