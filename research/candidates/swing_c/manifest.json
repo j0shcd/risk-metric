@@ -1,0 +1,14 @@
+{
+  "candidate_id": "upside_energy_24m",
+  "finalist": true,
+  "preregistered_before_scoring": true,
+  "generator": "research.candidates.swing_c.generate:generate",
+  "input": "btc_daily.csv:Date,Price",
+  "output": "monthly completed month-end score; higher means higher hypothesized risk",
+  "parameters": {"window_months": 24, "minimum_returns": 2, "neutral": 50},
+  "training_cutoff": "2022-12-31",
+  "training": "none; fixed unsupervised reconstruction",
+  "online_update": "append completed-month log return; drop returns beyond trailing 24",
+  "status": "preregistered_unscored",
+  "provenance": "cropped reconstructed cache; vintages/publication/UTC-close unverified"
+}
