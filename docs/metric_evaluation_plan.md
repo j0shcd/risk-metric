@@ -1,8 +1,9 @@
 # Indicator benchmark and evaluation plan
 
-Status: retrospective scorecard verified; known-law information demonstrated;
-conditional synthetic null control verified; fitted-search sensitivity unqualified.
-Updated 2026-11-06.
+Status: retrospective measurement verified; continuous single-path search failed
+sensitivity; independent-world panel qualification pending; seven development
+indicator variants frozen. No broad market improvement or production promotion.
+Updated 2026-11-07.
 
 This is the canonical plan for the next benchmark. Current implemented results
 remain in [DCA evidence](dca_evidence.md). This replaces the older Phase 1/2
@@ -1073,21 +1074,12 @@ Verified issues to resolve before policy/outcome optimization:
    paired ordering/forecast diagnostics, fixed references, candidate ledger and
    strict readout feasibility. Boundary, invariance, independent E2E and deliberate
    defect tests verify the measurement mechanics.
-2. **Next bounded qualification experiment:** implement a continuous location/scale
-   readout with a separate empirical residual-calibration distribution. Fit mean
-   and log residual scale from fitting data only; keep calibration outcomes out
-   of fitting. This tests a diagnosed capacity/memory gap rather than lowering a
-   failed acceptance threshold. Predeclare 192 fitting rows and 96 rows each for
-   calibration/development/audit, with every boundary clearing the longest label;
-   retain the 24-candidate, three-target, three-horizon search and repeat the
-   entire procedure in every CRT redraw. Before generating evaluation worlds,
-   freeze transformations, regularization, scale limits and code hashes. Reserve
-   fresh seed 20270119; all earlier worlds are exposed development/explanation.
-   Keep the existing null-error and sensitivity criteria; do not retune from new
-   evaluation counts. This is an accepted research implementation direction, not
-   implemented or guaranteed to pass. A 720-step synthetic path can fit these
-   phases; the ~140-month market indicator history cannot. Any synthetic success
-   must retain that coverage limit rather than claim a qualified BTC readout.
+2. **Implemented; failed:** continuous location/scale search with seed 20270119,
+   strict 192/96/96/96 phases and full selection repeated in each redraw. Its
+   null controls pass, but location/scale sensitivity is 40%/11.5%. The next
+   registered experiment changes the inferential unit to independent synthetic
+   world panels and conditions on fitted score prefixes, as specified below.
+   This is a new experiment, not a repaired result or a market significance test.
 3. Add an append-only shadow observation archive
    with producer/configuration identity, actual observation/publication/decision
    timestamps and frozen score/readout state. Archive incomplete-outcome forecasts
@@ -1119,6 +1111,125 @@ Verified issues to resolve before policy/outcome optimization:
   This does not block the indicator-only fixed-notional outcome slice.
 - A sealed historical audit remains limited by prior researcher exposure. Record
   its actual access boundary; only future frozen predictions can be prospective.
+
+## 10. Continuous readout, panel qualification and market campaign
+
+### Completed continuous experiment and diagnosis
+
+The immutable [continuous search receipt](artifacts/location-scale-search-2026-11-06.json)
+binds 1,900 campaigns and source/runtime hashes. Declarations in each of three
+500-campaign null families were 28, 25 and 15; their simultaneous one-sided bounds
+pass the declared 10% ceiling. Location sensitivity was 80/200 (40%, lower bound
+34.19%); scale sensitivity was 23/200 (11.5%, lower 7.99%). Both fail the 80%
+lower-bound requirement. This failure remains authoritative.
+
+A separate, explicitly posthoc [fixed-candidate replicate diagnosis](artifacts/readout-replicate-diagnostic-2026-11-06.json)
+uses candidate zero across the same exposed 200 worlds, without selecting a cell.
+Mean return-loss improvements at 12/24/48 months are 28.92%/16.15%/5.09% in the
+location family, with paired whole-world bootstrap intervals above zero. Scale
+return improvements are negative at all three horizons. Scale's 24-month true
+drawdown loss improves 5.32% (interval 2.91–7.62%). This distinguishes average
+forecast usefulness from a single trajectory's discovery power; it does not
+repair the failed qualification or add independent Bitcoin cycles.
+
+### Registered panel experiment, before evaluation seed use
+
+`research/panel_benchmark.py` reserves seed **20270417**. Each family-specific panel
+has 128 independent development worlds and 128 new audit worlds. Each world has
+720 steps and the same causal readout phases. Development pools raw paired CRPS
+across worlds and selects one global candidate/horizon/target out of 216 cells.
+The chosen algorithm is fitted separately on each audit world's earlier prefix.
+No training is shared across worlds and no audit outcome selects an endpoint.
+
+The new conditional test fixes all prices/context and all 24 indicator prefixes
+through step 545. It samples only the chosen indicator's audit continuation
+(steps 546–641), jointly within each world, from its **known synthetic Gaussian
+conditional law**. The exact posterior conditions on every candidate prefix,
+including shared AR state; 99 continuation draws give conservative tie/+1 ranks.
+The fixed selection and fitted states are measurable under this conditioning, so
+this test does not repeat development selection for each continuation. It tests
+a different null from the earlier full-path CRT and cannot credit information
+entirely contained in the fixed score history. Unknown market score laws do not
+inherit its error control.
+
+A declaration requires both p <= .05 and positive raw pooled audit loss gain.
+Normalized gain is 100(R-C)/(R+C), with the zero/zero case zero; it is not an
+investor utility. Three null families each use 500 panels; each of two positives
+uses 200. Existing criteria remain: simultaneous one-sided 98.333% null upper
+bounds <=10%, positive one-sided 95% lower bounds >=80%. Three panels each of
+constant, linear-context and nonlinear-context indicators use their actual
+point-mass continuation laws and must have p=1/no declaration. They check
+context redundancy and protocol plumbing, not Gaussian-law validity.
+
+The batched implementation agrees with the independent scalar path on all 216
+losses, selected cells and randomization results. A new feature-boundary invariant
+canonicalizes exactly constant fitting columns and falls back to identical
+reference losses for inactive features. Without it, floating point residuals of
+a constant such as 23 can be standardized into a false feature. The older frozen
+experiment source is unchanged; its failure is not rewritten. Conditional sampler
+tests compare exact multivariate Gaussian conditioning and Monte Carlo moments.
+Evaluation results must be appended without retuning the reserved experiment.
+Even a pass would qualify this finite known-law panel procedure, not unlimited
+adaptive market search or all endpoints simultaneously.
+
+### Chronological market hill-climb contract
+
+Josh requested actual divergent model experiments and meaningful improvement for
+multi-year Bitcoin swing decisions. This expands implementation scope while
+preserving a broad information objective, separate opportunity/downside reports,
+and the hold on all pushes. No combined strategy wealth score is accepted.
+
+`research/market_information.py` implements a distinct **direct conditional
+empirical CDF**. Each origin uses the latest 24 strictly mature labels to fit
+feature medians and raw outcome atoms. Sharing those fitting rows is ordinary
+distribution fitting: there is no fitted residual model or claim of probability
+calibration. The reference mixes pooled/context outcomes 50:50; the candidate
+mixes pooled/context-plus-indicator outcomes 50:50, falling back to reference for
+empty or duplicate-context cells. Every origin also records unconditional CRPS.
+Thus an indicator cannot be credited solely for beating an underfit context model
+while silently losing to the pooled distribution. Thirteen fixed references
+include the incumbent, its four components, price trend/volatility/drawdown,
+price/SMA, causal all-time drawdown, age and fixed four-year calendar sin/cos.
+They are diagnostic competitors, not proof that every strong model is covered.
+
+The input snapshot and next-day calendar outcomes are unchanged. Development
+requires label availability <=2022-12-31. Outer origins start 2023-01-01. Older
+origins with later labels are an exposed retrospective challenge. Full-snapshot
+forecast counts per candidate are development **48/24/0**, outer **30/18/0**, and
+challenge **13/25/19** at 12/24/48 months. These heavily overlapping observations
+are not independent cycles; there is no four-year outer validation. Historical
+public data and earlier inspections preclude claiming a genuinely blind test.
+Pending forecasts are reconstructions, never prospective receipts.
+
+The locked development CLI is `python -m research.indicator_trial --help`.
+Its immutable bundle contains only <=2022-12-31 data and a manifest of original
+and cropped source hashes. The portable [development bundle](artifacts/hillclimb-development-2026-11-07.zip)
+has SHA256 `93e1e59601602aeb6248ddbbe19595a6ba5940f5b3d10113a12d7d67fb08fffd`.
+It refuses post-cutoff observations, missing/duplicate dates and reused output
+paths, records exact candidate/producer/data/code identities, and evaluates all
+fixed references on the same origins. Current cached macro/volume vintages remain
+unverified; they cannot establish real-time eligibility.
+
+Three Astra medium agents worked independently in managed worktrees
+`codex/swing-research-a`, `codex/swing-research-b`, `codex/swing-research-c`, with
+at most six recorded development variants per agent. Seven variants were tried:
+three causal price-anchor/occupancy weights, three bounded online log-trend
+innovation filters, and one 24-month upside-energy share. The volume-divergence
+idea was rejected before scoring because venue/units consistency was unverified.
+Each agent froze a finalist and full attempt packets before parent-owned outer
+replay. No finalist is a claimed broad improvement: all lose two-year return CRPS
+to the unconditional baseline, despite some one-year downside gains. No default
+production model changes are authorized from these results. Candidate research
+can be retained as evidence even when its trading hypothesis fails.
+
+Next bounded work: independently review and execute the registered panel test;
+mechanically replay the three frozen finalists on the reserved chronological
+origins; retain every regression and compare both conditional and unconditional
+baselines. Then diagnose decoder capacity, novelty and fixed-direction usefulness
+separately before declaring another search batch. A prospective append-only
+archive and capital/exposure/cost-controlled policy probes are still required
+for professional-use claims. Synthetic qualification cannot supply missing
+multi-year market outcomes, verified vintages or economic validation.
 
 ## Verification and handoff
 
@@ -1182,6 +1293,7 @@ additional global skill change necessary.
 | Safe adaptive-search scope | Full 216-cell algorithm rerun per matrix; local custom ledger; documented correction/access limits | Finite scope defined; unlimited human adaptation not qualified |
 | Local-only changes | Atomic commits on local main; frozen receipts and portable evidence | No push/deployment; user hold persists |
 
-Do not mark the goal complete while the learned evaluation/search procedure fails
-the useful-signal sensitivity requirement. The continuous location/scale readout
-experiment above is the next bounded step, not a replacement or narrowed goal.
+Do not mark the goal complete while useful-signal sensitivity or the expanded
+market-improvement objective remains unmet. Panel qualification, honest market
+comparison and prospective validation are separate requirements. All work remains
+local; active research branches have not yet been integrated into local main.
