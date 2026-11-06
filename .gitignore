@@ -26,6 +26,7 @@ data/web/v1/
 !web/index.html
 *.txt
 !requirements.txt
+!web/public/fonts/OFL.txt
 __pycache__/
 .DS_Store
 viz
