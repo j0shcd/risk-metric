@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDcaRiskSeries, isReadingAvailable, regionForRisk } from "./data.js";
+import { buildDcaRiskSeries, isReadingAvailable, regionForRisk, RISK_REGIONS } from "./data.js";
 import { buildPublicApi, PUBLIC_NOTICE } from "./publicApi.js";
 
 const fixture = () => ({
@@ -25,7 +25,8 @@ describe("public JSON", () => {
     const { latest, history } = buildPublicApi(input);
     expect(latest).toEqual({
       version: 1, date: "2015-01-01", reading: 35.2, region: "middle", scale: "0-100",
-      regions: { low: "0-25", middle: "26-74", high: "75-100" },
+      regions: { low: "reading <= 25", middle: "25 < reading < 75", high: "reading >= 75" },
+      region_basis: "unrounded reading",
       sub_scores: { looks_like_past_peaks: 23.1, unlike_past_bottoms: 34, price_stretch: 31.4, speculation_and_hype: 50.2 },
       release_id: "fixture", notice: PUBLIC_NOTICE, docs: "https://risk-metric.pages.dev/#data", status: "ok",
     });
@@ -37,10 +38,32 @@ describe("public JSON", () => {
     });
   });
 
-  it.each([0, 0.25, 0.2501, 0.7499, 0.75, 1])("uses the page's region boundaries for %s", (value) => {
+  it("preserves a missing sub-score on a publishable day in latest and history JSON", () => {
+    const input = fixture();
+    input.historyCore.columns.dca_cycle_extension_component = [null, 0.2, null];
+    input.historyCore.columns.dca_component_coverage[2] = 0.75;
+    const { latest, history } = JSON.parse(JSON.stringify(buildPublicApi(input)));
+    expect(latest.status).toBe("ok");
+    expect(Object.values(latest.sub_scores)).toEqual([23.1, 34, null, 50.2]);
+    expect(history.rows.at(-1).slice(2)).toEqual([23.1, 34, null, 50.2]);
+  });
+
+  it("derives API rules from RISK_REGIONS", () => {
+    const region = RISK_REGIONS[1];
+    const original = region.rule;
+    try {
+      region.rule = "shared rule sentinel";
+      expect(buildPublicApi(fixture()).latest.regions.middle).toBe(region.rule);
+    } finally {
+      region.rule = original;
+    }
+  });
+
+  it.each([[0, "low"], [0.25, "low"], [0.2501, "middle"], [0.7499, "middle"], [0.75, "high"], [1, "high"]])("uses the page's region boundaries for %s", (value, region) => {
     const input = fixture();
     input.historyCore.columns.dca_risk[2] = value;
-    expect(buildPublicApi(input).latest.region).toBe(regionForRisk(value).key);
+    expect(regionForRisk(value).key).toBe(region);
+    expect(buildPublicApi(input).latest.region).toBe(region);
   });
 
   it.each([0.749, 0.75])("shares the Today coverage boundary at %s", (coverage) => {

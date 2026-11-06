@@ -276,106 +276,38 @@ function StatusTicker({ latestSnapshot, diagnostics }) {
   );
 }
 
+const OVERVIEW_SERIES = [
+  { key: "topRisk", column: "top_reversal_risk", label: "Looks like past peaks", color: COLORS.red, initialVisible: true, fillColor: "#f05b5b1f", tension: 0.16 },
+  { key: "bottomRisk", column: "bottom_reversal_risk", label: "Looks like past bottoms", color: COLORS.green, initialVisible: true, fillColor: "#22cc5517", tension: 0.16 },
+  { key: "extension", column: "cycle_extension_score", label: "Price stretch", color: COLORS.amber, initialVisible: false, fillColor: "#f0a50019", tension: 0.16 },
+  { key: "attention", column: "attention_score", label: "Signals agreeing", color: COLORS.blue, initialVisible: false, fillColor: "#5ca2ff19", tension: 0.16, context: true },
+  { key: "cycle", column: "cycle_frenzy_score", label: "Speculation and hype", color: COLORS.violet, initialVisible: false, fillColor: "#b58cff19", tension: 0.14 },
+];
+
 function OverviewPanel({ historyCore }) {
   const chartRef = useRef(null);
-  const [visible, setVisible] = useState({
-    topRisk: true,
-    bottomRisk: true,
-    extension: false,
-    attention: false,
-    cycle: false,
-  });
+  const [visible, setVisible] = useState(() => Object.fromEntries(OVERVIEW_SERIES.map((item) => [item.key, item.initialVisible])));
   const [priceScaleType, setPriceScaleType] = useState("logarithmic");
-
-  const topRiskSeries = useMemo(() => chartData(historyCore, "top_reversal_risk"), [historyCore]);
-  const bottomRiskValues = useMemo(
-    () => alignOverlayValues(topRiskSeries.labels, chartData(historyCore, "bottom_reversal_risk")),
-    [topRiskSeries.labels, historyCore],
-  );
-  const extensionValues = useMemo(
-    () => alignOverlayValues(topRiskSeries.labels, chartData(historyCore, "cycle_extension_score")),
-    [topRiskSeries.labels, historyCore],
-  );
-  const attnValues = useMemo(
-    () => alignOverlayValues(topRiskSeries.labels, chartData(historyCore, "attention_score")),
-    [topRiskSeries.labels, historyCore],
-  );
-  const cycleValues = useMemo(
-    () => alignOverlayValues(topRiskSeries.labels, chartData(historyCore, "cycle_frenzy_score")),
-    [topRiskSeries.labels, historyCore],
-  );
-  const btcValues = useMemo(
-    () => alignOverlayValues(topRiskSeries.labels, chartData(historyCore, "btc_price")),
-    [topRiskSeries.labels, historyCore],
-  );
-
-  const hasBtcData = btcValues.some((v) => v !== null);
-  const showPrice = hasBtcData;
-
-  const datasets = useMemo(() => {
-    const ds = [];
-    if (visible.topRisk) {
-      ds.push({
-        label: "Looks like past peaks",
-        data: topRiskSeries.values,
-        borderColor: COLORS.red,
-        borderWidth: 1.9,
-        pointRadius: 0,
-        fill: true,
-        backgroundColor: "#f05b5b1f",
-        tension: 0.16,
-      });
-    }
-    if (visible.bottomRisk) {
-      ds.push({
-        label: "Looks like past bottoms",
-        data: bottomRiskValues,
-        borderColor: COLORS.green,
-        borderWidth: 1.9,
-        pointRadius: 0,
-        fill: true,
-        backgroundColor: "#22cc5517",
-        tension: 0.16,
-      });
-    }
-    if (visible.extension) {
-      ds.push({
-        label: "Price stretch",
-        data: extensionValues,
-        borderColor: COLORS.amber,
-        borderWidth: 1.9,
-        pointRadius: 0,
-        fill: true,
-        backgroundColor: "#f0a50019",
-        tension: 0.16,
-      });
-    }
-    if (visible.attention) {
-      ds.push({
-        label: "Signals agreeing",
-        data: attnValues,
-        borderColor: COLORS.blue,
-        borderWidth: 1.9,
-        pointRadius: 0,
-        fill: true,
-        backgroundColor: "#5ca2ff19",
-        tension: 0.16,
-      });
-    }
-    if (visible.cycle) {
-      ds.push({
-        label: "Speculation and hype",
-        data: cycleValues,
-        borderColor: COLORS.violet,
-        borderWidth: 1.9,
-        pointRadius: 0,
-        fill: true,
-        backgroundColor: "#b58cff19",
-        tension: 0.14,
-      });
-    }
-    if (showPrice) {
-      ds.push({
+  const { chartPayload, legendItems, hasBtcData } = useMemo(() => {
+    const base = chartData(historyCore, OVERVIEW_SERIES[0].column);
+    const aligned = OVERVIEW_SERIES.map((item) => ({
+      ...item,
+      values: alignOverlayValues(base.labels, chartData(historyCore, item.column)),
+    }));
+    const btcValues = alignOverlayValues(base.labels, chartData(historyCore, "btc_price"));
+    const hasBtcData = btcValues.some((value) => value !== null);
+    const datasets = aligned.filter((item) => visible[item.key]).map((item) => ({
+      label: item.label,
+      data: item.values,
+      borderColor: item.color,
+      borderWidth: 1.9,
+      pointRadius: 0,
+      fill: true,
+      backgroundColor: item.fillColor,
+      tension: item.tension,
+    }));
+    if (hasBtcData) {
+      datasets.push({
         label: "BTC price",
         data: btcValues,
         borderColor: "#8b8473",
@@ -386,37 +318,30 @@ function OverviewPanel({ historyCore }) {
         yAxisID: "yPrice",
       });
     }
-    return ds;
-  }, [visible, topRiskSeries.values, bottomRiskValues, extensionValues, attnValues, cycleValues, btcValues, showPrice]);
-
-  const chartPayload = useMemo(
-    () => ({ labels: topRiskSeries.labels, datasets }),
-    [topRiskSeries.labels, datasets],
-  );
+    return {
+      chartPayload: { labels: base.labels, datasets },
+      legendItems: aligned.map((item) => ({ ...item, label: `${item.label}${item.context ? " (context)" : ""}` }))
+        .sort((a, b) => Number(Boolean(a.context)) - Number(Boolean(b.context))),
+      hasBtcData,
+    };
+  }, [historyCore, visible]);
+  const showPrice = hasBtcData;
 
   const options = useMemo(
     () =>
       makeChartOptions({
-        numLabels: topRiskSeries.labels.length,
+        numLabels: chartPayload.labels.length,
         hasPrice: showPrice,
         priceScaleType,
         accentColor: COLORS.amber,
         showLegend: false,
       }),
-    [topRiskSeries.labels.length, showPrice, priceScaleType],
+    [chartPayload.labels.length, showPrice, priceScaleType],
   );
 
   function toggle(key) {
     setVisible((prev) => ({ ...prev, [key]: !prev[key] }));
   }
-
-  const legendItems = [
-    { key: "topRisk", label: "Looks like past peaks", color: COLORS.red },
-    { key: "bottomRisk", label: "Looks like past bottoms", color: COLORS.green },
-    { key: "extension", label: "Price stretch", color: COLORS.amber },
-    { key: "cycle", label: "Speculation and hype", color: COLORS.violet },
-    { key: "attention", label: "Signals agreeing (context)", color: COLORS.blue },
-  ];
 
   return (
     <section className="bb-panel bb-panel--focus">
@@ -449,7 +374,7 @@ function OverviewPanel({ historyCore }) {
               role="switch"
               aria-checked={on}
               aria-label={`${item.label} — ${on ? "shown" : "hidden"}`}
-              className={`bb-legend__item${item.key === "attention" ? " bb-legend__item--context" : ""}${on ? "" : " bb-legend__item--off"}`}
+              className={`bb-legend__item${item.context ? " bb-legend__item--context" : ""}${on ? "" : " bb-legend__item--off"}`}
               onClick={() => toggle(item.key)}
             >
               <span
@@ -468,14 +393,14 @@ function OverviewPanel({ historyCore }) {
         )}
       </div>
       <div className="bb-chart-wrap bb-chart-wrap--focus" data-testid="overview-chart">
-        {topRiskSeries.labels.length > 0 ? (
+        {chartPayload.labels.length > 0 ? (
           <Line role="img" aria-label={`Sub-scores over time, shown: ${legendItems.filter((item) => visible[item.key]).map((item) => item.label).join(", ")}.`} ref={chartRef} data={chartPayload} options={options} plugins={[hoverGuidePlugin]} />
         ) : (
           <p className="bb-empty">No data available.</p>
         )}
       </div>
       <p className="bb-dca-note">
-        Every line is rescaled 0 to 100 against its own history, so 100 means the most extreme reading ever seen. Series start in December 2014.
+        Each line is that sub-score on its 0 to 100 scale. The sections below explain how each one is built. Series start in December 2014.
       </p>
     </section>
   );
@@ -645,6 +570,7 @@ function TrackRecordPanel() {
           <dl className="bb-research-meta">
             <div><dt>Last run</dt><dd>{formatDay(DCA_EVIDENCE.evaluatedAt)}</dd></div>
             <div><dt>History used</dt><dd>{DCA_EVIDENCE.dataWindow}</dd></div>
+            <div><dt>Evidence type</dt><dd>{DCA_EVIDENCE.evidenceTier}</dd></div>
           </dl>
         </div>
         <aside className="bb-research-cannot">
@@ -785,14 +711,14 @@ function ComparisonStrip({ comparisons }) {
 }
 
 function RegionTable({ regionShares, currentKey, since }) {
-  const rows = [
-    { key: "low", range: "0–25", blurb: "Quiet, well below the peaks of past cycles." },
-    { key: "middle", range: "26–74", blurb: "Neither extreme. Where the market spends most of its time." },
-    { key: "high", range: "75–100", blurb: "Stretched, and close to how past cycle peaks looked." },
-  ];
+  const blurbs = {
+    low: "Quiet, well below the peaks of past cycles.",
+    middle: "Neither extreme. Where the market spends most of its time.",
+    high: "Stretched, and close to how past cycle peaks looked.",
+  };
   return (
     <table className="bb-table bb-regions">
-      <caption>Shares count every day since {formatDay(since)}.</caption>
+      <caption>Shares count every day since {formatDay(since)}. Boundaries use the unrounded score, so exactly 25 counts as Low and exactly 75 as High.</caption>
       <thead>
         <tr>
           <th>Reading</th>
@@ -802,18 +728,18 @@ function RegionTable({ regionShares, currentKey, since }) {
         </tr>
       </thead>
       <tbody>
-        {rows.map((row) => {
+        {RISK_REGIONS.map((row) => {
           const share = regionShares.find((entry) => entry.key === row.key);
           const isCurrent = row.key === currentKey;
           return (
             <tr key={row.key} className={isCurrent ? "bb-regions__row--current" : ""}>
-              <td>{row.range}</td>
+              <td>{row.displayRange}</td>
               <td>
                 {share?.label ?? row.key}
                 {isCurrent && <span className="bb-regions__here">you are here</span>}
               </td>
               <td data-label="Share of days">{share ? `${Math.round(share.share * 100)}%` : "—"}</td>
-              <td>{row.blurb}</td>
+              <td>{blurbs[row.key]}</td>
             </tr>
           );
         })}
@@ -824,8 +750,8 @@ function RegionTable({ regionShares, currentKey, since }) {
 
 function DriverBars({ components, setActiveTab }) {
   const rows = components
-    .filter((component) => Number.isFinite(Number(component.latestValue)))
-    .sort((a, b) => Number(b.latestValue) - Number(a.latestValue));
+    .filter((component) => Number.isFinite(component.latestValue))
+    .sort((a, b) => b.latestValue - a.latestValue);
   if (!rows.length) return null;
 
   return (
@@ -838,7 +764,7 @@ function DriverBars({ components, setActiveTab }) {
       </div>
       <ul className="bb-drivers__list">
         {rows.map((component) => {
-          const value = Number(component.latestValue);
+          const value = component.latestValue;
           return (
             <li className="bb-drivers__item" key={component.key}>
               <span className="bb-drivers__name">{component.label}</span>
@@ -1152,10 +1078,24 @@ export default function App() {
   const [status, setStatus] = useState("loading");
   const [payload, setPayload] = useState(null);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState(loadStoredActiveTab);
+  const [activeTab, setActiveTab] = useState(() => window.location.hash === "#data" ? "today" : loadStoredActiveTab());
   const [metricBtc, setMetricBtc] = useState(null);
   const [methodStatus, setMethodStatus] = useState("idle");
   const methodRequest = useRef(null);
+  useEffect(() => {
+    function openData() {
+      if (window.location.hash !== "#data") return;
+      setActiveTab("today");
+      document.getElementById("data")?.scrollIntoView();
+    }
+    window.addEventListener("hashchange", openData);
+    return () => window.removeEventListener("hashchange", openData);
+  }, []);
+  useEffect(() => {
+    if (status === "ready" && activeTab === "today" && window.location.hash === "#data") {
+      document.getElementById("data")?.scrollIntoView();
+    }
+  }, [status, activeTab]);
   useEffect(() => {
     if (activeTab !== "method" || !payload || methodRequest.current) return;
     setMethodStatus("loading");

@@ -1,4 +1,5 @@
 export const DCA_EVIDENCE = Object.freeze({
+  evidenceTier: "Retrospective reconstruction",
   evaluatedAt: "2026-08-01",
   dataWindow: "2014-12-31 \u2192 2026-07-31",
   runId: "dca-evidence-three-tests",

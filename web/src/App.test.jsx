@@ -1,8 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { forwardRef, useImperativeHandle } from "react";
 import { vi } from "vitest";
 
 import App, { PublicDataPanel } from "./App";
+import { RISK_REGIONS } from "./data";
+import { DCA_EVIDENCE } from "./dcaEvidence";
 import { METRIC_COPY } from "./copy";
 import { readFileSync } from "node:fs";
 const styles = readFileSync(`${process.cwd()}/src/styles.css`, "utf8");
@@ -279,6 +281,7 @@ describe("App", () => {
     charts.props.length = 0;
     charts.reset.mockClear();
     window.localStorage.clear();
+    window.history.replaceState(null, "", "/");
     global.fetch = vi.fn(async (url) => {
       const key = String(url).split("/").pop();
       if (!key || !(key in fixtures)) {
@@ -294,6 +297,117 @@ describe("App", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    delete Element.prototype.scrollIntoView;
+  });
+
+  function useHistory(history) {
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn(async (url) => String(url).endsWith("history_core.json")
+      ? { ok: true, json: async () => ({ ...fixtures["history_core.json"], ...history }) }
+      : originalFetch(url));
+  }
+
+  it("omits a missing driver when three finite components permit publication", async () => {
+    useHistory({ columns: {
+      dca_risk: [0.2, 0.3, 0.4], dca_component_coverage: [1, 1, 0.75],
+      dca_top_reversal_component: [0.2, 0.3, 0.4], dca_bottom_reversal_component: [0.2, 0.3, 0.5],
+      dca_cycle_extension_component: [0.2, 0.3, null], dca_cycle_regime_component: [0.2, 0.3, 0.6],
+    } });
+    render(<App />);
+    await screen.findByText("What is moving it");
+    const drivers = document.querySelector(".bb-drivers__list");
+    expect(within(drivers).getAllByRole("listitem")).toHaveLength(3);
+    expect(within(drivers).queryByText("Price stretch")).not.toBeInTheDocument();
+    expect(within(drivers).getAllByRole("listitem").map((row) => row.textContent)).toEqual([
+      "Speculation and hype60", "Unlike past bottoms50", "Looks like past peaks40",
+    ]);
+  });
+
+  it("uses shared display ranges and explains unrounded boundaries", async () => {
+    expect(RISK_REGIONS.map((entry) => entry.displayRange)).toEqual(["0 to 25", "25 to 75", "75 to 100"]);
+    const region = RISK_REGIONS[1];
+    const original = region.displayRange;
+    try {
+      region.displayRange = "shared range sentinel";
+      render(<App />);
+      expect(await screen.findByRole("cell", { name: region.displayRange })).toBeInTheDocument();
+      for (const entry of RISK_REGIONS) expect(screen.getByRole("cell", { name: entry.displayRange })).toBeInTheDocument();
+      expect(screen.getByText(/Shares count every day since .* Boundaries use the unrounded score, so exactly 25 counts as Low and exactly 75 as High\./)).toBeInTheDocument();
+    } finally {
+      region.displayRange = original;
+    }
+  });
+
+  it("describes the raw sub-score scale without claiming historical rescaling", async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Method" }));
+    expect(screen.getByText("Each line is that sub-score on its 0 to 100 scale. The sections below explain how each one is built. Series start in December 2014.")).toBeInTheDocument();
+  });
+
+  it("renders the Track record evidence tier from its evidence metadata", async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Track record" }));
+    const term = screen.getByText("Evidence type");
+    expect(term.tagName).toBe("DT");
+    expect(term.nextElementSibling).toHaveTextContent(DCA_EVIDENCE.evidenceTier);
+    expect(DCA_EVIDENCE.evidenceTier).toBe("Retrospective reconstruction");
+  });
+
+  it("names the last published reading when the newest finite reading lacks coverage", async () => {
+    useHistory({ index: ["2026-04-23", "2026-04-24"], columns: {
+      dca_risk: [0.2, 0.8], dca_component_coverage: [1, 0.5],
+    } });
+    render(<App />);
+    expect(await screen.findByRole("heading", { name: "No reading today" })).toBeInTheDocument();
+    expect(screen.getByText("The last published reading was 20 on 23 Apr 2026.")).toBeInTheDocument();
+  });
+
+  it("opens and scrolls Today for #data instead of the saved Method tab", async () => {
+    window.localStorage.setItem("riskMetricActiveTab.v1", "method");
+    window.history.replaceState(null, "", "/#data");
+    const scroll = vi.fn();
+    Object.defineProperty(Element.prototype, "scrollIntoView", { configurable: true, value: scroll });
+    render(<App />);
+    expect(await screen.findByRole("heading", { name: "How heated does the Bitcoin market look today?" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Today" })).toHaveAttribute("aria-current", "page");
+    expect(scroll).toHaveBeenCalled();
+    expect(scroll.mock.instances.at(-1)).toBe(document.getElementById("data"));
+    fireEvent.click(screen.getByRole("button", { name: "Method" }));
+    expect(await screen.findByText("The four sub-scores")).toBeInTheDocument();
+    window.history.replaceState(null, "", "/");
+    window.history.replaceState(null, "", "/#data");
+    window.dispatchEvent(new Event("hashchange"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Today" })).toHaveAttribute("aria-current", "page"));
+    expect(scroll.mock.instances.at(-1)).toBe(document.getElementById("data"));
+  });
+
+  it("preserves overview defaults, legend order and all dataset styles when toggled", async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Method" }));
+    const switches = within(screen.getByRole("group", { name: "Series visibility" })).getAllByRole("switch");
+    expect(switches.map((item) => item.getAttribute("aria-label"))).toEqual([
+      "Looks like past peaks — shown", "Looks like past bottoms — shown", "Price stretch — hidden",
+      "Speculation and hype — hidden", "Signals agreeing (context) — hidden",
+    ]);
+    expect(switches[4]).toHaveClass("bb-legend__item--context");
+    const overview = () => charts.props.findLast((props) => props["aria-label"]?.startsWith("Sub-scores"));
+    expect(overview().data.datasets.map((item) => item.label)).toEqual(["Looks like past peaks", "Looks like past bottoms", "BTC price"]);
+    for (const item of switches.slice(2)) fireEvent.click(item);
+    const datasets = overview().data.datasets;
+    expect(datasets.map((item) => [item.label, item.borderColor, item.backgroundColor, item.tension])).toEqual([
+      ["Looks like past peaks", "#f05b5b", "#f05b5b1f", 0.16],
+      ["Looks like past bottoms", "#22cc55", "#22cc5517", 0.16],
+      ["Price stretch", "#f0a500", "#f0a50019", 0.16],
+      ["Signals agreeing", "#5ca2ff", "#5ca2ff19", 0.16],
+      ["Speculation and hype", "#b58cff", "#b58cff19", 0.14],
+      ["BTC price", "#8b8473", undefined, 0.12],
+    ]);
+    const columns = fixtures["history_core.json"].columns;
+    expect(datasets.map((item) => item.data)).toEqual([
+      columns.top_reversal_risk, columns.bottom_reversal_risk, columns.cycle_extension_score,
+      columns.attention_score, columns.cycle_frenzy_score, columns.btc_price,
+    ]);
+    expect(datasets.at(-1).yAxisID).toBe("yPrice");
   });
 
   it("leads with the reading and its context, then switches tabs", async () => {

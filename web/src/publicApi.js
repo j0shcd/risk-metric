@@ -27,9 +27,8 @@ export function buildPublicApi({ manifest, historyCore, latestSnapshot }) {
     status: available ? "ok" : "unavailable",
     reading: available ? percent(series.values[latestIndex]) : null,
     region: available ? regionForRisk(series.values[latestIndex]).key : null,
-    regions: Object.fromEntries(RISK_REGIONS.map((region, index) => [region.key,
-      `${Math.round(region.min * 100) + (index === 1 ? 1 : 0)}-${Math.round(region.max * 100) - (index === 1 ? 1 : 0)}`,
-    ])),
+    regions: Object.fromEntries(RISK_REGIONS.map((region) => [region.key, region.rule])),
+    region_basis: "unrounded reading",
     sub_scores: available ? scoresAt(latestIndex) : Object.fromEntries(COMPONENT_FIELDS.map(([field]) => [field, null])),
     docs: "https://risk-metric.pages.dev/#data",
   };

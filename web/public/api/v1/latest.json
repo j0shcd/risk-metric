@@ -8,10 +8,11 @@
   "reading": 34.7,
   "region": "middle",
   "regions": {
-    "low": "0-25",
-    "middle": "26-74",
-    "high": "75-100"
+    "low": "reading <= 25",
+    "middle": "25 < reading < 75",
+    "high": "reading >= 75"
   },
+  "region_basis": "unrounded reading",
   "sub_scores": {
     "looks_like_past_peaks": 23.3,
     "unlike_past_bottoms": 34,

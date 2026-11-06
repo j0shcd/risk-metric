@@ -281,9 +281,9 @@ export async function loadMethodData(releaseId) {
 // conveniences: changing them invalidates the published evidence.
 
 export const RISK_REGIONS = [
-  { key: "low", label: "Low", min: 0, max: 0.25 },
-  { key: "middle", label: "Middle", min: 0.25, max: 0.75 },
-  { key: "high", label: "High", min: 0.75, max: 1 },
+  { key: "low", label: "Low", min: 0, max: 0.25, displayRange: "0 to 25", rule: "reading <= 25" },
+  { key: "middle", label: "Middle", min: 0.25, max: 0.75, displayRange: "25 to 75", rule: "25 < reading < 75" },
+  { key: "high", label: "High", min: 0.75, max: 1, displayRange: "75 to 100", rule: "reading >= 75" },
 ];
 
 export function scoreLabel(value) {
@@ -297,13 +297,6 @@ export function regionForRisk(value) {
   if (num <= RISK_REGIONS[0].max) return RISK_REGIONS[0];
   if (num >= RISK_REGIONS[2].min) return RISK_REGIONS[2];
   return RISK_REGIONS[1];
-}
-
-function lastFiniteIndex(values = []) {
-  for (let idx = values.length - 1; idx >= 0; idx -= 1) {
-    if (toNumber(values[idx]) !== null) return idx;
-  }
-  return -1;
 }
 
 function shiftIsoDate(iso, days) {
@@ -325,7 +318,8 @@ function indexAtOrBefore(labels, target) {
 export function readingSummary(dcaSeries) {
   const labels = dcaSeries?.labels ?? [];
   const values = dcaSeries?.values ?? [];
-  const latestIndex = lastFiniteIndex(values);
+  let latestIndex = values.length - 1;
+  while (latestIndex >= 0 && !isReadingAvailable(dcaSeries, latestIndex)) latestIndex -= 1;
   if (latestIndex < 0) return null;
 
   const latest = toNumber(values[latestIndex]);
@@ -347,12 +341,6 @@ export function readingSummary(dcaSeries) {
     .filter((entry) => entry.value !== null);
 
   const region = regionForRisk(latest);
-  let daysInRegion = 0;
-  for (let idx = latestIndex; idx >= 0; idx -= 1) {
-    if (regionForRisk(values[idx])?.key !== region?.key) break;
-    daysInRegion += 1;
-  }
-
   const regionShares = RISK_REGIONS.map((entry) => ({
     ...entry,
     share: history.length
@@ -364,7 +352,6 @@ export function readingSummary(dcaSeries) {
     latest,
     latestDate,
     region,
-    daysInRegion,
     observations: history.length,
     percentileBelow: history.length > 1 ? belowCount / (history.length - 1) : null,
     firstDate: labels[firstFiniteIndex(values.map(toNumber))] ?? labels[0],
@@ -375,7 +362,6 @@ export function readingSummary(dcaSeries) {
 
 // This is also the Today panel's publication boundary. A previous finite value
 // must never stand in for a missing reading on the newest observation.
-export function isReadingAvailable(series) {
-  const index = series.labels.length - 1;
+export function isReadingAvailable(series, index = series.labels.length - 1) {
   return index >= 0 && Number.isFinite(series.values[index]) && series.coverageValues?.[index] >= 0.75;
 }

@@ -137,6 +137,7 @@ describe("reading context", () => {
   const series = {
     labels: ["2015-01-01", "2015-06-30", "2015-12-01", "2015-12-25", "2016-01-01"],
     values: [0.1, 0.9, 0.5, 0.4, 0.3],
+    coverageValues: [1, 1, 1, 1, 1],
   };
 
   it("scores 0-1 as a 0-100 integer", () => {
@@ -148,7 +149,14 @@ describe("reading context", () => {
   it("maps values onto the model's own frozen regions", () => {
     expect(regionForRisk(0.25).key).toBe("low");
     expect(regionForRisk(0.2501).key).toBe("middle");
+    expect(regionForRisk(0.7499).key).toBe("middle");
     expect(regionForRisk(0.75).key).toBe("high");
+  });
+
+  it("uses the last publishable reading, not the last finite reading", () => {
+    expect(readingSummary({
+      labels: ["2026-04-23", "2026-04-24"], values: [0.2, 0.8], coverageValues: [1, 0.5],
+    })).toMatchObject({ latest: 0.2, latestDate: "2026-04-23" });
   });
 
   it("places the latest reading in its own history", () => {
