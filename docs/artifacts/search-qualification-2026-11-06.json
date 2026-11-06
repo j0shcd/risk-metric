@@ -1,0 +1,141 @@
+{
+  "all_criteria_pass": false,
+  "config": {
+    "alpha": 0.05,
+    "calibration_worlds": 500,
+    "candidates": 24,
+    "evaluation_worlds": 200,
+    "horizons": [
+      12,
+      24,
+      48
+    ],
+    "rows": 24,
+    "seed": 20261117,
+    "steps": 720
+  },
+  "criteria": "each null one-sided 98.333% upper <=10%; each planted one-sided95% lower >=80%; strict threshold exceedance",
+  "downside_convention": "nonnegative log loss magnitudes, as in the market scorecard; monthly closes only",
+  "families": {
+    "clustered_t3_p95": {
+      "criterion_pass": false,
+      "flags": 16,
+      "median_audit_skill": 0.0,
+      "one_sided_lower": 0.05082171702992677,
+      "one_sided_upper": 0.13087630330982913,
+      "quartiles": [
+        -5.372760141912142,
+        3.611464788050883
+      ],
+      "rate": 0.08,
+      "worlds": 200
+    },
+    "gaussian_p50": {
+      "criterion_pass": true,
+      "flags": 1,
+      "median_audit_skill": -1.064443753901212,
+      "one_sided_lower": 0.0002564335872234924,
+      "one_sided_upper": 0.02985598732771229,
+      "quartiles": [
+        -4.571189122168534,
+        1.060767837695595
+      ],
+      "rate": 0.005,
+      "worlds": 200
+    },
+    "gaussian_p95": {
+      "criterion_pass": true,
+      "flags": 8,
+      "median_audit_skill": 0.0,
+      "one_sided_lower": 0.02005675958950892,
+      "one_sided_upper": 0.08076737831909606,
+      "quartiles": [
+        -5.641038587177327,
+        2.438802367854001
+      ],
+      "rate": 0.04,
+      "worlds": 200
+    },
+    "leading_location": {
+      "criterion_pass": false,
+      "flags": 5,
+      "median_audit_skill": 0.0,
+      "one_sided_lower": 0.009901244217107363,
+      "one_sided_upper": 0.051843339120291,
+      "quartiles": [
+        -1.00926230834536,
+        3.110481947272867
+      ],
+      "rate": 0.025,
+      "worlds": 200
+    },
+    "leading_scale": {
+      "criterion_pass": false,
+      "flags": 8,
+      "median_audit_skill": 0.0,
+      "one_sided_lower": 0.02005675958950892,
+      "one_sided_upper": 0.07101416861602047,
+      "quartiles": [
+        -2.425797720720513,
+        2.6476211251029893
+      ],
+      "rate": 0.04,
+      "worlds": 200
+    }
+  },
+  "limitations": [
+    "Generator-conditional, not a market false-positive guarantee or scorecard promotion gate.",
+    "One threshold realization; reported intervals condition on it. Calibration randomness is not measured.",
+    "Synthetic monthly paths, not daily market microstructure or verified real data vintages.",
+    "Fixed search family and 216 development comparisons; not arbitrary adaptive model generation.",
+    "Controls and seeds become exposed research data after this run; do not tune to them.",
+    "A single 140-step path cannot support these 48-month phases; never import the 720-step qualification to BTC."
+  ],
+  "local_full_report": "output/search-qualification-2026-11-06-finite-receipts",
+  "protocol": "whole-path-distribution-search-v1",
+  "receipt": {
+    "files": {
+      "COMPLETE": "7c7202a2317f4dad47ee64b9d99339462774c7e3a76300bc5474bc2f7836f040",
+      "campaigns.json": "66494d77beacbb82bf19ebf1a807bdf5b2bc1678f720a8f7ebee0a5744e23f4d",
+      "registration.json": "22d2b110e94ef52892ae1e976c5c2f88961770165117a353c753c172f9923c75",
+      "summary.json": "784bb9b8ba74972de1a0bef93aa5487833df0471e6bb6aa15d21060659b10f47"
+    }
+  },
+  "registration": {
+    "code_sha256": {
+      "distribution_readout.py": "c356b0e1769f9eb5ddee7507f520b5cc834cacd19f8de2f984325f0a6ebd7c19",
+      "market_dataset.py": "679222de6b2a98337790d5b5686af03d7f630b118e2165d93512f3f6898cace4",
+      "scorecard_artifacts.py": "ac01f75b625e0c728316eb61eebf3d0c4f18b4af63a546eb81a1f0316a356ab1",
+      "search_qualification.py": "f6263fb693ebad2551e515c788428bea541ee99f0743f3576b1d9b4f8a5319a7"
+    },
+    "config": {
+      "alpha": 0.05,
+      "calibration_worlds": 500,
+      "candidates": 24,
+      "evaluation_worlds": 200,
+      "horizons": [
+        12,
+        24,
+        48
+      ],
+      "rows": 24,
+      "seed": 20261117,
+      "steps": 720
+    },
+    "criteria": "null upper<=.10; planted lower>=.80; no retuning after reading",
+    "runtime": {
+      "numpy": "2.4.6",
+      "pandas": "2.3.3",
+      "python": "3.12.16"
+    }
+  },
+  "scope": "fixed synthetic 24-candidate search selecting one of 9 target/horizon cells on development; audit used once",
+  "threshold": 20.35293585591573,
+  "thresholds": {
+    "clustered_t3_p95": 19.732434289861487,
+    "gaussian_p50": 10.937983335986011,
+    "gaussian_p95": 20.35293585591573
+  },
+  "timing": "common phases separated by longest-horizon label maturity; no short-horizon audit before long-horizon selection resolves",
+  "zero_loss_convention": "identical perfect point forecasts receive zero improvement; no division by zero"
+}

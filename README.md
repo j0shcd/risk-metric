@@ -97,11 +97,13 @@ Without API keys the pipeline falls back to a `free_stable` profile (fewer signa
 
 ## Tests
 
-The [indicator benchmark plan](docs/metric_evaluation_plan.md) describes the
-proposed information-first evaluation and next implementation slice.
+The [indicator benchmark plan](docs/metric_evaluation_plan.md) owns the implemented
+retrospective information scorecard, its trust limits and next bounded work.
 [DCA evidence](docs/dca_evidence.md) records the current historical results.
-The primary market benchmark remains unqualified. Its offline IID and adversarial
-qualification pilots are implemented; the existing acceptance gate remains unchanged.
+The scorecard compares common dates, return/downside endpoints and forecast loss
+without a combined winner. Its automatic search failed qualification; it must not
+be used for automatic promotion. A portable snapshot and offline replay command
+are in the plan. The existing acceptance gate remains unchanged.
 
 CI prepares the ignored `config/runtime.json` from the credential-free
 `config/model_acceptance_runtime.json` before testing. This fixture reproduces

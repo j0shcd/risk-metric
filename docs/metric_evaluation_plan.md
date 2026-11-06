@@ -1,6 +1,6 @@
 # Indicator benchmark and evaluation plan
 
-Status: two research pilots implemented; long-horizon market benchmark unqualified.
+Status: retrospective scorecard implemented and verified; automatic discovery unqualified.
 Updated 2026-11-06.
 
 This is the canonical plan for the next benchmark. Current implemented results
@@ -26,9 +26,10 @@ not by themselves. Withdraw the horizon average and ordinal rank score as the
 proposed primary leaderboard; retain them as candidate diagnostics. Capital
 normalization is necessary for comparison but does not validate an objective.
 
-The research pilots now demonstrate why the current IID threshold and one
-location-only readout cannot serve as a long-horizon market gate. Settle the
-indicator's specific informational claim before market scoring. Qualification
+The research pilots demonstrate why the IID threshold and one location-only
+readout cannot serve as a long-horizon market gate. A retrospective scorecard now
+provides useful measurements without adopting a product utility or a total ranking.
+Settle the indicator's specific informational claim before promotion. Qualification
 must test the entire selection procedure against no-signal and planted-signal
 worlds; simulation results remain conditional on their generators, not evidence
 of real-market generalization.
@@ -44,14 +45,198 @@ of real-market generalization.
 - Availability: only information actually available at decision time may be used.
 - Outcomes: future return/opportunity and intervening downside, assessed separately.
 - Audience: Josh and future maintainers designing and implementing the benchmark.
-- Deliverable now: reviewed design plus a bounded synthetic forecast/search
-  qualification pilot and market-data coverage report. No market-model training,
+- Deliverable: reviewed design, bounded synthetic experiments and an operational
+  retrospective market scorecard with portable data and an exposure ledger.
+  Research readouts are fitted; production market models are unchanged. No
   adopted investor objective, data vendor or production-gate change.
 - Constraints: local/offline development, reproducible snapshots, bounded compute,
   existing free infrastructure; no incidental paid services.
 - Expected useful negative result: a candidate has no incremental information, is
   fragile across eras, or cannot be evaluated with the available mature outcomes.
   Each is a valid result, not a reason to loosen the benchmark after a run.
+
+## Implemented retrospective scorecard
+
+This is a trustworthy **measurement instrument within a narrow scope**, not a
+qualified automatic financial optimizer. It compares the incumbent, its four
+components and price-only references on identical historical opportunities.
+New candidates use the same frozen data, dates, outcomes and readout. There is
+no aggregate winner, significance declaration or promotion command.
+
+To reproduce the retained baseline using the committed, already-exposed snapshot:
+
+```bash
+mkdir -p output
+python -m research.market_scorecard create \
+  --snapshot docs/artifacts/market-scorecard-2026-11-06-snapshot.json \
+  --campaign output/market-scorecard-replay \
+  --diagnostic-horizons 12 24 48
+python -m research.market_scorecard verify --campaign output/market-scorecard-replay
+```
+
+The destination must be new, below an existing parent without symlink components.
+For a new reconstructed source, replace `--snapshot ...` with
+`--source output/risk_scores_full.csv`; this changes the dataset identity when
+the bytes change. Neither command updates production, contacts APIs or opens a
+browser. The diagnostic horizon grid remains an implementation coordinate, not
+an accepted primary investor objective. Copying a campaign or snapshot does not
+restore unseen evidence.
+
+`research/market_dataset.py` freezes complete month ends, a next-daily-close entry
+and an endpoint exactly H calendar months from entry. It requires every daily
+price in that path to be finite and positive; no forward-fill, last-finite-value
+carry or partial-month stamping is allowed. Outcomes are terminal log return,
+entry adverse **log loss** and true peak-to-trough **log loss**, with both losses
+nonnegative. A 100 → 200 → 80 path has different entry loss and peak drawdown.
+These daily-close losses miss intraday troughs. Log ratios are invariant to price
+currency scaling and hypothetical ticket size; no contribution schedule, cash
+deferral, varying exposure, interest or trading policy enters the score. This
+solves common-outcome accounting; it does not establish equal risk for adaptive
+investment policies.
+
+Historical input vintages and the source's UTC/executable close convention remain
+**unverified**. The snapshot preserves that status. The one-day observation-to-entry
+lag is a hypothetical research convention, not proof that historical macro inputs
+or reconstructed scores were available then. These results cannot be relabeled
+point-in-time or prospective. No macro or external-market data was downloaded.
+
+The scorecard has two separate panels within each target/horizon:
+
+- Fixed-direction ordinal alignment: higher risk should accompany lower return
+  or greater downside loss. Constant features/outcomes have no defined alignment.
+  No favorable sign is chosen after observing outcomes. Price references are
+  undirected and receive no advertised risk-ordering score.
+- Distribution forecast loss: exact weighted empirical CRPS for a fixed finite-bin
+  decoder. Lower paired loss, or higher skill relative to the same reference, is
+  better **for that defined forecasting task and decoder**. It is not conditional
+  mutual information, every user's utility, profitability or proof of novel signal.
+
+The context is trailing 12-month log return and 90-day daily-return volatility.
+At every scored origin the last 24 mature calibration rows are chosen first;
+the 24 fitting rows must have labels strictly mature before the first calibration
+decision. No fitting/calibration overlap is permitted. Feature median thresholds
+use fitting features only. Calibration labels supply the probability atoms.
+Reference and augmented forecasts both mix 50% pooled calibration mass with
+50% their respective context or context-plus-indicator cell. Empty augmented
+cells fall back exactly to the reference, without deleting an outcome. A duplicate
+context feature cannot gain merely by changing shrinkage. Each forecast retains
+its dates, thresholds, atoms, weights, quantiles and fallback counts.
+
+This decoder can use distributional differences, including scale, and can learn
+either direction. The separate alignment panel checks the advertised direction.
+The 50:50 shrinkage and median bins are explicit modeling choices. Finite/coarse
+context can make redundant features useful to this decoder; coarse bins can also
+hide real information. A gain compares context-plus-candidate with context; the
+side-by-side incumbent result is **not** a test of incremental information given
+the incumbent. There is no IID confidence interval over overlapping origins.
+
+The retained [scorecard summary](artifacts/market-scorecard-2026-11-06.json) binds
+the full local report through its receipt. The [portable snapshot](artifacts/market-scorecard-2026-11-06-snapshot.json)
+reproduces the exact benchmark identity under the recorded runtime. Baseline dates
+are December 2014–June 2026; July 30 is excluded as incomplete.
+
+| Diagnostic horizon | Mature ordering origins | Forecast origins | Forecast dates |
+| --- | ---: | ---: | --- |
+| 12 months | 127 | 55 | December 2020–June 2025 |
+| 24 months | 115 | 19 | December 2022–June 2024 |
+| 48 months | 91 | 0 | Insufficient evidence |
+
+These are dependent origin counts, not effective independent sample sizes. The
+incumbent's 12-month forecast skill is negative for all three endpoints; at 24
+months its return skill is +1.51%, entry-loss skill +3.10%, and drawdown skill
+approximately zero, across only 19 overlapping origins. Four-year opportunity
+ordering has the wrong sign. Those are exploratory measurements, not significance
+or a recommendation to optimize toward whichever row currently looks best.
+
+Custom submissions are JSON objects with a name, fixed `direction` of
+`higher_risk` or `undirected`, a nonempty `provenance` description, and `values`
+containing exactly the snapshot's ordered monthly dates and finite scalar values:
+
+```json
+{"name":"candidate-v1","direction":"higher_risk","provenance":"describe inputs and reconstruction limits","values":[{"date":"2014-12-31","value":0.5}]}
+```
+
+The example shows one row; a real submission needs every frozen date, including
+all fitting/calibration dates. Extra, missing or duplicate dates are rejected.
+Submit with:
+
+```bash
+python -m research.market_scorecard submit \
+  --campaign output/market-scorecard-replay --candidate output/candidate.json
+```
+
+The immutable baseline never changes. Before scoring, the tool atomically reserves
+one of 24 custom attempt directories and records the exact payload. Failed and
+interrupted attempts consume slots; identical reruns also count. Exclusive receipts
+bind input/output bytes, campaign/dataset/slot ownership, code and runtime. A
+changed runtime/code, corrupt prior result or moved receipt rejects replay. An
+interrupted attempt has no valid `COMPLETE`; it remains consumed. The ledger is
+a local governance aid, not tamper-proof access control or a correction for all
+prior research. It cannot justify unlimited adaptive reuse or create a holdout.
+
+## Registered whole-path search: qualification failed
+
+`research/search_qualification.py` tests a **different, explicitly fixed four-phase
+synthetic selection procedure**, sharing the scorecard's finite-bin decoder. It
+does not qualify the market scorecard's rolling procedure or supply its promotion
+threshold. Run with a new destination:
+
+```bash
+python -m research.search_qualification --output-dir output/search-qualification-new
+```
+
+Before generating worlds, the runner writes its source hashes, runtime, seed and
+criteria. Each independent 720-step world searches 24 noisy indicators across
+three horizons and three outcomes: 216 development comparisons. It selects once
+on development, then evaluates only that choice on audit. All horizons share phase
+boundaries governed by the longest label: no short-horizon audit starts before
+long-horizon selection information resolves. Every development attempt is retained.
+Twenty-four fitting/calibration/development/audit rows remain overlapping and are
+not treated as independent. The underlying monthly paths and feature availability
+are synthetic, not market-vintage reconstructions.
+
+There are 500 calibration worlds for each of three predeclared null families:
+Gaussian prices with score persistence .5 or .95, and clustered heavy-tailed t(3)
+returns with score persistence .95. Null scores are independent of all price and
+context paths. The 476th ordered score calibrates each 5% threshold; their maximum,
+**20.3529%**, is used for strict audit exceedance. Fresh evaluation has 200 worlds
+per null and per planted location/scale family. The registered criteria require
+each null's one-sided 98.333% binomial upper bound ≤10%, and each plant's one-sided
+95% detection lower bound ≥80%. Rate bounds condition on this threshold realization;
+threshold calibration variability was not evaluated.
+
+The [retained result](artifacts/search-qualification-2026-11-06.json) fails:
+
+| Family | Flags / 200 | Rate | Registered bound | Pass |
+| --- | ---: | ---: | ---: | --- |
+| Gaussian, score persistence .5 | 1 | 0.5% | upper 2.99% | yes |
+| Gaussian, score persistence .95 | 8 | 4.0% | upper 8.08% | yes |
+| Clustered t(3), score persistence .95 | 16 | 8.0% | upper 13.09% | no |
+| Planted location | 5 | 2.5% | lower 0.99% | no |
+| Planted scale | 8 | 4.0% | lower 2.01% | no |
+
+The clustered result fails to establish the prespecified ≤10% bound; it does not
+prove that the true rate exceeds 10%. Low detection does not establish an absence
+of information, a uniquely defective decoder or a strong available four-year
+signal. The per-step plant, its incremental value beyond context, noisy indicator,
+overlap, limited calibration, 216-way selection and threshold interact. An exact
+known-law oracle is a possible explanatory follow-up, not a way to retune these
+criteria after seeing results. A 140-step path cannot supply the 48-month phases.
+
+The first full run stopped before publishing results because zero-loss reference
+cells used a nonfinite internal sentinel that JSON correctly rejected. The fixed
+rule assigns zero improvement when both forecasts already have exactly zero loss.
+That correction has a regression test; seeds, worlds and acceptance criteria were
+unchanged, and no published results were used to choose a new threshold. The
+interrupted registration remains locally at
+`output/search-qualification-2026-11-06-registered`; the completed run is
+`output/search-qualification-2026-11-06-finite-receipts`. Neither is a new market gate.
+
+**Trust boundary:** use the scorecard for reproducible, common-outcome research and
+error detection. Preserve the failed search result. Do not claim an indefinitely
+reusable discovery score, automatic financial promotion or unseen historical BTC
+evidence. Future acceptance requires a specified informational claim and evidence
+separate from the research loop; no amount of reshuffling recreates new market eras.
 
 ## Implemented qualification pilot
 
@@ -695,14 +880,14 @@ model generation. Its current three-test results are faithfully recorded in
 | Capability | Current state | Required delta / acceptance |
 | --- | --- | --- |
 | Unit/regression infrastructure | Implemented; focused tests available | Preserve and add boundary tests that fail under reintroduced defects |
-| Fixed-notional multi-horizon outcome table | Not implemented as the primary benchmark | Common timestamps, executable dates, complete outcomes and named loss conventions |
-| Ordinal information diagnostics | Existing region diagnostics only | Continuous fixed-direction ranks, ties, invariance tests and paired baselines; not the primary leaderboard |
-| Forecast readout and skill | Implemented for synthetic pilot only | Market-target decision, dependent-data qualification and real readout feasibility remain open |
-| Chronological benchmark | Existing sidecar plus synthetic observation/publication/execution/resolution audits | Real input-vintage reconstruction and complete market-fitting/update audit remain open |
-| Baseline identity | File hashes and canonical summary exist | Immutable retained dataset; incumbent rerun on identical bytes |
-| Experiment registry | Existing run index; pilot logs every synthetic attempt and selected audit prediction | General candidate lineage, market prediction state and restricted audit access remain open |
+| Common-outcome table | Retrospective daily-close log return, entry loss and true drawdown implemented | Verified source close/availability convention and accepted primary claim remain open |
+| Ordinal information diagnostics | Fixed-direction continuous ranks, ties and common origins implemented | Descriptive only; no primary rank leaderboard |
+| Forecast readout and skill | Distributional finite-bin market readout implemented | No eligible 48-month market origins; automatic search failed qualification |
+| Chronological benchmark | Strict fitting/calibration label maturity, exact complete outcomes and independent replay implemented | Real input-vintage reconstruction and prospective update audit remain open |
+| Baseline identity | Committed minimal snapshot, immutable manifests/receipts and byte-identical baseline replay | Snapshot is exposed and reconstructed, not new holdout evidence |
+| Experiment registry | 24-slot atomic local market ledger; failed/interrupted attempts count | Candidate-producer lineage, prospective prediction state and actual restricted audit access remain open |
 | Prospective archive | Release records and inputs exist | Candidate/readout/update-state lineage and outcome-resolution evaluator |
-| Synthetic / external suite | IID pilot and four falsification experiments implemented | Whole-path threshold calibration, regime breaks and cross-asset tests remain open |
+| Synthetic / external suite | IID/adversarial pilots plus registered whole-path search implemented; search criteria failed | No external-market transfer data collected; broader generator/market validity remains open |
 | Supporting policy accounting | Implemented but multiple variants remain | One explicit contract per test; capital/exposure controls and reporting |
 
 Verified issues to resolve before policy/outcome optimization:
@@ -730,23 +915,25 @@ Verified issues to resolve before policy/outcome optimization:
 
 ### Implementation sequence
 
-1. **First bounded slice:** versioned immutable dataset/benchmark manifests and
-   fixed-notional outcome table, with interval/split feasibility report. Test
-   cash/price scale invariance, identical sample support, execution-based label
-   maturity, forecast immutability after retraining, future-suffix stability,
-   incomplete periods and adverse-excursion/drawdown semantics.
-   Do not launch candidate searches or replace CI acceptance yet.
-2. Add paired ordinal diagnostics, fixed references, candidate registry and
-   historical era sensitivity. Mutation-test direction, missing-date selection,
-   monotone rescaling and future leakage. Freeze development/audit roles.
-3. Assess whether a tiny causal readout is supportable; add forecast scoring and
-   incremental-information comparisons with explicit unavailable states. Test
-   constant, inverted, random, planted-signal and overconfident sentinels.
-4. Add separate synthetic/transfer tests and supporting economic panels. Audit
-   generator seams, reference financing, exposure controls and policy invariants.
-5. Run the predeclared small campaign. Freeze its finalist, audit, then record
-   prospective predictions. Revisit richer models only on a concrete diagnosis.
-6. Replace the production acceptance contract only after the indicator benchmark
+1. **Implemented:** immutable dataset/benchmark manifests, exact outcome paths,
+   paired ordering/forecast diagnostics, fixed references, candidate ledger and
+   strict readout feasibility. Boundary, invariance, independent E2E and deliberate
+   defect tests verify the measurement mechanics.
+2. **Next bounded implementation:** add an append-only shadow observation archive
+   with producer/configuration identity, actual observation/publication/decision
+   timestamps and frozen score/readout state. Archive incomplete-outcome forecasts
+   without scoring them, then resolve labels append-only when they mature. The
+   present scorecard only scores completed paths; this archive is not implemented.
+   Tests must prove future data/retraining cannot rewrite prior observations or
+   forecasts. Unknown input vintages remain unknown, not silently point-in-time.
+3. Before a bounded candidate campaign, state one informational hypothesis and
+   diagnostic comparisons; distinguish decoder improvement from novelty and
+   directional usefulness. All explored historical results remain development
+   evidence. Do not promote a model from its best exposed scorecard row.
+4. External markets, real-time macro vintages and analytic oracle comparisons
+   may address specific diagnosed gaps. They are accepted research directions,
+   not implemented transfers or excuses to tune exposed qualification worlds.
+5. Replace the production acceptance contract only after the indicator benchmark
    is reviewed and verified. ADR 0008 and existing canonical metrics describe the
    current policy gate until then; do not silently rewrite them as implemented.
 
@@ -766,23 +953,42 @@ Verified issues to resolve before policy/outcome optimization:
 
 ## Verification and handoff
 
-This task specifies the benchmark and implements the IID and adversarial
-qualification pilots; it does not demonstrate a better market indicator. No new market dataset
-was downloaded and no market model was trained. The Astra medium collaborator
-reviewed the design and implementation independently. Its two recommended test
-additions, frozen forecast quantiles and a non-extreme threshold order statistic,
-were included.
+This task specifies the benchmark and implements synthetic pilots, a real-data
+retrospective measurement tool and a failed whole-path qualification. It does not
+demonstrate a better market indicator. No new market dataset was downloaded and
+no production model was trained. Research readouts were fitted on strictly mature
+historical labels. Astra medium and two other model perspectives independently
+reviewed the design, timing and implementation. A reviewer caught cross-horizon
+selection leakage before the registered run; the common-boundary invariant and a
+deliberately failing mutation now guard that relationship.
 
 The implementation plan now serves the requested information-indicator goal;
 strategy-specific wealth optimization is explicitly outside the primary score.
-Historical data quality, vintage eligibility, market readout feasibility,
-market false-positive rates and external-market transfer remain unverified.
-The pilot measures declaration rates only under its specified synthetic generator.
+Historical data quality, vintage eligibility, market false-positive rates and
+external-market transfer remain unverified. Market readout feasibility is measured
+under the stated protocol, with four-year forecasts explicitly unavailable.
+Each synthetic experiment measures rates only under its specified procedure and
+generator; none establishes the market scorecard's automatic promotion validity.
 The strongest alternative explanation for an apparent future leaderboard gain
 will be adaptive fitting to a few shared market eras. Keep that risk visible.
 
-The production model fingerprint remains unchanged. The v1 scorer/pilot are
-committed in `349b973` and `fe04721`; timed counterexamples/oracles are committed
-in `e5d71b1`. The falsification runner, its tests, retained results and this
-reconciliation form the next research slice. Josh explicitly requested keeping
-all commits local; no push or deployment is authorized.
+The independent actual-data E2E replay checked all 1,776 forecast records against
+raw daily prices, strict split boundaries and a quadratic CRPS calculation. An
+exact incumbent submission reproduced every prediction; a missing date failed
+without altering the immutable baseline. A fixed noise submission changed only
+its dependent result. Portable snapshot replay reproduces benchmark identity
+`7b4a52c04577d92d40501965a5c01d801b62c3d31306d7297db08ded9cfb57cb`.
+All 195 backend tests passed, including the 17 new focused tests. Existing pandas
+future warnings remain; no hosted CI or frontend checks were needed for this
+offline-only change. Eleven deliberately reintroduced defects were
+caught in isolated copies, including entry lag, false drawdown, missing support,
+label maturity, cross-horizon timing, CRPS, duplicate-context shrinkage, runtime
+drift, unbounded attempts, corrupt receipts and nonfinite zero-loss references.
+
+The production model fingerprint remains unchanged. Earlier research commits are
+`573de0d`, `b260774`, `349b973`, `fe04721`, `e5d71b1` and `51bb110`; scorecard
+implementation is `a35a3f9` and whole-path qualification is `92e8a27`. Josh explicitly requested
+keeping all commits local; no push or deployment is authorized. The two untracked
+user directories `.codex/` and `.github/hooks/` are preserved. This document owns
+the project-specific lessons; the skill-harvest/self-improvement review found no
+additional global skill change necessary.
