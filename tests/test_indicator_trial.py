@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import pandas as pd
 
@@ -52,6 +53,48 @@ class IndicatorTrialTests(unittest.TestCase):
             manifest["sources"]["development_scores.csv"]["development_sha256"] = "changed"
             (bundle/"manifest.json").write_text(json.dumps(manifest))
             with self.assertRaisesRegex(ValueError, "cutoff/hash"): run_trial(bundle, candidate, "signal", "x", "x")
+
+    def captured_input_trial(self, directory, replace_source=False, replace_candidate=False):
+        bundle, candidate = self.fixture(directory)
+        source = bundle/"development_scores.csv"
+        source_bytes, candidate_bytes = source.read_bytes(), candidate.read_bytes()
+        expected_snapshot = load_snapshot(source)
+        expected_candidate = pd.read_csv(io.BytesIO(candidate_bytes))
+        changed_source = pd.read_csv(io.BytesIO(source_bytes))
+        changed_source["btc_price"] *= 2
+        changed_candidate = expected_candidate.copy()
+        changed_candidate["signal"] += .125
+        replacements = {}
+        if replace_source:
+            replacements[source] = changed_source.to_csv(index=False).encode()
+        if replace_candidate:
+            replacements[candidate] = changed_candidate.to_csv(index=False).encode()
+        original_read = Path.read_bytes
+        captured = {}
+        def replace_after_capture(path):
+            payload = original_read(path)
+            if path in replacements:
+                path.write_bytes(replacements.pop(path))
+            return payload
+        def score(snapshot, submitted):
+            captured.update(snapshot=snapshot, submitted=submitted)
+            return {"dataset_id": "fixture", "code_sha256": {}, "source_sha256": snapshot["source_sha256"]}
+        with patch.object(Path, "read_bytes", replace_after_capture), patch("research.indicator_trial.score_candidate", score), patch("research.indicator_trial.baseline_candidates", return_value=[]):
+            trial = run_trial(bundle, candidate, "signal", "fixture", "synthetic captured-input regression")
+        self.assertEqual(captured["snapshot"]["source_sha256"], expected_snapshot["source_sha256"])
+        self.assertTrue(captured["snapshot"] == expected_snapshot, "captured snapshot differs")
+        self.assertEqual(trial["result"]["source_sha256"], hashlib.sha256(source_bytes).hexdigest())
+        self.assertEqual(trial["candidate_csv_sha256"], hashlib.sha256(candidate_bytes).hexdigest())
+        self.assertEqual([v["value"] for v in captured["submitted"]["values"]], expected_candidate["signal"].tolist())
+        self.assertFalse(replacements)
+
+    def test_replaced_source_path_cannot_change_captured_snapshot(self):
+        with tempfile.TemporaryDirectory() as raw:
+            self.captured_input_trial(Path(raw), replace_source=True)
+
+    def test_replaced_candidate_path_cannot_change_captured_values(self):
+        with tempfile.TemporaryDirectory() as raw:
+            self.captured_input_trial(Path(raw), replace_candidate=True)
 
     def test_cli_writes_exclusive_replayable_receipt(self):
         with tempfile.TemporaryDirectory() as raw:
