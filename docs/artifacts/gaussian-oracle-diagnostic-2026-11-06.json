@@ -1,0 +1,122 @@
+{
+  "candidate": 0,
+  "code_sha256": {
+    "gaussian_information_oracle.py": "8e471b07d7eb9278762a2b7c2e68736119fb955984cc30a820143f1e27b19006",
+    "gaussian_oracle_diagnostic.py": "be62fe3eaea79db4f7c27af67be79f9267ec4f0cf3e06c65478c029c17106506",
+    "market_dataset.py": "679222de6b2a98337790d5b5686af03d7f630b118e2165d93512f3f6898cace4",
+    "scorecard_artifacts.py": "ac01f75b625e0c728316eb61eebf3d0c4f18b4af63a546eb81a1f0316a356ab1",
+    "search_qualification.py": "f6263fb693ebad2551e515c788428bea541ee99f0743f3576b1d9b4f8a5319a7"
+  },
+  "config": {
+    "alpha": 0.05,
+    "calibration_worlds": 500,
+    "candidates": 24,
+    "evaluation_worlds": 200,
+    "horizons": [
+      12,
+      24,
+      48
+    ],
+    "rows": 24,
+    "seed": 20261117,
+    "steps": 720
+  },
+  "limitations": [
+    "Already-exposed Gaussian location worlds only; no new confirmation or acceptance criteria.",
+    "All causal prices vs all causal prices plus observed score0; no hidden state is provided to either filter.",
+    "Exact generating parameters and linear Gaussian law are known; not a fitted decoder or transferable market oracle.",
+    "Reference is stronger and different from the finite-bin scorecard's two-feature context; gaps do not isolate a single cause.",
+    "Only terminal-return laws are Gaussian here. No drawdown, scale-world or automatic-search qualification is implied.",
+    "No horizon average, product utility, materiality rule or production promotion is selected."
+  ],
+  "local_full_report": "output/gaussian-oracle-diagnostic-2026-11-06",
+  "parent_all_criteria_pass": false,
+  "parent_protocol": "whole-path-distribution-search-v1",
+  "protocol": "observed-score-gaussian-oracle-diagnostic-v1",
+  "receipt": {
+    "files": {
+      "COMPLETE": "7c7202a2317f4dad47ee64b9d99339462774c7e3a76300bc5474bc2f7836f040",
+      "forecasts.json": "104d394760a847ea6960c4807d261a4c0131f6cfa2307bb7daabd70dd1b2f5f9",
+      "summary.json": "d45326569ec8ccb4f60170770158b011cb93af28557db72f12a14929edd6362f"
+    }
+  },
+  "results": {
+    "12": {
+      "candidate_mean_crps": 0.2850987543920962,
+      "crps_skill_percent": 20.253426202249003,
+      "mean_crps_improvement": 0.07240720582024901,
+      "mean_improvement_world_bootstrap_95": [
+        0.06290506716264996,
+        0.08261081288320292
+      ],
+      "overlapping_origins_per_world": 24,
+      "reference_mean_crps": 0.35750596021234526,
+      "skill_world_bootstrap_95": [
+        18.25128940292227,
+        22.222101141763982
+      ],
+      "theory": {
+        "candidate_expected_crps": 0.2781522242465348,
+        "expected_crps_skill_percent": 20.719947846454744,
+        "qualification": "exact known-law expectation; parameters known, not estimated; no materiality threshold chosen",
+        "reference_expected_crps": 0.3508476807101802
+      },
+      "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+      "worlds": 200
+    },
+    "24": {
+      "candidate_mean_crps": 0.6430440605098457,
+      "crps_skill_percent": 10.523445338153204,
+      "mean_crps_improvement": 0.07562918628654958,
+      "mean_improvement_world_bootstrap_95": [
+        0.06041677820756359,
+        0.09121321109109391
+      ],
+      "overlapping_origins_per_world": 24,
+      "reference_mean_crps": 0.7186732467963953,
+      "skill_world_bootstrap_95": [
+        8.773581993260859,
+        12.187181760392518
+      ],
+      "theory": {
+        "candidate_expected_crps": 0.6467520995879125,
+        "expected_crps_skill_percent": 10.890785560957926,
+        "qualification": "exact known-law expectation; parameters known, not estimated; no materiality threshold chosen",
+        "reference_expected_crps": 0.7257971060112346
+      },
+      "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+      "worlds": 200
+    },
+    "48": {
+      "candidate_mean_crps": 1.3117174983445468,
+      "crps_skill_percent": 4.438551078550734,
+      "mean_crps_improvement": 0.06092545877801417,
+      "mean_improvement_world_bootstrap_95": [
+        0.03937507541851858,
+        0.08359883173126405
+      ],
+      "overlapping_origins_per_world": 24,
+      "reference_mean_crps": 1.372642957122561,
+      "skill_world_bootstrap_95": [
+        2.961264029920364,
+        5.887886165765139
+      ],
+      "theory": {
+        "candidate_expected_crps": 1.3215518301486675,
+        "expected_crps_skill_percent": 4.813413236038566,
+        "qualification": "exact known-law expectation; parameters known, not estimated; no materiality threshold chosen",
+        "reference_expected_crps": 1.388380311845597
+      },
+      "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+      "worlds": 200
+    }
+  },
+  "role": "post_hoc_explanation_not_qualification",
+  "runtime": {
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "python": "3.12.16"
+  },
+  "source_domain": 203,
+  "source_sha256": "d90ea8462cd1a73dbb1238462db45c895f1e2421e1fb64b492ba85483b3931c4"
+}

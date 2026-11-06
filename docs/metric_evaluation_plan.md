@@ -1,6 +1,7 @@
 # Indicator benchmark and evaluation plan
 
-Status: retrospective scorecard implemented and verified; automatic discovery unqualified.
+Status: retrospective scorecard verified; known-law information demonstrated;
+conditional synthetic null control verified; fitted-search sensitivity unqualified.
 Updated 2026-11-06.
 
 This is the canonical plan for the next benchmark. Current implemented results
@@ -237,6 +238,159 @@ error detection. Preserve the failed search result. Do not claim an indefinitely
 reusable discovery score, automatic financial promotion or unseen historical BTC
 evidence. Future acceptance requires a specified informational claim and evidence
 separate from the research loop; no amount of reshuffling recreates new market eras.
+
+## Known-law observed-score diagnostic
+
+The failed search is not the end of the qualification goal. A separate
+`research/gaussian_information_oracle.py` now establishes how much terminal-return
+information is available in the location positive when the generating law is
+known. It conditions on **observed data only**: all causal price history, versus
+all causal prices plus the history of candidate zero. It never receives the
+hidden state. Candidate zero is predesignated as the generator's smallest-noise
+score, not the candidate selected by the failed search.
+
+The state is stationary Gaussian AR(.95). Returns from step 2 onward equal
+`.08 * state[t-2] + .04 * innovation[t]`. The score is `-state[t]` plus `.1` times
+independent AR(.5) measurement error. A four-dimensional filter carries current
+and two lagged states plus measurement error. It updates using the current close
+and score before issuing a forecast. Future scores, prices and mature outcomes
+cannot change earlier posteriors. The reference uses the complete price history,
+which is stronger/different than the finite-bin readout's two-feature context.
+
+For terminal return from entry `t+1` to `t+H+1`, let
+`g_H = sum(phi**k for k in range(H))`. Its conditional mean is
+`b * g_H * E[state_t | history]`; variance is:
+
+```
+H * return_noise**2
++ b**2 * (1-phi**2) * sum(g_j**2 for j in range(1, H))
++ (b * g_H)**2 * Var[state_t | history]
+```
+
+Both conditional forecasts are exact Gaussians under this known law. Their
+expected CRPS is predictive standard deviation divided by `sqrt(pi)`. This
+permits an analytic ratio of expected losses without fitting long-horizon labels.
+It does not remove the structural-law assumption or make a market model valid.
+
+The [retained diagnostic](artifacts/gaussian-oracle-diagnostic-2026-11-06.json)
+reuses the **already exposed** 200 location worlds and all 24 common audit origins
+at each horizon. All overlapping origins stay together in each of 2,000 paired
+whole-world bootstrap resamples. This is post-hoc explanation, not fresh
+confirmation or revised qualification criteria:
+
+| Horizon | Exact expected CRPS skill | Replayed skill | Whole-world bootstrap 95% interval |
+| --- | ---: | ---: | --- |
+| 12 months | 20.72% | 20.25% | 18.25–22.22% |
+| 24 months | 10.89% | 10.52% | 8.77–12.19% |
+| 48 months | 4.81% | 4.44% | 2.96–5.89% |
+
+The generator does contain incremental observed-score information beyond full
+price history, including at 48 months. A correctly specified causal filter can
+extract it; the registered finite-data search did not reliably do so. The gap
+combines memory, reference, estimation, decoder capacity and selection, and cannot
+be assigned entirely to median bins. The four-year expected gain is also much
+smaller than the earlier 20.35% transferred threshold. No downside/scale oracle,
+learned-model qualification, market accuracy or horizon utility is established.
+
+Reproduce this explanatory diagnostic with:
+
+```bash
+python -m research.gaussian_oracle_diagnostic \
+  --output-dir output/gaussian-oracle-diagnostic-new
+```
+
+Independent review matched the filter to the frozen generator. Boundary tests
+compare recursive filtering to direct multivariate-Gaussian conditioning, terminal
+variance to an independent covariance sum, and normal CRPS to numerical CDF
+integration. They also check future-prefix immutability, a noiseless score, the
+uninformative-score limit, paired uncertainty and retention of the failed parent
+qualification status.
+
+## Whole-path conditional randomization
+
+`research/conditional_search.py` replaces transferred cutoff calibration with a
+model-X randomization test for a **declared, known synthetic score-path law**. The
+[original model-X paper](https://arxiv.org/abs/1610.02351) gives the conditional
+exchangeability argument. Here one observation is an entire joint matrix of all
+720 times and 24 candidates, not an independently shuffled ticket.
+
+Conditional on the complete realized price/context path, the null score matrix is:
+
+```
+score[t,j] = .5 * context0[t] - shared_AR95[t] + sigma[j] * independent_AR50[t,j]
+sigma = linearly spaced .1 ... 2
+```
+
+Both AR processes start in their stationary unit-variance distributions; candidate
+correlation and temporal persistence are retained. The context component is a
+known causal transform of the fixed price path. Under this null, observed and
+redrawn whole score matrices are exchangeable conditional on that path. The test
+reruns the complete 216-cell development search for each matrix, with common
+longest-horizon phase boundaries, and reports the selected audit statistic. Its
+one-campaign p-value is:
+
+```
+(1 + count(randomized_statistic >= observed_statistic)) / (randomizations + 1)
+```
+
+Ties use `>=`; 99 redraws give minimum p=.01. Exact conditional rank validity does
+not require independent returns, independent outcomes or a model of the price
+path. It **does require the correct entire conditional score law**. It is a strong
+synthetic null, not a generic null of no useful Bitcoin information. Estimating a
+score law from short market history does not inherit this guarantee.
+
+The vectorized implementation is checked against every development attempt,
+selected candidate/target/horizon and audit result from the frozen scalar search.
+It computes audit losses in a batch but selection depends only on development.
+Missing paths fail rather than disappear. All observed development attempts and
+randomized statistics/selections are retained; source and seeds reproduce redraws.
+
+The new registered run uses fresh seed 20261211, 500 independent null campaigns
+per each of three price families, and 200 per location/scale positive. Null prices
+are IID Gaussian, clustered heavy-tailed, or autocorrelated Gaussian location paths;
+the observed score residual is independent of price in all nulls. Positives have
+the same score-residual marginal law after subtracting the known context shift,
+with a common state driving future price increments. Their raw score marginals
+may differ because price context is correlated with the state.
+
+The acceptance criteria remain explicit: each null's one-sided 98.333% upper bound
+must be at most 10%; each planted sensitivity's one-sided 95% lower bound must be
+at least 80%. Passing null control alone does not qualify useful-signal detection.
+The full [registered result](artifacts/conditional-search-2026-11-06.json) is retained
+at `output/conditional-search-2026-11-06-registered`. Its 1,900 independent campaigns
+each used 99 whole-path redraws; all 190,000 score-matrix searches completed in
+305 seconds with four bounded workers. No campaign was dropped. Every retained
+p-value and aggregate flag count was independently recalculated from the stored
+statistics, and all receipts/source hashes verified.
+
+| Family | Flags / worlds | Rate | Registered bound | Pass |
+| --- | ---: | ---: | ---: | --- |
+| IID Gaussian prices | 31 / 500 | 6.2% | upper 8.91% | yes |
+| Clustered t(3) prices | 18 / 500 | 3.6% | upper 5.82% | yes |
+| Autocorrelated location prices | 25 / 500 | 5.0% | upper 7.50% | yes |
+| Planted location | 21 / 200 | 10.5% | lower 7.14% | no |
+| Planted scale | 6 / 200 | 3.0% | lower 1.31% | no |
+
+The registered **overall qualification still fails**. Null control and sensitivity
+are separate requirements. Under exact Q the exchangeable-rank argument controls
+one campaign at 5%; these simulation bounds also meet the declared 10% tolerance.
+They are not an empirical proof of a market 5% error rate. Low sensitivity remains
+despite known observed-score information in the location world. No threshold or
+readout retuning was performed using these evaluation counts.
+
+```bash
+python -m research.conditional_search \
+  --output-dir output/conditional-search-new --workers 4
+```
+
+One test covers one complete registered search. Further campaigns require an
+explicit shared alpha budget or another valid joint test. Human adaptation that
+is not reproduced for every redraw is outside the conditional-rank argument.
+The 24-slot local ledger is exposure accounting, not that statistical correction.
+This restriction preserves the original long-running research goal: do not
+substitute a passing synthetic null check for sensitivity or claim a restored
+historical holdout. The goal remains active until its qualification requirements
+are actually supported.
 
 ## Implemented qualification pilot
 
@@ -919,21 +1073,36 @@ Verified issues to resolve before policy/outcome optimization:
    paired ordering/forecast diagnostics, fixed references, candidate ledger and
    strict readout feasibility. Boundary, invariance, independent E2E and deliberate
    defect tests verify the measurement mechanics.
-2. **Next bounded implementation:** add an append-only shadow observation archive
+2. **Next bounded qualification experiment:** implement a continuous location/scale
+   readout with a separate empirical residual-calibration distribution. Fit mean
+   and log residual scale from fitting data only; keep calibration outcomes out
+   of fitting. This tests a diagnosed capacity/memory gap rather than lowering a
+   failed acceptance threshold. Predeclare 192 fitting rows and 96 rows each for
+   calibration/development/audit, with every boundary clearing the longest label;
+   retain the 24-candidate, three-target, three-horizon search and repeat the
+   entire procedure in every CRT redraw. Before generating evaluation worlds,
+   freeze transformations, regularization, scale limits and code hashes. Reserve
+   fresh seed 20270119; all earlier worlds are exposed development/explanation.
+   Keep the existing null-error and sensitivity criteria; do not retune from new
+   evaluation counts. This is an accepted research implementation direction, not
+   implemented or guaranteed to pass. A 720-step synthetic path can fit these
+   phases; the ~140-month market indicator history cannot. Any synthetic success
+   must retain that coverage limit rather than claim a qualified BTC readout.
+3. Add an append-only shadow observation archive
    with producer/configuration identity, actual observation/publication/decision
    timestamps and frozen score/readout state. Archive incomplete-outcome forecasts
    without scoring them, then resolve labels append-only when they mature. The
    present scorecard only scores completed paths; this archive is not implemented.
    Tests must prove future data/retraining cannot rewrite prior observations or
    forecasts. Unknown input vintages remain unknown, not silently point-in-time.
-3. Before a bounded candidate campaign, state one informational hypothesis and
+4. Before a bounded candidate campaign, state one informational hypothesis and
    diagnostic comparisons; distinguish decoder improvement from novelty and
    directional usefulness. All explored historical results remain development
    evidence. Do not promote a model from its best exposed scorecard row.
-4. External markets, real-time macro vintages and analytic oracle comparisons
+5. External markets, real-time macro vintages and further oracle comparisons
    may address specific diagnosed gaps. They are accepted research directions,
    not implemented transfers or excuses to tune exposed qualification worlds.
-5. Replace the production acceptance contract only after the indicator benchmark
+6. Replace the production acceptance contract only after the indicator benchmark
    is reviewed and verified. ADR 0008 and existing canonical metrics describe the
    current policy gate until then; do not silently rewrite them as implemented.
 
@@ -978,8 +1147,14 @@ exact incumbent submission reproduced every prediction; a missing date failed
 without altering the immutable baseline. A fixed noise submission changed only
 its dependent result. Portable snapshot replay reproduces benchmark identity
 `7b4a52c04577d92d40501965a5c01d801b62c3d31306d7297db08ded9cfb57cb`.
-All 195 backend tests passed, including the 17 new focused tests. Existing pandas
-future warnings remain; no hosted CI or frontend checks were needed for this
+The scorecard slice passed all 195 backend tests, including 17 new focused tests.
+The oracle/conditional-search slice passed all 206 backend tests, including 11
+further tests. Its independent mathematical review found no blocking defect;
+11 reintroduced defects were caught, including return-lag errors, incorrect
+state prior scale, omitted future innovations, future-score leakage, wrong
+Gaussian CRPS, invalid tie/+1 ranks, lost candidate dependence, audit selection,
+failure to reselect on redraws and incorrectly marking the failed parent as passed.
+Existing pandas future warnings remain; no hosted CI or frontend checks were needed for this
 offline-only change. Eleven deliberately reintroduced defects were
 caught in isolated copies, including entry lag, false drawdown, missing support,
 label maturity, cross-horizon timing, CRPS, duplicate-context shrinkage, runtime
@@ -987,8 +1162,26 @@ drift, unbounded attempts, corrupt receipts and nonfinite zero-loss references.
 
 The production model fingerprint remains unchanged. Earlier research commits are
 `573de0d`, `b260774`, `349b973`, `fe04721`, `e5d71b1` and `51bb110`; scorecard
-implementation is `a35a3f9` and whole-path qualification is `92e8a27`. Josh explicitly requested
-keeping all commits local; no push or deployment is authorized. The two untracked
+implementation is `a35a3f9`, whole-path qualification is `92e8a27`, the observed-score
+oracle is `631063b` and conditional randomization is `e5f26e2`. Josh explicitly
+requested keeping all commits local; no push or deployment is authorized. The
+remote advanced independently with automated data refresh `4d9789b`; it was not
+merged into this held research checkout or used to alter the frozen evidence.
+The two untracked
 user directories `.codex/` and `.github/hooks/` are preserved. This document owns
 the project-specific lessons; the skill-harvest/self-improvement review found no
 additional global skill change necessary.
+
+### Active-goal completion audit
+
+| Requirement | Current authoritative evidence | Status |
+| --- | --- | --- |
+| Detect useful information under dependent worlds | Observed-score Gaussian oracle, independent conditioning/covariance tests and exposed-world replay | Known-law capability demonstrated; fitted-search sensitivity still fails |
+| Control false promotion under declared dependent nulls | Whole-path CRT exchangeability under exact Q, full-search equivalence tests, 1,500 fresh null campaigns | Pass within the declared one-campaign synthetic scope |
+| Chronological/provenance integrity | Strict longest-label boundaries, causal filter prefix tests, immutable data/results and unchanged source fingerprints | Verified mechanics; historical market vintages explicitly unverified |
+| Safe adaptive-search scope | Full 216-cell algorithm rerun per matrix; local custom ledger; documented correction/access limits | Finite scope defined; unlimited human adaptation not qualified |
+| Local-only changes | Atomic commits on local main; frozen receipts and portable evidence | No push/deployment; user hold persists |
+
+Do not mark the goal complete while the learned evaluation/search procedure fails
+the useful-signal sensitivity requirement. The continuous location/scale readout
+experiment above is the next bounded step, not a replacement or narrowed goal.

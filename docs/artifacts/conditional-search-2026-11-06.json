@@ -1,0 +1,96 @@
+{
+  "all_criteria_pass": false,
+  "config": {
+    "alpha": 0.05,
+    "null_worlds": 500,
+    "positive_worlds": 200,
+    "randomizations": 99,
+    "seed": 20261211
+  },
+  "criteria": "null one-sided98.333% upper<=10%; planted one-sided95% lower>=80%; no dropping or retuning",
+  "elapsed_seconds": 305.20760212501045,
+  "families": {
+    "autocorrelated_location": {
+      "criterion_pass": true,
+      "flags": 25,
+      "lower": 0.03499847873037898,
+      "rate": 0.05,
+      "upper": 0.07499948674120568,
+      "worlds": 500
+    },
+    "clustered_t3": {
+      "criterion_pass": true,
+      "flags": 18,
+      "lower": 0.023395132182358003,
+      "rate": 0.036,
+      "upper": 0.05815612997778767,
+      "worlds": 500
+    },
+    "iid_gaussian": {
+      "criterion_pass": true,
+      "flags": 31,
+      "lower": 0.04523566649412647,
+      "rate": 0.062,
+      "upper": 0.08908222298345642,
+      "worlds": 500
+    },
+    "leading_location": {
+      "criterion_pass": false,
+      "flags": 21,
+      "lower": 0.07144443546847468,
+      "rate": 0.105,
+      "upper": 0.14767524398221699,
+      "worlds": 200
+    },
+    "leading_scale": {
+      "criterion_pass": false,
+      "flags": 6,
+      "lower": 0.013143987087180564,
+      "rate": 0.03,
+      "upper": 0.058349760375911525,
+      "worlds": 200
+    }
+  },
+  "known_null": "conditional on full price/context path: .5*context0 - independent sharedAR(.95) + sigma_j*independentAR(.5), sigma=.1..2",
+  "limitations": [
+    "Exact rank validity requires the declared conditional score law, including every time/candidate dependence.",
+    "The whole path, including its known contemporaneous context shift, is conditioned on; this is a strong synthetic model-X null.",
+    "Unknown or estimated Bitcoin score-path laws do not inherit the guarantee.",
+    "One registered complete search per campaign; human adaptation outside the rerun algorithm invalidates this interpretation.",
+    "Repeated campaigns need an explicit alpha budget or another joint test; a 24-attempt ledger alone is not that correction.",
+    "The fitted readout can still lack power; exact null validity is not useful-signal sensitivity, market validity or a production promotion rule."
+  ],
+  "local_full_report": "output/conditional-search-2026-11-06-registered",
+  "protocol": "whole-path-conditional-search-v1",
+  "receipt": {
+    "files": {
+      "COMPLETE": "7c7202a2317f4dad47ee64b9d99339462774c7e3a76300bc5474bc2f7836f040",
+      "campaigns.json": "5872839d42d0bcb86b7e4d862f9a08dce3950d0f04eb9dfb4ae74a5e9b6492d0",
+      "registration.json": "9de3891edfae64fee21057521c4eade381d8a74295468d7168fbf7fc39e6747b",
+      "summary.json": "6465fbacf4a52a1a6245b31c4de4463229391a7c244b8cf3354b728ea3606bf7"
+    }
+  },
+  "registration": {
+    "code_sha256": {
+      "conditional_search.py": "72f5dc66454b55c37912375c2efba38a31858b2f26e1525bea401c79aaecc8a1",
+      "market_dataset.py": "679222de6b2a98337790d5b5686af03d7f630b118e2165d93512f3f6898cace4",
+      "scorecard_artifacts.py": "ac01f75b625e0c728316eb61eebf3d0c4f18b4af63a546eb81a1f0316a356ab1",
+      "search_qualification.py": "f6263fb693ebad2551e515c788428bea541ee99f0743f3576b1d9b4f8a5319a7"
+    },
+    "config": {
+      "alpha": 0.05,
+      "null_worlds": 500,
+      "positive_worlds": 200,
+      "randomizations": 99,
+      "seed": 20261211
+    },
+    "criteria": "three null upper<=.10, two positive lower>=.80, no retuning",
+    "runtime": {
+      "numpy": "2.4.6",
+      "pandas": "2.3.3",
+      "python": "3.12.16"
+    }
+  },
+  "test": "repeat complete216-cell dev selection for every joint whole-path redraw; one selected audit statistic; p=(1+count(random>=observed))/(B+1)",
+  "workers": 4
+}
