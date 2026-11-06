@@ -1,6 +1,7 @@
 # Indicator benchmark and evaluation plan
 
-Status: design proposal, not implemented. Updated 2026-11-06.
+Status: benchmark design under review; synthetic qualification pilot implemented.
+Updated 2026-11-06.
 
 This is the canonical plan for the next benchmark. Current implemented results
 remain in [DCA evidence](dca_evidence.md). This replaces the older Phase 1/2
@@ -44,13 +45,219 @@ real-market generalization.
 - Availability: only information actually available at decision time may be used.
 - Outcomes: future return/opportunity and intervening downside, assessed separately.
 - Audience: Josh and future maintainers designing and implementing the benchmark.
-- Deliverable now: reviewed research and an implementation specification. No new
-  model, training campaign, data vendor or production-gate change in this task.
+- Deliverable now: reviewed design plus a bounded synthetic forecast/search
+  qualification pilot and market-data coverage report. No market-model training,
+  adopted investor objective, data vendor or production-gate change.
 - Constraints: local/offline development, reproducible snapshots, bounded compute,
   existing free infrastructure; no incidental paid services.
 - Expected useful negative result: a candidate has no incremental information, is
   fragile across eras, or cannot be evaluated with the available mature outcomes.
   Each is a valid result, not a reason to loosen the benchmark after a run.
+
+## Implemented qualification pilot
+
+Run the offline research tool with locked NumPy/pandas dependencies installed:
+
+```bash
+mkdir -p output
+python -m research.forecast_pilot --output-dir output/forecast-pilot-new-run
+```
+
+The output path must be new, under an existing parent, with no symlinked path
+components. Runs are immutable: a completed run has a `COMPLETE` marker and a
+SHA-256 manifest binding its outputs. Interrupted runs have no completion marker;
+keep them for diagnosis and choose a fresh path. The tool does not repair,
+overwrite, delete, open browsers or contact APIs.
+
+`research/forecast_readout.py` owns exact empirical-distribution CRPS, a
+training-only mid-percentile transform and a fixed direction-constrained ridge
+location model. Residual distributions use a separate later calibration phase,
+not location-fit residuals. The context coefficient is reoptimized if the
+indicator's constrained slope lands at zero. These plug-in forecasts still omit
+parameter uncertainty and are not asserted to be calibrated.
+
+`research/forecast_pilot.py` generates four independent chronological regression
+blocks per campaign: fit, residual calibration, development and audit. The
+context is genuinely predictive; the null says that the indicator contributes
+no information beyond it. All phases have explicit decision and label-resolution
+steps. Each campaign tries 24 fixed noisy-indicator variants, selects once on
+development, and then evaluates only that winner on audit. A distinct 200 null
+campaigns calibrate a 5%-level declaration threshold for this synthetic procedure.
+Fresh campaigns evaluate the full search, including its selection step.
+
+The [portable result](artifacts/forecast-pilot-2026-11-06.json) records the frozen
+configuration, source-code hashes, runtime, all reported summaries and monthly
+market-data usability ledger. Full local attempts/predictions are in
+`output/forecast-pilot-2026-11-06-qualified/`, approximately 15 MB, ignored by Git.
+Synthetic records can be regenerated from the seed and code; the usability ledger
+retains the inputs needed to reproduce coverage counts without retaining the full
+ignored market artifact. It is not a retained feature dataset for training.
+
+| Fresh campaign family | Declarations / 200 | Rate, 95% Wilson interval | Median audit CRPS skill vs context |
+| --- | --- | --- | --- |
+| No incremental information | 11 | 5.5%, 3.1–9.6% | approximately 0 |
+| Planted signal, strength 0.5 | 197 | 98.5%, 95.7–99.5% | +5.14 |
+| Planted signal, strength 1.0 | 200 | 100%, 98.1–100% | +15.04 |
+| Same strong signal, inverted indicator direction | 0 | 0%, 0–1.9% | 0 |
+
+These are Monte Carlo campaign intervals conditional on the calibrated threshold.
+The threshold was 0.535 CRPS skill points; it is not a proposed market materiality
+margin. The null median development gain was +0.220 points, illustrating how
+selection can create an apparent improvement even without incremental information.
+These independent Gaussian regression blocks do not qualify persistent, heavy-
+tailed or overlapping market outcomes. The audit worlds are now exposed; do not
+retune to them and describe them as unseen.
+
+Optional coverage-only diagnostics require explicit horizons:
+
+```bash
+python -m research.forecast_pilot --output-dir output/forecast-pilot-with-coverage \
+  --artifact-series output/risk_scores_full.csv --diagnostic-horizons 12 24 48
+```
+
+This invocation does not approve those horizons or score market forecasts. Under
+illustrative one-month execution lag, one-day outcome publication lag and 24 raw
+mature labels, the current artifact supports 89/65/17 completed entry observations
+after the first fitting cutoff for 12/24/48 months. These are overlapping coverage
+counts, not independent samples or sufficient calibration data. Exact month-close
+rows are required; July 30 is not relabeled July 31 and missing closes are not
+filled from earlier prices. As-of source/input vintages remain unverified.
+
+Verification: 18 focused pilot/readout tests pass; the complete backend suite
+passes 165 tests. Eight deliberate defects were caught in isolated copies: removing
+the CRPS pair term, clipping a constrained slope without refitting context,
+allowing unresolved labels, accepting the wrong direction, carrying a missing
+month-close price, selecting the winner using audit outcomes, using development
+outcomes for residual calibration and replacing the null threshold order statistic
+with the maximum. Astra's
+implementation review reported no substantive correctness/leakage finding for
+this synthetic-only scope. Python 3.12.16 ran the local checks; project CI pins
+Python 3.11.18, so hosted execution has not been demonstrated for this slice.
+
+A smaller harness smoke run (8 candidates, 40 threshold campaigns, 30 evaluation
+campaigns per family, 96 fit/48 later-phase rows) preceded the registered-size run.
+Repeated full-size runs used identical seeds and trial recipes while report
+metadata was hardened; they are duplicate simulations, not new evidence.
+
+Next bounded step: the falsification experiments specified below, before broader
+market-model search. Separately settle the indicator's informational claim before
+market scoring. Do not use this pilot as the production acceptance gate.
+
+## Scientific interpretation and competing designs
+
+Independent objective, validation and adversarial lenses (Sol, Terra and Astra)
+were used after the first pilot. Their methodological arguments, checked against
+primary sources, change the recommendation as follows. Model agreement is not
+validation; the arguments and falsification tests determine the next work.
+
+Three distinct meanings of an indicator must not share an unqualified score:
+
+| Meaning | Evidence needed | What a passing result cannot imply |
+| --- | --- | --- |
+| Descriptive state: unusual, stretched or expensive against a defined quantity | Correct measurement, provenance and causal stability | That future exposure is unattractive |
+| Predictive representation: helps forecast future outcomes | Incremental out-of-sample proper-loss reduction under a registered readout/context | That higher/lower states are economically preferable |
+| Favourable ordering: distinguishes better exposure opportunities | Correct directional ordering across a declared outcome/preference domain | Universal dominance when upside and downside trade off |
+
+For example, a signal that predicts variance but not expected return may be useful
+risk information while failing an accumulation-opportunity claim. A registered
+location-only decoder can miss that information; a flexible distribution decoder
+can reward it without establishing favourable ordering. A failed decoder is not
+proof that the indicator contains no information. Neither decoder is neutral.
+
+**Recommended research architecture:** a representation benchmark for experiments,
+separate directional tests for the product's stated ordering, and a decision-value
+surface as the breadth check. Do not average these into one scientific certificate.
+A candidate can improve one and remain ineligible for another claim.
+
+Call the representation result *incremental usable predictive content under the
+registered context/readout/update procedure*. A deterministic transform of full
+price history adds no Shannon information conditional on that full history. It
+can still help a restricted learner extract a useful pattern. Our small price
+reference tests this practical learnability comparison, not the impossible claim
+of information absent from all the underlying price data.
+[Holzmann–Eulert](https://arxiv.org/abs/1404.7653) analyzes forecasting with differing
+information sets; finite fitted procedures and their estimation uncertainty still
+need evaluation, as emphasized by
+[Giacomini–White](https://economia.uc3m.es/jgonzalo/teaching/PhdTimeSeries/GiacominiWhite.pdf).
+
+Cash-relative log-wealth paths provide a coherent outcome representation without
+arbitrary dollars: `X_t(u) = log(P_(t+u)/P_t) - log(C_(t+u)/C_t)`. This is a proposed
+representation, not an accepted utility or horizon. Terminal return distributions
+can cross: high upside with crash risk and modest upside with little risk can be
+incomparable. Terminal stochastic dominance does not imply pathwise dominance;
+separate marginal forecasts can miss ordering, recovery duration and dependence.
+Even multivariate proper scores may have weak sensitivity to incorrect dependence
+([Scheuerer–Hamill](https://repository.library.noaa.gov/view/noaa/22327/)). Full
+48-dimensional path forecasting is not justified by this small sample.
+
+Decision-value surfaces should use a small prespecified family of exposure/cash
+choices, holding periods and loss tolerances, with decision rules fitted only on
+past data and common funding constraints. Murphy diagrams are a precedent for
+comparisons across defined loss classes, not a shortcut to every investor's
+preferences. Persistent crossings challenge the one-dimensional indicator claim;
+they are not automatically repaired by another fitted weight.
+
+### Prioritized falsification experiments
+
+These are proposals for the next research slice, not completed experiments.
+
+1. **Dependence without edge.** Generate short chronological price paths with
+   persistent irrelevant indicators and overlapping long-horizon outcomes. Preserve
+   candidate/context dependence under the conditional null. Replay all fit,
+   calibration and selection cutoffs on matured labels; hold the IID-calibrated
+   threshold fixed as a falsification check. Measure whole-campaign false flags
+   across independent paths. Inflation means the pilot threshold does not transfer.
+   BTC-sized histories that cannot support the phases must return insufficient
+   evidence; longer simulated controls do not solve their feasibility problem.
+2. **Information timing with matching marginals.** Compare an observable state
+   influencing future returns with an identically distributed lagging indicator
+   describing past returns, and a retrospectively revised version unavailable at
+   the decision time. The leading signal may score, the lagging signal must not
+   inherit its edge, and unavailable revisions must be ineligible regardless of
+   score. Require observation, publication, decision and execution records.
+3. **Useful tail information with no mean signal.** Plant observable volatility
+   or downside-tail state with equal conditional mean, plus a location-shift
+   control and exact oracle distributions. Test whether the location decoder
+   misses genuine information and a registered distribution readout detects it.
+   Forecast skill may pass while favourable-entry ordering must remain unproven.
+4. **A redundant transform repairing an underfit reference.** Generate nonlinear
+   outcome dependence on price context C and an indicator S=g(C). Compare a weak
+   context model, a suitable context-only oracle, the transform-augmented model
+   and a genuinely additional signal. A representation gain must not be labeled
+   information absent from price. Register stronger references before using their
+   results, rather than increasing capacity opportunistically until a win vanishes.
+5. **A relationship that vanishes or flips after selection.** Freeze the update
+   algorithm and score the audit regime without retuning. Preserve marginals
+   while changing the relationship; include gradual and sudden transitions.
+   Report transition losses and recovery, and forbid updates from unresolved
+   labels. No method can instantly identify an unobserved regime reversal.
+6. **Crossed outcomes, path order and financing.** Construct upside/downside
+   trade-offs and paths with similar terminal/marginal distributions but different
+   crash order or recovery. Vary cash returns separately from BTC returns. The
+   benchmark must show preference/dependence sensitivity rather than label one
+   universally better. This can falsify the one-dimensional opportunity claim.
+
+The next minimum qualification tranche is experiments 1–4, using oracle
+references and explicit ineligible/insufficient-evidence states. Predeclare
+new generators/parameters and hold out generator families, not only seeds.
+Repeat complete threshold calibration plus search/audit on independent worlds;
+report both conditional and across-calibration uncertainty, modest-effect power
+and chance of at least one false declaration over the planned campaign schedule.
+The current Wilson intervals condition on one threshold and do not establish
+indefinite 5% error control. Development diagnostics can compare return tails,
+volatility/label autocorrelation, drawdown duration and cross-variable dependence;
+matching them does not prove a simulator contains future BTC regimes. Unknown
+source vintages remain quarantined rather than simulated into certainty.
+
+White/Hansen family tests, block bootstrap, PBO and sequential tests answer
+specific questions under explicit assumptions. They are not interchangeable
+protections to stack until the score looks rigorous. Long-block inference is
+weak with only a few complete market eras. Anytime-valid methods require a valid
+conditional null and delayed-outcome filtration; ordinary repeated p-values are
+not an e-process. See
+[Casgrain–Larsson–Ziegel](https://arxiv.org/abs/2204.05680). More synthetic replications
+can reduce Monte Carlo error, but not uncertainty about which generator describes
+the market.
 
 ## 1. Separate four kinds of test
 
@@ -418,12 +625,12 @@ model generation. Its current three-test results are faithfully recorded in
 | Unit/regression infrastructure | Implemented; focused tests available | Preserve and add boundary tests that fail under reintroduced defects |
 | Fixed-notional multi-horizon outcome table | Not implemented as the primary benchmark | Common timestamps, executable dates, complete outcomes and named loss conventions |
 | Ordinal information diagnostics | Existing region diagnostics only | Continuous fixed-direction ranks, ties, invariance tests and paired baselines; not the primary leaderboard |
-| Forecast readout and skill | Not implemented | Mature-label fit audit; tiny common decoder; insufficient-evidence state |
+| Forecast readout and skill | Implemented for synthetic pilot only | Market-target decision, dependent-data qualification and real readout feasibility remain open |
 | Chronological benchmark | Partial walk-forward label/threshold sidecar | Audit complete model fitting, candidate selection and online updates |
 | Baseline identity | File hashes and canonical summary exist | Immutable retained dataset; incumbent rerun on identical bytes |
-| Experiment registry | SQLite run index/artifacts exist | Candidate lineage, all attempts, predictions, benchmark identity and audit access |
+| Experiment registry | Existing run index; pilot logs every synthetic attempt and selected audit prediction | General candidate lineage, market prediction state and restricted audit access remain open |
 | Prospective archive | Release records and inputs exist | Candidate/readout/update-state lineage and outcome-resolution evaluator |
-| Synthetic / external suite | Not implemented as specified | Separate evidence tiers, coherent generators and synchronized cross-asset splits |
+| Synthetic / external suite | Independent Gaussian qualification worlds implemented | Dependent/overlapping paths, regime breaks and cross-asset tests remain open |
 | Supporting policy accounting | Implemented but multiple variants remain | One explicit contract per test; capital/exposure controls and reporting |
 
 Verified issues to resolve before policy/outcome optimization:
@@ -487,18 +694,22 @@ Verified issues to resolve before policy/outcome optimization:
 
 ## Verification and handoff
 
-This task inspects and specifies the benchmark; it does not demonstrate that a
-new model is better. No new dataset was downloaded, generator fitted, or model
-trained. The Astra medium collaborator supplied an independent design and then
-revised it following the indicator-first correction; its claims were checked
-against owning code and primary sources before inclusion.
+This task specifies the benchmark and implements its first synthetic qualification
+pilot; it does not demonstrate a better market indicator. No new market dataset
+was downloaded and no market model was trained. The Astra medium collaborator
+reviewed the design and implementation independently. Its two recommended test
+additions, frozen forecast quantiles and a non-extreme threshold order statistic,
+were included.
 
 The implementation plan now serves the requested information-indicator goal;
 strategy-specific wealth optimization is explicitly outside the primary score.
-Historical data quality, vintage eligibility, calibrated-readout feasibility,
-benchmark false-positive rates and external-market transfer remain unverified.
+Historical data quality, vintage eligibility, market readout feasibility,
+market false-positive rates and external-market transfer remain unverified.
+The pilot measures declaration rates only under its specified synthetic generator.
 The strongest alternative explanation for an apparent future leaderboard gain
 will be adaptive fitting to a few shared market eras. Keep that risk visible.
 
-Changes here are a specification, not new accepted model behavior. Record the
-focused verification result and commit/publication status with the handoff.
+The production model fingerprint remains unchanged. Core scorer/readout controls
+are committed in `349b973`; the runner, tests, portable pilot result and this
+status are one subsequent research slice. Local commits require push approval;
+no publication or deployment is implied by local test results.
