@@ -19,7 +19,19 @@ capital or exposure. Strategy simulations are supporting evidence.
 The benchmark must support many model ideas, limit adaptive overfitting, remain
 representative of long-horizon use, and test situations outside the development
 sample. No combined wealth/drawdown utility is accepted. Exact scoring and the
-proposed 12/24/48-month outcome contract remain proposals pending review.
+outcome contract remain unaccepted. In review, Josh challenged whether fixed
+notional returns and a 12/24/48-month grid constitute a robust target. They do
+not by themselves. Withdraw the horizon average and ordinal rank score as the
+proposed primary leaderboard; retain them as candidate diagnostics. Capital
+normalization is necessary for comparison but does not validate an objective.
+
+The next design check is a small conditional-forecast comparison against simple
+references, not approval of arbitrary horizons. First establish the indicator's
+specific informational claim and whether mature data supports its evaluation.
+Before freezing a search score, test the whole selection procedure on no-signal
+and planted-signal worlds: does it reject lucky search winners and detect increasing
+information? These tests validate behavior under their declared generators, not
+real-market generalization.
 
 ## Decision served and scope
 
@@ -98,7 +110,7 @@ adaptive strategies. State exactly which comparison is controlled.
 
 ## 3. What 'higher is better' can mean
 
-### First implement an ordinal development benchmark
+### Keep ordinal ordering as a diagnostic
 
 The current indicator is an ordered index, not a forecast probability. Evaluate
 its declared meaning directly before fitting a decoder that might conceal it.
@@ -119,17 +131,19 @@ Properties required of this score:
 - Scores are reported per horizon and era, with outcome magnitudes beside them.
   Good ordering of tiny differences is not automatically economically material.
 
-Proposed horizons: 12, 24 and 48 months, with separate opportunity and downside
-leaderboards. A headline within a family may use equal frozen horizon weights,
-but must show every constituent and cannot promote a candidate by hiding a
-material four-year regression. Do not pool return and downside into one utility.
-Until the horizon decision is accepted, keep this as a proposal.
+Candidate diagnostic horizons are 12, 24 and 48 months, with opportunity and
+downside reported separately. An equal-weight horizon average has no accepted
+economic interpretation and is withdrawn as the proposed primary score. A rank
+score also discards the size of outcome differences and may reflect calendar
+trends across overlapping outcomes. It is not sufficient evidence of incremental
+information beyond price. Select targets from the indicator's intended claim;
+do not pool return and downside into one utility or treat this grid as approved.
 
 This is a retrospective discovery score, not a confirmatory p-value or a
 probability of profit. Nonlinear conditional information that contradicts the
 advertised ordering is an exploratory finding, not a passing ordinal indicator.
 
-### Add proper forecast scoring when calibration is supportable
+### Evaluate conditional forecast quality when the target and data support it
 
 A stronger information test evaluates distributions of those outcomes. Use a
 proper loss such as CRPS for continuous forecasts, and Brier loss for a small
@@ -403,7 +417,7 @@ model generation. Its current three-test results are faithfully recorded in
 | --- | --- | --- |
 | Unit/regression infrastructure | Implemented; focused tests available | Preserve and add boundary tests that fail under reintroduced defects |
 | Fixed-notional multi-horizon outcome table | Not implemented as the primary benchmark | Common timestamps, executable dates, complete outcomes and named loss conventions |
-| Ordinal information score | Existing region diagnostics only | Continuous fixed-direction ranks, ties, invariance tests and paired baselines |
+| Ordinal information diagnostics | Existing region diagnostics only | Continuous fixed-direction ranks, ties, invariance tests and paired baselines; not the primary leaderboard |
 | Forecast readout and skill | Not implemented | Mature-label fit audit; tiny common decoder; insufficient-evidence state |
 | Chronological benchmark | Partial walk-forward label/threshold sidecar | Audit complete model fitting, candidate selection and online updates |
 | Baseline identity | File hashes and canonical summary exist | Immutable retained dataset; incumbent rerun on identical bytes |
@@ -443,7 +457,7 @@ Verified issues to resolve before policy/outcome optimization:
    maturity, forecast immutability after retraining, future-suffix stability,
    incomplete periods and adverse-excursion/drawdown semantics.
    Do not launch candidate searches or replace CI acceptance yet.
-2. Add ordinal paired leaderboard, fixed references, candidate registry and
+2. Add paired ordinal diagnostics, fixed references, candidate registry and
    historical era sensitivity. Mutation-test direction, missing-date selection,
    monotone rescaling and future leakage. Freeze development/audit roles.
 3. Assess whether a tiny causal readout is supportable; add forecast scoring and
@@ -459,9 +473,11 @@ Verified issues to resolve before policy/outcome optimization:
 
 ### Genuinely open decisions
 
-- Confirm the proposed return/downside outcome contract at 12/24/48 months.
-  The glossary currently says approximately six months; the gate uses 48 months.
-  Reconcile the glossary and ADRs when the new contract is accepted.
+- Establish the precise information the indicator claims to convey before
+  selecting primary targets/horizons. The 12/24/48-month mixture and rank-based
+  primary score were challenged and withdrawn as the recommendation. The glossary
+  currently says approximately six months; the gate uses 48 months. Reconcile
+  glossary and ADRs only when a replacement contract is actually accepted.
 - Freeze exact family/horizon weights and materiality/non-regression margins
   before the first campaign. No cross-family scalar utility is proposed.
 - For supporting accumulation policies, define permitted cash deferral precisely.
