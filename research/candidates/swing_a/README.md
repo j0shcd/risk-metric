@@ -56,8 +56,8 @@ cycles provide weak independent replication; no pristine holdout is claimed.
 
 ## Verification and status
 
-Five unit tests cover every monthly prefix, future perturbation including the query
-date, scale invariance/bounds, invalid inputs and empty-history neutrality. Removing
+Six unit tests cover every monthly prefix, future perturbation including the query
+date, scale invariance/bounds, invalid inputs/parameters and empty-history neutrality. Removing
 the observation lag makes the perturbation test fail; the mutation was restored.
 Run from repository root:
 
@@ -75,3 +75,7 @@ Brief vs delivered: predictive monthly Bitcoin indicator as briefed; all outcome
 comparisons and uncertainty remain unanswered until parent contract is supplied.
 No shared/product documentation changes are needed for this isolated prototype.
 Skill harvest/self-review: no global skill change justified by this bounded run.
+
+Frozen-input smoke run: 4,018 daily observations (2012-01-01 to 2022-12-31)
+yield 132 finite monthly outputs. Nonfinite-parameter guard mutation also fails
+its regression test; restored before commit.

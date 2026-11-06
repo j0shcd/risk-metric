@@ -22,7 +22,7 @@ def generate_indicator(observations: pd.DataFrame, dates=None, *, memory_weight=
     """
     if not 0 <= memory_weight <= 1:
         raise ValueError("memory_weight must be in [0,1]")
-    if anchor_halflife_days <= 0 or memory_halflife_days <= 0:
+    if not np.isfinite([anchor_halflife_days, memory_halflife_days]).all() or anchor_halflife_days <= 0 or memory_halflife_days <= 0:
         raise ValueError("halflives must be positive")
     frame = observations.loc[:, ["Date", "Price"]].copy()
     frame["Date"] = pd.to_datetime(frame["Date"], utc=True).dt.tz_localize(None).dt.normalize()

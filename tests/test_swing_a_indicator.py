@@ -40,6 +40,13 @@ class SwingACausalityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             generate_indicator(broken, self.queries)
 
+    def test_reject_nonfinite_parameters(self):
+        for value in (float("nan"), float("inf"), 0):
+            with self.assertRaises(ValueError):
+                generate_indicator(self.frame, self.queries, anchor_halflife_days=value)
+            with self.assertRaises(ValueError):
+                generate_indicator(self.frame, self.queries, memory_halflife_days=value)
+
     def test_empty_history_is_neutral(self):
         result = generate_indicator(self.frame.iloc[:0], self.queries)
         self.assertTrue((result == 0.5).all())
