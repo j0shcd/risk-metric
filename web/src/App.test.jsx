@@ -551,6 +551,9 @@ describe("App", () => {
     if (hasPrior) expect(screen.getByText("The last published reading was 19 on 22 Apr 2026.")).toBeInTheDocument();
     else expect(screen.queryByText(/The last published reading/)).not.toBeInTheDocument();
     expect(screen.queryByText(/on the chart under Method/)).not.toBeInTheDocument();
+    // The JSON docs (and the /#data target) stay reachable on a day with no reading.
+    expect(document.getElementById("data")).toBeInTheDocument();
+    expect(screen.getByText(/api\/v1\/latest\.json/)).toBeInTheDocument();
   });
 
   it("keeps region descriptions muted and left aligned, and technical values scoped", async () => {

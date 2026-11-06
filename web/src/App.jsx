@@ -956,8 +956,6 @@ function RiskPanel({ historyCore, setActiveTab }) {
       </section>
 
       <DriverBars components={componentRows} setActiveTab={setActiveTab} />
-
-      <PublicDataPanel />
     </section>
   );
 }
@@ -1175,7 +1173,13 @@ export default function App() {
           </nav>
         </div>
 
-        {activeTab === "today" && <RiskPanel historyCore={historyCore} setActiveTab={setActiveTab} />}
+        {activeTab === "today" && (
+          <>
+            <RiskPanel historyCore={historyCore} setActiveTab={setActiveTab} />
+            {/* Outside RiskPanel so the JSON docs stay reachable on days with no reading. */}
+            <PublicDataPanel />
+          </>
+        )}
 
         {activeTab === "record" && <TrackRecordPanel />}
 
