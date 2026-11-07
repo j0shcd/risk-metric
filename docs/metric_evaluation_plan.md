@@ -1532,12 +1532,81 @@ interruptions count. Campaign ID is
 local path `output/divergent-campaign-v2-2026-11-07/`. All earlier development,
 outer and generative results are declared exposed. Single specifications must be
 reviewed and committed before submission; no new candidate score has been read
-at this registration point. Further search inherits those exposures and the full
-reference frontier. No primary model has qualified.
+at that registration point. The [completed results](artifacts/divergent-campaign-v2-2026-11-07.json)
+and [portable campaign/audit packet](artifacts/divergent-campaign-v2-2026-11-07.zip)
+now retain all three attempts; the campaign is FROZEN and no outer release was
+reserved. Archive SHA-256 is
+`49948772afd80fa1094a6bc96780b4ad18d2048a880617c5da6873a4809866db`.
 
-Next bounded work: finish review of the registered monthly portability runner,
-then execute its one unchanged-candidate falsification; independently complete
-and measure the three new development arms under the v2 budget.
+The independent Astra arms used different mechanisms, with one specification
+committed before each measurement:
+
+| Arm | Fixed mechanism | Primary 24-month return CRPS | Unconditional / best matched CRPS |
+| --- | --- | ---: | ---: |
+| Monetary state | 12-month ten-year real-yield change, 45-day observation lag, fixed 1 percentage-point tanh scale | 0.454196 | 0.331074 |
+| Attention state | English Wikipedia all-agent Bitcoin views: 30-day mean versus prior non-overlapping 365-day mean, two-day lag | 0.481079 | 0.331074 |
+| Structural price state | Concentration of positive daily log returns over exactly 730 days | 0.481286 | 0.331074 |
+
+None of the 18 mature development CRPS coordinates (three arms × two horizons ×
+three outcomes) beats its strongest matched reference. There are no 48-month
+forecasts in this readout. The monetary arm improves two-year entry-loss CRPS
+versus the old direct-CDF family (0.218178 versus 0.227048), but loses to the
+stronger generative benchmark (0.154522). This is why the full frontier is
+required; beating a selected weak reference is not a competitive result.
+
+All 97 common dates remain present. Monetary and structural inputs are available
+at every common origin; attention has 78 available and 19 explicitly neutral
+warm-up origins. Macroeconomic lag assumptions do not repair revised historical
+vintages; attention counts include automated traffic and are not investor counts.
+The structural score deliberately omits downside severity. Independent review
+fixed an extreme-count overflow before attention scoring; all actual outputs
+remained byte-identical. No window, direction or parameter was changed using
+these scores.
+
+Independent arithmetic audits checked each arm's 216 scored distributions, 765
+comparison cells and 90 Monte Carlo guards; all 29,160 training atoms were
+reconstructed exactly from daily paths and strict maturity. Maximum individual
+CRPS discrepancy was below `8.89e-16`; Brier, interval/ordering/support comparisons
+and guards agreed. All three receipt trees and the extracted portable campaign
+were verified. These are failed development hypotheses, retained for reproducibility,
+not model promotions. Further search inherits every exposed result.
+
+**Next bounded diagnostic, accepted before its execution:** one return-transport
+readout study will distinguish a restrictive decoder from missing indicator
+information. Existing median bits use up to eight cells from 24 overlapping
+labels, with fixed 50:50 shrinkage and no movement of outcome support; these
+restrictions are plausible bottlenecks, not an established explanation for failure.
+Prior continuous-rank experiments already failed to rescue broad performance.
+
+Freeze one ridge model (penalty 24, unpenalized intercept) on training-only
+percentile/center/scale features. Canonicalize duplicate/complement coordinates
+including query equivalence; query values cannot fit transforms. Forecast atoms
+are the full-fit query prediction plus signed PRESS residuals
+`e_i/(1-H_ii)`, with uniform weights. The feature design and penalty stay fixed
+for each 23-label deletion; this is label-held-out residual construction, not
+fully cross-fitted preprocessing or calibrated probabilities. No residual
+recentering/rescaling, clipping or ensemble correction is allowed.
+
+The inventory is intercept-only, context-only, context plus each of the 13 fixed
+references/three old finalists/three new arms, and two attention-availability
+controls: 23 models. Keep all 17 frozen forecast references too. Only terminal
+returns at 12/24 months are studied, on the same 48/24 development origins;
+24-month CRPS is primary, event Brier and coverage/width remain separate. No
+transport of path-loss outcomes, new early origins, equity fitting or outer replay.
+An intercept-only model already widens the pooled CDF by 24/23, so it is an
+essential control. Indicator information requires improvement against the **same
+decoder's** context model (attention against context plus availability mask),
+not simply against the old decoder. Unrestricted ridge coefficients do not
+validate the fixed higher-risk direction.
+
+[Ridge's objective](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html)
+and [the jackknife literature](https://stat.cmu.edu/~ryantibs/papers/jackknife.pdf)
+provide methodological context, not a coverage theorem for these overlapping
+labels or this full-fit-centered residual CDF. Source, inventory and registration
+must be reviewed and committed before any actual fit. This is one retrospective
+decoder diagnostic, not a new unseen test or significance claim. If it fails,
+stop this decoder-rescue path; no further penalty/decoder sweep is accepted.
+No primary model has qualified, and professional-use reliability remains unmet.
 The expanded user goal
 is unmet: no candidate has demonstrated broad incremental market information or
 professional-use reliability. Synthetic qualification cannot supply missing
