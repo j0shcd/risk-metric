@@ -110,4 +110,3 @@ class BoundaryTests(unittest.TestCase):
             receipt=verify_packet(root/'out')
             self.assertIn('registration.json',receipt['files'])
             self.assertIn('error.json',receipt['files'])
-
