@@ -6,6 +6,10 @@ from an independently retained receipt. Runtime UTC time cannot be supplied by C
 A local chain detects corruption; trusted external heads are needed to detect
 adversarial tail deletion or a complete rewrite. Hashes identify, not authenticate,
 source/producers. Publication claims must be verified by the caller.
+Source age is measured at actual observation time and reported separately from
+prospective eligibility. Older known inputs do not imply a backdated forecast;
+no freshness threshold or quality endorsement is inferred. Schema v2 rejects
+v1 archives rather than reclassifying their historical observations.
 Entry/end/availability follow label_calendar, not caller-selected maturity.
 A full-chain scan verifies each append; bounded to 2,048 events, 128 KiB per
 event and 16 MiB total. Start a separately registered archive at that boundary.
@@ -26,7 +30,7 @@ import re
 from .market_dataset import canonical_bytes, TARGETS
 from .scorecard_artifacts import publish, safe_path
 
-SCHEMA = 'research-shadow-archive-v1'
+SCHEMA = 'research-shadow-archive-v2'
 MAX_EVENTS = 2048
 MAX_EVENT_BYTES = 128 * 1024
 MAX_ARCHIVE_BYTES = 16 * 1024 * 1024
@@ -111,8 +115,9 @@ def _validate_observation(request, now):
         raise ValueError('availability must explicitly declare known publication or unknown vintage')
     if decision.date() != now.date():
         reasons.append('historical_decision_reconstruction')
-    if as_of.date() != now.date():
-        reasons.append('stale_source_as_of')
+    # Input age is a quality observation, not evidence that the forecast was backdated.
+    quality_flags = ['older_source_as_of'] if as_of.date() != now.date() else []
+    source_age_seconds = (now - as_of).total_seconds()
     identity = request['identity']
     _keys(identity, ('config_sha256', 'producer_sha256', 'readout_sha256', 'code_sha256'))
     for value in identity.values(): _sha(value)
@@ -151,7 +156,8 @@ def _validate_observation(request, now):
             raise ValueError('weights must be nonnegative and sum to one')
     return {'prospective_eligibility': not reasons,
             'classification': 'prospective_eligible_observation' if not reasons else 'retrospective_or_unverified_observation',
-            'reasons': reasons}
+            'reasons': reasons, 'quality_flags': quality_flags,
+            'source_age_seconds': source_age_seconds}
 
 
 def _observation_key(request):
