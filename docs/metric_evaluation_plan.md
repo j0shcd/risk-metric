@@ -1,9 +1,11 @@
 # Indicator benchmark and evaluation plan
 
 Status: finite known-law panel qualification passes; earlier single-path searches
-remain failed. Seven indicator variants and two readout studies show no broad
-improvement. One generative baseline adds stronger partial benchmarks but fails
-the primary two-year return comparison and long-horizon calibration. No promotion.
+remain failed. Ten indicator variants have produced no qualified indicator;
+unchanged candidates also fail monthly equity portability. A fixed return-
+transport study improves two-year development CRPS by 19.72% using a chronology
+control, with a one-year regression. One frozen outer falsification is next.
+No promotion.
 Updated 2026-11-07.
 
 This is the canonical plan for the next benchmark. Current implemented results
@@ -1866,16 +1868,28 @@ oracle is `631063b` and conditional randomization is `e5f26e2`. Josh explicitly
 requested keeping all commits local; no push or deployment is authorized. The
 remote advanced independently with automated data refresh `4d9789b`; it was not
 merged into this held research checkout or used to alter the frozen evidence.
-All reviewed slices above are merged into local main at `948677b`. Completed
-task branches were deleted after ancestry and clean-tree checks. Two managed
-worktrees were archived; the app refuses to remove its primary checkout, so
-the remaining clean managed checkout is detached at the merged main revision.
-No force removal was attempted. Local main is 79 commits ahead and one automated
-data-refresh commit behind origin at this integration point; no push, remote
-merge or deployment occurred. The two untracked
-user directories `.codex/` and `.github/hooks/` are preserved. This document owns
-the project-specific lessons; the skill-harvest/self-improvement review found no
-additional global skill change necessary.
+Reviewed research, causality repairs, full-reference guards, both new measurement
+campaigns and their portable audits are integrated into local main through
+`cbf50b8`. The full integrated backend suite passes **405 tests in 158.8 seconds**
+(`/private/tmp/risk-transport-final-backend-20261107.log`). No hosted CI or frontend
+check was required for these backend-only additions; existing pandas warnings
+remain. New decoder, boundary and producer bugs have failing reintroduction
+regressions, and actual experiments received independent arithmetic audits.
+
+Completed branches were deleted after ancestry checks. Four completed managed
+worktrees are archived; important ignored French source files were first
+preserved byte-identically in the original checkout. One active managed worktree,
+`/Users/josh/.codex/worktrees/swing-research-c/risk-metric`, is implementing the
+accepted outer falsification on `codex/transport-outer-falsification`; its source
+and actual execution are not yet integrated or approved for measurement. The
+original main checkout remains the integration owner. No force removal, push,
+remote merge or deployment occurred. The untracked user directories `.codex/`
+and `.github/hooks/` remain preserved.
+
+This document owns project-specific lessons and the next bounded contract.
+README's general benchmark entry point remains accurate and links here; no new
+user-facing claim or documentation owner was needed. The skill-harvest and loaded-
+skill self-improvement review found no additional global skill change necessary.
 
 ### Active-goal completion audit
 
@@ -1885,11 +1899,13 @@ additional global skill change necessary.
 | Control false promotion under declared dependent nulls | Whole-path CRT exchangeability under exact Q, full-search equivalence tests, 1,500 fresh null campaigns | Pass within the declared one-campaign synthetic scope |
 | Chronological/provenance integrity | Strict label boundaries, frozen measurement hashes, 43-column producer oracle and immutable receipts | Verified fixed-input mechanics; historical market vintages explicitly unverified |
 | Safe adaptive-search scope | Registered conditional tests, shared attempt/freeze/release ledger and explicit exposure lineage | Finite scope defined; unlimited human adaptation not qualified |
-| Local-only changes | Atomic commits integrated into local main, frozen evidence and completed-branch cleanup | No push/deployment; clean app-primary worktree retained by app constraint |
+| Local-only changes | Atomic commits integrated locally, portable evidence, four archived worktrees | No push/deployment; one isolated active outer-falsification branch |
 
 Do not mark the goal complete while useful-signal sensitivity or the expanded
 market-improvement objective remains unmet. Panel qualification, honest market
 comparison and prospective validation are separate requirements. All work remains
-local. The frozen stronger-reference comparison guard is implemented; next are
-the registered monthly falsification run and
-three-slot divergent development campaign. Neither is a new unseen BTC holdout.
+local. Full-reference guarding, monthly falsification, the three-slot campaign
+and the one decoder diagnostic are complete within their declared measurement
+scope. Next is the accepted, separately registered chronology-control outer
+falsification. Historical exposure, missing independent cycles and prospective
+validation remain unresolved; no result is relabeled a fresh holdout.
