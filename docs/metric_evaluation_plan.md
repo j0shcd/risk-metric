@@ -7,8 +7,9 @@ Updated 2026-11-07.
 
 This is the canonical plan for the next benchmark. Current implemented results
 remain in [DCA evidence](dca_evidence.md). This replaces the older Phase 1/2
-planning narrative; Git preserves its implementation history. Production scoring,
-acceptance policy, canonical metrics and publication behavior are unchanged.
+planning narrative; Git preserves its implementation history. Published scoring,
+acceptance policy and canonical metrics are unchanged. Local producer causality
+corrections below are unaccepted source revisions and have not been published.
 
 ## Accepted requirements
 
@@ -981,6 +982,31 @@ Long public return histories such as the
 can support this track. They do not validate BTC-specific features, and current
 historical files can be revised. Shared global shocks limit independent replication.
 
+The next bounded external experiment is **portability falsification**, not pooled
+pretraining. Candidate generators and readouts remain frozen. The first eligible
+source is the official [French daily factors ZIP](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip):
+reconstruct broad-US market total return from Mkt-RF + RF, then compound. This is
+a research portfolio, not the S&P 500 or an executable security. Record the
+[2025 CIZ methodology change and revisions](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html).
+The second proposed equity stress series is [Nasdaq Composite](https://fred.stlouisfed.org/series/NASDAQCOM),
+a price index with dividends excluded; its metadata includes copyright terms,
+and redistribution eligibility has not been established. These two series form
+one equity family. Gold's official World Bank monthly series is an average spot
+price, so it cannot enter daily drawdown/next-day policy tests. No external file
+has been downloaded or adopted in this task.
+
+Before acquisition, freeze and test a trading-session calendar adapter. Monthly
+decisions must use available closes, execute on the next eligible session, and
+compute declared calendar-horizon endpoints without inventing weekend trades.
+Proposed unchanged-candidate audit origins are 1990–2017, with labels available
+by 2022; any training uses labels available by 1979, validation origins 1980–1984,
+and choices frozen before 1990. Exact maturity overrides approximate row gaps.
+Keep transformations causal and asset-specific, retain native log-loss units,
+and report asset/era cells separately. Resampling must preserve shared calendar
+shocks and multi-year dependence. Failure versus unconditional/price references
+or inverted ordering rejects this representation's portability claim; success
+does not add independent BTC cycles or validate a four-year Bitcoin forecast.
+
 ## 7. Candidate research queue
 
 These ideas change models or inputs, not the benchmark contract. Use the same
@@ -1027,25 +1053,25 @@ references. No framework migration or new runtime dependency is selected here.
 
 ## 9. Current implementation, defects and next bounded work
 
-Inspected at local HEAD `37fbd99` on 2026-11-06. The existing compact evaluator
-reran in 2.72 seconds on stored inputs in the preceding assessment; this excludes
-model generation. Its current three-test results are faithfully recorded in
-[DCA evidence](dca_evidence.md). That does not validate the proposed protocol.
+The legacy assessment at `37fbd99` ran its compact evaluator in 2.72 seconds,
+excluding model generation. [DCA evidence](dca_evidence.md) owns those historical
+results. Current research implementation and qualification are recorded below;
+the legacy acceptance gate remains unchanged.
 
 | Capability | Current state | Required delta / acceptance |
 | --- | --- | --- |
 | Unit/regression infrastructure | Implemented; focused tests available | Preserve and add boundary tests that fail under reintroduced defects |
 | Common-outcome table | Retrospective daily-close log return, entry loss and true drawdown implemented | Verified source close/availability convention and accepted primary claim remain open |
 | Ordinal information diagnostics | Fixed-direction continuous ranks, ties and common origins implemented | Descriptive only; no primary rank leaderboard |
-| Forecast readout and skill | Distributional finite-bin market readout implemented | No eligible 48-month market origins; automatic search failed qualification |
+| Forecast readout and skill | Frozen residual-CDF and direct empirical-CDF protocols; separate median/rank ablations | No 48-month direct-CDF development/outer forecasts; no calibrated market model or automatic promotion |
 | Chronological benchmark | Strict fitting/calibration label maturity, exact complete outcomes and independent replay implemented | Real input-vintage reconstruction and prospective update audit remain open |
 | Baseline identity | Committed minimal snapshot, immutable manifests/receipts and byte-identical baseline replay | Snapshot is exposed and reconstructed, not new holdout evidence |
-| Experiment registry | 24-slot atomic local market ledger; failed/interrupted attempts count | Candidate-producer lineage, prospective prediction state and actual restricted audit access remain open |
-| Prospective archive | Release records and inputs exist | Candidate/readout/update-state lineage and outcome-resolution evaluator |
-| Synthetic / external suite | IID/adversarial pilots plus registered whole-path search implemented; search criteria failed | No external-market transfer data collected; broader generator/market validity remains open |
-| Supporting policy accounting | Implemented but multiple variants remain | One explicit contract per test; capital/exposure controls and reporting |
+| Experiment registry | Shared direct-CDF budgets, immutable finalists, one release and reasoned interrupted-attempt closure implemented | Declared producer artifacts are not executed/causally certified; public exposure cannot be erased |
+| Prospective archive | Bounded hash-chained observation/resolution API, synthetic CLI and independent review implemented | No live archive or verified input-publication adapter; hashes are not source authentication |
+| Synthetic / external suite | New independent-world conditional panel passes; earlier single-path search failures retained | No external-market data adopted; no market error-control transfer |
+| Supporting policy accounting | Equal initial capital, no contributions, explicit costs, common dates and ex-post exposure matches | Candidate C's three-trade lead is exploratory; no policy winner or pathwise risk equivalence |
 
-Verified issues to resolve before policy/outcome optimization:
+Legacy acceptance/policy issues remain separate from the research protocol:
 
 - `_relative_window_rows` uses varying-length suffixes ending at one date. Use
   exact horizons for the new outcome table; keep suffix reports diagnostic only.
@@ -1080,13 +1106,24 @@ Verified issues to resolve before policy/outcome optimization:
    registered experiment changes the inferential unit to independent synthetic
    world panels and conditions on fitted score prefixes, as specified below.
    This is a new experiment, not a repaired result or a market significance test.
-3. Add an append-only shadow observation archive
-   with producer/configuration identity, actual observation/publication/decision
-   timestamps and frozen score/readout state. Archive incomplete-outcome forecasts
-   without scoring them, then resolve labels append-only when they mature. The
-   present scorecard only scores completed paths; this archive is not implemented.
-   Tests must prove future data/retraining cannot rewrite prior observations or
-   forecasts. Unknown input vintages remain unknown, not silently point-in-time.
+3. **Implemented:** append-only shadow observations and unique mature-label
+   resolutions, actual runtime UTC timestamps, producer/configuration/readout
+   identities and immutable forecast atoms. Calendar-derived entry/end/publication
+   prevents shortening a declared multi-year horizon. Concurrent writes, tampering,
+   premature labels and prefix immutability have regression/mutation tests and an
+   independent synthetic CLI replay. Unknown vintages remain explicit; no live
+   market archive is initialized. Retain trusted heads separately: a local chain
+   cannot defeat adversarial tail removal/full rewriting. Appends scan bounded
+   history (2,048 events, 128 KiB/event, 16 MiB total); measured 7.4ms after 100
+   events and 93.1ms after 1,000. Midnight UTC dates are calendar anchors, not
+   independently verified exchange execution timestamps.
+   Schema v2 separates evidence timing from input freshness: known older inputs
+   can support a forecast recorded today, with age/quality flags disclosed.
+   Unknown vintages, historical decisions and elapsed endpoints remain ineligible.
+   It does not endorse stale data quality or authenticate publication assertions.
+   The CLI is `python -m research.shadow_archive --help`; request fixtures are in
+   `tests/test_shadow_archive.py`. Earlier synthetic v1 archives are explicitly
+   rejected, never silently reclassified.
 4. Before a bounded candidate campaign, state one informational hypothesis and
    diagnostic comparisons; distinguish decoder improvement from novelty and
    directional usefulness. All explored historical results remain development
@@ -1311,12 +1348,71 @@ these are different risk/exposure outcomes. This is a narrow research lead,
 not an established timing edge or professional-use validation. Do not select
 the successful rule after seeing this table or reset its trial history.
 
-Next bounded work: integrate and independently review the append-only shadow
-archive; assess an external-market falsification design and the shared attempt
-ledger gap before another model batch. The expanded user goal
+`research/direct_cdf_campaign.py` now coordinates future parallel experiments.
+It freezes the development bundle, complete references, protocol, runtime and
+evaluator code hashes. Global and per-worker budgets include all reserved slots,
+including malformed candidates, failures and interruptions. Explicit reasoned
+abandonment retains the slot and partial evidence; a late worker cannot replace
+its terminal outcome. A serialized finalist freeze accepts only successful
+attempt receipts. The single outer release is reserved before its input is read
+and remains consumed after failure or interruption. Price/component history,
+candidate development values, supplied producer/config artifacts and parameters
+must match the frozen records exactly. The target source hash is first bound in
+the reserved release request, not precommitted at campaign creation. Interrupted
+administrative freezes fail closed as `FREEZE_RESERVED`.
+
+The module docstring owns request schemas and CLI commands (`create`, `submit`,
+`status`, `freeze`, `abandon`, `release`). Bounds are 999 slots, 16 MiB per supplied
+file, 64 MiB per bundle and 50,000 daily rows/date-span days. Seventeen synthetic
+tests and four failing mutations cover races, budgets, identities and release
+reuse. Independent review and an unmocked synthetic lifecycle through both
+evaluators pass, including 54 scored synthetic outer records. This is verification,
+not another market trial. The original seven model attempts predate the shared
+coordinator and remain individually archived; they were not retrospectively
+relabelled as coordinator runs.
+
+Supplied producer hashes establish artifact continuity only. The coordinator
+does not execute the generator, verify imported model/data closure, or prove that
+CSV values were produced causally. Those require a trusted producer adapter and
+independent prefix tests. New campaigns must record exposure lineage; a new
+directory or replayed receipt cannot restore unseen history. Exact prefix
+matching requires a stable serialization, not an independently rounded rewrite.
+The locked trial harness also now parses the same captured source/candidate bytes
+that it hashes; path-replacement regressions and exact original-byte replay pass.
+
+Next bounded work: complete the producer-wide causal-history oracle before
+further model search, then acquire/test the declared external calendar adapter.
+The expanded user goal
 is unmet: no candidate has demonstrated broad incremental market information or
 professional-use reliability. Synthetic qualification cannot supply missing
 multi-year outcomes, verified vintages or economic validation.
+
+### Producer causality corrections
+
+An upstream audit found a second reason not to certify reconstructed incumbent
+values as point-in-time evidence. `calibrate_primary_outputs` globally skipped
+all transforms below 66 months, then applied bottom persistence retrospectively
+when more rows arrived. A synthetic 65-to-66-month extension changed 50 earlier
+bottom components and DCA values. Commit `6da7fb0` removes this total-length gate;
+each origin's existing mature-label/model-training guards remain in place.
+
+The owning calibration-to-DCA oracle compares completed and partial prefixes,
+future price shocks, regime warmups and extension warmups. Restoring the gate
+fails eight prefix subtests. Isolated old/new source comparison is bit-exact for
+series, downstream DCA and metadata at 66/80/160 months, including a case with
+17 actual bottom-calibration training steps. This fixes history consistency,
+not forecast performance. Frozen market data/results and canonical release
+identities are unchanged. The local model fingerprint changes and remains an
+unaccepted correctness revision.
+
+The same audit found whole-invocation total-market coverage selecting fallback
+features in `run_pipeline`. A producer-wide prefix oracle is now required at
+that boundary: fixed configuration/source metadata and identical input prefixes
+must produce identical earlier per-date signals, features, confidence and DCA
+columns when suffix values/availability change. Aggregate benchmarks/newly
+resolved labels are explicit exclusions. This routing path is under test; the
+calibration fix alone does not establish whole-pipeline causality. Revised source
+histories and unknown publication timestamps remain separate limitations.
 
 ## Verification and handoff
 
@@ -1358,7 +1454,10 @@ caught in isolated copies, including entry lag, false drawdown, missing support,
 label maturity, cross-horizon timing, CRPS, duplicate-context shrinkage, runtime
 drift, unbounded attempts, corrupt receipts and nonfinite zero-loss references.
 
-The production model fingerprint remains unchanged. Earlier research commits are
+The published/frozen research model fingerprint remains
+`21a4b0160e184a67f141c57202b46e455ccc92791961430493c7d250ee5c053d`.
+Local producer correctness changes are unaccepted and must clear the release
+gate before publication; no canonical identity was rewritten. Earlier research commits are
 `573de0d`, `b260774`, `349b973`, `fe04721`, `e5d71b1` and `51bb110`; scorecard
 implementation is `a35a3f9`, whole-path qualification is `92e8a27`, the observed-score
 oracle is `631063b` and conditional randomization is `e5f26e2`. Josh explicitly
