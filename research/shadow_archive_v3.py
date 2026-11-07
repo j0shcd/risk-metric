@@ -348,7 +348,9 @@ def issue(root,capture_dirs,producer):
             classification=_validate_observation(event,reg,root,{})
             return _append(root,state,reg,'observation',request,classification,commit)
         except Exception as error:
-            cap.frozen_write(root/'attempts'/(day+'.failure.json'),canonical_bytes({'error':str(error)[:1024],'error_sha256':cap.sha(str(error).encode()),'status':'failed_no_reuse'}));raise
+            failure=canonical_bytes({**cap.failure_evidence(error),'status':'failed_no_reuse'})
+            if len(failure)>4096:raise ValueError('issue failure evidence byte cap') from error
+            cap.frozen_write(root/'attempts'/(day+'.failure.json'),failure);raise
 
 
 def resolve(root,observation_id,model,target,horizon_months,outcome,capture_dir,closed_at):

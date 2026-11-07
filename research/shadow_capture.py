@@ -62,6 +62,14 @@ def frozen_write(path,raw):
     sync_directory(path.parent)
 
 
+def failure_evidence(error):
+    """JSON-byte-safe Unicode preview; full message hash uses escaped canonical JSON."""
+    message=str(error)
+    result={'error':message[:256],'error_sha256':sha(canonical_bytes(message))}
+    if len(canonical_bytes(result))>3500:raise ValueError('failure evidence byte cap')
+    return result
+
+
 def capture_response(directory,request,fetch):
     """fetch(request copy) -> (bytes, response metadata). Never import a provider."""
     directory=safe(directory);request_raw=canonical_bytes(request)
@@ -82,7 +90,7 @@ def capture_response(directory,request,fetch):
         frozen_write(directory/'capture.json',canonical_bytes(receipt))
         return receipt
     except Exception as error:
-        failure={'status':'failed_capture','error':str(error)[:1024],'error_sha256':sha(str(error).encode()),'started_at':stamp(started),'failed_at':stamp(now()),
+        failure={'status':'failed_capture',**failure_evidence(error),'started_at':stamp(started),'failed_at':stamp(now()),
                  'request_sha256':sha(request_raw)}
         if isinstance(error,CaptureFailure):
             partial=error.raw_bytes;metadata=canonical_bytes(error.response_metadata)
@@ -90,7 +98,9 @@ def capture_response(directory,request,fetch):
                 frozen_write(directory/'partial.bin',partial)
                 failure.update(partial_sha256=sha(partial),response_metadata=error.response_metadata)
             else:failure['partial_payload']='rejected_over_limit_or_wrong_type'
-        frozen_write(directory/'failure.json',canonical_bytes(failure));raise
+        encoded=canonical_bytes(failure)
+        if len(encoded)>2*MAX_METADATA_BYTES:raise ValueError('capture failure evidence byte cap') from error
+        frozen_write(directory/'failure.json',encoded);raise
 
 
 def verify_capture(directory):
