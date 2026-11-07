@@ -1,8 +1,13 @@
 """Coin Metrics local noncommercial PAPER witness; no trading or publication rights.
 
-fetch is explicitly networked and called only by the v3 capture boundary.
-produce is pure: one captured page envelope, three fixed baselines, no fallback.
-No invocation on import. No actual acquisition is authorized by this module.
+API: fetch({'query_day': 'YYYY-MM-DD'}) is the explicit network callback for
+shadow_capture.capture_response. produce((owned_raw_bytes,), CONFIG, query_day)
+is pure and emits six forecasts; register it with CODE_PATHS and the companion
+coinmetrics_shadow_config.json. No acquisition or CLI runs on import. The sole
+module CLI is an internal fixed worker called by fetch, not a user entrypoint.
+
+Canonical protocol, provider evidence, rights scope, status and run authorization:
+docs/metric_evaluation_plan.md. No actual acquisition is authorized by this module.
 """
 from __future__ import annotations
 import base64
