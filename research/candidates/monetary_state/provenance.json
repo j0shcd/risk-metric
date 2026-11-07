@@ -1,0 +1,15 @@
+{
+  "candidate_id": "real_yield_tightening_12m_lag45",
+  "status": "one_fixed_specification_before_any_scoring",
+  "hypothesis": "A rise in long-term real yields tightens the discount-rate environment and may identify lower subsequent BTC opportunity; rising yield change is assigned higher risk before observing evaluation results.",
+  "rule": "At each month-end d use latest finite observation on/before d-45 calendar days and latest on/before that anchor minus12 calendar months; reject endpoints older than14 days relative to their anchors. Delta is current minus prior yield in percentage points. Score=50+50*tanh(delta/1pp).",
+  "missingness": "Missing or stale endpoint emits neutral50 and explicit status. No origin is excluded. Malformed dates, duplicate dates, infinities, bad numeric strings and changed config fail closed.",
+  "training": "None. Fixed economic sign and1pp scale; no BTC inputs, labels, outcome-based normalization or variant selection.",
+  "online_update": "Append raw observations. Every decision selects only observations at/before its own lagged anchors; future suffixes cannot change earlier valid scores.",
+  "source": "Frozen pre2023 bundle fred_real_yield_10y.csv; column real_yield_10y, repository maps to DFII10.",
+  "source_sha256": "90e7364fa75800f476c7e0d681330be4d6b851353df9621641e46411e35a5079",
+  "producer_audit": "risk_engine/sources/cycle.py:_fetch_fred_series requests observation_start/end, reads observation date/value, and does not request historical vintages or preserve publication metadata; local/fetched caches are merged. This candidate reads the cropped raw cache directly, not cycle_model derived fields.",
+  "availability": "Date is treated as observation date, not verified release date.45 calendar days is a deliberately conservative assumed lag for this daily series, not evidence of actual publication timing. Revised observations remain retrospective even after lagging. Last-known values may be used for at most14days behind each lagged anchor.",
+  "limits": "Few independent monetary cycles, overlapping holding periods, changing BTC sensitivity, and uncertain data vintages limit inference.1pp is a fixed scale rather than a fitted threshold. This can be economically wrong: tightening may precede easing or mark an attractive entry.",
+  "falsifier": "No stable matched24m return-forecast improvement against the complete frozen atlas, or CRPS benefits accompanied by adverse Brier/downside behavior, defeats a general opportunity claim. Ordering and separate targets/horizons must remain visible; no aggregate winner or professional qualification claim."
+}
