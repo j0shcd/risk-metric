@@ -170,3 +170,33 @@ class MonthlyPortabilityTests(unittest.TestCase):
             self.assertEqual(value['same_comparator_24m_dominance_both_eras'],[])
 
 if __name__=='__main__':unittest.main()
+
+
+class MonthlyReceiptLifecycleTests(unittest.TestCase):
+    def test_failed_reserved_attempt_is_bound_and_tamper_evident(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory).resolve();source=root/'source.csv';source.write_bytes(b'invented bad source')
+            reg=root/'registration.json';record=m.registration();reg.write_text(json.dumps(record))
+            output=root/'attempt'
+            with patch.object(m,'PRIVATE_ROOT',root):
+                with self.assertRaisesRegex(ValueError,'source size/hash'):m.run(source,reg,output)
+            receipt=verify_packet(output)
+            self.assertEqual(set(receipt['files']),{'request.json','error.json','COMPLETE'})
+            self.assertEqual(json.loads((output/'error.json').read_bytes())['status'],'failed_no_discard_or_retuning')
+            (output/'error.json').write_text('{}')
+            with self.assertRaisesRegex(ValueError,'corrupt'):verify_packet(output)
+
+    def test_interrupted_reservation_is_visible_and_not_reusable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory).resolve();source=root/'source.csv';source.write_bytes(b'invented')
+            reg=root/'registration.json';reg.write_text(json.dumps(m.registration()));output=root/'attempt'
+            original_open=Path.open
+            def interrupted(path,*args,**kwargs):
+                if path==source:raise KeyboardInterrupt
+                return original_open(path,*args,**kwargs)
+            with patch.object(m,'PRIVATE_ROOT',root),patch.object(Path,'open',interrupted):
+                with self.assertRaises(KeyboardInterrupt):m.run(source,reg,output)
+            self.assertTrue((output/'request.json').exists())
+            with self.assertRaisesRegex(ValueError,'incomplete'):verify_packet(output)
+            with patch.object(m,'PRIVATE_ROOT',root):
+                with self.assertRaises(FileExistsError):m.run(source,reg,output)

@@ -259,6 +259,10 @@ def evaluate(prices):
 
 
 def run(source,registration_path,output):
+    """Pre-reservation identity/path errors create no attempt; reserved failures
+    bind request+error in a terminal receipt. Process interruption/publication
+    failure leaves a visibly incomplete exclusive directory; never reuse it.
+    """
     registered=json.loads(Path(registration_path).read_bytes())
     if registered!=registration():raise ValueError('registration/code/data/runtime identity mismatch')
     output=private_child(output, PRIVATE_ROOT)
@@ -278,7 +282,9 @@ def run(source,registration_path,output):
         result['registration_id']=registered['registration_id'];result['source_sha256']=sha(payload)
         write_packet(output,{'result.json':canonical_bytes(result)},bound_existing=('request.json',))
     except Exception as error:
-        publish(output/'error.json',canonical_bytes({'error':str(error),'status':'failed_no_discard_or_retuning'}));raise
+        if not (output/'receipt.json').exists():
+            write_packet(output,{'error.json':canonical_bytes({'error':str(error),'status':'failed_no_discard_or_retuning'})},bound_existing=('request.json',))
+        raise
     return {'status':'monthly_portability_falsification_only','output':str(output),'registration_id':registered['registration_id']}
 
 
