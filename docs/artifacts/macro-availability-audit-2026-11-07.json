@@ -1,0 +1,496 @@
+{
+  "availability_summary": {
+    "DFII10": {
+      "benchmark_dates_available": 97,
+      "benchmark_dates_total": 97,
+      "finite_to_missing_events": 0,
+      "first_archived_vintage": "2005-10-12",
+      "interpretation": "Availability under the stated archival-date convention, not exact intraday publication proof.",
+      "old_different_unique_observations": 0,
+      "old_matched_unique_observations": 2749
+    },
+    "DTWEXBGS": {
+      "benchmark_dates_available": 47,
+      "benchmark_dates_total": 97,
+      "finite_to_missing_events": 130,
+      "first_archived_vintage": "2019-02-04",
+      "interpretation": "Availability under the stated archival-date convention, not exact intraday publication proof.",
+      "old_different_unique_observations": 2731,
+      "old_matched_unique_observations": 2731
+    },
+    "RRPONTSYD": {
+      "benchmark_dates_available": 82,
+      "benchmark_dates_total": 97,
+      "finite_to_missing_events": 1135,
+      "first_archived_vintage": "2016-03-28",
+      "interpretation": "Availability under the stated archival-date convention, not exact intraday publication proof.",
+      "old_different_unique_observations": 3,
+      "old_matched_unique_observations": 2317
+    },
+    "WALCL": {
+      "benchmark_dates_available": 97,
+      "benchmark_dates_total": 97,
+      "finite_to_missing_events": 0,
+      "first_archived_vintage": "2011-07-07",
+      "interpretation": "Availability under the stated archival-date convention, not exact intraday publication proof.",
+      "old_different_unique_observations": 65,
+      "old_matched_unique_observations": 574
+    }
+  },
+  "capture_calls": 13,
+  "capture_manifest_sha256": "3c5fcc8f47af9f6e0a0bfbc4f05825bf0bf8e9eff6792d3eababe9dc4414dd78",
+  "convention": "Query at 00:00 UTC; archival day is query minus two calendar days; inclusive ALFRED intervals. This is not proof of intraday publication or first FRED ingestion.",
+  "cutoff": "2022-12-31",
+  "independent_reports": {
+    "adapter_audit": {
+      "detail": "Private audit evidence; provider values and examples excluded from publication.",
+      "sha256": "6145b84103979c7bf050f9a1d5ec3927b789ab89bb9cfd60c04d9b0bc44f25d7"
+    },
+    "fed_h15": {
+      "detail": "Private audit evidence; provider values and examples excluded from publication.",
+      "sha256": "e7404a4a2bc3af5fa76c7c4b8d4a73f9b2679ff2d548072ee57d5902436bfaa2"
+    },
+    "fed_h41": {
+      "detail": "Private audit evidence; provider values and examples excluded from publication.",
+      "sha256": "d51c89f315279d8c29619f4633e272e08b717e21d7e6fa09762463d874ab1fa1"
+    },
+    "interval_oracle": {
+      "detail": "Private audit evidence; provider values and examples excluded from publication.",
+      "sha256": "f46a42419f64cf958c9ad320ed85b0cbfd330f0241093b05f9ac623dc64f7d81"
+    },
+    "local_cache": {
+      "detail": "Private audit evidence; provider values and examples excluded from publication.",
+      "sha256": "ee8e483aa16996e325c6fc6689f753a3800276aff1d6781d7ef204fbdbabe40e"
+    },
+    "numerical": {
+      "detail": "Private audit evidence; provider values and examples excluded from publication.",
+      "sha256": "3ce820dc54fe6e5c14b40cb8d9183d0caf24d2ee987b02fd3be984b4c717d1e2"
+    },
+    "official": {
+      "detail": "Private audit evidence; provider values and examples excluded from publication.",
+      "sha256": "48f1c4e764f32bb3b9e23fcd149e5afa6161e3702e2a40dab25fa885b1bf0990"
+    },
+    "source_terms": {
+      "detail": "Private audit evidence; provider values and examples excluded from publication.",
+      "sha256": "ba9c71ae5c3f0e448c5e5d79ff17efffd6d6a3b9c557420ceec7e991b4030ce2"
+    }
+  },
+  "private_capture_path": "/Users/josh/Documents/03_Projects/risk-metric/data/external_private/macro-vintages-2026-11-07-v2",
+  "publication": "Audit metadata and counts only. Detailed provider-derived values/examples retained privately and excluded from candidate generation and public packets.",
+  "rejected_assumptions": [
+    "observation date equals publicationdate",
+    "45daylag repairs revisedhistory",
+    "DTWEXBGSbackcast existedbefore2019",
+    "missingRRP equalszero",
+    "datedBoardrelease URL guarantees unchangedoriginalvalues",
+    "publicaccess automatically permits ML/APIcaching"
+  ],
+  "schema": "macro-availability-audit-v1",
+  "source_admission": {
+    "continuing_round": "Owned frozen BTC prices only; benchmark and reference identities unchanged. Newly captured macro values have no outcome or fitness testing.",
+    "new_macro_values": "NONE for this round",
+    "original_source_policy": "https://www.federalreserve.gov/disclaimer.htm",
+    "reason": "FRED service/API terms restrict the proposed ML and caching use. Original Board releases still require a full version/correction audit. New API payloads are quarantined as audit evidence, not model inputs or public redistribution.",
+    "terms": "https://fred.stlouisfed.org/legal/"
+  },
+  "source_responses": {
+    "DFII10": {
+      "blocks": [
+        {
+          "pages": [
+            {
+              "bytes": 149037,
+              "completed_at": "2026-11-07T14:43:00.874411+00:00",
+              "count": 1565,
+              "endpoint": "/series/observations",
+              "file": "DFII10-block0-page0.json",
+              "offset": 0,
+              "params": {
+                "file_type": "json",
+                "limit": 100000,
+                "observation_end": "2022-12-31",
+                "observation_start": "2007-01-01",
+                "offset": 0,
+                "output_type": 1,
+                "realtime_end": "2012-12-31",
+                "realtime_start": "2007-01-01",
+                "series_id": "DFII10",
+                "sort_order": "asc",
+                "units": "lin"
+              },
+              "rows": 1565,
+              "sha256": "1543efc2b3a2109b27ea6a738ec6d34a6f6ddb7b328f7ab69b7be2d2a51882fe",
+              "started_at": "2026-11-07T14:43:00.464036+00:00",
+              "status": 200
+            }
+          ],
+          "realtime_end": "2012-12-31",
+          "realtime_start": "2007-01-01",
+          "status": "captured"
+        },
+        {
+          "pages": [
+            {
+              "bytes": 272873,
+              "completed_at": "2026-11-07T14:43:02.246546+00:00",
+              "count": 2869,
+              "endpoint": "/series/observations",
+              "file": "DFII10-block1-page0.json",
+              "offset": 0,
+              "params": {
+                "file_type": "json",
+                "limit": 100000,
+                "observation_end": "2022-12-31",
+                "observation_start": "2007-01-01",
+                "offset": 0,
+                "output_type": 1,
+                "realtime_end": "2017-12-31",
+                "realtime_start": "2013-01-01",
+                "series_id": "DFII10",
+                "sort_order": "asc",
+                "units": "lin"
+              },
+              "rows": 2869,
+              "sha256": "3982974a5dc6bf5e047c5262127065b4320768e82666c38d8cffc1c69454983a",
+              "started_at": "2026-11-07T14:43:01.878528+00:00",
+              "status": 200
+            }
+          ],
+          "realtime_end": "2017-12-31",
+          "realtime_start": "2013-01-01",
+          "status": "captured"
+        },
+        {
+          "pages": [
+            {
+              "bytes": 397341,
+              "completed_at": "2026-11-07T14:43:03.666494+00:00",
+              "count": 4175,
+              "endpoint": "/series/observations",
+              "file": "DFII10-block2-page0.json",
+              "offset": 0,
+              "params": {
+                "file_type": "json",
+                "limit": 100000,
+                "observation_end": "2022-12-31",
+                "observation_start": "2007-01-01",
+                "offset": 0,
+                "output_type": 1,
+                "realtime_end": "2022-12-31",
+                "realtime_start": "2018-01-01",
+                "series_id": "DFII10",
+                "sort_order": "asc",
+                "units": "lin"
+              },
+              "rows": 4175,
+              "sha256": "f3650d7a4ed0fb6b843e0da0ad0692ac461ecb048077e9ad46569dcc09530bc6",
+              "started_at": "2026-11-07T14:43:03.257196+00:00",
+              "status": 200
+            }
+          ],
+          "realtime_end": "2022-12-31",
+          "realtime_start": "2018-01-01",
+          "status": "captured"
+        }
+      ],
+      "first_archived_vintage": "2005-10-12",
+      "last_archived_vintage": "2022-12-30",
+      "vintage_dates": {
+        "bytes": 54409,
+        "completed_at": "2026-11-07T14:42:59.461504+00:00",
+        "endpoint": "/series/vintagedates",
+        "file": "DFII10-vintagedates.json",
+        "params": {
+          "file_type": "json",
+          "limit": 10000,
+          "realtime_end": "2022-12-31",
+          "realtime_start": "1776-07-04",
+          "series_id": "DFII10",
+          "sort_order": "asc"
+        },
+        "sha256": "748e6a04b2b4368bc2ebed2d4b56a6dcaed93900ab7274addc139ecda563fff3",
+        "started_at": "2026-11-07T14:42:59.102173+00:00",
+        "status": 200
+      }
+    },
+    "DTWEXBGS": {
+      "blocks": [
+        {
+          "pages": [],
+          "realtime_end": "2012-12-31",
+          "realtime_start": "2007-01-01",
+          "status": "no_archived_vintages"
+        },
+        {
+          "pages": [],
+          "realtime_end": "2017-12-31",
+          "realtime_start": "2013-01-01",
+          "status": "no_archived_vintages"
+        },
+        {
+          "pages": [
+            {
+              "bytes": 1439206,
+              "completed_at": "2026-11-07T14:43:06.548831+00:00",
+              "count": 14626,
+              "endpoint": "/series/observations",
+              "file": "DTWEXBGS-block2-page0.json",
+              "offset": 0,
+              "params": {
+                "file_type": "json",
+                "limit": 100000,
+                "observation_end": "2022-12-31",
+                "observation_start": "2007-01-01",
+                "offset": 0,
+                "output_type": 1,
+                "realtime_end": "2022-12-31",
+                "realtime_start": "2018-01-01",
+                "series_id": "DTWEXBGS",
+                "sort_order": "asc",
+                "units": "lin"
+              },
+              "rows": 14626,
+              "sha256": "5e7a257474936c1c32e1f96612be4ef95e0ee067a31bc76a8c18a3b52caf3817",
+              "started_at": "2026-11-07T14:43:05.974686+00:00",
+              "status": 200
+            }
+          ],
+          "realtime_end": "2022-12-31",
+          "realtime_start": "2018-01-01",
+          "status": "captured"
+        }
+      ],
+      "first_archived_vintage": "2019-02-04",
+      "last_archived_vintage": "2022-12-27",
+      "vintage_dates": {
+        "bytes": 2811,
+        "completed_at": "2026-11-07T14:43:04.969988+00:00",
+        "endpoint": "/series/vintagedates",
+        "file": "DTWEXBGS-vintagedates.json",
+        "params": {
+          "file_type": "json",
+          "limit": 10000,
+          "realtime_end": "2022-12-31",
+          "realtime_start": "1776-07-04",
+          "series_id": "DTWEXBGS",
+          "sort_order": "asc"
+        },
+        "sha256": "6f452f5a18ea3e120aa7b33f0ae6eced4bd5a357e7839b3f9b92258414ec0965",
+        "started_at": "2026-11-07T14:43:04.672871+00:00",
+        "status": 200
+      }
+    },
+    "RRPONTSYD": {
+      "blocks": [
+        {
+          "pages": [],
+          "realtime_end": "2012-12-31",
+          "realtime_start": "2007-01-01",
+          "status": "no_archived_vintages"
+        },
+        {
+          "pages": [
+            {
+              "bytes": 270650,
+              "completed_at": "2026-11-07T14:43:14.782169+00:00",
+              "count": 2871,
+              "endpoint": "/series/observations",
+              "file": "RRPONTSYD-block1-page0.json",
+              "offset": 0,
+              "params": {
+                "file_type": "json",
+                "limit": 100000,
+                "observation_end": "2022-12-31",
+                "observation_start": "2007-01-01",
+                "offset": 0,
+                "output_type": 1,
+                "realtime_end": "2017-12-31",
+                "realtime_start": "2013-01-01",
+                "series_id": "RRPONTSYD",
+                "sort_order": "asc",
+                "units": "lin"
+              },
+              "rows": 2871,
+              "sha256": "6798f9010c716a65d2603b9af13c8d9e5bc69eb8535926582e74fce3a1ab9949",
+              "started_at": "2026-11-07T14:43:14.333182+00:00",
+              "status": 200
+            }
+          ],
+          "realtime_end": "2017-12-31",
+          "realtime_start": "2013-01-01",
+          "status": "captured"
+        },
+        {
+          "pages": [
+            {
+              "bytes": 611685,
+              "completed_at": "2026-11-07T14:43:16.889206+00:00",
+              "count": 6449,
+              "endpoint": "/series/observations",
+              "file": "RRPONTSYD-block2-page0.json",
+              "offset": 0,
+              "params": {
+                "file_type": "json",
+                "limit": 100000,
+                "observation_end": "2022-12-31",
+                "observation_start": "2007-01-01",
+                "offset": 0,
+                "output_type": 1,
+                "realtime_end": "2022-12-31",
+                "realtime_start": "2018-01-01",
+                "series_id": "RRPONTSYD",
+                "sort_order": "asc",
+                "units": "lin"
+              },
+              "rows": 6449,
+              "sha256": "7c43ef2c3fc51fe674ef8e7a96ac15d72e527433517283081958c6befdfef2a1",
+              "started_at": "2026-11-07T14:43:15.789688+00:00",
+              "status": 200
+            }
+          ],
+          "realtime_end": "2022-12-31",
+          "realtime_start": "2018-01-01",
+          "status": "captured"
+        }
+      ],
+      "first_archived_vintage": "2016-03-28",
+      "last_archived_vintage": "2022-12-30",
+      "vintage_dates": {
+        "bytes": 22000,
+        "completed_at": "2026-11-07T14:43:13.326498+00:00",
+        "endpoint": "/series/vintagedates",
+        "file": "RRPONTSYD-vintagedates.json",
+        "params": {
+          "file_type": "json",
+          "limit": 10000,
+          "realtime_end": "2022-12-31",
+          "realtime_start": "1776-07-04",
+          "series_id": "RRPONTSYD",
+          "sort_order": "asc"
+        },
+        "sha256": "457186f806a349881c7bdd75b1150900a9cc15bfb097860d8744632bb3cc41e8",
+        "started_at": "2026-11-07T14:43:13.015513+00:00",
+        "status": 200
+      }
+    },
+    "WALCL": {
+      "blocks": [
+        {
+          "pages": [
+            {
+              "bytes": 30860,
+              "completed_at": "2026-11-07T14:43:09.287996+00:00",
+              "count": 313,
+              "endpoint": "/series/observations",
+              "file": "WALCL-block0-page0.json",
+              "offset": 0,
+              "params": {
+                "file_type": "json",
+                "limit": 100000,
+                "observation_end": "2022-12-31",
+                "observation_start": "2007-01-01",
+                "offset": 0,
+                "output_type": 1,
+                "realtime_end": "2012-12-31",
+                "realtime_start": "2007-01-01",
+                "series_id": "WALCL",
+                "sort_order": "asc",
+                "units": "lin"
+              },
+              "rows": 313,
+              "sha256": "f32ae5817b148d7e9ffd5e0cd7e89f266c7151678200c778eb0c8e73421d4589",
+              "started_at": "2026-11-07T14:43:08.932363+00:00",
+              "status": 200
+            }
+          ],
+          "realtime_end": "2012-12-31",
+          "realtime_start": "2007-01-01",
+          "status": "captured"
+        },
+        {
+          "pages": [
+            {
+              "bytes": 88492,
+              "completed_at": "2026-11-07T14:43:10.661407+00:00",
+              "count": 902,
+              "endpoint": "/series/observations",
+              "file": "WALCL-block1-page0.json",
+              "offset": 0,
+              "params": {
+                "file_type": "json",
+                "limit": 100000,
+                "observation_end": "2022-12-31",
+                "observation_start": "2007-01-01",
+                "offset": 0,
+                "output_type": 1,
+                "realtime_end": "2017-12-31",
+                "realtime_start": "2013-01-01",
+                "series_id": "WALCL",
+                "sort_order": "asc",
+                "units": "lin"
+              },
+              "rows": 902,
+              "sha256": "b2b201a0da8105f50a27104873f8c54daa7f169b65ad3fa8022581feb160e655",
+              "started_at": "2026-11-07T14:43:10.293882+00:00",
+              "status": 200
+            }
+          ],
+          "realtime_end": "2017-12-31",
+          "realtime_start": "2013-01-01",
+          "status": "captured"
+        },
+        {
+          "pages": [
+            {
+              "bytes": 82488,
+              "completed_at": "2026-11-07T14:43:12.008084+00:00",
+              "count": 835,
+              "endpoint": "/series/observations",
+              "file": "WALCL-block2-page0.json",
+              "offset": 0,
+              "params": {
+                "file_type": "json",
+                "limit": 100000,
+                "observation_end": "2022-12-31",
+                "observation_start": "2007-01-01",
+                "offset": 0,
+                "output_type": 1,
+                "realtime_end": "2022-12-31",
+                "realtime_start": "2018-01-01",
+                "series_id": "WALCL",
+                "sort_order": "asc",
+                "units": "lin"
+              },
+              "rows": 835,
+              "sha256": "ac05bd724931198760024daad2606b4f8fa2188328e64b50d36eee03d3c88d83",
+              "started_at": "2026-11-07T14:43:11.667951+00:00",
+              "status": 200
+            }
+          ],
+          "realtime_end": "2022-12-31",
+          "realtime_start": "2018-01-01",
+          "status": "captured"
+        }
+      ],
+      "first_archived_vintage": "2011-07-07",
+      "last_archived_vintage": "2022-12-29",
+      "vintage_dates": {
+        "bytes": 7946,
+        "completed_at": "2026-11-07T14:43:07.926503+00:00",
+        "endpoint": "/series/vintagedates",
+        "file": "WALCL-vintagedates.json",
+        "params": {
+          "file_type": "json",
+          "limit": 10000,
+          "realtime_end": "2022-12-31",
+          "realtime_start": "1776-07-04",
+          "series_id": "WALCL",
+          "sort_order": "asc"
+        },
+        "sha256": "deb3b321325b8fc9621d1211e96b741a70a2128fc448ee81fb2725ca05b24ae3",
+        "started_at": "2026-11-07T14:43:07.567537+00:00",
+        "status": 200
+      }
+    }
+  }
+}
