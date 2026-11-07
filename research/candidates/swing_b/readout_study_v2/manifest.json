@@ -1,0 +1,54 @@
+{
+  "status": "completed_development_only",
+  "version": "rank-equivalence-v2",
+  "producer_commit": "076db34",
+  "study_run_count": 1,
+  "representation_study_count_including_v1": 2,
+  "failed_study_runs": 0,
+  "protocol": {
+    "arms": [
+      "indicator_median",
+      "combined_median",
+      "indicator_rank",
+      "combined_rank"
+    ],
+    "coverage": "inclusive central 50% and 80%; left inverse weighted empirical CDF",
+    "cutoff": "2022-12-31",
+    "distance": "mean absolute rank distance; fractional boundary ties atol=1e-12",
+    "events": "return<0; entry loss>log(2); peak drawdown>log(2)",
+    "fallback": "empty combined median -> context median; empty indicator median -> uniform",
+    "horizons": [
+      12,
+      24
+    ],
+    "neighbors": 8,
+    "pooled_mass": 0.5,
+    "primary": "24-month terminal_log_return",
+    "rank": "(count less + .5 count equal)/training_n; query ranked against training only",
+    "rank_equivalence": "exact training rank vector AND query rank; one equally weighted canonical coordinate per class",
+    "training_n": 24,
+    "trial_accounting": "additional decoded-representation study after inspecting v1; not a new candidate or independent validation",
+    "version": "rank-equivalence-v2"
+  },
+  "study_sha256": "2240016641503a2f5a15db67c2f6effdaa2c3db0a6fee23a32f7c3b562888ae9",
+  "packet_sha256": "5f6df1db3e8628d490c4370616b358ad6134b1004bc7ea6e98f2620454a37aab",
+  "code_hashes": {
+    "distribution_readout.py": "c356b0e1769f9eb5ddee7507f520b5cc834cacd19f8de2f984325f0a6ebd7c19",
+    "market_dataset.py": "679222de6b2a98337790d5b5686af03d7f630b118e2165d93512f3f6898cace4",
+    "market_information.py": "018077dc749fdd7dda11ddee78898c48a8788dc6c9c0f7c304d7aa65443c45ce",
+    "market_scorecard.py": "78719677d169579f92b9c3c1e6b5b04cb2979905e2c84680fe4b814b448d791a",
+    "readout_study.py": "27013d5c05805ecc1f5d8c54b1159ea57a7f83b9cb39f6cbc9bea01f7c0ac05a",
+    "readout_study_v2.py": "cb230758dbbf115ddcc2b81838f3436d38dc4e67d2e4cf458a53582441e8315c"
+  },
+  "source_hashes": {
+    "btc_daily.csv": "d6e0e23e4d84e32690cea42cc0bf69f44ddfe9d954939b54ba499635431ed04c",
+    "development_scores.csv": "ef6f3f337ca828d56c6a45c829b0244985f5a931add3307acd822ae26dedbe28",
+    "manifest.json": "f46f8af3b7070da5943e618d34b295437972ff86f1d522f52cadbe14a88917b8"
+  },
+  "generator_sha256": "7fb62c01c1bcb08dd186b0add0c10e5da9a2dc1b3d3e4b877c779cd5a706b861",
+  "old_study_unchanged_sha256": "66e0a812e7c0c74b03c3fc6ab70aee8dcc2ecde5b0afec1afc35644dfc993f69",
+  "old_packet_unchanged_sha256": "d7674c6b178a1b990040380c564f7437ba93b50ffec572068f64ed3472d9f76c",
+  "outer_accessed": false,
+  "tuned_after_results": false,
+  "duplicate_prediction_matches": 432
+}

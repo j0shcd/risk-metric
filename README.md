@@ -101,8 +101,8 @@ The [indicator benchmark plan](docs/metric_evaluation_plan.md) owns the implemen
 retrospective information scorecard, its trust limits and next bounded work.
 [DCA evidence](docs/dca_evidence.md) records the current historical results.
 The scorecard compares common dates, return/downside endpoints and forecast loss
-without a combined winner. Its automatic search failed qualification; it must not
-be used for automatic promotion. A portable snapshot and offline replay command
+without a combined winner. A finite known-law synthetic panel test now passes;
+market automatic promotion remains unqualified. A portable snapshot and offline replay command
 are in the plan. The existing acceptance gate remains unchanged.
 
 CI prepares the ignored `config/runtime.json` from the credential-free

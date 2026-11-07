@@ -1,0 +1,342 @@
+{
+  "candidate": 0,
+  "code_sha256": {
+    "gaussian_oracle_diagnostic.py": "be62fe3eaea79db4f7c27af67be79f9267ec4f0cf3e06c65478c029c17106506",
+    "location_scale_readout.py": "76ea0092f75d51ea020b68fba63c24175449e63b55fba465923046540bd1f59d",
+    "location_scale_search.py": "7c9bdb5d38dcf7d763519bcb6fa5adab49da31f3eddff7e2536bb9a433a3d8e7",
+    "market_dataset.py": "679222de6b2a98337790d5b5686af03d7f630b118e2165d93512f3f6898cace4",
+    "readout_replicate_diagnostic.py": "1db2cbe7bf3035c1c6f605017d22c134f59aa976d6e416ef4d5344b28849332b",
+    "scorecard_artifacts.py": "ac01f75b625e0c728316eb61eebf3d0c4f18b4af63a546eb81a1f0316a356ab1",
+    "search_qualification.py": "f6263fb693ebad2551e515c788428bea541ee99f0743f3576b1d9b4f8a5319a7"
+  },
+  "limitations": [
+    "Same exposed worlds, no new confirmation or acceptance criteria.",
+    "Fixed predesignated smallest-noise candidate; not the candidate selected on development in each world.",
+    "Paired whole-world average loss and bootstrap uncertainty, not single-world discovery power.",
+    "No horizon/target average, market utility, Bitcoin generalization or repaired parent qualification is implied."
+  ],
+  "local_full_report": "output/readout-replicate-diagnostic-2026-11-06-bound-generator",
+  "parent_all_criteria_pass": false,
+  "parent_sha256": "b77a40761a7c37a7a7b2cde0bf167f5c6473a321247a5dc5cf760bff40717b80",
+  "protocol": "fixed-candidate-replicate-diagnostic-v1",
+  "receipt": {
+    "files": {
+      "COMPLETE": "7c7202a2317f4dad47ee64b9d99339462774c7e3a76300bc5474bc2f7836f040",
+      "forecasts.json": "4119d465f6db3eb79201cd631e347cae17c8f0f91f9e6f65e9c9b192cdeaa3cb",
+      "summary.json": "5a15d2e1ed7cc045b187c9b4f62b1718ebb78a5fb944d21672439df4c253559e"
+    }
+  },
+  "results": {
+    "leading_location": {
+      "h12_target0": {
+        "candidate_mean_crps": 0.353425480409522,
+        "crps_skill_percent": 28.918056369708435,
+        "mean_crps_improvement": 0.14378304029123964,
+        "mean_improvement_world_bootstrap_95": [
+          0.12945284090734996,
+          0.16012749661533315
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.49720852070076166,
+        "skill_world_bootstrap_95": [
+          27.055343753624303,
+          30.856090365963613
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h12_target1": {
+        "candidate_mean_crps": 0.208965440448634,
+        "crps_skill_percent": 17.584398794178046,
+        "mean_crps_improvement": 0.04458538899538197,
+        "mean_improvement_world_bootstrap_95": [
+          0.035309102324581634,
+          0.054139407764473006
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.25355082944401597,
+        "skill_world_bootstrap_95": [
+          14.68936411364037,
+          20.216692165201927
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h12_target2": {
+        "candidate_mean_crps": 0.2053548113365167,
+        "crps_skill_percent": 17.77573266049043,
+        "mean_crps_improvement": 0.044394828254180806,
+        "mean_improvement_world_bootstrap_95": [
+          0.0357238234152259,
+          0.05350848474877394
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.24974963959069746,
+        "skill_world_bootstrap_95": [
+          15.020705847286225,
+          20.43256369799901
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h24_target0": {
+        "candidate_mean_crps": 0.920640270767928,
+        "crps_skill_percent": 16.1463841693647,
+        "mean_crps_improvement": 0.17727335126049606,
+        "mean_improvement_world_bootstrap_95": [
+          0.1337138969656927,
+          0.23982956749765133
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 1.097913622028424,
+        "skill_world_bootstrap_95": [
+          12.948429948189144,
+          19.83794988478316
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h24_target1": {
+        "candidate_mean_crps": 0.45770151635607087,
+        "crps_skill_percent": 15.593662432197597,
+        "mean_crps_improvement": 0.08455814037693907,
+        "mean_improvement_world_bootstrap_95": [
+          0.0609971451259474,
+          0.11164694311774015
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.5422596567330099,
+        "skill_world_bootstrap_95": [
+          12.015871516413617,
+          18.891095791659943
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h24_target2": {
+        "candidate_mean_crps": 0.47691906389331934,
+        "crps_skill_percent": 13.562940577064687,
+        "mean_crps_improvement": 0.07483393080281106,
+        "mean_improvement_world_bootstrap_95": [
+          0.050524689504000894,
+          0.10681812614032006
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.5517529946961304,
+        "skill_world_bootstrap_95": [
+          9.78265708321419,
+          17.379850559289846
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h48_target0": {
+        "candidate_mean_crps": 2.157351742266893,
+        "crps_skill_percent": 5.087178995271313,
+        "mean_crps_improvement": 0.11563068458501868,
+        "mean_improvement_world_bootstrap_95": [
+          0.050929210416893606,
+          0.17720505816770962
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 2.272982426851912,
+        "skill_world_bootstrap_95": [
+          2.2666485039760436,
+          7.531361975252041
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h48_target1": {
+        "candidate_mean_crps": 1.0997833243320312,
+        "crps_skill_percent": 5.5702346567104595,
+        "mean_crps_improvement": 0.06487415451892646,
+        "mean_improvement_world_bootstrap_95": [
+          -0.0058893259263284575,
+          0.126294716325143
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 1.1646574788509574,
+        "skill_world_bootstrap_95": [
+          -0.47813404008986204,
+          11.036776345848416
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h48_target2": {
+        "candidate_mean_crps": 1.1737633298649517,
+        "crps_skill_percent": 5.492197978195035,
+        "mean_crps_improvement": 0.06821172907689038,
+        "mean_improvement_world_bootstrap_95": [
+          0.0129461585412251,
+          0.14477188375125608
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 1.2419750589418421,
+        "skill_world_bootstrap_95": [
+          1.0603410505146411,
+          10.98817133196918
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      }
+    },
+    "leading_scale": {
+      "h12_target0": {
+        "candidate_mean_crps": 0.16829210917640453,
+        "crps_skill_percent": -1.8590070521862012,
+        "mean_crps_improvement": -0.00307146345561703,
+        "mean_improvement_world_bootstrap_95": [
+          -0.005886140853941581,
+          -0.0005974447441950175
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.1652206457207875,
+        "skill_world_bootstrap_95": [
+          -3.5362455581275696,
+          -0.35330013834702223
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h12_target1": {
+        "candidate_mean_crps": 0.09742016151741702,
+        "crps_skill_percent": -1.7349420467300591,
+        "mean_crps_improvement": -0.0016613597158994132,
+        "mean_improvement_world_bootstrap_95": [
+          -0.006120012486165433,
+          0.0016459453419747614
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.09575880180151759,
+        "skill_world_bootstrap_95": [
+          -6.302486339388828,
+          1.7412721527061357
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h12_target2": {
+        "candidate_mean_crps": 0.09513144615033729,
+        "crps_skill_percent": 5.462304986990086,
+        "mean_crps_improvement": 0.005496611406223263,
+        "mean_improvement_world_bootstrap_95": [
+          -0.0003786011783830819,
+          0.009455030559011644
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.10062805755656057,
+        "skill_world_bootstrap_95": [
+          -0.37521702096505016,
+          9.217341132435283
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h24_target0": {
+        "candidate_mean_crps": 0.2663710903628697,
+        "crps_skill_percent": -3.8774686368676647,
+        "mean_crps_improvement": -0.009942921811667024,
+        "mean_improvement_world_bootstrap_95": [
+          -0.016546377489296854,
+          -0.0037321268563056337
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.2564281685512027,
+        "skill_world_bootstrap_95": [
+          -6.518138808864182,
+          -1.444570235252755
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h24_target1": {
+        "candidate_mean_crps": 0.15101576124957394,
+        "crps_skill_percent": -1.5577004653332782,
+        "mean_crps_improvement": -0.00231629231947231,
+        "mean_improvement_world_bootstrap_95": [
+          -0.0070801753857560774,
+          0.0018223004610086746
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.14869946893010164,
+        "skill_world_bootstrap_95": [
+          -4.836454634252191,
+          1.1978932030778855
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h24_target2": {
+        "candidate_mean_crps": 0.14906245630002304,
+        "crps_skill_percent": 5.321168285055256,
+        "mean_crps_improvement": 0.008377653173247974,
+        "mean_improvement_world_bootstrap_95": [
+          0.004521459547881874,
+          0.01223632794427892
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.15744010947327103,
+        "skill_world_bootstrap_95": [
+          2.906522767898793,
+          7.6177007457629085
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h48_target0": {
+        "candidate_mean_crps": 0.4304858189661775,
+        "crps_skill_percent": -2.7526735465780217,
+        "mean_crps_improvement": -0.011532419402284666,
+        "mean_improvement_world_bootstrap_95": [
+          -0.020015661413807347,
+          -0.0037694092193619366
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.4189533995638928,
+        "skill_world_bootstrap_95": [
+          -4.841576952683474,
+          -0.8689798925078187
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h48_target1": {
+        "candidate_mean_crps": 0.2515983841727113,
+        "crps_skill_percent": -4.316868245939798,
+        "mean_crps_improvement": -0.010411710911453827,
+        "mean_improvement_world_bootstrap_95": [
+          -0.017451186353032676,
+          -0.004113346368174027
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.2411866732612575,
+        "skill_world_bootstrap_95": [
+          -7.286412605485798,
+          -1.6865952167003284
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      },
+      "h48_target2": {
+        "candidate_mean_crps": 0.24922829914753103,
+        "crps_skill_percent": -0.4507222885311801,
+        "mean_crps_improvement": -0.0011182871242662671,
+        "mean_improvement_world_bootstrap_95": [
+          -0.007220006109504023,
+          0.004480854474019107
+        ],
+        "overlapping_origins_per_world": 96,
+        "reference_mean_crps": 0.2481100120232648,
+        "skill_world_bootstrap_95": [
+          -2.9034070177380467,
+          1.8442332949892273
+        ],
+        "uncertainty": "2000 paired bootstrap resamples of independent whole worlds; exposed-world descriptive inference",
+        "worlds": 200
+      }
+    }
+  },
+  "role": "post_hoc_explanation_not_qualification"
+}

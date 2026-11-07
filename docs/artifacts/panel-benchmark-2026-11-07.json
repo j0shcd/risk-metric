@@ -1,0 +1,145 @@
+{
+  "all_criteria_pass": true,
+  "config": {
+    "alpha": 0.05,
+    "audit_worlds": 128,
+    "development_worlds": 128,
+    "null_panels": 500,
+    "positive_panels": 200,
+    "randomizations": 99,
+    "seed": 20270417,
+    "sentinel_panels": 3
+  },
+  "criteria": "null one-sided98.333% declaration upper<=10%; positive one-sided95% lower>=80%; deterministic sentinels p=1 and no declaration",
+  "elapsed_seconds": 381.1870405829977,
+  "families": {
+    "autocorrelated_location": {
+      "criterion_pass": true,
+      "crt_rejections": 17,
+      "declarations": 6,
+      "lower": 0.005238564057380435,
+      "panels": 500,
+      "rate": 0.012,
+      "upper": 0.027267407037527287
+    },
+    "clustered_t3": {
+      "criterion_pass": true,
+      "crt_rejections": 19,
+      "declarations": 9,
+      "lower": 0.009421707985477479,
+      "panels": 500,
+      "rate": 0.018,
+      "upper": 0.03538700400136523
+    },
+    "constant": {
+      "criterion_pass": true,
+      "crt_rejections": 0,
+      "declarations": 0,
+      "lower": 0.0,
+      "panels": 3,
+      "rate": 0.0,
+      "upper": 0.6315968501359612
+    },
+    "iid_gaussian": {
+      "criterion_pass": true,
+      "crt_rejections": 23,
+      "declarations": 9,
+      "lower": 0.009421707985477479,
+      "panels": 500,
+      "rate": 0.018,
+      "upper": 0.03538700400136523
+    },
+    "leading_location": {
+      "criterion_pass": true,
+      "crt_rejections": 200,
+      "declarations": 200,
+      "lower": 0.9851329607687279,
+      "panels": 200,
+      "rate": 1.0,
+      "upper": 1.0
+    },
+    "leading_scale": {
+      "criterion_pass": true,
+      "crt_rejections": 199,
+      "declarations": 198,
+      "lower": 0.9688574005859152,
+      "panels": 200,
+      "rate": 0.99,
+      "upper": 0.9982203185521075
+    },
+    "linear_context": {
+      "criterion_pass": true,
+      "crt_rejections": 0,
+      "declarations": 0,
+      "lower": 0.0,
+      "panels": 3,
+      "rate": 0.0,
+      "upper": 0.6315968501359612
+    },
+    "nonlinear_context": {
+      "criterion_pass": true,
+      "crt_rejections": 0,
+      "declarations": 0,
+      "lower": 0.0,
+      "panels": 3,
+      "rate": 0.0,
+      "upper": 0.6315968501359612
+    }
+  },
+  "limitations": [
+    "New conditional-audit experiment, not repaired whole-path qualification; it cannot credit information entirely in fixed score history.",
+    "Worlds are independent synthetic replications, not additional independent Bitcoin cycles.",
+    "Known continuation laws are required. Unknown market score laws do not inherit conditional error control.",
+    "One endpoint is selected for detecting some usefulness; all endpoints are not thereby improved or investor-optimal.",
+    "Positive observed pooled proper-loss gain is not a confidence bound on population gain or economic utility.",
+    "One campaign's level is not a lifetime discovery budget. Repeated use requires fresh audit data and a shared error budget.",
+    "Prior failures and exposed generator families remain development knowledge; no unlimited adaptive benchmark or production promotion is qualified."
+  ],
+  "local_full_report": "output/panel-benchmark-2026-11-07-registered",
+  "null": "chosen audit score continuation conditional on all prices/context and all24score prefixes through545; exact Gaussian continuation or declared point mass",
+  "portable_packet": "docs/artifacts/panel-benchmark-2026-11-07.zip",
+  "portable_packet_sha256": "efe092e280ad2c3c9ec8981bf0b01c7610c9d49ed1360d7c293d6a1aaf072506",
+  "protocol": "independent-world-panel-v1",
+  "receipt": {
+    "files": {
+      "COMPLETE": "7c7202a2317f4dad47ee64b9d99339462774c7e3a76300bc5474bc2f7836f040",
+      "panels.json": "1e0b8b324252c56d8195fde43c14889711da260a4fda0c3a1f39339e6f1bbc09",
+      "registration.json": "37385cb3e0182564b978baf7c8658730a67053138b0d3e0774b7b0d66f967940",
+      "summary.json": "440a55a53cc88ba6c5bbae87a3aa5a9d87cbc5993f609b389139e4374f49d5f0"
+    }
+  },
+  "registration": {
+    "code_sha256": {
+      "batched_scenarios.py": "f3616d7545498be2ea77d7d6480848566c7d1958aaaa9916072893e6b33f4f38",
+      "batched_world_readout.py": "eecd61bd496b50753e07daa645553310eab774e62646fe201cc19b9d86c591e3",
+      "conditional_score_law.py": "62f1de2f883fa2182d92b904ab7d771444b0d7ab98d27b45979dc3a5aae84179",
+      "conditional_search.py": "72f5dc66454b55c37912375c2efba38a31858b2f26e1525bea401c79aaecc8a1",
+      "location_scale_readout.py": "76ea0092f75d51ea020b68fba63c24175449e63b55fba465923046540bd1f59d",
+      "location_scale_search.py": "7c9bdb5d38dcf7d763519bcb6fa5adab49da31f3eddff7e2536bb9a433a3d8e7",
+      "market_dataset.py": "679222de6b2a98337790d5b5686af03d7f630b118e2165d93512f3f6898cace4",
+      "panel_benchmark.py": "0623b56f699b2b0f9117ca76d256ec70c353429c4198bcbcfe3820dc41230e69",
+      "panel_score_contract.py": "43bdf642b63b3c918818a54488be39839e7667239e3a55bfbdf2a7cac7eed139",
+      "scorecard_artifacts.py": "ac01f75b625e0c728316eb61eebf3d0c4f18b4af63a546eb81a1f0316a356ab1",
+      "search_qualification.py": "f6263fb693ebad2551e515c788428bea541ee99f0743f3576b1d9b4f8a5319a7"
+    },
+    "config": {
+      "alpha": 0.05,
+      "audit_worlds": 128,
+      "development_worlds": 128,
+      "null_panels": 500,
+      "positive_panels": 200,
+      "randomizations": 99,
+      "seed": 20270417,
+      "sentinel_panels": 3
+    },
+    "criteria": "same statistical criteria; new panel unit and continuation null; positive raw gain additionally required",
+    "runtime": {
+      "numpy": "2.4.6",
+      "pandas": "2.3.3",
+      "python": "3.12.16"
+    }
+  },
+  "scope": "Finite one-campaign independent-world conditional continuation test under declared known synthetic laws, not market promotion",
+  "unit": "one family-specific panel, one global development selection, independent audit worlds",
+  "workers": 4
+}

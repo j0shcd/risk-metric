@@ -166,15 +166,15 @@ def _metric_specs(cfg: RuntimeConfig, include_total_market_fallback_proxies: boo
     return _metric_specs_free_stable(include_total_market_fallback_proxies=include_total_market_fallback_proxies)
 
 
-def _should_use_total_market_fallback_proxies(total_market_cap: pd.Series) -> bool:
-    aligned = total_market_cap.astype(float)
-    if aligned.empty:
-        return True
+def _total_market_fallback_eligibility(total_market_cap: pd.Series) -> pd.Series:
+    """Route each date using only coverage available through that date."""
+    observed = total_market_cap.astype(float).notna()
+    return (observed.cumsum() < 365) | (observed.rolling(90, min_periods=1).mean() < 0.8)
 
-    total_points = int(aligned.notna().sum())
-    recent = aligned.tail(90)
-    recent_coverage = float(recent.notna().mean()) if len(recent) else 0.0
-    return bool(total_points < 365 or recent_coverage < 0.8)
+
+def _should_use_total_market_fallback_proxies(total_market_cap: pd.Series) -> bool:
+    eligibility = _total_market_fallback_eligibility(total_market_cap)
+    return bool(eligibility.iloc[-1]) if len(eligibility) else True
 
 
 def _source_mode_multiplier(mode: str) -> float:
@@ -464,8 +464,12 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     index = btc_price.index
 
     total_market_cap = load_total_market_cap(runtime, index=index)
-    use_total_market_fallback_proxies = _should_use_total_market_fallback_proxies(total_market_cap)
-    metric_specs = _metric_specs(runtime, include_total_market_fallback_proxies=use_total_market_fallback_proxies)
+    fallback_eligibility = _total_market_fallback_eligibility(total_market_cap)
+    # Build both routes once. Removing proxies based on the invocation's final
+    # coverage rewrites historical scores, including their coverage denominator.
+    metric_specs = _metric_specs(runtime, include_total_market_fallback_proxies=True)
+    primary_specs = _metric_specs(runtime, include_total_market_fallback_proxies=False)
+    primary_bundle_names = {f"{spec.name}__{spec.target}__{spec.category}" for spec in primary_specs}
     if runtime.data_profile == "extended":
         onchain_frame = load_onchain_metrics(runtime, index=index)
     else:
@@ -513,6 +517,10 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
         metric_specs=metric_specs,
         reliability_adjustments=reliability_adjustments,
     )
+
+    for bundle in bundles:
+        if bundle.name not in primary_bundle_names:
+            bundle.frame["eligible"] = fallback_eligibility.reindex(bundle.frame.index)
 
     btc_score = score_target(
         index=index,
@@ -762,8 +770,11 @@ def run_pipeline(cfg: RuntimeConfig | None = None) -> RiskOutput:
     for column in cycle_context.columns:
         source_map[f"cycle::{column}"] = cycle_context[column]
 
+    # Health describes the final-date route; historical eligibility remains in
+    # feature frames and metric attribution rather than masquerading as missing data.
+    latest_specs = metric_specs if _should_use_total_market_fallback_proxies(total_market_cap) else primary_specs
     metric_health = build_metric_health(
-        metric_specs=metric_specs,
+        metric_specs=latest_specs,
         feature_bundles=bundles,
         as_of=as_of,
         lookback_days=30,

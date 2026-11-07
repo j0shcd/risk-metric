@@ -1,0 +1,123 @@
+{
+  "all_criteria_pass": false,
+  "config": {
+    "alpha": 0.05,
+    "candidates": 24,
+    "fit_rows": 192,
+    "horizons": [
+      12,
+      24,
+      48
+    ],
+    "null_worlds": 500,
+    "phase_rows": 96,
+    "positive_worlds": 200,
+    "randomizations": 99,
+    "seed": 20270119,
+    "steps": 720
+  },
+  "criteria": "null one-sided98.333% upper<=10%; planted one-sided95% lower>=80%",
+  "elapsed_seconds": 514.204975916975,
+  "families": {
+    "autocorrelated_location": {
+      "criterion_pass": true,
+      "flags": 15,
+      "lower": 0.018581564717314425,
+      "rate": 0.03,
+      "upper": 0.05074703658960755,
+      "worlds": 500
+    },
+    "clustered_t3": {
+      "criterion_pass": true,
+      "flags": 25,
+      "lower": 0.03499847873037898,
+      "rate": 0.05,
+      "upper": 0.07499948674120568,
+      "worlds": 500
+    },
+    "iid_gaussian": {
+      "criterion_pass": true,
+      "flags": 28,
+      "lower": 0.04008951577442876,
+      "rate": 0.056,
+      "upper": 0.08207465663584318,
+      "worlds": 500
+    },
+    "leading_location": {
+      "criterion_pass": false,
+      "flags": 80,
+      "lower": 0.34192505481761515,
+      "rate": 0.4,
+      "upper": 0.4603162046302287,
+      "worlds": 200
+    },
+    "leading_scale": {
+      "criterion_pass": false,
+      "flags": 23,
+      "lower": 0.0798852450738885,
+      "rate": 0.115,
+      "upper": 0.15897674070837498,
+      "worlds": 200
+    }
+  },
+  "limitations": [
+    "720-step synthetic histories support these phases; the ~140-month market indicator history does not.",
+    "The readout estimates a location/scale family, not arbitrary conditional distributions, and omits parameter uncertainty.",
+    "Scale shape uses fitting residuals; the empirical residual distribution uses a distinct later mature phase.",
+    "Exact CRT validity requires the complete known conditional score law; it does not establish Bitcoin error control.",
+    "All past qualification worlds are exposed; this fresh seed is not a market holdout or protection against generator-family overfitting.",
+    "No aggregate horizon utility, automatic production promotion or unrestricted adaptive search is qualified."
+  ],
+  "local_full_report": "output/location-scale-search-2026-11-06-registered",
+  "protocol": "continuous-location-scale-search-v1",
+  "readout": {
+    "absolute_variance_floor": 1e-12,
+    "indicator_residual_tolerance": 1e-06,
+    "log_variance_bound": 6.0,
+    "projection_rcond": 1e-12,
+    "relative_variance_floor": 1e-08,
+    "ridge": 0.1
+  },
+  "receipt": {
+    "files": {
+      "COMPLETE": "7c7202a2317f4dad47ee64b9d99339462774c7e3a76300bc5474bc2f7836f040",
+      "campaigns.json": "cfabcc28f82ad7ddaeea022fc9c5f49c6b82e9cdbc6b33e63f108e1685dcc5d3",
+      "registration.json": "050a575e79f8b82d0843f70c9c17993b87ddef0cb71a3ac14a2eb1ed1550bb29",
+      "summary.json": "3e6d6040efdabd5652e9843440429b31d5ae978c43f257f741a70d93f36991d3"
+    }
+  },
+  "registration": {
+    "code_sha256": {
+      "conditional_search.py": "72f5dc66454b55c37912375c2efba38a31858b2f26e1525bea401c79aaecc8a1",
+      "location_scale_readout.py": "76ea0092f75d51ea020b68fba63c24175449e63b55fba465923046540bd1f59d",
+      "location_scale_search.py": "7c9bdb5d38dcf7d763519bcb6fa5adab49da31f3eddff7e2536bb9a433a3d8e7",
+      "market_dataset.py": "679222de6b2a98337790d5b5686af03d7f630b118e2165d93512f3f6898cace4",
+      "scorecard_artifacts.py": "ac01f75b625e0c728316eb61eebf3d0c4f18b4af63a546eb81a1f0316a356ab1",
+      "search_qualification.py": "f6263fb693ebad2551e515c788428bea541ee99f0743f3576b1d9b4f8a5319a7"
+    },
+    "config": {
+      "alpha": 0.05,
+      "candidates": 24,
+      "fit_rows": 192,
+      "horizons": [
+        12,
+        24,
+        48
+      ],
+      "null_worlds": 500,
+      "phase_rows": 96,
+      "positive_worlds": 200,
+      "randomizations": 99,
+      "seed": 20270119,
+      "steps": 720
+    },
+    "criteria": "same null upper<=.10 and planted lower>=.80; no evaluation retuning",
+    "runtime": {
+      "numpy": "2.4.6",
+      "pandas": "2.3.3",
+      "python": "3.12.16"
+    }
+  },
+  "scope": "known conditional whole-path score law; fixed216-cell dev search and one selected audit; no market qualification",
+  "workers": 4
+}

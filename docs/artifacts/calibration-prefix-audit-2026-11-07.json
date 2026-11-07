@@ -1,0 +1,79 @@
+{
+  "acceptance_identity_changes": false,
+  "change": "remove total-history calibration no-op; retain per-origin mature-label training guards",
+  "frozen_data_or_artifact_changes": false,
+  "local_model_fingerprint_after_calibration_only": "89663be575b1cad4e0817d17f8c6e2668f049df055849c96771f2a287d1877e5",
+  "new_source_sha256": "9cc2cbfce1924ab8c6a3fa1464a16272c8cecdc86562fc419cbb1c06d84cc478",
+  "note": "Source SHA fields identify calibration.py, not the complete model. Later routing corrections have their own identity. No historical market artifacts were regenerated.",
+  "old_source_sha256": "5e3cb5b13d666c1268f1ee8cdbfab5582eb539f9a85a3eddb824ba62d0f32751",
+  "published_model_fingerprint": "21a4b0160e184a67f141c57202b46e455ccc92791961430493c7d250ee5c053d",
+  "regression": {
+    "calibration_month_prefixes": [
+      1,
+      12,
+      24,
+      36,
+      48,
+      64,
+      65,
+      66,
+      72,
+      96
+    ],
+    "extension_day_prefixes": [
+      49,
+      50,
+      199,
+      200,
+      349,
+      350,
+      563,
+      564,
+      699,
+      700,
+      713,
+      714,
+      729,
+      730,
+      1428,
+      1429
+    ],
+    "full_months": 120,
+    "partial_month_prefixes": [
+      "2000-01-15",
+      "2005-07-15"
+    ],
+    "regime_month_prefixes": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      11,
+      12,
+      13,
+      23,
+      24,
+      25,
+      46,
+      47,
+      48,
+      60
+    ],
+    "restored_old_gate": "regression fails at 8 prefix subtests",
+    "same_length_future_price_multiplier": 1000
+  },
+  "regression_test": "tests/test_calibration_walkforward.py",
+  "source_commit": "6da7fb08ece8ddc8f3cb06dd74b73f63353c1b6c",
+  "status": "unaccepted_correctness_revision_not_market_trial",
+  "synthetic_old_module_comparison": {
+    "160_month_bottom_walkforward_steps": 17,
+    "monthly_history_lengths": [
+      66,
+      80,
+      160
+    ],
+    "old_module_import": "risk_engine._calibration_before_prefix_fix from /private/tmp/calibration-before-prefix-fix.py",
+    "series_and_dca_and_metadata": "bit-exact equality"
+  }
+}

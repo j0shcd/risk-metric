@@ -1,13 +1,16 @@
 # Indicator benchmark and evaluation plan
 
-Status: retrospective scorecard verified; known-law information demonstrated;
-conditional synthetic null control verified; fitted-search sensitivity unqualified.
-Updated 2026-11-06.
+Status: finite known-law panel qualification passes; earlier single-path searches
+remain failed. Seven indicator variants and two readout studies show no broad
+improvement. One generative baseline adds stronger partial benchmarks but fails
+the primary two-year return comparison and long-horizon calibration. No promotion.
+Updated 2026-11-07.
 
 This is the canonical plan for the next benchmark. Current implemented results
 remain in [DCA evidence](dca_evidence.md). This replaces the older Phase 1/2
-planning narrative; Git preserves its implementation history. Production scoring,
-acceptance policy, canonical metrics and publication behavior are unchanged.
+planning narrative; Git preserves its implementation history. Published scoring,
+acceptance policy and canonical metrics are unchanged. Local producer causality
+corrections below are unaccepted source revisions and have not been published.
 
 ## Accepted requirements
 
@@ -980,6 +983,31 @@ Long public return histories such as the
 can support this track. They do not validate BTC-specific features, and current
 historical files can be revised. Shared global shocks limit independent replication.
 
+The next bounded external experiment is **portability falsification**, not pooled
+pretraining. Candidate generators and readouts remain frozen. The first eligible
+source is the official [French daily factors ZIP](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip):
+reconstruct broad-US market total return from Mkt-RF + RF, then compound. This is
+a research portfolio, not the S&P 500 or an executable security. Record the
+[2025 CIZ methodology change and revisions](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html).
+The second proposed equity stress series is [Nasdaq Composite](https://fred.stlouisfed.org/series/NASDAQCOM),
+a price index with dividends excluded; its metadata includes copyright terms,
+and redistribution eligibility has not been established. These two series form
+one equity family. Gold's official World Bank monthly series is an average spot
+price, so it cannot enter daily drawdown/next-day policy tests. No external file
+has been downloaded or adopted in this task.
+
+Before acquisition, freeze and test a trading-session calendar adapter. Monthly
+decisions must use available closes, execute on the next eligible session, and
+compute declared calendar-horizon endpoints without inventing weekend trades.
+Proposed unchanged-candidate audit origins are 1990–2017, with labels available
+by 2022; any training uses labels available by 1979, validation origins 1980–1984,
+and choices frozen before 1990. Exact maturity overrides approximate row gaps.
+Keep transformations causal and asset-specific, retain native log-loss units,
+and report asset/era cells separately. Resampling must preserve shared calendar
+shocks and multi-year dependence. Failure versus unconditional/price references
+or inverted ordering rejects this representation's portability claim; success
+does not add independent BTC cycles or validate a four-year Bitcoin forecast.
+
 ## 7. Candidate research queue
 
 These ideas change models or inputs, not the benchmark contract. Use the same
@@ -1026,25 +1054,25 @@ references. No framework migration or new runtime dependency is selected here.
 
 ## 9. Current implementation, defects and next bounded work
 
-Inspected at local HEAD `37fbd99` on 2026-11-06. The existing compact evaluator
-reran in 2.72 seconds on stored inputs in the preceding assessment; this excludes
-model generation. Its current three-test results are faithfully recorded in
-[DCA evidence](dca_evidence.md). That does not validate the proposed protocol.
+The legacy assessment at `37fbd99` ran its compact evaluator in 2.72 seconds,
+excluding model generation. [DCA evidence](dca_evidence.md) owns those historical
+results. Current research implementation and qualification are recorded below;
+the legacy acceptance gate remains unchanged.
 
 | Capability | Current state | Required delta / acceptance |
 | --- | --- | --- |
 | Unit/regression infrastructure | Implemented; focused tests available | Preserve and add boundary tests that fail under reintroduced defects |
 | Common-outcome table | Retrospective daily-close log return, entry loss and true drawdown implemented | Verified source close/availability convention and accepted primary claim remain open |
 | Ordinal information diagnostics | Fixed-direction continuous ranks, ties and common origins implemented | Descriptive only; no primary rank leaderboard |
-| Forecast readout and skill | Distributional finite-bin market readout implemented | No eligible 48-month market origins; automatic search failed qualification |
+| Forecast readout and skill | Frozen residual-CDF and direct empirical-CDF protocols; separate median/rank ablations | No 48-month direct-CDF development/outer forecasts; no calibrated market model or automatic promotion |
 | Chronological benchmark | Strict fitting/calibration label maturity, exact complete outcomes and independent replay implemented | Real input-vintage reconstruction and prospective update audit remain open |
 | Baseline identity | Committed minimal snapshot, immutable manifests/receipts and byte-identical baseline replay | Snapshot is exposed and reconstructed, not new holdout evidence |
-| Experiment registry | 24-slot atomic local market ledger; failed/interrupted attempts count | Candidate-producer lineage, prospective prediction state and actual restricted audit access remain open |
-| Prospective archive | Release records and inputs exist | Candidate/readout/update-state lineage and outcome-resolution evaluator |
-| Synthetic / external suite | IID/adversarial pilots plus registered whole-path search implemented; search criteria failed | No external-market transfer data collected; broader generator/market validity remains open |
-| Supporting policy accounting | Implemented but multiple variants remain | One explicit contract per test; capital/exposure controls and reporting |
+| Experiment registry | Shared direct-CDF budgets, immutable finalists, one release and reasoned interrupted-attempt closure implemented | Declared producer artifacts are not executed/causally certified; public exposure cannot be erased |
+| Prospective archive | Bounded hash-chained observation/resolution API, synthetic CLI and independent review implemented | No live archive or verified input-publication adapter; hashes are not source authentication |
+| Synthetic / external suite | New independent-world conditional panel passes; earlier single-path search failures retained | No external-market data adopted; no market error-control transfer |
+| Supporting policy accounting | Equal initial capital, no contributions, explicit costs, common dates and ex-post exposure matches | Candidate C's three-trade lead is exploratory; no policy winner or pathwise risk equivalence |
 
-Verified issues to resolve before policy/outcome optimization:
+Legacy acceptance/policy issues remain separate from the research protocol:
 
 - `_relative_window_rows` uses varying-length suffixes ending at one date. Use
   exact horizons for the new outcome table; keep suffix reports diagnostic only.
@@ -1073,28 +1101,30 @@ Verified issues to resolve before policy/outcome optimization:
    paired ordering/forecast diagnostics, fixed references, candidate ledger and
    strict readout feasibility. Boundary, invariance, independent E2E and deliberate
    defect tests verify the measurement mechanics.
-2. **Next bounded qualification experiment:** implement a continuous location/scale
-   readout with a separate empirical residual-calibration distribution. Fit mean
-   and log residual scale from fitting data only; keep calibration outcomes out
-   of fitting. This tests a diagnosed capacity/memory gap rather than lowering a
-   failed acceptance threshold. Predeclare 192 fitting rows and 96 rows each for
-   calibration/development/audit, with every boundary clearing the longest label;
-   retain the 24-candidate, three-target, three-horizon search and repeat the
-   entire procedure in every CRT redraw. Before generating evaluation worlds,
-   freeze transformations, regularization, scale limits and code hashes. Reserve
-   fresh seed 20270119; all earlier worlds are exposed development/explanation.
-   Keep the existing null-error and sensitivity criteria; do not retune from new
-   evaluation counts. This is an accepted research implementation direction, not
-   implemented or guaranteed to pass. A 720-step synthetic path can fit these
-   phases; the ~140-month market indicator history cannot. Any synthetic success
-   must retain that coverage limit rather than claim a qualified BTC readout.
-3. Add an append-only shadow observation archive
-   with producer/configuration identity, actual observation/publication/decision
-   timestamps and frozen score/readout state. Archive incomplete-outcome forecasts
-   without scoring them, then resolve labels append-only when they mature. The
-   present scorecard only scores completed paths; this archive is not implemented.
-   Tests must prove future data/retraining cannot rewrite prior observations or
-   forecasts. Unknown input vintages remain unknown, not silently point-in-time.
+2. **Implemented; failed:** continuous location/scale search with seed 20270119,
+   strict 192/96/96/96 phases and full selection repeated in each redraw. Its
+   null controls pass, but location/scale sensitivity is 40%/11.5%. The next
+   registered experiment changes the inferential unit to independent synthetic
+   world panels and conditions on fitted score prefixes, as specified below.
+   This is a new experiment, not a repaired result or a market significance test.
+3. **Implemented:** append-only shadow observations and unique mature-label
+   resolutions, actual runtime UTC timestamps, producer/configuration/readout
+   identities and immutable forecast atoms. Calendar-derived entry/end/publication
+   prevents shortening a declared multi-year horizon. Concurrent writes, tampering,
+   premature labels and prefix immutability have regression/mutation tests and an
+   independent synthetic CLI replay. Unknown vintages remain explicit; no live
+   market archive is initialized. Retain trusted heads separately: a local chain
+   cannot defeat adversarial tail removal/full rewriting. Appends scan bounded
+   history (2,048 events, 128 KiB/event, 16 MiB total); measured 7.4ms after 100
+   events and 93.1ms after 1,000. Midnight UTC dates are calendar anchors, not
+   independently verified exchange execution timestamps.
+   Schema v2 separates evidence timing from input freshness: known older inputs
+   can support a forecast recorded today, with age/quality flags disclosed.
+   Unknown vintages, historical decisions and elapsed endpoints remain ineligible.
+   It does not endorse stale data quality or authenticate publication assertions.
+   The CLI is `python -m research.shadow_archive --help`; request fixtures are in
+   `tests/test_shadow_archive.py`. Earlier synthetic v1 archives are explicitly
+   rejected, never silently reclassified.
 4. Before a bounded candidate campaign, state one informational hypothesis and
    diagnostic comparisons; distinguish decoder improvement from novelty and
    directional usefulness. All explored historical results remain development
@@ -1120,6 +1150,379 @@ Verified issues to resolve before policy/outcome optimization:
 - A sealed historical audit remains limited by prior researcher exposure. Record
   its actual access boundary; only future frozen predictions can be prospective.
 
+## 10. Continuous readout, panel qualification and market campaign
+
+### Completed continuous experiment and diagnosis
+
+The immutable [continuous search receipt](artifacts/location-scale-search-2026-11-06.json)
+binds 1,900 campaigns and source/runtime hashes. Declarations in each of three
+500-campaign null families were 28, 25 and 15; their simultaneous one-sided bounds
+pass the declared 10% ceiling. Location sensitivity was 80/200 (40%, lower bound
+34.19%); scale sensitivity was 23/200 (11.5%, lower 7.99%). Both fail the 80%
+lower-bound requirement. This failure remains authoritative.
+
+A separate, explicitly posthoc [fixed-candidate replicate diagnosis](artifacts/readout-replicate-diagnostic-2026-11-06.json)
+uses candidate zero across the same exposed 200 worlds, without selecting a cell.
+Mean return-loss improvements at 12/24/48 months are 28.92%/16.15%/5.09% in the
+location family, with paired whole-world bootstrap intervals above zero. Scale
+return improvements are negative at all three horizons. Scale's 24-month true
+drawdown loss improves 5.32% (interval 2.91–7.62%). This distinguishes average
+forecast usefulness from a single trajectory's discovery power; it does not
+repair the failed qualification or add independent Bitcoin cycles.
+
+### Registered panel experiment and completed qualification
+
+`research/panel_benchmark.py` reserves seed **20270417**. Each family-specific panel
+has 128 independent development worlds and 128 new audit worlds. Each world has
+720 steps and the same causal readout phases. Development pools raw paired CRPS
+across worlds and selects one global candidate/horizon/target out of 216 cells.
+The chosen algorithm is fitted separately on each audit world's earlier prefix.
+No training is shared across worlds and no audit outcome selects an endpoint.
+
+The new conditional test fixes all prices/context and all 24 indicator prefixes
+through step 545. It samples only the chosen indicator's audit continuation
+(steps 546–641), jointly within each world, from its **known synthetic Gaussian
+conditional law**. The exact posterior conditions on every candidate prefix,
+including shared AR state; 99 continuation draws give conservative tie/+1 ranks.
+The fixed selection and fitted states are measurable under this conditioning, so
+this test does not repeat development selection for each continuation. It tests
+a different null from the earlier full-path CRT and cannot credit information
+entirely contained in the fixed score history. Unknown market score laws do not
+inherit its error control.
+
+A declaration requires both p <= .05 and positive raw pooled audit loss gain.
+Normalized gain is 100(R-C)/(R+C), with the zero/zero case zero; it is not an
+investor utility. Three null families each use 500 panels; each of two positives
+uses 200. Existing criteria remain: simultaneous one-sided 98.333% null upper
+bounds <=10%, positive one-sided 95% lower bounds >=80%. Three panels each of
+constant, linear-context and nonlinear-context indicators use their actual
+point-mass continuation laws and must have p=1/no declaration. They check
+context redundancy and protocol plumbing, not Gaussian-law validity.
+
+The batched implementation agrees with the independent scalar path on all 216
+losses, selected cells and randomization results. A new feature-boundary invariant
+canonicalizes exactly constant fitting columns and falls back to identical
+reference losses for inactive features. Without it, floating point residuals of
+a constant such as 23 can be standardized into a false feature. The older frozen
+experiment source is unchanged; its failure is not rewritten. Conditional sampler
+tests compare exact multivariate Gaussian conditioning and Monte Carlo moments.
+The [registered results](artifacts/panel-benchmark-2026-11-07.json) and complete
+[portable packet](artifacts/panel-benchmark-2026-11-07.zip) bind all 1,909 panels
+and unchanged source hashes. Runtime was 381 seconds with four workers. All
+registered criteria pass:
+
+| Family | Declarations | Relevant one-sided bound |
+| --- | ---: | ---: |
+| IID Gaussian null | 9/500 | Upper 3.539% |
+| Clustered t3 null | 9/500 | Upper 3.539% |
+| Autocorrelated-location null | 6/500 | Upper 2.727% |
+| Leading location | 200/200 | Lower 98.513% |
+| Leading scale | 198/200 | Lower 96.886% |
+| Three deterministic sentinels | 0/9 | Every p=1 |
+
+Independent verification recomputed every selection, pooled gain, rank p-value
+and binomial bound, and checked disjoint world IDs and receipt/source hashes.
+Thirty-six CRT rejections had negative gains and were correctly blocked; scale
+panel 110 has p=.01 but gain -.01075265. Statistical unusualness alone is not
+useful forecasting. This pass qualifies the finite known-law panel procedure,
+not unlimited adaptation, Bitcoin significance, population economic benefit or
+all endpoints simultaneously.
+
+### Chronological market hill-climb contract
+
+Josh requested actual divergent model experiments and meaningful improvement for
+multi-year Bitcoin swing decisions. This expands implementation scope while
+preserving a broad information objective, separate opportunity/downside reports,
+and the hold on all pushes. No combined strategy wealth score is accepted.
+
+`research/market_information.py` implements a distinct **direct conditional
+empirical CDF**. Each origin uses the latest 24 strictly mature labels to fit
+feature medians and raw outcome atoms. Sharing those fitting rows is ordinary
+distribution fitting: there is no fitted residual model or claim of probability
+calibration. The reference mixes pooled/context outcomes 50:50; the candidate
+mixes pooled/context-plus-indicator outcomes 50:50, falling back to reference for
+empty or duplicate-context cells. Every origin also records unconditional CRPS.
+Thus an indicator cannot be credited solely for beating an underfit context model
+while silently losing to the pooled distribution. Thirteen fixed references
+include the incumbent, its four components, price trend/volatility/drawdown,
+price/SMA, causal all-time drawdown, age and fixed four-year calendar sin/cos.
+They are diagnostic competitors, not proof that every strong model is covered.
+
+The input snapshot and next-day calendar outcomes are unchanged. Development
+requires label availability <=2022-12-31. Outer origins start 2023-01-01. Older
+origins with later labels are an exposed retrospective challenge. Full-snapshot
+forecast counts per candidate are development **48/24/0**, outer **30/18/0**, and
+challenge **13/25/19** at 12/24/48 months. These heavily overlapping observations
+are not independent cycles; there is no four-year outer validation. Historical
+public data and earlier inspections preclude claiming a genuinely blind test.
+Pending forecasts are reconstructions, never prospective receipts.
+
+The locked development CLI is `python -m research.indicator_trial --help`.
+Its immutable bundle contains only <=2022-12-31 data and a manifest of original
+and cropped source hashes. The portable [development bundle](artifacts/hillclimb-development-2026-11-07.zip)
+has SHA256 `93e1e59601602aeb6248ddbbe19595a6ba5940f5b3d10113a12d7d67fb08fffd`.
+It refuses post-cutoff observations, missing/duplicate dates and reused output
+paths, records exact candidate/producer/data/code identities, and evaluates all
+fixed references on the same origins. Current cached macro/volume vintages remain
+unverified; they cannot establish real-time eligibility.
+
+Three Astra medium agents worked independently in managed worktrees
+`codex/swing-research-a`, `codex/swing-research-b`, `codex/swing-research-c`, with
+at most six recorded development variants per agent. Seven variants were tried:
+three causal price-anchor/occupancy weights, three bounded online log-trend
+innovation filters, and one 24-month upside-energy share. The volume-divergence
+idea was rejected before scoring because venue/units consistency was unverified.
+Each agent froze a finalist and full attempt packets before parent-owned outer
+replay. No finalist is a claimed broad improvement: all lose two-year return CRPS
+to the unconditional baseline, despite some one-year downside gains. No default
+production model changes are authorized from these results. Candidate research
+can be retained as evidence even when its trading hypothesis fails.
+
+The frozen [outer replay packet](artifacts/indicator-outer-replay-2026-11-07.zip)
+(SHA256 `258a3f1a40b39b0106c104071450d3e6f5969e50466d0c41422ebb7d090b02a0`)
+contains all three finalists, declarations, full source and every reference.
+`python -m research.indicator_outer_replay --help` documents exact portable replay.
+Every finalist loses every outer outcome cell to at least one fixed reference.
+All three lose all one-year cells and two-year peak drawdown to unconditional;
+only two-year return and entry loss improve unconditional. Candidate B's two-year
+return CRPS is .280957 versus unconditional .304205, context .276072 and best
+fixed .256821. Its entry loss is .123800 versus context .146430 and best fixed
+.097276. These are separate descriptive comparisons, not a broad winner.
+Independent raw-price/atom/maturity/quadratic-CRPS replay checked all 1,593 scored
+candidate records (maximum difference 1.33e-15) and 756 unscored records. Archived
+development losses reproduce exactly; B/C serialized score values differ by at
+most 1.42e-14 from CSV rounding. No retuning followed the outer look.
+
+A separately frozen development-only 2x2 readout study (`research/readout_study.py`)
+compares indicator-only/combined with median/rank decoding on identical 24-label
+pools, all thirteen references and frozen candidate B. Rank distance uses eight
+nearest training-percentile observations, fractional boundary ties and half
+uniform mass. Its full packet is in `research/candidates/swing_b/readout_study/`.
+There is no general improvement: B's two-year combined return loss improves
+.450009 to .424059, still worse than unconditional .331074; all one-year combined
+losses regress. Nominal 80% return intervals cover only 37.5–39.6% of one-year
+outcomes, versus 91.7% at two years. These empirical distributions are not
+calibrated. Coverage, Brier events, atom-range violations, cell mass, weight
+concentration and same-scored-origin Spearman alignment are descriptive reports.
+Spearman is a separate implemented rank diagnostic; the earlier Kendall proposal
+is not implemented. Concentration is not an effective independent sample count.
+
+The frozen rank study also exposes a representation limitation: duplicating one
+context coordinate reweights its distance contribution and can improve loss
+without adding information. Its results therefore measure representation plus
+readout, not conditional novelty. The original source/result is unchanged.
+Implemented `research/readout_study_v2.py` collapses exact training-and-query
+rank-equivalent coordinates. Tests cover duplication, monotone copies, permutation
+and broken query relationships; disabling collapse fails the oracle. The single
+v2 development study changes only twelve context-duplicate reference cells; all
+432 duplicate-control forecasts now equal context-only exactly. Candidate B and
+best-reference gaps are unchanged. Both packets and all 25,488 predictions were
+independently audited. This is an additional representation trial, not independent
+validation. It controls exact rank redundancy, not arbitrary nonlinear functions
+of context. The 13-reference envelope is descriptive, not a causal
+per-origin model selector; trend and volatility are context-duplicate controls.
+
+Supporting self-financing policy probes in `research/policy_probes.py` have one
+fixed historical replay. Both start with capital 1, no contributions or
+cash yield, next-calendar-day execution, daily BTC/cash holdings, and separate
+0/25/50bps per-leg costs. Exactly 24 prior monthly scores define the percentile;
+continuous weight 1-percentile and 20/80 hysteresis (initial 50%, full BTC <=20%,
+cash >=80%, otherwise hold) remain separate probes. Buyhold, cash and monthly
+50/50 share first eligible execution and final mark. An explicitly ex-post
+constant-allocation comparator matches realized time-average exposure; it is
+neither causal nor a match for pathwise risk. Missing daily/monthly dates reject;
+warmup/pending orders are explicit. Terminal liquidation is a separate diagnostic.
+No policy defines the indicator winner.
+
+The [fixed replay](artifacts/policy-probes-2026-11-07.json) and
+[full ledgers](artifacts/policy-probes-2026-11-07.zip) use all three finalists plus
+all five higher-risk fixed references. Decisions start 2023-01-31 after exactly
+24 prior months; all policies execute first on 2023-02-01 and end 2026-07-30.
+Independently recomputed all 214,368 ledger rows, fees, holdings, post-fee targets
+and matched exposures. At 25bps candidate C's hysteresis ends at 2.4046 versus
+its ex-post exposure-matched comparator 1.7565 (36.90% higher), with drawdown
+-29.17% versus -28.41%. The relative advantage is 37.39% at zero costs and 36.41%
+at 50bps. However, **three trades drive this result**. Its continuous rule loses
+to its matched comparator (1.6206 versus 1.8025), and its forecast comparisons
+remain weak. Buyhold ends at 2.7236 with full exposure and -52.97% drawdown;
+these are different risk/exposure outcomes. This is a narrow research lead,
+not an established timing edge or professional-use validation. Do not select
+the successful rule after seeing this table or reset its trial history.
+
+`research/direct_cdf_campaign.py` now coordinates future parallel experiments.
+It freezes the development bundle, complete references, protocol, runtime and
+evaluator code hashes. Global and per-worker budgets include all reserved slots,
+including malformed candidates, failures and interruptions. Explicit reasoned
+abandonment retains the slot and partial evidence; a late worker cannot replace
+its terminal outcome. A serialized finalist freeze accepts only successful
+attempt receipts. The single outer release is reserved before its input is read
+and remains consumed after failure or interruption. Price/component history,
+candidate development values, supplied producer/config artifacts and parameters
+must match the frozen records exactly. The target source hash is first bound in
+the reserved release request, not precommitted at campaign creation. Interrupted
+administrative freezes fail closed as `FREEZE_RESERVED`.
+
+The module docstring owns request schemas and CLI commands (`create`, `submit`,
+`status`, `freeze`, `abandon`, `release`). Bounds are 999 slots, 16 MiB per supplied
+file, 64 MiB per bundle and 50,000 daily rows/date-span days. Seventeen synthetic
+tests and four failing mutations cover races, budgets, identities and release
+reuse. Independent review and an unmocked synthetic lifecycle through both
+evaluators pass, including 54 scored synthetic outer records. This is verification,
+not another market trial. The original seven model attempts predate the shared
+coordinator and remain individually archived; they were not retrospectively
+relabelled as coordinator runs.
+
+Supplied producer hashes establish artifact continuity only. The coordinator
+does not execute the generator, verify imported model/data closure, or prove that
+CSV values were produced causally. Those require a trusted producer adapter and
+independent prefix tests. New campaigns must record exposure lineage; a new
+directory or replayed receipt cannot restore unseen history. Exact prefix
+matching requires a stable serialization, not an independently rounded rewrite.
+The locked trial harness also now parses the same captured source/candidate bytes
+that it hashes; path-replacement regressions and exact original-byte replay pass.
+
+Next bounded work: make the stronger generative benchmarks part of future
+candidate comparison guards, then implement one external-market falsification
+adapter. Further indicator search must inherit all exposed results and keep the
+same horizon/target/metric distinctions; no primary model has qualified.
+The expanded user goal
+is unmet: no candidate has demonstrated broad incremental market information or
+professional-use reliability. Synthetic qualification cannot supply missing
+multi-year outcomes, verified vintages or economic validation.
+
+### Producer causality corrections
+
+An upstream audit found a second reason not to certify reconstructed incumbent
+values as point-in-time evidence. `calibrate_primary_outputs` globally skipped
+all transforms below 66 months, then applied bottom persistence retrospectively
+when more rows arrived. A synthetic 65-to-66-month extension changed 50 earlier
+bottom components and DCA values. Commit `6da7fb0` removes this total-length gate;
+each origin's existing mature-label/model-training guards remain in place.
+
+The owning calibration-to-DCA oracle compares completed and partial prefixes,
+future price shocks, regime warmups and extension warmups. Restoring the gate
+fails eight prefix subtests. Isolated old/new source comparison is bit-exact for
+series, downstream DCA and metadata at 66/80/160 months, including a case with
+17 actual bottom-calibration training steps. This fixes history consistency,
+not forecast performance. Frozen market data/results and canonical release
+identities are unchanged. The local model fingerprint changes and remains an
+unaccepted correctness revision.
+
+The same audit reproduced whole-invocation total-market coverage changing ten
+earlier output columns. Commits `949b226` and `bf153c7` route proxies per date,
+using cumulative observations and trailing 90-row coverage. Inactive metrics
+contribute neither scores nor expected-metric coverage; wholly inactive
+categories contribute zero coverage weight. Historical feature exports retain
+eligibility; current metric health describes the final-date route. Eligibility
+participates in normalized-input/export content hashes.
+
+The producer oracle independently inventories all 43 dated output columns,
+feature frames and both attribution layers. Seven synthetic pipeline runs
+(at most 943 days, 26.95 seconds) cover 364/365 observations, 72/90 versus 71/90
+coverage, restored availability and perturbed future numeric inputs. Configuration
+and source-mode metadata stay fixed. Aggregate benchmarks/newly resolved labels
+and current health metadata are explicit exclusions. Old-route and wrong-coverage
+mutations fail the oracle. Independent review caught and verified the
+all-ineligible-category correction. Revised inputs and unknown timestamps remain
+separate limitations; this is a tested fixed-input prefix contract.
+
+The complete causal/coordinator slice passed **337 backend tests in 144 seconds**.
+Local model fingerprint is now
+`71657a22230f4ebd5488b5c869731bb1f5ea4acadee083f3beefea006fde204d`;
+the acceptance CLI reports `changed=true`. Published canonical identity stays
+unchanged. No source cache, market result, release acceptance or deployment was
+updated to conceal that difference.
+
+### Registered daily-price forecast baseline and completed development run
+
+The CDF decoder's zero four-year development forecasts are a protocol-specific
+training-pool constraint. A model of daily returns can forecast a long holding
+path without 24 mature four-year labels. That does not create more independent
+four-year market cycles or establish calibration. Before further indicator
+tuning, test one conventional price-only predictive family as a stronger
+reference challenge. One registered development run is complete; source and
+parameters stayed fixed, with no outer fit or outcome-dependent retuning.
+
+Reviewed source `6150199` implements a fixed Student-t5 volatility path model,
+fitted on exactly 730 prior daily log returns. Its unit-variance shock is
+sqrt(3/5)*t5; variance updates as .01*s² + .05*(r-mu)² + .94*h. Only mu and s
+are estimated, under s~HalfNormal(.05) and mu|s~Normal(0,s²/365). These are
+heuristic predeclared assumptions, not a fitted trading thesis. Each of 8,192
+paths draws its joint parameters once and retains them. An unobserved next-day
+entry shock updates variance but is excluded from holding profit/downside;
+12/24/48-month outcomes share each maximum-horizon path.
+
+The posterior is a finite-domain deterministic approximation in mu/s and log(s),
+with fixed bounds, 65² coarse localization and 65²/129²/257² refinement. It must
+pass density-L1 .005, log-normalizer-change 1e-4, scaled-moment-change 1e-3 and
+edge-strip-mass 1e-6 checks, or return a visible failure. These are numerical
+proxies, not rigorous excluded-tail or misspecification guarantees. Independent
+original-coordinate integration and analytic holding-variance/H² drift-uncertainty
+checks pass. A fixed [nine-case numerical preflight](artifacts/generative-price-preflight-2026-11-07.json)
+converged without tuning or failures in 4.92 seconds. This does not test posterior
+calibration. The chosen recursion has no stationary fourth moment; Student-t
+log returns have no finite positive exponential price moments. Do not report
+simulated mean wealth or precise extreme-tail claims.
+
+The new scorecard must report exact matched-CDF origins separately from all
+730-return-eligible origins. More forecast coverage is not superiority. Keep
+all targets, horizons, roles and two predeclared simulation replicas separate;
+failures withhold complete-support means. Seeds depend on fixed base/date/replica,
+never full snapshot hashes or row positions, so future data cannot change earlier
+Monte Carlo forecasts. Existing event thresholds and 50%/80% interval diagnostics
+remain unchanged. Input/replica/code/runtime identities are frozen in the
+[one-run registration](artifacts/generative-baseline-registration-2026-11-07.json)
+before the first fit; no outcome-dependent retuning is authorized. It requests
+109 fit origins, with 96/84/60 completed development outcomes per target at
+12/24/48 months. Matched CDF counts remain 48/24/0. Additional four-year forecasts
+do not supply a four-year outer comparison or independent market cycles. The
+two replica bases are 20270529 and 20270530.
+
+Monte Carlo paths represent draws from an underlying law, rather than the issued
+finite CDF used by earlier readouts. Use finite-ensemble-unbiased CRPS and Brier
+estimates for the generative law, retain empirical scores/corrections, and leave
+exact reference-CDF scores unadjusted. This avoids rewarding more simulation
+particles as if they added information. The independence assumption is essential;
+see [Ferro's fair scoring rules](https://empslocal.ex.ac.uk/people/staff/ferro/Publications/ferro2013.pdf)
+and the [scoringrules interpretation guide](https://scoringrules.readthedocs.io/en/latest/crps_estimators.html).
+
+The [completed results](artifacts/generative-baseline-development-2026-11-07.json)
+and [portable scorecard/reference/audit packet](artifacts/generative-baseline-development-2026-11-07.zip)
+bind all 109 successful fits, 1,962 generated records and 855 aggregate cells.
+Approximate wall time was 103 seconds. All 3,240 scored reference CRPS values
+reproduce exactly. Independent audit verified every input window, raw outcome,
+support, aggregate and replica comparison. Three fixed dates regenerated both
+replicas: posterior/sample hashes match, and 36 scored records agree with
+independent quadratic/U-statistic scores within 2.89e-15. Eighteen pending
+records stay unscored. The full backend suite passes **356 tests in 150 seconds**.
+
+Matched development CRPS (lower is better; two simulation replicas shown):
+
+| Months | Outcome | Generative replicas | Unconditional | Best fixed CDF |
+| --- | --- | --- | ---: | ---: |
+| 12 | Terminal log return | .6550 / .6533 | .8585 | .8109 |
+| 12 | Entry adverse loss | .3062 / .3059 | .3619 | .3512 |
+| 12 | Peak drawdown loss | .3283 / .3278 | .2823 | .2602 |
+| 24 | Terminal log return | .7052 / .7066 | .3311 | .4119 |
+| 24 | Entry adverse loss | .1545 / .1548 | .2494 | .2270 |
+| 24 | Peak drawdown loss | .2750 / .2760 | .3006 | .2740 |
+
+The one-year return CRPS improvement is about 19% versus the fixed-CDF envelope,
+but its loss-event Brier score is worse (~.277 versus ~.258) and nominal 80%
+coverage is only 47.9–50%. Entry-loss CRPS/Brier improve at both matched horizons;
+the two-year CRPS improvement is about 32% versus the fixed-CDF envelope. Neither
+finding repairs the primary two-year return regression. Across 60 additional
+four-year origins, return coverage is only 45–46.7% and peak-drawdown coverage
+28.3%. There is no matched four-year CDF comparator. These overlapping outcomes
+are not independent market cycles or a new holdout. More forecast availability
+does not establish better forecasting.
+
+Keep this model as a stronger *partial reference*, not the primary indicator or
+a calibrated risk forecast. The scorecard correctly exposes improvements in one
+loss alongside regressions in another; do not average them into a winner. No
+source, prior, recursion, numerical tolerance or simulation budget was tuned
+after the result.
+
 ## Verification and handoff
 
 This task specifies the benchmark and implements synthetic pilots, a real-data
@@ -1135,7 +1538,9 @@ The implementation plan now serves the requested information-indicator goal;
 strategy-specific wealth optimization is explicitly outside the primary score.
 Historical data quality, vintage eligibility, market false-positive rates and
 external-market transfer remain unverified. Market readout feasibility is measured
-under the stated protocol, with four-year forecasts explicitly unavailable.
+under each stated protocol: mature-label CDF four-year development/outer forecasts
+remain unavailable; the new generative four-year reconstruction is measurable
+and fails important calibration checks.
 Each synthetic experiment measures rates only under its specified procedure and
 generator; none establishes the market scorecard's automatic promotion validity.
 The strongest alternative explanation for an apparent future leaderboard gain
@@ -1160,7 +1565,10 @@ caught in isolated copies, including entry lag, false drawdown, missing support,
 label maturity, cross-horizon timing, CRPS, duplicate-context shrinkage, runtime
 drift, unbounded attempts, corrupt receipts and nonfinite zero-loss references.
 
-The production model fingerprint remains unchanged. Earlier research commits are
+The published/frozen research model fingerprint remains
+`21a4b0160e184a67f141c57202b46e455ccc92791961430493c7d250ee5c053d`.
+Local producer correctness changes are unaccepted and must clear the release
+gate before publication; no canonical identity was rewritten. Earlier research commits are
 `573de0d`, `b260774`, `349b973`, `fe04721`, `e5d71b1` and `51bb110`; scorecard
 implementation is `a35a3f9`, whole-path qualification is `92e8a27`, the observed-score
 oracle is `631063b` and conditional randomization is `e5f26e2`. Josh explicitly
@@ -1176,12 +1584,13 @@ additional global skill change necessary.
 
 | Requirement | Current authoritative evidence | Status |
 | --- | --- | --- |
-| Detect useful information under dependent worlds | Observed-score Gaussian oracle, independent conditioning/covariance tests and exposed-world replay | Known-law capability demonstrated; fitted-search sensitivity still fails |
+| Detect useful information under dependent worlds | Gaussian oracle and registered panel test, 398/400 positive declarations | Pass in finite known-law panel scope; previous single-path searches still fail |
 | Control false promotion under declared dependent nulls | Whole-path CRT exchangeability under exact Q, full-search equivalence tests, 1,500 fresh null campaigns | Pass within the declared one-campaign synthetic scope |
-| Chronological/provenance integrity | Strict longest-label boundaries, causal filter prefix tests, immutable data/results and unchanged source fingerprints | Verified mechanics; historical market vintages explicitly unverified |
-| Safe adaptive-search scope | Full 216-cell algorithm rerun per matrix; local custom ledger; documented correction/access limits | Finite scope defined; unlimited human adaptation not qualified |
-| Local-only changes | Atomic commits on local main; frozen receipts and portable evidence | No push/deployment; user hold persists |
+| Chronological/provenance integrity | Strict label boundaries, frozen measurement hashes, 43-column producer oracle and immutable receipts | Verified fixed-input mechanics; historical market vintages explicitly unverified |
+| Safe adaptive-search scope | Registered conditional tests, shared attempt/freeze/release ledger and explicit exposure lineage | Finite scope defined; unlimited human adaptation not qualified |
+| Local-only changes | Atomic research branch commits; frozen receipts and portable evidence | Local-main integration pending; no push/deployment; user hold persists |
 
-Do not mark the goal complete while the learned evaluation/search procedure fails
-the useful-signal sensitivity requirement. The continuous location/scale readout
-experiment above is the next bounded step, not a replacement or narrowed goal.
+Do not mark the goal complete while useful-signal sensitivity or the expanded
+market-improvement objective remains unmet. Panel qualification, honest market
+comparison and prospective validation are separate requirements. All work remains
+local; active research branches have not yet been integrated into local main.
