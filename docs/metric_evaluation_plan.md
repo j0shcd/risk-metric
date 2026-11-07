@@ -1,7 +1,7 @@
 # Indicator benchmark and evaluation plan
 
 Status: finite known-law panel qualification passes; earlier single-path searches
-remain failed. Thirteen indicator variants have produced no qualified indicator;
+remain failed. Sixteen indicator variants have produced no qualified indicator;
 three earlier candidates fail monthly equity portability. A chronology control's
 19.72% two-year development gain fails its frozen outer check; that branch is
 stopped. The first prospective, price-only operational paper witness is issued
@@ -42,7 +42,7 @@ adopted combined investor utility or universal automatic promotion score.
 | Artificial-market qualification | Detected planted information 398/400 times and declared skill 24/1500 times under specified no-added-information cases | Useful check of the measuring procedure under those artificial laws; no market success-rate claim |
 | Archived live baselines | Six forecasts reproduced exactly, zero mature outcomes | Continue separate forward collection; correctness is not predictive success |
 
-### Active round: three different remaining ideas
+### First completed round: three different remaining ideas
 
 Registration `a36bd86` fixes three total benchmark attempts, one each for anomaly,
 small supervised learner and ensemble. All source/configuration choices must be
@@ -72,7 +72,7 @@ experimental programme contribution, without changing the published model or its
 canonical acceptance record. Professional use still needs stronger independent
 evidence and appropriate data rights.
 
-### Completed round and practical assessment
+### First-round results and practical assessment
 
 All three experiments received their single registered measurement. None beats
 the strongest matched reference on the declared two-year return task:
@@ -135,17 +135,144 @@ They are not adopted or merged as model improvements. Their unmerged branch refs
 are retained to obey the no-unmerged-branch-deletion rule; worker checkouts can be
 archived once idle. No failed research source is silently added to production.
 
+### Macro availability audit and second completed round
+
+The [November 7 macro audit](artifacts/macro-availability-audit-2026-11-07.json)
+separates an observation's date from when its particular value was available.
+Our four FRED caches contain only dates and current values: no historical release
+or revision identity. The collector does not request historical versions, and
+monthly preprocessing carries observations forward. A 45-day lag cannot repair
+revised or backfilled history. Coverage measured after removing missing rows
+also does not establish a complete calendar or timely publication.
+
+The audit checked the actual series and historical archive intervals. Under a
+conservative convention—query at 00:00 UTC, use archive information dated no later
+than two calendar days earlier—the 97 benchmark dates have this support:
+
+| Cached input | Actual series | First archival vintage | Benchmark dates with an eligible latest observation |
+| --- | --- | --- | ---: |
+| Ten-year real yield | DFII10 | 2005-10-12 | 97/97 |
+| Federal Reserve assets | WALCL | 2011-07-07 | 97/97 |
+| Broad dollar index | DTWEXBGS | 2019-02-04 | 47/97 |
+| Overnight reverse repos | RRPONTSYD | 2016-03-28 | 82/97 |
+
+The dollar input is a trade-weighted goods-and-services index, **not ICE DXY**.
+It was introduced in 2019 with older observations backfilled. That backfill
+cannot serve as a contemporary pre-2019 input. Reverse-repo history before its
+first archive entry likewise cannot be certified from this archive. This does
+not prove no original source existed then. Missing reverse-repo entries are not
+zero. The audit also found changes to older observations and finite entries
+later withdrawn as missing; an as-of selector must retain those withdrawals.
+ALFRED dates can represent source release dates rather than first FRED ingestion;
+these counts do not establish exact intraday availability.
+
+Thirteen bounded API responses were captured for the audit before the source-use
+review was completed. [FRED's current service/API terms](https://fred.stlouisfed.org/legal/)
+restrict the proposed machine-learning use and API caching. New captures and
+detailed numerical examples are therefore quarantined privately as audit evidence,
+excluded from model inputs and public evidence packets. The public artifact
+contains metadata, counts and hashes only. An independent review caught numerical
+examples in the unpublished draft; that local history was replaced before any
+push. A publication-boundary regression rejects the original detailed artifact.
+This is a source-admission decision for this round, not retrospective clearance
+of legacy caches or references.
+
+The [Federal Reserve Board's own policy](https://www.federalreserve.gov/disclaimer.htm)
+offers a possible original-source route. Sample H.15 and H.4.1 releases were
+checked, but a date-shaped URL does not guarantee the original values: some pages
+contain later corrections, and release formats change. Full required coverage,
+original-versus-corrected versions and target-field extraction remain unresolved.
+The generic interval adapter is retained under local tag
+`archive/macro-vintage-adapter-20261107` (`de65db0`), with synthetic tests and
+independent arithmetic checks; it is not an admitted macro model pipeline.
+
+With no new macro feed admitted, three Astra workers froze independent price-only
+hypotheses. The [second registration](artifacts/research-programme-round2-2026-11-07-registration.json)
+binds campaign `245d1825d1f50e97d89489e1f21d4c8092d73b44a41131c1260eca6ab8a13163`:
+three total attempts, one each for sign persistence, drawdown recovery and a
+forward-updating volatility state. All used the owned BTC price snapshot only,
+with one- or two-day close lags. No new FRED payload or macro value entered these
+calculations. The benchmark code, 17-family atlas, readout, dates, label rules and
+declared two-year return objective stayed fixed.
+
+| New hypothesis | What the scalar measures | Two-year forecast error | Error above strongest reference |
+| --- | --- | ---: | ---: |
+| Sign persistence | Whether adjacent up/down days tend to follow each other | 0.505273 | 52.6% |
+| Drawdown recovery | Progress back toward the previous peak, retaining the deepest fall in that excursion | 0.516677 | 56.1% |
+| Volatility state | A causal probability filter for sustained unusually high daily variation | 0.468936 | 41.6% |
+| Unconditional history | The same mature historical outcomes without the new scalar | 0.331074 | Reference |
+
+All three fail the primary comparison. None beats the lowest matched CRPS in any
+of the six scored horizon/outcome cells either. Some loss-probability errors
+(Brier scores) improve; those separate diagnostics cannot rescue the primary failure. No later-period release, retries,
+parameter changes or model promotion followed. These are forecast errors, not
+investment returns. The primary comparison still has only 24 overlapping monthly
+starts and one negative two-year return; four-year predictive scoring has no
+eligible starts. Sixteen indicator variants have now been tried across the
+programme. This weak exposed-history sample cannot establish universal failure
+of these model families or a reliable probability of future trading success.
+
+Before scoring, root captured every producer/configuration and reproduced all 97
+rows per arm byte for byte. The shared `owned_indicator_input.derive` boundary
+passes the exact immutable, hash-attested input bytes to each reviewed transform.
+It rejects path/mutable inputs and wrong identities before execution. Replacing
+the original path cannot change the derived values. This addresses a repeated
+hash-then-reopen defect; it is not a Python sandbox or a proof of arbitrary import
+purity. The fixed trial API's default `higher_risk` metadata is arbitrary for the
+undirected persistence and regime states. Their ordering diagnostics must not be
+read as registered risk-direction evidence; distribution scores are unaffected.
+
+The [second-round result summary](artifacts/research-programme-round2-2026-11-07.json)
+retains every scored outcome and its strongest matched comparison. The [portable packet](artifacts/research-programme-round2-2026-11-07.zip) preserves
+the price input, frozen sources/configurations/tests, original root capture receipt,
+replay validator, recorded forecasts and independent audit. SHA256:
+`53a20b5af70a48ab1f6c39ae4f72ebed7138c4e3eefbf46879a79daa0692d934`.
+Its 31 tests pass. After checking the ZIP identity and unpacking, run
+`python replay-verified.py --packet . --output-dir NEW_DIRECTORY` and
+`python audit-scores.py --packet . --source-root benchmark-code --output NEW_REPORT.json`
+in the registered Python/NumPy/pandas environment. The replay validates every
+captured identity before executing reviewed Python from private copies; it does
+not sandbox that Python. Independent arithmetic reconstructed 291 scalar values
+and checked 1,215 predictions, 648 scored records and 2,295 frontier cells across
+17 references. Maximum CRPS discrepancy was 1.72e-15; weights, outcomes and interval
+coverage matched exactly.
+It excludes new macro captures and does not redistribute the legacy raw macro
+bundle. Generator replay and recorded-score arithmetic are portable; rebuilding
+the original reference atlas still requires its separately identified frozen
+bundle. Failed source branches are archived without merging them as improvements: local
+tags `archive/round2-persistence-20261107` (`7ca3609`),
+`archive/round2-recovery-20261107` (`1606873`) and
+`archive/round2-regime-20261107` (`1b62110`). Two clean worker checkouts were
+archived; the app requires its clean primary checkout to remain, detached at main.
+Unmerged branch refs are retained. The superseded detailed macro draft is retained
+only under a private local archive tag, outside main ancestry; do not publish
+archive tags or private captures.
+The campaign ledger remains OPEN with all three slots consumed and no eligible
+finalist, for the same administrative reason as round one. Do not reopen its budget.
+
 ### Next bounded research step
 
-This round is complete without a model promotion. Keep its three-slot budget
-closed to further attempts. The next round should first establish historical
-availability of the chosen additional economic inputs, then register a small
-new hypothesis and attempt budget before scoring. Rates, balance-sheet/liquidity
-and on-chain valuation remain possible groups; no choice or additional fitness
-run is made here. Do not tune the failed round's weights or PCA dimensions to its
-observed scores. The archive's scheduled monthly observation remains a separate
-November 30 action, with no scheduler installed. Research can continue before its
-long-horizon live outcomes mature.
+The next macro step is a source audit, not another parameter search: inventory one
+eligible original H.4.1 release per benchmark month and enough preceding releases
+for feature warm-up, including original/corrected links, publication timing and
+the exact current-Wednesday total-assets field.
+A narrower series assembled from verified published monthly levels is acceptable;
+it must be named that way rather than presented as a complete revised history.
+Exclude uncertain versions, quantify missing months, and freeze the extraction
+and eligibility rule before looking at model outcomes. If that route cannot
+supply enough verified history, obtain an appropriate source permission or select
+a different input. Only then register a small new hypothesis and attempt budget.
+This completed registration permits no additional model or score run.
+Do not tune either round's failed parameters to the exposed results. November 30
+collection remains a separate registered action; no scheduler was installed.
+
+Local verification passed 466 backend tests in 359.397 seconds, plus the new
+publication-boundary test separately. The portable packet passes 31 tests and
+its own byte-identity and independent arithmetic replay. Frozen benchmark code
+and reference atlas identities still match registration. Only measurement
+safeguards and the research record are integrated into main; candidate models
+remain archived. This round's commits await their own push confirmation; no
+production model or acceptance identity changed.
 
 ### Publication and operations
 
@@ -2297,7 +2424,7 @@ research results and the frozen benchmark remain unchanged.
 | Control false promotion under declared dependent nulls | Whole-path CRT exchangeability under exact Q, full-search equivalence tests, 1,500 fresh null campaigns | Pass within the declared one-campaign synthetic scope |
 | Chronological/provenance integrity | Strict label boundaries, 43-column producer oracle, immutable receipts and first audited live operational witness | Fixed-input mechanics and current capture lineage verified; historical market vintages and future outcomes remain unverified |
 | Safe adaptive-search scope | Registered conditional tests, shared attempt/freeze/release ledger and explicit exposure lineage | Finite scope defined; unlimited human adaptation not qualified |
-| Broad incremental BTC information | Thirteen indicator variants fail qualification; chronology improvement fails frozen outer check | No candidate promoted; not a prerequisite for finishing a useful research round |
+| Broad incremental BTC information | Sixteen indicator variants fail qualification; chronology improvement fails frozen outer check | No candidate promoted; not a prerequisite for finishing a useful research round |
 | Prospective market validation | Six frozen forecasts issued in one operational observation; no mature outcomes | Pending future labels; no prospective performance claim |
 | Publication control | Explicit approval for accumulated main push; daily source/effective-setting guards; unchanged production gate | Research may be shared; no model promoted |
 

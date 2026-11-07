@@ -21,13 +21,16 @@ round. The same document owns the frozen benchmark, reproducible evidence,
 attempt history, data limitations and next steps. Legacy strategy-specific
 experiments remain in [DCA evidence](docs/dca_evidence.md).
 
-The November 7 round explores three remaining ideas independently: unusual market
-states, a small supervised learner and a restrained ensemble. Each froze one
-candidate before benchmark feedback; all three failed the declared main comparison
-and are retained as reproducible negative evidence. A favorable historical result permits a
-further check; it does not automatically replace the dashboard model. Separately,
-six baseline forecasts were archived before their starting point; none has a
-mature outcome yet. The next registered monthly observation is November 30, 2026.
+Two November 7 rounds tested six new ideas: unusual market states, a small
+learner, an ensemble, sign persistence, recovery after a fall and changing
+volatility. None beat the strongest reference on the declared two-year return
+comparison. They remain reproducible negative evidence, with no model promotion.
+The macro audit found backfilled/revised history and unresolved source-use and
+original-version questions; no newly captured macro values entered round two.
+See the research record for the exact findings and next source-audit step.
+Separately, six baseline forecasts were archived before their starting point;
+none has a mature outcome yet. The next registered monthly observation is
+November 30, 2026.
 
 ## Existing dashboard
 
