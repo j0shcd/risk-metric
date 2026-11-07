@@ -9,8 +9,14 @@ from research import benchmark_frontier as f
 from research.market_dataset import digest, canonical_bytes
 from research.scorecard_artifacts import write_packet
 from research.generative_forecast_scorecard import evaluate, MODEL_FILE
-from tests.test_generative_forecast_scorecard import fixture,registration,ToyModel
+from tests.test_generative_forecast_scorecard import fixture,registration as toy_registration,ToyModel
 from research.market_information import baseline_candidates, score_candidate
+
+REAL_FAMILY=deepcopy(f._FROZEN_FAMILY)
+
+def registration():
+    return {**toy_registration(),'model_module':'research.generative_price_baseline',
+            'model_source_sha256':f.sha(MODEL_FILE.read_bytes())}
 
 def references(snapshot):
     return [score_candidate(snapshot,c) for c in baseline_candidates(snapshot)]
@@ -23,7 +29,14 @@ def seal(atlas):
 
 def minimal_atlas(source):
     """Empty synthetic reference support for coordinator lifecycle-only tests."""
-    return seal({'protocol':f.PROTOCOL,'identity':{'source_sha256':source},'code_sha256':f.code_identity(),
+    reg={**deepcopy(f._FROZEN_FAMILY),'source_sha256':source,'protocol':f.GENERATIVE_PROTOCOL,
+         'runtime':f.runtime_identity(),'scorecard_code_sha256':f.scorecard_code()}
+    identity={'source_sha256':source,'dataset_id':'synthetic','snapshot_id':'synthetic',
+              'protocol':f.DIRECT_PROTOCOL,'as_of':'2022-12-31','development_cutoff':'2022-12-31',
+              'outer_start':'2023-01-01','minimum_training':24,
+              'code_sha256':{k:f.scorecard_code()[k] for k in ('market_information.py','market_dataset.py','market_scorecard.py','distribution_readout.py')}}
+    return seal({'protocol':f.PROTOCOL,'identity':identity,'code_sha256':f.code_identity(),
+                 'generative_registration':reg,'generative_model_protocol':reg['model_protocol'],
                  'runtime':f.runtime_identity(),'models':[
                      {'name':name,'replica':replica,'kind':kind,'records':[]}
                      for name,replica,kind in [*[("direct_cdf:"+name,None,"issued_cdf") for name in f.DIRECT_NAMES],('context',None,'issued_cdf'),
@@ -34,6 +47,8 @@ def minimal_atlas(source):
 class FrontierTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        toy=registration();cls.family_patch=patch.object(f,'_FROZEN_FAMILY',{k:toy[k] for k in REAL_FAMILY})
+        cls.family_patch.start();cls.addClassCleanup(cls.family_patch.stop)
         cls.temp=tempfile.TemporaryDirectory();cls.root=Path(cls.temp.name).resolve()
         snap=fixture('2022-12-31');cls.refs=references(snap);raw=canonical_bytes({'references':cls.refs})
         reg=registration();reg.update(reference_replay_sha256=f.sha(raw),source_sha256=snap['source_sha256'],model_source_sha256=f.sha(MODEL_FILE.read_bytes()))
@@ -43,6 +58,31 @@ class FrontierTests(unittest.TestCase):
         cls.atlas=f.build_atlas(cls.root/'direct',cls.root/'gen');cls.trial={'result':cls.refs[0]}
     @classmethod
     def tearDownClass(cls):cls.temp.cleanup()
+
+    def test_frozen_family_and_replica_substitution_rejected_after_reseal(self):
+        source=self.atlas['identity']['source_sha256']
+        # The test-private ToyModel expectation is never accepted by production.
+        with patch.object(f,'_FROZEN_FAMILY',REAL_FAMILY):
+            with self.assertRaisesRegex(ValueError,'family identity'):
+                f.validate_atlas(self.atlas,source)
+        mutations=[lambda a:a.pop('generative_registration'),
+                   lambda a:a['generative_registration'].update(model_module='other.module'),
+                   lambda a:a['generative_registration'].update(model_protocol={'paths':1}),
+                   lambda a:a['generative_registration'].update(model_source_sha256='0'*64),
+                   lambda a:a['generative_registration'].update(sample_count=1),
+                   lambda a:a['generative_registration'].update(replica_seeds=[1,2]),
+                   lambda a:a['generative_registration'].update(ensemble_interpretation='issued_cdf'),
+                   lambda a:a.update(generative_model_protocol={'wrong':True}),
+                   lambda a:a['models'][-1].update(kind='issued_cdf'),
+                   lambda a:a['models'][0].update(kind='iid_predictive_law_draws'),
+                   lambda a:a['models'][-1]['records'][0].update(replica=0),
+                   lambda a:a['models'][-1]['records'][0].update(seed=1),
+                   lambda a:a['models'][-1]['records'][0].update(sample_n=1),
+                   lambda a:a['models'][-1]['records'][0].update(score_interpretation='issued_cdf')]
+        for mutate in mutations:
+            bad=deepcopy(self.atlas);mutate(bad);seal(bad)
+            with self.subTest(mutation=mutate):
+                with self.assertRaises(ValueError):f.validate_atlas(bad,source)
 
     def test_issued_identity_and_compact_exact_support(self):
         report=f.compare_trial(self.atlas,self.trial)

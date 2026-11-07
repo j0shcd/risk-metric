@@ -13,7 +13,8 @@ import numpy as np
 from .market_dataset import TARGETS, COMPONENTS, canonical_bytes, digest
 from .market_information import PROTOCOL as DIRECT_PROTOCOL
 from .generative_forecast_scorecard import (PROTOCOL as GENERATIVE_PROTOCOL,
-    code_identity as scorecard_code, runtime_identity, distribution_summary, sha)
+    code_identity as scorecard_code, runtime_identity, distribution_summary, simulation_seed, sha)
+from .generative_price_baseline import PROTOCOL as BASELINE_PROTOCOL
 from .scorecard_artifacts import verify_packet, write_packet, safe_path
 
 PROTOCOL = {'id':'benchmark-frontier-v1','horizons':[12,24,48],
@@ -26,6 +27,13 @@ DIRECT_NAMES = (*COMPONENTS, 'price_trend_12m', 'price_volatility_90d', 'price_d
                 'calendar_cycle_sin_4y', 'calendar_cycle_cos_4y')
 METRICS = ('crps','brier','coverage_50','coverage_80','width_50','width_80')
 MAX_ATLAS_BYTES = 16*1024*1024
+# This atlas is the registered development frontier, not an arbitrary model adapter.
+# Synthetic tests patch this private expectation explicitly; no CLI/API override.
+_FROZEN_FAMILY = {'model_module':'research.generative_price_baseline',
+                  'model_protocol':BASELINE_PROTOCOL,
+                  'model_source_sha256':'801dfc49b518adc5aadc29935e0621655bd971154ecd5340d9b268f689344680',
+                  'sample_count':8192,'replica_seeds':[20270529,20270530],
+                  'ensemble_interpretation':'iid_predictive_law_draws'}
 
 
 def code_identity():
@@ -95,7 +103,7 @@ def build_atlas(reference_packet, generative_packet):
     atlas={'protocol':PROTOCOL,'identity':identity,'code_sha256':code_identity(),'runtime':runtime_identity(),
            'parents':{str(p.name):digest(receipts[p]) for p in (reference_packet,generative_packet)},
            'reference_inventory':[(m['name'],m['replica']) for m in models],
-           'generative_registration':reg,'models':models}
+           'generative_registration':reg,'generative_model_protocol':gen['model_protocol'],'models':models}
     atlas['atlas_id']=digest(atlas)
     if len(canonical_bytes(atlas))>MAX_ATLAS_BYTES: raise ValueError('atlas byte limit exceeded')
     validate_atlas(atlas,identity['source_sha256']);return atlas
@@ -106,6 +114,19 @@ def validate_atlas(atlas, source_sha256):
             or atlas['runtime']!=runtime_identity() or atlas['identity']['source_sha256']!=source_sha256
             or atlas['atlas_id']!=digest({k:v for k,v in atlas.items() if k!='atlas_id'})):
         raise ValueError('atlas source/protocol/code/runtime/digest mismatch')
+    reg=atlas.get('generative_registration')
+    if (not isinstance(reg,dict) or any(reg.get(k)!=v for k,v in _FROZEN_FAMILY.items())
+            or atlas.get('generative_model_protocol')!=_FROZEN_FAMILY['model_protocol']
+            or reg.get('source_sha256')!=source_sha256 or reg.get('protocol')!=GENERATIVE_PROTOCOL
+            or reg.get('scorecard_code_sha256')!=scorecard_code() or reg.get('runtime')!=runtime_identity()
+            or _FROZEN_FAMILY['model_source_sha256']!=sha(Path(__file__).with_name('generative_price_baseline.py').read_bytes())):
+        raise ValueError('atlas frozen generative family identity mismatch')
+    identity=atlas['identity']
+    if (any(k not in identity for k in IDENTITY) or identity['protocol']!=DIRECT_PROTOCOL
+            or identity['minimum_training']!=24 or identity['development_cutoff']!='2022-12-31'
+            or identity['outer_start']!='2023-01-01' or identity['as_of']>'2022-12-31'
+            or identity['code_sha256']!={k:scorecard_code()[k] for k in ('market_information.py','market_dataset.py','market_scorecard.py','distribution_readout.py')}):
+        raise ValueError('atlas direct forecast identity mismatch')
     models=atlas['models'];names=[(m['name'],m['replica']) for m in models]
     if names!=[tuple(n) for n in atlas['reference_inventory']]: raise ValueError('atlas reference inventory mismatch')
     if len(set(names))!=len(names) or ('generative',0) not in names or ('generative',1) not in names or ('unconditional',None) not in names or ('context',None) not in names:
@@ -115,8 +136,28 @@ def validate_atlas(atlas, source_sha256):
         raise ValueError('atlas requires every frozen direct reference and both generative replicas')
     base=mapping(direct[0]['records'])
     for model in models:
+        generative=model['name']=='generative'
+        expected_kind='iid_predictive_law_draws' if generative else 'issued_cdf'
+        if (model['kind']!=expected_kind or (generative and type(model['replica']) is not int)
+                or (not generative and model['replica'] is not None)):
+            raise ValueError('atlas reference kind/replica mismatch')
         records=mapping(model['records'])
-        if (model['kind']=='issued_cdf' and records.keys()!=base.keys()) or any(k not in records or outcome(records[k])!=outcome(base[k]) for k in base):
+        for record in records.values():
+            if record['status'] not in ('scored','unscored','numerical_failure'):
+                raise ValueError('atlas forecast status invalid')
+            if generative:
+                replica=model['replica']
+                if (record.get('model')!='generative' or type(record.get('replica')) is not int or record.get('replica')!=replica
+                        or record.get('seed')!=simulation_seed(reg['replica_seeds'][replica],record['date'])):
+                    raise ValueError('atlas generative record replica/seed mismatch')
+                if record['status']!='numerical_failure' and (record.get('sample_n')!=reg['sample_count']
+                        or record.get('score_interpretation')!=expected_kind
+                        or record.get('atoms_identity',{}).get('shape')!=[reg['sample_count']]
+                        or record.get('weights_identity',{}).get('shape')!=[reg['sample_count']]):
+                    raise ValueError('atlas generative sample/interpretation mismatch')
+            elif record.get('score_interpretation')!=expected_kind:
+                raise ValueError('atlas issued-CDF interpretation mismatch')
+        if (model['kind']=='issued_cdf'  and records.keys()!=base.keys()) or any(k not in records or outcome(records[k])!=outcome(base[k]) for k in base):
             raise ValueError('atlas reference origins/outcomes mismatch')
     return atlas
 
