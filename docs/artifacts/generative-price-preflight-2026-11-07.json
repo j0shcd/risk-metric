@@ -1,0 +1,1660 @@
+{
+  "schema": "fixed-synthetic-garch-quadrature-preflight-v1",
+  "source_commit": "6150199",
+  "source_sha256": "801dfc49b518adc5aadc29935e0621655bd971154ecd5340d9b268f689344680",
+  "protocol": {
+    "id": "student-t5-price-path-v1",
+    "window_daily_log_returns": 730,
+    "paths": 8192,
+    "model": "r=mu+sqrt(h)*sqrt(3/5)*t5; h_next=.01*s^2+.05*(r-mu)^2+.94*h",
+    "initial_history_variance": "s^2 at start of trailing730-return window",
+    "priors": {
+      "scale_halfnormal_sd": 0.05,
+      "mu_given_scale_variance": "s^2/365"
+    },
+    "posterior_coordinates": "u=mu/s, y=log(s); prior includes Jacobian exp(y)",
+    "outer_domain": {
+      "u": [
+        -0.5,
+        0.5
+      ],
+      "scale": [
+        1e-05,
+        0.5
+      ]
+    },
+    "quadrature": "tensor trapezoid;65^2 coarse; marginal1e-8 tails+4coarse-cell padding;local65,129,257 meshes",
+    "tolerances": {
+      "density_interpolation_l1": 0.005,
+      "log_normalizer_change": 0.0001,
+      "scaled_moment_change": 0.001,
+      "edge_strip_mass": 1e-06
+    },
+    "edge_strip": "outer2% of each coordinate interval; numerical proxy, not excluded-tail bound",
+    "entry": "first innovation is next-day entry; then requested integer holding days",
+    "targets": [
+      "terminal_log_return",
+      "entry_adverse_log_loss",
+      "peak_drawdown_log_loss"
+    ],
+    "parameter_uncertainty": "one joint(mu,s,h_next) draw per path, held across all days/horizons",
+    "failure": "FitError; no plug-in or pooled fallback",
+    "fourth_moment": "stationary fourth moment not finite: .05^2*9+2*.05*.94+.94^2=1.0001",
+    "interpretation": "price-only model-based reconstruction, not calibrated or production-qualified"
+  },
+  "runtime": {
+    "python": "3.12.16 (main, Oct 25 2026, 18:24:37) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "numpy": "2.4.6",
+    "platform": "macOS-26.5-arm64-arm-64bit"
+  },
+  "design": {
+    "scales": [
+      0.01,
+      0.03,
+      0.08
+    ],
+    "drifts": [
+      -0.001,
+      0.0,
+      0.001
+    ],
+    "seeds": [
+      2026110701,
+      2026110702,
+      2026110703,
+      2026110704,
+      2026110705,
+      2026110706,
+      2026110707,
+      2026110708,
+      2026110709
+    ],
+    "order": "scale outer, drift inner",
+    "rng": "numpy.default_rng/PCG64",
+    "generator": "rng = np.random.default_rng(seed)\nh = scale**2\nreturns = np.empty(730)\nfor t in range(730):\n    shock = np.sqrt(h) * np.sqrt(3/5) * rng.standard_t(5)\n    returns[t] = drift + shock\n    h = .01*scale**2 + .05*shock**2 + .94*h\n",
+    "scope": "numerical quadrature preflight only; no posterior calibration, market data, model selection or tuning"
+  },
+  "cases": [
+    {
+      "scale": 0.01,
+      "drift": -0.001,
+      "seed": 2026110701,
+      "returns_sha256_float64_le": "e93b6c057536beae1ff074811cf001baae2a1032a771671601e6bdd346715a77",
+      "return_summary": {
+        "mean": -0.000681853362084365,
+        "sd": 0.010038768166564687,
+        "min": -0.04247366605309765,
+        "max": 0.047734086536299805
+      },
+      "grids": [
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.5,
+            0.5
+          ],
+          "log_scale_bounds": [
+            -11.512925464970229,
+            -0.6931471805599453
+          ],
+          "edge_strip_mass": 2.3241154193762957e-27,
+          "log_normalizer": 2389.5435024807175,
+          "moments": [
+            -0.0007385419221747003,
+            7.2267494636859e-08,
+            0.00011749621595071926,
+            0.00011418156975222055
+          ]
+        },
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.296875,
+            0.140625
+          ],
+          "log_scale_bounds": [
+            -6.272095358458998,
+            -3.398091751662516
+          ],
+          "edge_strip_mass": 5.086333540031179e-12,
+          "log_normalizer": 2389.5442757954565,
+          "moments": [
+            -0.0007384628786117404,
+            7.223063054022594e-08,
+            0.00011735443258365783,
+            0.00011415739444321926
+          ]
+        },
+        {
+          "count": 129,
+          "u_bounds": [
+            -0.296875,
+            0.140625
+          ],
+          "log_scale_bounds": [
+            -6.272095358458998,
+            -3.398091751662516
+          ],
+          "edge_strip_mass": 3.9153958507728655e-12,
+          "log_normalizer": 2389.544275795457,
+          "moments": [
+            -0.0007384628786117164,
+            7.223063054029764e-08,
+            0.00011735443258364476,
+            0.00011415739444321698
+          ]
+        },
+        {
+          "count": 257,
+          "u_bounds": [
+            -0.296875,
+            0.140625
+          ],
+          "log_scale_bounds": [
+            -6.272095358458998,
+            -3.398091751662516
+          ],
+          "edge_strip_mass": 4.653153656803056e-12,
+          "log_normalizer": 2389.544275795457,
+          "moments": [
+            -0.0007384628786117095,
+            7.223063054032188e-08,
+            0.00011735443258364191,
+            0.00011415739444321646
+          ]
+        }
+      ],
+      "convergence_trace": [
+        {
+          "grid_count": 129,
+          "density_interpolation_l1": 0.013443560726204565,
+          "log_normalizer_change": 4.547473508864641e-13,
+          "scaled_moment_change": 9.925622622274923e-13,
+          "componentwise_scaled_moment_change": [
+            8.915420748848563e-14,
+            9.925622622274923e-13,
+            1.1144179574371744e-13,
+            1.9944608698581276e-14
+          ],
+          "edge_strip_mass": 3.9153958507728655e-12
+        },
+        {
+          "grid_count": 257,
+          "density_interpolation_l1": 0.0033740209442115086,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 3.3567917009417674e-13,
+          "componentwise_scaled_moment_change": [
+            2.5818413028335397e-14,
+            3.3567917009417674e-13,
+            2.425158249345205e-14,
+            4.511280538964833e-15
+          ],
+          "edge_strip_mass": 4.653153656803056e-12
+        }
+      ],
+      "status": "converged",
+      "diagnostics": {
+        "converged": true,
+        "method": "finite-domain deterministic trapezoidal approximation",
+        "window": 730,
+        "grid_count": 257,
+        "u_bounds": [
+          -0.296875,
+          0.140625
+        ],
+        "log_scale_bounds": [
+          -6.272095358458998,
+          -3.398091751662516
+        ],
+        "outer_edge_strip_mass": 2.3241154193762957e-27,
+        "convergence_trace": [
+          {
+            "grid_count": 129,
+            "density_interpolation_l1": 0.013443560726204565,
+            "log_normalizer_change": 4.547473508864641e-13,
+            "scaled_moment_change": 9.925622622274923e-13,
+            "componentwise_scaled_moment_change": [
+              8.915420748848563e-14,
+              9.925622622274923e-13,
+              1.1144179574371744e-13,
+              1.9944608698581276e-14
+            ],
+            "edge_strip_mass": 3.9153958507728655e-12
+          },
+          {
+            "grid_count": 257,
+            "density_interpolation_l1": 0.0033740209442115086,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 3.3567917009417674e-13,
+            "componentwise_scaled_moment_change": [
+              2.5818413028335397e-14,
+              3.3567917009417674e-13,
+              2.425158249345205e-14,
+              4.511280538964833e-15
+            ],
+            "edge_strip_mass": 4.653153656803056e-12
+          }
+        ],
+        "posterior_log_normalizer": 2389.544275795457,
+        "moment_normalization": [
+          "mean_mu / posterior_sd_mu",
+          "variance_mu / itself",
+          "mean_scale_squared / itself",
+          "mean_next_variance / itself"
+        ],
+        "posterior_mean_mu": -0.0007384628786117095,
+        "posterior_variance_mu": 7.223063054032188e-08,
+        "posterior_mean_scale_squared": 0.00011735443258364191,
+        "posterior_mean_next_variance": 0.00011415739444321646,
+        "error_scope": "mesh/edge proxies only; no rigorous excluded-tail or misspecification guarantee"
+      },
+      "runtime_seconds": 0.5431720410124399
+    },
+    {
+      "scale": 0.01,
+      "drift": 0.0,
+      "seed": 2026110702,
+      "returns_sha256_float64_le": "dd66a8593480d3a7e10b2c3825ff4fec21447691e18b66ffa197501cbd56c19b",
+      "return_summary": {
+        "mean": -0.0010145666187780877,
+        "sd": 0.013088833557179599,
+        "min": -0.05818807386778927,
+        "max": 0.09460032685698382
+      },
+      "grids": [
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.5,
+            0.5
+          ],
+          "log_scale_bounds": [
+            -11.512925464970229,
+            -0.6931471805599453
+          ],
+          "edge_strip_mass": 1.6975619747740603e-25,
+          "log_normalizer": 2245.720772368235,
+          "moments": [
+            -0.0003606063555907749,
+            8.726992376457634e-08,
+            0.00011137275146598722,
+            6.022795154898687e-05
+          ]
+        },
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.28125,
+            0.21875
+          ],
+          "log_scale_bounds": [
+            -6.94833150123464,
+            -3.398091751662516
+          ],
+          "edge_strip_mass": 2.0193716092567417e-11,
+          "log_normalizer": 2245.720659063545,
+          "moments": [
+            -0.0003605871347263619,
+            8.726650896388884e-08,
+            0.00011136308696156134,
+            6.022629046313097e-05
+          ]
+        },
+        {
+          "count": 129,
+          "u_bounds": [
+            -0.28125,
+            0.21875
+          ],
+          "log_scale_bounds": [
+            -6.94833150123464,
+            -3.398091751662516
+          ],
+          "edge_strip_mass": 1.539813572161408e-11,
+          "log_normalizer": 2245.720659063545,
+          "moments": [
+            -0.0003605871347261356,
+            8.726650896431396e-08,
+            0.0001113630869615288,
+            6.022629046312534e-05
+          ]
+        },
+        {
+          "count": 257,
+          "u_bounds": [
+            -0.28125,
+            0.21875
+          ],
+          "log_scale_bounds": [
+            -6.94833150123464,
+            -3.398091751662516
+          ],
+          "edge_strip_mass": 1.8459044587242243e-11,
+          "log_normalizer": 2245.720659063545,
+          "moments": [
+            -0.00036058713472609714,
+            8.726650896441901e-08,
+            0.00011136308696151623,
+            6.022629046312323e-05
+          ]
+        }
+      ],
+      "convergence_trace": [
+        {
+          "grid_count": 129,
+          "density_interpolation_l1": 0.012186454780082037,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 4.8714896509369594e-12,
+          "componentwise_scaled_moment_change": [
+            7.659649920007514e-13,
+            4.8714896509369594e-12,
+            2.921939269963148e-13,
+            9.338610640833234e-14
+          ],
+          "edge_strip_mass": 1.539813572161408e-11
+        },
+        {
+          "grid_count": 257,
+          "density_interpolation_l1": 0.003061021164772453,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 1.2037300631810996e-12,
+          "componentwise_scaled_moment_change": [
+            1.3029112226166895e-13,
+            1.2037300631810996e-12,
+            1.1281289892778609e-13,
+            3.5104174939037e-14
+          ],
+          "edge_strip_mass": 1.8459044587242243e-11
+        }
+      ],
+      "status": "converged",
+      "diagnostics": {
+        "converged": true,
+        "method": "finite-domain deterministic trapezoidal approximation",
+        "window": 730,
+        "grid_count": 257,
+        "u_bounds": [
+          -0.28125,
+          0.21875
+        ],
+        "log_scale_bounds": [
+          -6.94833150123464,
+          -3.398091751662516
+        ],
+        "outer_edge_strip_mass": 1.6975619747740603e-25,
+        "convergence_trace": [
+          {
+            "grid_count": 129,
+            "density_interpolation_l1": 0.012186454780082037,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 4.8714896509369594e-12,
+            "componentwise_scaled_moment_change": [
+              7.659649920007514e-13,
+              4.8714896509369594e-12,
+              2.921939269963148e-13,
+              9.338610640833234e-14
+            ],
+            "edge_strip_mass": 1.539813572161408e-11
+          },
+          {
+            "grid_count": 257,
+            "density_interpolation_l1": 0.003061021164772453,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 1.2037300631810996e-12,
+            "componentwise_scaled_moment_change": [
+              1.3029112226166895e-13,
+              1.2037300631810996e-12,
+              1.1281289892778609e-13,
+              3.5104174939037e-14
+            ],
+            "edge_strip_mass": 1.8459044587242243e-11
+          }
+        ],
+        "posterior_log_normalizer": 2245.720659063545,
+        "moment_normalization": [
+          "mean_mu / posterior_sd_mu",
+          "variance_mu / itself",
+          "mean_scale_squared / itself",
+          "mean_next_variance / itself"
+        ],
+        "posterior_mean_mu": -0.00036058713472609714,
+        "posterior_variance_mu": 8.726650896441901e-08,
+        "posterior_mean_scale_squared": 0.00011136308696151623,
+        "posterior_mean_next_variance": 6.022629046312323e-05,
+        "error_scope": "mesh/edge proxies only; no rigorous excluded-tail or misspecification guarantee"
+      },
+      "runtime_seconds": 0.5414115830208175
+    },
+    {
+      "scale": 0.01,
+      "drift": 0.001,
+      "seed": 2026110703,
+      "returns_sha256_float64_le": "adf708b8382424c36c21f31261482a8c6cd74b3b584044d63927e1acff0eb3b4",
+      "return_summary": {
+        "mean": 0.0007398955489919039,
+        "sd": 0.009155675797258362,
+        "min": -0.055407356566229894,
+        "max": 0.059612250998094946
+      },
+      "grids": [
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.5,
+            0.5
+          ],
+          "log_scale_bounds": [
+            -11.512925464970229,
+            -0.6931471805599453
+          ],
+          "edge_strip_mass": 2.087354020750234e-26,
+          "log_normalizer": 2488.0989636648983,
+          "moments": [
+            0.0005000997124257793,
+            5.145065667644235e-08,
+            7.862070594584566e-05,
+            4.49628251866941e-05
+          ]
+        },
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.15625,
+            0.296875
+          ],
+          "log_scale_bounds": [
+            -6.610213429846819,
+            -3.567150787356427
+          ],
+          "edge_strip_mass": 6.445962171877468e-12,
+          "log_normalizer": 2488.0993944778456,
+          "moments": [
+            0.0005001063249689647,
+            5.1447174305440564e-08,
+            7.859290972401919e-05,
+            4.4958203435709046e-05
+          ]
+        },
+        {
+          "count": 129,
+          "u_bounds": [
+            -0.15625,
+            0.296875
+          ],
+          "log_scale_bounds": [
+            -6.610213429846819,
+            -3.567150787356427
+          ],
+          "edge_strip_mass": 4.8669570547128725e-12,
+          "log_normalizer": 2488.099394477846,
+          "moments": [
+            0.0005001063249689497,
+            5.144717430553564e-08,
+            7.859290972401125e-05,
+            4.495820343570778e-05
+          ]
+        },
+        {
+          "count": 257,
+          "u_bounds": [
+            -0.15625,
+            0.296875
+          ],
+          "log_scale_bounds": [
+            -6.610213429846819,
+            -3.567150787356427
+          ],
+          "edge_strip_mass": 5.8877060818303614e-12,
+          "log_normalizer": 2488.099394477846,
+          "moments": [
+            0.0005001063249689462,
+            5.144717430555971e-08,
+            7.859290972400935e-05,
+            4.4958203435707474e-05
+          ]
+        }
+      ],
+      "convergence_trace": [
+        {
+          "grid_count": 129,
+          "density_interpolation_l1": 0.012627932940643858,
+          "log_normalizer_change": 4.547473508864641e-13,
+          "scaled_moment_change": 1.8480985518200713e-12,
+          "componentwise_scaled_moment_change": [
+            6.596424504350273e-14,
+            1.8480985518200713e-12,
+            1.0104958502420726e-13,
+            2.8185318634996837e-14
+          ],
+          "edge_strip_mass": 4.8669570547128725e-12
+        },
+        {
+          "grid_count": 257,
+          "density_interpolation_l1": 0.0031752204443199865,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 4.678128085305162e-13,
+          "componentwise_scaled_moment_change": [
+            1.5296056821678215e-14,
+            4.678128085305162e-13,
+            2.4141539084282182e-14,
+            6.782563307886985e-15
+          ],
+          "edge_strip_mass": 5.8877060818303614e-12
+        }
+      ],
+      "status": "converged",
+      "diagnostics": {
+        "converged": true,
+        "method": "finite-domain deterministic trapezoidal approximation",
+        "window": 730,
+        "grid_count": 257,
+        "u_bounds": [
+          -0.15625,
+          0.296875
+        ],
+        "log_scale_bounds": [
+          -6.610213429846819,
+          -3.567150787356427
+        ],
+        "outer_edge_strip_mass": 2.087354020750234e-26,
+        "convergence_trace": [
+          {
+            "grid_count": 129,
+            "density_interpolation_l1": 0.012627932940643858,
+            "log_normalizer_change": 4.547473508864641e-13,
+            "scaled_moment_change": 1.8480985518200713e-12,
+            "componentwise_scaled_moment_change": [
+              6.596424504350273e-14,
+              1.8480985518200713e-12,
+              1.0104958502420726e-13,
+              2.8185318634996837e-14
+            ],
+            "edge_strip_mass": 4.8669570547128725e-12
+          },
+          {
+            "grid_count": 257,
+            "density_interpolation_l1": 0.0031752204443199865,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 4.678128085305162e-13,
+            "componentwise_scaled_moment_change": [
+              1.5296056821678215e-14,
+              4.678128085305162e-13,
+              2.4141539084282182e-14,
+              6.782563307886985e-15
+            ],
+            "edge_strip_mass": 5.8877060818303614e-12
+          }
+        ],
+        "posterior_log_normalizer": 2488.099394477846,
+        "moment_normalization": [
+          "mean_mu / posterior_sd_mu",
+          "variance_mu / itself",
+          "mean_scale_squared / itself",
+          "mean_next_variance / itself"
+        ],
+        "posterior_mean_mu": 0.0005001063249689462,
+        "posterior_variance_mu": 5.144717430555971e-08,
+        "posterior_mean_scale_squared": 7.859290972400935e-05,
+        "posterior_mean_next_variance": 4.4958203435707474e-05,
+        "error_scope": "mesh/edge proxies only; no rigorous excluded-tail or misspecification guarantee"
+      },
+      "runtime_seconds": 0.5455798339971807
+    },
+    {
+      "scale": 0.03,
+      "drift": -0.001,
+      "seed": 2026110704,
+      "returns_sha256_float64_le": "9800db9e11e39d6d706ac2a09143da2c39a733a918a0127c94e86a7bbf43a0a1",
+      "return_summary": {
+        "mean": -0.0018810313311686396,
+        "sd": 0.022872790519463927,
+        "min": -0.14648713642468714,
+        "max": 0.09191040149616309
+      },
+      "grids": [
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.5,
+            0.5
+          ],
+          "log_scale_bounds": [
+            -11.512925464970229,
+            -0.6931471805599453
+          ],
+          "edge_strip_mass": 8.095950717861889e-31,
+          "log_normalizer": 1752.0757657276492,
+          "moments": [
+            -0.0010545172268322319,
+            4.3733002845022317e-07,
+            0.0007679274183385354,
+            0.0005019839125818142
+          ]
+        },
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.25,
+            0.171875
+          ],
+          "log_scale_bounds": [
+            -5.257741144295534,
+            -2.5527965731929623
+          ],
+          "edge_strip_mass": 5.9080000995773215e-12,
+          "log_normalizer": 1752.0750870472853,
+          "moments": [
+            -0.001054681539860511,
+            4.3753560228948115e-07,
+            0.0007693537226813359,
+            0.0005022218347599264
+          ]
+        },
+        {
+          "count": 129,
+          "u_bounds": [
+            -0.25,
+            0.171875
+          ],
+          "log_scale_bounds": [
+            -5.257741144295534,
+            -2.5527965731929623
+          ],
+          "edge_strip_mass": 4.419230115185847e-12,
+          "log_normalizer": 1752.0750870472857,
+          "moments": [
+            -0.0010546815398608316,
+            4.375356022903685e-07,
+            0.0007693537226812661,
+            0.0005022218347599156
+          ]
+        },
+        {
+          "count": 257,
+          "u_bounds": [
+            -0.25,
+            0.171875
+          ],
+          "log_scale_bounds": [
+            -5.257741144295534,
+            -2.5527965731929623
+          ],
+          "edge_strip_mass": 5.391698688160183e-12,
+          "log_normalizer": 1752.0750870472857,
+          "moments": [
+            -0.001054681539860925,
+            4.375356022905898e-07,
+            0.0007693537226812563,
+            0.0005022218347599141
+          ]
+        }
+      ],
+      "convergence_trace": [
+        {
+          "grid_count": 129,
+          "density_interpolation_l1": 0.01269814079314456,
+          "log_normalizer_change": 4.547473508864641e-13,
+          "scaled_moment_change": 2.028115853252064e-12,
+          "componentwise_scaled_moment_change": [
+            4.848436858649185e-13,
+            2.028115853252064e-12,
+            9.061397590676204e-14,
+            2.1588113009937162e-14
+          ],
+          "edge_strip_mass": 4.419230115185847e-12
+        },
+        {
+          "grid_count": 257,
+          "density_interpolation_l1": 0.003199210309369636,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 5.057585172765385e-13,
+          "componentwise_scaled_moment_change": [
+            1.4128980974153278e-13,
+            5.057585172765385e-13,
+            1.2824061909044248e-14,
+            2.806454691291839e-15
+          ],
+          "edge_strip_mass": 5.391698688160183e-12
+        }
+      ],
+      "status": "converged",
+      "diagnostics": {
+        "converged": true,
+        "method": "finite-domain deterministic trapezoidal approximation",
+        "window": 730,
+        "grid_count": 257,
+        "u_bounds": [
+          -0.25,
+          0.171875
+        ],
+        "log_scale_bounds": [
+          -5.257741144295534,
+          -2.5527965731929623
+        ],
+        "outer_edge_strip_mass": 8.095950717861889e-31,
+        "convergence_trace": [
+          {
+            "grid_count": 129,
+            "density_interpolation_l1": 0.01269814079314456,
+            "log_normalizer_change": 4.547473508864641e-13,
+            "scaled_moment_change": 2.028115853252064e-12,
+            "componentwise_scaled_moment_change": [
+              4.848436858649185e-13,
+              2.028115853252064e-12,
+              9.061397590676204e-14,
+              2.1588113009937162e-14
+            ],
+            "edge_strip_mass": 4.419230115185847e-12
+          },
+          {
+            "grid_count": 257,
+            "density_interpolation_l1": 0.003199210309369636,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 5.057585172765385e-13,
+            "componentwise_scaled_moment_change": [
+              1.4128980974153278e-13,
+              5.057585172765385e-13,
+              1.2824061909044248e-14,
+              2.806454691291839e-15
+            ],
+            "edge_strip_mass": 5.391698688160183e-12
+          }
+        ],
+        "posterior_log_normalizer": 1752.0750870472857,
+        "moment_normalization": [
+          "mean_mu / posterior_sd_mu",
+          "variance_mu / itself",
+          "mean_scale_squared / itself",
+          "mean_next_variance / itself"
+        ],
+        "posterior_mean_mu": -0.001054681539860925,
+        "posterior_variance_mu": 4.375356022905898e-07,
+        "posterior_mean_scale_squared": 0.0007693537226812563,
+        "posterior_mean_next_variance": 0.0005022218347599141,
+        "error_scope": "mesh/edge proxies only; no rigorous excluded-tail or misspecification guarantee"
+      },
+      "runtime_seconds": 0.5433326250058599
+    },
+    {
+      "scale": 0.03,
+      "drift": 0.0,
+      "seed": 2026110705,
+      "returns_sha256_float64_le": "862e399bcc77fa16df18d54c4bba56e2aad7a00b34a96c2cb20a024e245d07d4",
+      "return_summary": {
+        "mean": -0.0010162155174192613,
+        "sd": 0.02508805082537417,
+        "min": -0.13129859141041025,
+        "max": 0.09461881324318046
+      },
+      "grids": [
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.5,
+            0.5
+          ],
+          "log_scale_bounds": [
+            -11.512925464970229,
+            -0.6931471805599453
+          ],
+          "edge_strip_mass": 5.727117264452905e-29,
+          "log_normalizer": 1713.1824438110496,
+          "moments": [
+            -0.0007668775514038359,
+            4.574773580332705e-07,
+            0.0007991223010064507,
+            0.0005636157514548087
+          ]
+        },
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.25,
+            0.1875
+          ],
+          "log_scale_bounds": [
+            -5.595859215683355,
+            -2.3837375374990515
+          ],
+          "edge_strip_mass": 1.0583372869647447e-11,
+          "log_normalizer": 1713.1837793171037,
+          "moments": [
+            -0.0007669800185879177,
+            4.5757950405879547e-07,
+            0.0007996065915839535,
+            0.0005636961441903227
+          ]
+        },
+        {
+          "count": 129,
+          "u_bounds": [
+            -0.25,
+            0.1875
+          ],
+          "log_scale_bounds": [
+            -5.595859215683355,
+            -2.3837375374990515
+          ],
+          "edge_strip_mass": 8.133929262249345e-12,
+          "log_normalizer": 1713.1837793171037,
+          "moments": [
+            -0.0007669800185881078,
+            4.575795040597214e-07,
+            0.0007996065915838289,
+            0.000563696144190302
+          ]
+        },
+        {
+          "count": 257,
+          "u_bounds": [
+            -0.25,
+            0.1875
+          ],
+          "log_scale_bounds": [
+            -5.595859215683355,
+            -2.3837375374990515
+          ],
+          "edge_strip_mass": 9.681186062167362e-12,
+          "log_normalizer": 1713.1837793171037,
+          "moments": [
+            -0.000766980018588158,
+            4.5757950405995707e-07,
+            0.0007996065915837981,
+            0.0005636961441902969
+          ]
+        }
+      ],
+      "convergence_trace": [
+        {
+          "grid_count": 129,
+          "density_interpolation_l1": 0.014592041677401874,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 2.0235016696606907e-12,
+          "componentwise_scaled_moment_change": [
+            2.8112960381614596e-13,
+            2.0235016696606907e-12,
+            1.5579515092769758e-13,
+            3.6736567577943363e-14
+          ],
+          "edge_strip_mass": 8.133929262249345e-12
+        },
+        {
+          "grid_count": 257,
+          "density_interpolation_l1": 0.003666021689303663,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 5.150731522770015e-13,
+          "componentwise_scaled_moment_change": [
+            7.420923977585066e-14,
+            5.150731522770015e-13,
+            3.850811389335754e-14,
+            9.039888356876197e-15
+          ],
+          "edge_strip_mass": 9.681186062167362e-12
+        }
+      ],
+      "status": "converged",
+      "diagnostics": {
+        "converged": true,
+        "method": "finite-domain deterministic trapezoidal approximation",
+        "window": 730,
+        "grid_count": 257,
+        "u_bounds": [
+          -0.25,
+          0.1875
+        ],
+        "log_scale_bounds": [
+          -5.595859215683355,
+          -2.3837375374990515
+        ],
+        "outer_edge_strip_mass": 5.727117264452905e-29,
+        "convergence_trace": [
+          {
+            "grid_count": 129,
+            "density_interpolation_l1": 0.014592041677401874,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 2.0235016696606907e-12,
+            "componentwise_scaled_moment_change": [
+              2.8112960381614596e-13,
+              2.0235016696606907e-12,
+              1.5579515092769758e-13,
+              3.6736567577943363e-14
+            ],
+            "edge_strip_mass": 8.133929262249345e-12
+          },
+          {
+            "grid_count": 257,
+            "density_interpolation_l1": 0.003666021689303663,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 5.150731522770015e-13,
+            "componentwise_scaled_moment_change": [
+              7.420923977585066e-14,
+              5.150731522770015e-13,
+              3.850811389335754e-14,
+              9.039888356876197e-15
+            ],
+            "edge_strip_mass": 9.681186062167362e-12
+          }
+        ],
+        "posterior_log_normalizer": 1713.1837793171037,
+        "moment_normalization": [
+          "mean_mu / posterior_sd_mu",
+          "variance_mu / itself",
+          "mean_scale_squared / itself",
+          "mean_next_variance / itself"
+        ],
+        "posterior_mean_mu": -0.000766980018588158,
+        "posterior_variance_mu": 4.5757950405995707e-07,
+        "posterior_mean_scale_squared": 0.0007996065915837981,
+        "posterior_mean_next_variance": 0.0005636961441902969,
+        "error_scope": "mesh/edge proxies only; no rigorous excluded-tail or misspecification guarantee"
+      },
+      "runtime_seconds": 0.5408525000093505
+    },
+    {
+      "scale": 0.03,
+      "drift": 0.001,
+      "seed": 2026110706,
+      "returns_sha256_float64_le": "2e85c2edacfc6bcb0066ec478c693a42398c187e137733f59fafca4b4ff64d56",
+      "return_summary": {
+        "mean": 0.0007325144677967331,
+        "sd": 0.027532157196982335,
+        "min": -0.15101533432927733,
+        "max": 0.10977899302177677
+      },
+      "grids": [
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.5,
+            0.5
+          ],
+          "log_scale_bounds": [
+            -11.512925464970229,
+            -0.6931471805599453
+          ],
+          "edge_strip_mass": 2.496286209471604e-30,
+          "log_normalizer": 1654.7585878197585,
+          "moments": [
+            0.0010273124575551134,
+            5.430759786042806e-07,
+            0.0010026678660327046,
+            0.001649146955373402
+          ]
+        },
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.171875,
+            0.25
+          ],
+          "log_scale_bounds": [
+            -5.257741144295534,
+            -2.3837375374990515
+          ],
+          "edge_strip_mass": 5.085794095167618e-12,
+          "log_normalizer": 1654.7548054174724,
+          "moments": [
+            0.0010270609645983138,
+            5.42867012682664e-07,
+            0.0010017161729895126,
+            0.0016489873425316374
+          ]
+        },
+        {
+          "count": 129,
+          "u_bounds": [
+            -0.171875,
+            0.25
+          ],
+          "log_scale_bounds": [
+            -5.257741144295534,
+            -2.3837375374990515
+          ],
+          "edge_strip_mass": 3.99364914679937e-12,
+          "log_normalizer": 1654.7548054174727,
+          "moments": [
+            0.0010270609645983415,
+            5.42867012682844e-07,
+            0.0010017161729894504,
+            0.0016489873425316274
+          ]
+        },
+        {
+          "count": 257,
+          "u_bounds": [
+            -0.171875,
+            0.25
+          ],
+          "log_scale_bounds": [
+            -5.257741144295534,
+            -2.3837375374990515
+          ],
+          "edge_strip_mass": 4.660529916092408e-12,
+          "log_normalizer": 1654.7548054174727,
+          "moments": [
+            0.0010270609645983328,
+            5.428670126829363e-07,
+            0.0010017161729894335,
+            0.0016489873425316248
+          ]
+        }
+      ],
+      "convergence_trace": [
+        {
+          "grid_count": 129,
+          "density_interpolation_l1": 0.014713268238576351,
+          "log_normalizer_change": 2.2737367544323206e-13,
+          "scaled_moment_change": 3.3156278994004e-13,
+          "componentwise_scaled_moment_change": [
+            3.767068454572611e-14,
+            3.3156278994004e-13,
+            6.212658473402063e-14,
+            6.0489609165543536e-15
+          ],
+          "edge_strip_mass": 3.99364914679937e-12
+        },
+        {
+          "grid_count": 257,
+          "density_interpolation_l1": 0.003693629484115465,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 1.700722075456857e-13,
+          "componentwise_scaled_moment_change": [
+            1.177208892053841e-14,
+            1.700722075456857e-13,
+            1.6884577035727147e-14,
+            1.5779898043185296e-15
+          ],
+          "edge_strip_mass": 4.660529916092408e-12
+        }
+      ],
+      "status": "converged",
+      "diagnostics": {
+        "converged": true,
+        "method": "finite-domain deterministic trapezoidal approximation",
+        "window": 730,
+        "grid_count": 257,
+        "u_bounds": [
+          -0.171875,
+          0.25
+        ],
+        "log_scale_bounds": [
+          -5.257741144295534,
+          -2.3837375374990515
+        ],
+        "outer_edge_strip_mass": 2.496286209471604e-30,
+        "convergence_trace": [
+          {
+            "grid_count": 129,
+            "density_interpolation_l1": 0.014713268238576351,
+            "log_normalizer_change": 2.2737367544323206e-13,
+            "scaled_moment_change": 3.3156278994004e-13,
+            "componentwise_scaled_moment_change": [
+              3.767068454572611e-14,
+              3.3156278994004e-13,
+              6.212658473402063e-14,
+              6.0489609165543536e-15
+            ],
+            "edge_strip_mass": 3.99364914679937e-12
+          },
+          {
+            "grid_count": 257,
+            "density_interpolation_l1": 0.003693629484115465,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 1.700722075456857e-13,
+            "componentwise_scaled_moment_change": [
+              1.177208892053841e-14,
+              1.700722075456857e-13,
+              1.6884577035727147e-14,
+              1.5779898043185296e-15
+            ],
+            "edge_strip_mass": 4.660529916092408e-12
+          }
+        ],
+        "posterior_log_normalizer": 1654.7548054174727,
+        "moment_normalization": [
+          "mean_mu / posterior_sd_mu",
+          "variance_mu / itself",
+          "mean_scale_squared / itself",
+          "mean_next_variance / itself"
+        ],
+        "posterior_mean_mu": 0.0010270609645983328,
+        "posterior_variance_mu": 5.428670126829363e-07,
+        "posterior_mean_scale_squared": 0.0010017161729894335,
+        "posterior_mean_next_variance": 0.0016489873425316248,
+        "error_scope": "mesh/edge proxies only; no rigorous excluded-tail or misspecification guarantee"
+      },
+      "runtime_seconds": 0.5482196249940898
+    },
+    {
+      "scale": 0.08,
+      "drift": -0.001,
+      "seed": 2026110707,
+      "returns_sha256_float64_le": "62d8b9c62b39a324d3385aa8e59d58e95c1c189d335d6b023e20632acbc6c05d",
+      "return_summary": {
+        "mean": -0.002530496410731792,
+        "sd": 0.08243081064779273,
+        "min": -0.4245520463724778,
+        "max": 0.3393274386467513
+      },
+      "grids": [
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.5,
+            0.5
+          ],
+          "log_scale_bounds": [
+            -11.512925464970229,
+            -0.6931471805599453
+          ],
+          "edge_strip_mass": 7.492950313343877e-31,
+          "log_normalizer": 807.7558116253339,
+          "moments": [
+            -0.001233695278873385,
+            5.546662411518332e-06,
+            0.008335417050001966,
+            0.008643943597626075
+          ]
+        },
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.25,
+            0.21875
+          ],
+          "log_scale_bounds": [
+            -4.243386930132069,
+            -1.2003242876416778
+          ],
+          "edge_strip_mass": 8.88794622714889e-12,
+          "log_normalizer": 807.7564870399699,
+          "moments": [
+            -0.0012338530052209992,
+            5.547614583905976e-06,
+            0.008339629218808535,
+            0.008644639386099934
+          ]
+        },
+        {
+          "count": 129,
+          "u_bounds": [
+            -0.25,
+            0.21875
+          ],
+          "log_scale_bounds": [
+            -4.243386930132069,
+            -1.2003242876416778
+          ],
+          "edge_strip_mass": 6.941475958699714e-12,
+          "log_normalizer": 807.7564870399701,
+          "moments": [
+            -0.001233853005220869,
+            5.547614583910557e-06,
+            0.008339629218807385,
+            0.008644639386099748
+          ]
+        },
+        {
+          "count": 257,
+          "u_bounds": [
+            -0.25,
+            0.21875
+          ],
+          "log_scale_bounds": [
+            -4.243386930132069,
+            -1.2003242876416778
+          ],
+          "edge_strip_mass": 8.141820104670953e-12,
+          "log_normalizer": 807.7564870399702,
+          "moments": [
+            -0.0012338530052208045,
+            5.547614583911536e-06,
+            0.008339629218807128,
+            0.00864463938609971
+          ]
+        }
+      ],
+      "convergence_trace": [
+        {
+          "grid_count": 129,
+          "density_interpolation_l1": 0.012736246125557791,
+          "log_normalizer_change": 2.2737367544323206e-13,
+          "scaled_moment_change": 8.257160099111006e-13,
+          "componentwise_scaled_moment_change": [
+            5.533011848760047e-14,
+            8.257160099111006e-13,
+            1.3791040757290373e-13,
+            2.1471735677948683e-14
+          ],
+          "edge_strip_mass": 6.941475958699714e-12
+        },
+        {
+          "grid_count": 257,
+          "density_interpolation_l1": 0.0031950782322176553,
+          "log_normalizer_change": 1.1368683772161603e-13,
+          "scaled_moment_change": 1.7650290448540382e-13,
+          "componentwise_scaled_moment_change": [
+            2.7342837255933265e-14,
+            1.7650290448540382e-13,
+            3.078543034810012e-14,
+            4.4147493917277855e-15
+          ],
+          "edge_strip_mass": 8.141820104670953e-12
+        }
+      ],
+      "status": "converged",
+      "diagnostics": {
+        "converged": true,
+        "method": "finite-domain deterministic trapezoidal approximation",
+        "window": 730,
+        "grid_count": 257,
+        "u_bounds": [
+          -0.25,
+          0.21875
+        ],
+        "log_scale_bounds": [
+          -4.243386930132069,
+          -1.2003242876416778
+        ],
+        "outer_edge_strip_mass": 7.492950313343877e-31,
+        "convergence_trace": [
+          {
+            "grid_count": 129,
+            "density_interpolation_l1": 0.012736246125557791,
+            "log_normalizer_change": 2.2737367544323206e-13,
+            "scaled_moment_change": 8.257160099111006e-13,
+            "componentwise_scaled_moment_change": [
+              5.533011848760047e-14,
+              8.257160099111006e-13,
+              1.3791040757290373e-13,
+              2.1471735677948683e-14
+            ],
+            "edge_strip_mass": 6.941475958699714e-12
+          },
+          {
+            "grid_count": 257,
+            "density_interpolation_l1": 0.0031950782322176553,
+            "log_normalizer_change": 1.1368683772161603e-13,
+            "scaled_moment_change": 1.7650290448540382e-13,
+            "componentwise_scaled_moment_change": [
+              2.7342837255933265e-14,
+              1.7650290448540382e-13,
+              3.078543034810012e-14,
+              4.4147493917277855e-15
+            ],
+            "edge_strip_mass": 8.141820104670953e-12
+          }
+        ],
+        "posterior_log_normalizer": 807.7564870399702,
+        "moment_normalization": [
+          "mean_mu / posterior_sd_mu",
+          "variance_mu / itself",
+          "mean_scale_squared / itself",
+          "mean_next_variance / itself"
+        ],
+        "posterior_mean_mu": -0.0012338530052208045,
+        "posterior_variance_mu": 5.547614583911536e-06,
+        "posterior_mean_scale_squared": 0.008339629218807128,
+        "posterior_mean_next_variance": 0.00864463938609971,
+        "error_scope": "mesh/edge proxies only; no rigorous excluded-tail or misspecification guarantee"
+      },
+      "runtime_seconds": 0.5426019159785938
+    },
+    {
+      "scale": 0.08,
+      "drift": 0.0,
+      "seed": 2026110708,
+      "returns_sha256_float64_le": "15ba1c369291b51687a010e14800ceacd22ab09b2d1e50871ef7aeddb536b1dd",
+      "return_summary": {
+        "mean": 0.000400830498785652,
+        "sd": 0.06409313633652003,
+        "min": -0.29637254141046265,
+        "max": 0.3646420576643615
+      },
+      "grids": [
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.5,
+            0.5
+          ],
+          "log_scale_bounds": [
+            -11.512925464970229,
+            -0.6931471805599453
+          ],
+          "edge_strip_mass": 2.3493610415992477e-33,
+          "log_normalizer": 1002.7600563387933,
+          "moments": [
+            -0.00028622220621150494,
+            3.465659300386872e-06,
+            0.006315580207275533,
+            0.0027098810848331933
+          ]
+        },
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.21875,
+            0.203125
+          ],
+          "log_scale_bounds": [
+            -4.243386930132069,
+            -1.3693833233355885
+          ],
+          "edge_strip_mass": 1.9437453955322863e-12,
+          "log_normalizer": 1002.7633101097431,
+          "moments": [
+            -0.00028629932971742606,
+            3.4671826546885916e-06,
+            0.006324441998542215,
+            0.002711360237056754
+          ]
+        },
+        {
+          "count": 129,
+          "u_bounds": [
+            -0.21875,
+            0.203125
+          ],
+          "log_scale_bounds": [
+            -4.243386930132069,
+            -1.3693833233355885
+          ],
+          "edge_strip_mass": 1.4543788539214697e-12,
+          "log_normalizer": 1002.7633101097432,
+          "moments": [
+            -0.0002862993297172217,
+            3.4671826546912682e-06,
+            0.006324441998542056,
+            0.002711360237056727
+          ]
+        },
+        {
+          "count": 257,
+          "u_bounds": [
+            -0.21875,
+            0.203125
+          ],
+          "log_scale_bounds": [
+            -4.243386930132069,
+            -1.3693833233355885
+          ],
+          "edge_strip_mass": 1.7741632065533138e-12,
+          "log_normalizer": 1002.7633101097432,
+          "moments": [
+            -0.00028629932971723914,
+            3.4671826546918895e-06,
+            0.006324441998542012,
+            0.002711360237056721
+          ]
+        }
+      ],
+      "convergence_trace": [
+        {
+          "grid_count": 129,
+          "density_interpolation_l1": 0.014317188225607104,
+          "log_normalizer_change": 1.1368683772161603e-13,
+          "scaled_moment_change": 7.719882048042625e-13,
+          "componentwise_scaled_moment_change": [
+            1.0975726261638557e-13,
+            7.719882048042625e-13,
+            2.5097423312359963e-14,
+            9.916872538792032e-15
+          ],
+          "edge_strip_mass": 1.4543788539214697e-12
+        },
+        {
+          "grid_count": 257,
+          "density_interpolation_l1": 0.0035931767898782037,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 1.7919409753918512e-13,
+          "componentwise_scaled_moment_change": [
+            9.374492987393366e-15,
+            1.7919409753918512e-13,
+            6.994363873936432e-15,
+            2.2392937990820766e-15
+          ],
+          "edge_strip_mass": 1.7741632065533138e-12
+        }
+      ],
+      "status": "converged",
+      "diagnostics": {
+        "converged": true,
+        "method": "finite-domain deterministic trapezoidal approximation",
+        "window": 730,
+        "grid_count": 257,
+        "u_bounds": [
+          -0.21875,
+          0.203125
+        ],
+        "log_scale_bounds": [
+          -4.243386930132069,
+          -1.3693833233355885
+        ],
+        "outer_edge_strip_mass": 2.3493610415992477e-33,
+        "convergence_trace": [
+          {
+            "grid_count": 129,
+            "density_interpolation_l1": 0.014317188225607104,
+            "log_normalizer_change": 1.1368683772161603e-13,
+            "scaled_moment_change": 7.719882048042625e-13,
+            "componentwise_scaled_moment_change": [
+              1.0975726261638557e-13,
+              7.719882048042625e-13,
+              2.5097423312359963e-14,
+              9.916872538792032e-15
+            ],
+            "edge_strip_mass": 1.4543788539214697e-12
+          },
+          {
+            "grid_count": 257,
+            "density_interpolation_l1": 0.0035931767898782037,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 1.7919409753918512e-13,
+            "componentwise_scaled_moment_change": [
+              9.374492987393366e-15,
+              1.7919409753918512e-13,
+              6.994363873936432e-15,
+              2.2392937990820766e-15
+            ],
+            "edge_strip_mass": 1.7741632065533138e-12
+          }
+        ],
+        "posterior_log_normalizer": 1002.7633101097432,
+        "moment_normalization": [
+          "mean_mu / posterior_sd_mu",
+          "variance_mu / itself",
+          "mean_scale_squared / itself",
+          "mean_next_variance / itself"
+        ],
+        "posterior_mean_mu": -0.00028629932971723914,
+        "posterior_variance_mu": 3.4671826546918895e-06,
+        "posterior_mean_scale_squared": 0.006324441998542012,
+        "posterior_mean_next_variance": 0.002711360237056721,
+        "error_scope": "mesh/edge proxies only; no rigorous excluded-tail or misspecification guarantee"
+      },
+      "runtime_seconds": 0.5423875420237891
+    },
+    {
+      "scale": 0.08,
+      "drift": 0.001,
+      "seed": 2026110709,
+      "returns_sha256_float64_le": "d978ec96fd3a2794effb88ced603687a349094a31a456ae9debd7f1f7b7d8995",
+      "return_summary": {
+        "mean": 0.005773020433633121,
+        "sd": 0.07646733015629657,
+        "min": -0.3584204690538534,
+        "max": 0.3220036122637208
+      },
+      "grids": [
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.5,
+            0.5
+          ],
+          "log_scale_bounds": [
+            -11.512925464970229,
+            -0.6931471805599453
+          ],
+          "edge_strip_mass": 4.267057155075847e-28,
+          "log_normalizer": 903.0016462040721,
+          "moments": [
+            0.0054900016882645794,
+            4.057872408239181e-06,
+            0.006698659111857421,
+            0.005403790551975213
+          ]
+        },
+        {
+          "count": 65,
+          "u_bounds": [
+            -0.140625,
+            0.296875
+          ],
+          "log_scale_bounds": [
+            -4.074327894438159,
+            -1.3693833233355885
+          ],
+          "edge_strip_mass": 2.7145561376696547e-12,
+          "log_normalizer": 903.0029168029042,
+          "moments": [
+            0.005490084686783614,
+            4.0568756474419135e-06,
+            0.006692670791213839,
+            0.005402790643834157
+          ]
+        },
+        {
+          "count": 129,
+          "u_bounds": [
+            -0.140625,
+            0.296875
+          ],
+          "log_scale_bounds": [
+            -4.074327894438159,
+            -1.3693833233355885
+          ],
+          "edge_strip_mass": 2.036688249719709e-12,
+          "log_normalizer": 903.0029168029042,
+          "moments": [
+            0.005490084686783728,
+            4.056875647445044e-06,
+            0.006692670791213639,
+            0.005402790643834125
+          ]
+        },
+        {
+          "count": 257,
+          "u_bounds": [
+            -0.140625,
+            0.296875
+          ],
+          "log_scale_bounds": [
+            -4.074327894438159,
+            -1.3693833233355885
+          ],
+          "edge_strip_mass": 2.4782022956818343e-12,
+          "log_normalizer": 903.0029168029042,
+          "moments": [
+            0.005490084686783775,
+            4.0568756474459556e-06,
+            0.006692670791213589,
+            0.005402790643834116
+          ]
+        }
+      ],
+      "convergence_trace": [
+        {
+          "grid_count": 129,
+          "density_interpolation_l1": 0.0125818603811066,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 7.716859093335822e-13,
+          "componentwise_scaled_moment_change": [
+            5.684317707275609e-14,
+            7.716859093335822e-13,
+            2.9807711444470585e-14,
+            5.939964440820229e-15
+          ],
+          "edge_strip_mass": 2.036688249719709e-12
+        },
+        {
+          "grid_count": 257,
+          "density_interpolation_l1": 0.0031617402630676433,
+          "log_normalizer_change": 0.0,
+          "scaled_moment_change": 2.246574779336439e-13,
+          "componentwise_scaled_moment_change": [
+            2.3254026984306697e-14,
+            2.246574779336439e-13,
+            7.516727233823074e-15,
+            1.6053957948162806e-15
+          ],
+          "edge_strip_mass": 2.4782022956818343e-12
+        }
+      ],
+      "status": "converged",
+      "diagnostics": {
+        "converged": true,
+        "method": "finite-domain deterministic trapezoidal approximation",
+        "window": 730,
+        "grid_count": 257,
+        "u_bounds": [
+          -0.140625,
+          0.296875
+        ],
+        "log_scale_bounds": [
+          -4.074327894438159,
+          -1.3693833233355885
+        ],
+        "outer_edge_strip_mass": 4.267057155075847e-28,
+        "convergence_trace": [
+          {
+            "grid_count": 129,
+            "density_interpolation_l1": 0.0125818603811066,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 7.716859093335822e-13,
+            "componentwise_scaled_moment_change": [
+              5.684317707275609e-14,
+              7.716859093335822e-13,
+              2.9807711444470585e-14,
+              5.939964440820229e-15
+            ],
+            "edge_strip_mass": 2.036688249719709e-12
+          },
+          {
+            "grid_count": 257,
+            "density_interpolation_l1": 0.0031617402630676433,
+            "log_normalizer_change": 0.0,
+            "scaled_moment_change": 2.246574779336439e-13,
+            "componentwise_scaled_moment_change": [
+              2.3254026984306697e-14,
+              2.246574779336439e-13,
+              7.516727233823074e-15,
+              1.6053957948162806e-15
+            ],
+            "edge_strip_mass": 2.4782022956818343e-12
+          }
+        ],
+        "posterior_log_normalizer": 903.0029168029042,
+        "moment_normalization": [
+          "mean_mu / posterior_sd_mu",
+          "variance_mu / itself",
+          "mean_scale_squared / itself",
+          "mean_next_variance / itself"
+        ],
+        "posterior_mean_mu": 0.005490084686783775,
+        "posterior_variance_mu": 4.0568756474459556e-06,
+        "posterior_mean_scale_squared": 0.006692670791213589,
+        "posterior_mean_next_variance": 0.005402790643834116,
+        "error_scope": "mesh/edge proxies only; no rigorous excluded-tail or misspecification guarantee"
+      },
+      "runtime_seconds": 0.5417174999893177
+    }
+  ],
+  "runtime_seconds": 4.916197207989171,
+  "summary": {
+    "converged": 9,
+    "FitError": 0,
+    "settings_changed": false
+  }
+}

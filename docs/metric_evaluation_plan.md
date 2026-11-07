@@ -1380,8 +1380,9 @@ matching requires a stable serialization, not an independently rounded rewrite.
 The locked trial harness also now parses the same captured source/candidate bytes
 that it hashes; path-replacement regressions and exact original-byte replay pass.
 
-Next bounded work: complete the producer-wide causal-history oracle before
-further model search, then acquire/test the declared external calendar adapter.
+Next bounded work: execute the one registered generative development run below,
+retain failures and compare its matched forecasts/calibration before further
+indicator search. External calendar/data acquisition remains a later experiment.
 The expanded user goal
 is unmet: no candidate has demonstrated broad incremental market information or
 professional-use reliability. Synthetic qualification cannot supply missing
@@ -1405,14 +1406,82 @@ not forecast performance. Frozen market data/results and canonical release
 identities are unchanged. The local model fingerprint changes and remains an
 unaccepted correctness revision.
 
-The same audit found whole-invocation total-market coverage selecting fallback
-features in `run_pipeline`. A producer-wide prefix oracle is now required at
-that boundary: fixed configuration/source metadata and identical input prefixes
-must produce identical earlier per-date signals, features, confidence and DCA
-columns when suffix values/availability change. Aggregate benchmarks/newly
-resolved labels are explicit exclusions. This routing path is under test; the
-calibration fix alone does not establish whole-pipeline causality. Revised source
-histories and unknown publication timestamps remain separate limitations.
+The same audit reproduced whole-invocation total-market coverage changing ten
+earlier output columns. Commits `949b226` and `bf153c7` route proxies per date,
+using cumulative observations and trailing 90-row coverage. Inactive metrics
+contribute neither scores nor expected-metric coverage; wholly inactive
+categories contribute zero coverage weight. Historical feature exports retain
+eligibility; current metric health describes the final-date route. Eligibility
+participates in normalized-input/export content hashes.
+
+The producer oracle independently inventories all 43 dated output columns,
+feature frames and both attribution layers. Seven synthetic pipeline runs
+(at most 943 days, 26.95 seconds) cover 364/365 observations, 72/90 versus 71/90
+coverage, restored availability and perturbed future numeric inputs. Configuration
+and source-mode metadata stay fixed. Aggregate benchmarks/newly resolved labels
+and current health metadata are explicit exclusions. Old-route and wrong-coverage
+mutations fail the oracle. Independent review caught and verified the
+all-ineligible-category correction. Revised inputs and unknown timestamps remain
+separate limitations; this is a tested fixed-input prefix contract.
+
+The complete causal/coordinator slice passed **337 backend tests in 144 seconds**.
+Local model fingerprint is now
+`71657a22230f4ebd5488b5c869731bb1f5ea4acadee083f3beefea006fde204d`;
+the acceptance CLI reports `changed=true`. Published canonical identity stays
+unchanged. No source cache, market result, release acceptance or deployment was
+updated to conceal that difference.
+
+### Next registered family: direct daily-price forecast baseline
+
+The CDF decoder's zero four-year development forecasts are a protocol-specific
+training-pool constraint. A model of daily returns can forecast a long holding
+path without 24 mature four-year labels. That does not create more independent
+four-year market cycles or establish calibration. Before further indicator
+tuning, test one conventional price-only predictive family as a stronger
+reference challenge. No generative market fitting has occurred yet.
+
+Reviewed source `6150199` implements a fixed Student-t5 volatility path model,
+fitted on exactly 730 prior daily log returns. Its unit-variance shock is
+sqrt(3/5)*t5; variance updates as .01*s² + .05*(r-mu)² + .94*h. Only mu and s
+are estimated, under s~HalfNormal(.05) and mu|s~Normal(0,s²/365). These are
+heuristic predeclared assumptions, not a fitted trading thesis. Each of 8,192
+paths draws its joint parameters once and retains them. An unobserved next-day
+entry shock updates variance but is excluded from holding profit/downside;
+12/24/48-month outcomes share each maximum-horizon path.
+
+The posterior is a finite-domain deterministic approximation in mu/s and log(s),
+with fixed bounds, 65² coarse localization and 65²/129²/257² refinement. It must
+pass density-L1 .005, log-normalizer-change 1e-4, scaled-moment-change 1e-3 and
+edge-strip-mass 1e-6 checks, or return a visible failure. These are numerical
+proxies, not rigorous excluded-tail or misspecification guarantees. Independent
+original-coordinate integration and analytic holding-variance/H² drift-uncertainty
+checks pass. A fixed [nine-case numerical preflight](artifacts/generative-price-preflight-2026-11-07.json)
+converged without tuning or failures in 4.92 seconds. This does not test posterior
+calibration. The chosen recursion has no stationary fourth moment; Student-t
+log returns have no finite positive exponential price moments. Do not report
+simulated mean wealth or precise extreme-tail claims.
+
+The new scorecard must report exact matched-CDF origins separately from all
+730-return-eligible origins. More forecast coverage is not superiority. Keep
+all targets, horizons, roles and two predeclared simulation replicas separate;
+failures withhold complete-support means. Seeds depend on fixed base/date/replica,
+never full snapshot hashes or row positions, so future data cannot change earlier
+Monte Carlo forecasts. Existing event thresholds and 50%/80% interval diagnostics
+remain unchanged. Input/replica/code/runtime identities are frozen in the
+[one-run registration](artifacts/generative-baseline-registration-2026-11-07.json)
+before the first fit; no outcome-dependent retuning is authorized. It requests
+109 fit origins, with 96/84/60 completed development outcomes per target at
+12/24/48 months. Matched CDF counts remain 48/24/0. Additional four-year forecasts
+do not supply a four-year outer comparison or independent market cycles. The
+two replica bases are 20270529 and 20270530.
+
+Monte Carlo paths represent draws from an underlying law, rather than the issued
+finite CDF used by earlier readouts. Use finite-ensemble-unbiased CRPS and Brier
+estimates for the generative law, retain empirical scores/corrections, and leave
+exact reference-CDF scores unadjusted. This avoids rewarding more simulation
+particles as if they added information. The independence assumption is essential;
+see [Ferro's fair scoring rules](https://empslocal.ex.ac.uk/people/staff/ferro/Publications/ferro2013.pdf)
+and the [scoringrules interpretation guide](https://scoringrules.readthedocs.io/en/latest/crps_estimators.html).
 
 ## Verification and handoff
 
