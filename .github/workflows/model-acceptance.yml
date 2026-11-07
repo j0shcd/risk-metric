@@ -1,0 +1,68 @@
+name: Production Model Acceptance
+
+# Research CI checks correctness. This separate explicit workflow retains the
+# unchanged legacy performance gate; neither a green CI run nor a push promotes a model.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-security:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/dependency-security.yml
+
+  model-acceptance:
+    needs: dependency-security
+    runs-on: ubuntu-latest
+    env:
+      REFRESH_API_SOURCES: "false"
+      RISK_END_DATE: "2026-05-14"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version-file: .python-version
+          check-latest: true
+      - name: Install Python dependencies
+        run: 'pip install --require-hashes --only-binary=:all: -r requirements.txt'
+      - name: Prepare model acceptance runtime
+        run: cp config/model_acceptance_runtime.json config/runtime.json
+
+      - name: Detect model changes
+        id: model-change
+        run: |
+          changed=$(python -m risk_engine.model_acceptance changed \
+            --canonical config/model_acceptance_canonical.json)
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Evaluate changed model on frozen data
+        if: steps.model-change.outputs.changed == 'true'
+        run: |
+          set +e
+          python -m risk_engine.evaluation.cli run \
+            --profile standard \
+            --output-dir /tmp/model-acceptance-evaluation \
+            --run-id candidate
+          status=$?
+          set -e
+          test "$status" -eq 0 -o "$status" -eq 2
+
+      - name: Enforce model acceptance
+        if: steps.model-change.outputs.changed == 'true'
+        run: |
+          python -m risk_engine.model_acceptance produce \
+            --run-dir /tmp/model-acceptance-evaluation/runs/candidate \
+            --output /tmp/model-acceptance-candidate.json
+          python -m risk_engine.model_acceptance compare \
+            --candidate /tmp/model-acceptance-candidate.json \
+            --canonical config/model_acceptance_canonical.json \
+            --policy config/model_acceptance.json \
+            --output /tmp/model-acceptance-report.json
+

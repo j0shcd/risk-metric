@@ -79,6 +79,17 @@ class DailyPublishAcceptanceTests(unittest.TestCase):
                 self.assertEqual(runtime.mismatches(root), [])
         self.assertIn('python scripts/check-publication-runtime.py', guard_script(text))
 
+    def test_research_ci_and_production_acceptance_have_distinct_jobs(self):
+        ci = (ROOT / '.github/workflows/ci-quality-and-benchmark.yml').read_text()
+        release = (ROOT / '.github/workflows/model-acceptance.yml').read_text()
+        self.assertIn('Run unit tests', ci)
+        self.assertNotIn('Enforce model acceptance', ci)
+        self.assertIn('workflow_dispatch:', release)
+        self.assertNotIn('\n  push:', release)
+        self.assertIn('python -m risk_engine.model_acceptance compare', release)
+        self.assertIn('--policy config/model_acceptance.json', release)
+        self.assertNotIn('continue-on-error:', release)
+
 
 if __name__ == '__main__':
     unittest.main()
