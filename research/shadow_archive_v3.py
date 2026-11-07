@@ -2,7 +2,9 @@
 
 Local ownership and chronology are not publication-vintage authentication,
 calibration, freshness or fitness. An independently retained head is necessary
-against adversarial tail deletion/full rewrite. Producer purity/source selection
+against adversarial tail deletion/full rewrite. The public head binds every
+scientific file, including failed attempts and orphan captures; event linkage is
+a separate chain head. Lock contents alone are explicitly non-scientific. Producer purity/source selection
 is reviewed, not a Python sandbox; no arbitrary module loading is provided.
 Raw captures have a separate128MiB budget, events64MiB, per-event1MiB/2048events.
 Exclusive attempts remain visible after failure/interruption and consume that
@@ -230,6 +232,27 @@ def _validate_resolution(event,observations,resolved,root,cache):
     return key
 
 
+def _persisted_head(root,event_chain_head):
+    """Bind every scientific file, including failed/pending/orphan state.
+
+    Lock bytes are intentionally excluded: they carry no scientific state; the
+    lock must still exist for every operation. Paths themselves are hash-bound.
+    Event-chain linkage stays separate from this externally retained state head.
+    """
+    inventory={};scientific_bytes=0;capture_bytes=0
+    for path in sorted(root.rglob('*')):
+        cap.safe(path)
+        if path.is_dir():continue
+        name=path.relative_to(root).as_posix()
+        if name=='archive.lock':continue
+        limit=cap.MAX_RESPONSE_BYTES if name.startswith('captures/') else MAX_EVENT_BYTES
+        raw=cap.read(path,limit);inventory[name]=cap.sha(raw)
+        if name.startswith('captures/'):capture_bytes+=len(raw)
+        else:scientific_bytes+=len(raw)
+        if scientific_bytes>MAX_ARCHIVE_BYTES or capture_bytes>cap.MAX_CAPTURE_BYTES:raise ValueError('complete persisted state byte cap')
+    return digest({'event_chain_head_sha256':event_chain_head,'scientific_files':inventory}),scientific_bytes,len(inventory)
+
+
 def _read(root,expected_head=None):
     raw=cap.read(root/'registration.json',MAX_EVENT_BYTES);reg=json.loads(raw);_registration(reg)
     if {p.name for p in root.iterdir()}!={'registration.json','archive.lock','events','captures','attempts','publications'}:raise ValueError('archive inventory')
@@ -281,8 +304,10 @@ def _read(root,expected_head=None):
         if a['query_day'] not in reg['cohort']['decision_days']:raise ValueError('attempt cohort')
         attempts[a['query_day']]=a
     if len(attempts)>MAX_EVENTS:raise ValueError('attempt cap')
-    if expected_head is not None and head!=expected_head:raise ValueError('trusted head mismatch')
-    return {'head_sha256':head,'event_count':len(files),'archive_bytes':total,'capture_bytes':capture_bytes,
+    state_head,total,scientific_file_count=_persisted_head(root,head)
+    if expected_head is not None and state_head!=expected_head:raise ValueError('trusted head mismatch')
+    return {'head_sha256':state_head,'event_chain_head_sha256':head,'scientific_file_count':scientific_file_count,
+            'event_count':len(files),'archive_bytes':total,'capture_bytes':capture_bytes,
             'observation_count':len(observations),'resolution_count':len(resolved),'pending_or_failed_days':sorted(set(attempts)-days)},reg,observations,resolved,last
 
 
@@ -296,10 +321,11 @@ def _provisional(classification):
 
 def _append(root,state,reg,kind,request,classification,commit):
     if state['event_count']>=MAX_EVENTS:raise ValueError('event cap')
-    event={'sequence':state['event_count']+1,'previous_sha256':state['head_sha256'],'registration_id':reg['registration_id'],
+    event={'sequence':state['event_count']+1,'previous_sha256':state['event_chain_head_sha256'],'registration_id':reg['registration_id'],
            'kind':kind,'committed_at':cap.stamp(commit),'request':request,'classification':_provisional(classification) if kind=='observation' else None}
     raw=canonical_bytes(event)
-    if len(raw)>MAX_EVENT_BYTES or state['archive_bytes']+len(raw)+4096>MAX_ARCHIVE_BYTES:raise ValueError('event/archive byte cap')
+    current_bytes=state['archive_bytes']+(root/'attempts'/request['attempt']).stat().st_size if kind=='observation' else state['archive_bytes']
+    if len(raw)>MAX_EVENT_BYTES or current_bytes+len(raw)+4096>MAX_ARCHIVE_BYTES:raise ValueError('event/archive byte cap')
     identity=cap.sha(raw);filename=f"{event['sequence']:08d}_{identity}.json"
     cap.frozen_write(root/'events'/filename,raw)
     completed=now()
@@ -308,7 +334,10 @@ def _append(root,state,reg,kind,request,classification,commit):
     cap.frozen_write(root/'publications'/(filename+'.receipt'),marker_raw)
     if completed<commit or (kind=='observation' and any(completed>=cap.time(f['entry_at'])-timedelta(seconds=reg['cohort']['entry_observation_buffer_seconds']) for f in request['forecasts'])):
         raise ValueError('publication clock reversal/entry boundary; archive invalid, no eligibility')
-    return {'event_id':identity,'head_sha256':digest({'event_id':identity,'publication_receipt_sha256':cap.sha(marker_raw)}),'committed_at':event['committed_at'],'publication_completed_at':cap.stamp(completed),'classification':classification}
+    event_head=digest({'event_id':identity,'publication_receipt_sha256':cap.sha(marker_raw)})
+    state_head,_,_=_persisted_head(root,event_head)
+    return {'event_id':identity,'head_sha256':state_head,'event_chain_head_sha256':event_head,
+            'committed_at':event['committed_at'],'publication_completed_at':cap.stamp(completed),'classification':classification}
 
 
 def issue(root,capture_dirs,producer):
