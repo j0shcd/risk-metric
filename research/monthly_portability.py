@@ -27,7 +27,8 @@ from .candidates.swing_c.generate import generate as generate_c
 from .distribution_readout import mixture_forecasts
 from .readout_study import diagnostics, event_mask
 from .market_dataset import canonical_bytes, digest, TARGETS
-from .scorecard_artifacts import publish, safe_path, write_packet
+from .scorecard_artifacts import publish, write_packet
+from .external_equity_fixture import private_child, _safe
 
 ROOT=Path(__file__).resolve().parents[1]
 PRIVATE_ROOT=ROOT/'data/external_private'
@@ -71,7 +72,7 @@ PROTOCOL={
            'shared-era equity outcomes overlap exposed BTC macro shocks','no pre1990freeze or unseenholdout claim',
            'one equity family; do not pool candidates/horizons as independent BTC cycles',
            'single-class event samples cannot establish discrimination; zero-loss skill undefined']}
-CODE_FILES=('research/monthly_portability.py','research/distribution_readout.py','research/readout_study.py',
+CODE_FILES=('research/external_equity_fixture.py','research/monthly_portability.py','research/distribution_readout.py','research/readout_study.py',
  'research/market_dataset.py','research/market_information.py','research/market_scorecard.py','research/scorecard_artifacts.py',
  'research/candidates/swing_a/indicator.py','research/candidates/swing_b/generator.py','research/candidates/swing_c/generate.py')
 
@@ -260,8 +261,9 @@ def evaluate(prices):
 def run(source,registration_path,output):
     registered=json.loads(Path(registration_path).read_bytes())
     if registered!=registration():raise ValueError('registration/code/data/runtime identity mismatch')
-    output=safe_path(Path(output));private=safe_path(PRIVATE_ROOT)
-    if not output.is_relative_to(private) or output==private:raise ValueError('derived provider outputs must remain in ignored private directory')
+    output=private_child(output, PRIVATE_ROOT)
+    source=_safe(Path(source))
+    if source == output or source.is_relative_to(output):raise ValueError('source/output alias forbidden')
     output.mkdir(parents=True,exist_ok=False)
     publish(output/'request.json',canonical_bytes({'registration':registered,'source':str(source),'privacy':'derived numeric outputs remain private'}))
     try:

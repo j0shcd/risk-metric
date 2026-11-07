@@ -170,6 +170,18 @@ def _safe(path):
     return path.resolve()
 
 
+def private_child(path, root):
+    """Canonical private sink; reject symlinks and root/escape aliases before I/O.
+
+    Cooperative local boundary, not protection against concurrent filesystem
+    replacement. Public manifests contain identities/counts, never numeric rows.
+    """
+    path, root = _safe(Path(path)), _safe(Path(root))
+    if not path.is_relative_to(root) or path == root:
+        raise ValueError('numeric outputs require a child of the private directory')
+    return path
+
+
 def _write_once(path, payload):
     with path.open('xb') as stream: stream.write(payload)
     path.chmod(0o444)
@@ -177,9 +189,7 @@ def _write_once(path, payload):
 
 def acquire(private_dir, manifest_path):
     """One exclusive acquisition, private raw/derived bytes, public metadata only."""
-    private_dir, manifest_path = _safe(Path(private_dir)), _safe(Path(manifest_path))
-    private_dir.relative_to(_safe(PRIVATE_ROOT))
-    if private_dir == _safe(PRIVATE_ROOT): raise ValueError('use a new child directory for each acquisition')
+    private_dir, manifest_path = private_child(private_dir, PRIVATE_ROOT), _safe(Path(manifest_path))
     if private_dir.exists() or manifest_path.exists(): raise FileExistsError('acquisition paths must be new')
     payload, retrieval = download()
     private_dir.mkdir(parents=True, exist_ok=False)
@@ -190,8 +200,7 @@ def acquire(private_dir, manifest_path):
 
 def derive(private_dir, manifest_path):
     """Derive once from captured bytes, without redownloading or modifying raw data."""
-    private_dir, manifest_path = _safe(Path(private_dir)), _safe(Path(manifest_path))
-    private_dir.relative_to(_safe(PRIVATE_ROOT))
+    private_dir, manifest_path = private_child(private_dir, PRIVATE_ROOT), _safe(Path(manifest_path))
     if manifest_path.exists() or (private_dir / 'monthly_through_2022.csv').exists():
         raise FileExistsError('derived acquisition outputs must be new')
     for name in ('source.zip', 'retrieval.json', 'monthly_source.csv'):
