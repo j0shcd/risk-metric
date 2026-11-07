@@ -1075,9 +1075,50 @@ is not a month-end close. Neither was acquired or adopted.
   neither significance nor portability. A retrospective best-reference envelope
   is informative but is not an origin-time forecasting strategy.
 
-No external candidate scoring has run at this registration point. Success would
-not validate BTC-specific features, daily risk, four-year Bitcoin predictions or
-professional-use reliability. Failure cannot be repaired by tuning on these eras.
+**Completed registered falsification:** source and method were frozen before
+execution; review closed private-path traversal and incomplete-failure-receipt
+bugs first. One canonical private-output boundary now covers acquisition,
+derivation and scoring, with a sink inventory/path oracle. No provider scoring
+preceded those repairs. Failure receipts bind requests and errors; interrupted
+reservations stay visibly incomplete and cannot be reused. Registration is
+`723970fe069c27447510105f115efb4e0399558a716f22f8b368ba0b06f8d24a`.
+The original acquisition metadata retains its actual historical producer hash;
+the scoring registration separately binds the repaired shared helper.
+
+[Aggregate results](artifacts/monthly-portability-2026-11-07.json) retain all 234
+cells and 18 class-support summaries. The private packet contains 39,312 forecast
+records across 13 models, two eras, 168 origins per era, three horizons and three
+targets. The unconditional forecast dominates **each** unchanged candidate across
+all three two-year outcomes in **both** eras under the registered descriptive
+criterion. Two-year terminal-return CRPS (lower is better):
+
+| Model | 1990–2003 older-family falsification | 2004–2017 shared-era challenge |
+| --- | ---: | ---: |
+| Unconditional | 0.229197 | 0.193960 |
+| A, no-memory displacement | 0.242262 | 0.206133 |
+| B, adaptive innovations | 0.237577 | 0.207302 |
+| C, upside energy | 0.239006 | 0.211850 |
+
+All three return alignments are negative in the older era and positive in the
+later era; the separate negative-in-both-eras rejection did not trigger. That
+does not reverse the CRPS rejection. Four-year negative/nonnegative return counts
+are 29/139 and 31/137, respectively, but only one disjoint negative-return path is
+available within each era. External class support is broader than the frozen BTC
+sample without becoming many independent crises.
+
+The [independent audit](artifacts/monthly-portability-independent-audit-2026-11-07.json)
+reconstructed raw index composition, all generator recurrences/references,
+monthly paths, strict training pools, weights, all 39,312 forecast diagnostics,
+234 cells and class/non-overlap/rejection rules without importing the runner or
+scorer. Maximum individual CRPS discrepancy was `3.72e-15`; aggregate CRPS
+`1.11e-16`, with exact event/coverage/count/rejection agreement. Raw provider rows,
+atoms and per-origin predictions remain private; committed artifacts contain
+aggregate experimental measurements and identities only.
+
+This rejects the broad portability claim under the declared monthly protocol.
+It does not prove zero BTC information or compare daily risk/executable policies.
+No equity tuning, replacement variant or pooled BTC score follows. Historical
+vintages, shared shocks and professional-use reliability remain unverified.
 
 ## 7. Candidate research queue
 
@@ -1140,7 +1181,7 @@ the legacy acceptance gate remains unchanged.
 | Baseline identity | Committed minimal snapshot, immutable manifests/receipts and byte-identical baseline replay | Snapshot is exposed and reconstructed, not new holdout evidence |
 | Experiment registry | Shared direct-CDF budgets, immutable finalists, one release and reasoned interrupted-attempt closure implemented | Declared producer artifacts are not executed/causally certified; public exposure cannot be erased |
 | Prospective archive | Bounded hash-chained observation/resolution API, synthetic CLI and independent review implemented | No live archive or verified input-publication adapter; hashes are not source authentication |
-| Synthetic / external suite | Independent-world conditional panel passes; private monthly equity fixture acquired and falsification contract frozen | External candidate scoring pending; no market error-control transfer |
+| Synthetic / external suite | Independent-world panel passes; unchanged candidates fail registered monthly equity falsification | Neither synthetic qualification nor external testing establishes BTC market error control |
 | Supporting policy accounting | Equal initial capital, no contributions, explicit costs, common dates and ex-post exposure matches | Candidate C's three-trade lead is exploratory; no policy winner or pathwise risk equivalence |
 
 Legacy acceptance/policy issues remain separate from the research protocol:
@@ -1711,6 +1752,6 @@ additional global skill change necessary.
 Do not mark the goal complete while useful-signal sensitivity or the expanded
 market-improvement objective remains unmet. Panel qualification, honest market
 comparison and prospective validation are separate requirements. All work remains
-local. The next bounded implementation is a frozen stronger-reference comparison
-guard is now implemented; next are the registered monthly falsification run and
+local. The frozen stronger-reference comparison guard is implemented; next are
+the registered monthly falsification run and
 three-slot divergent development campaign. Neither is a new unseen BTC holdout.
