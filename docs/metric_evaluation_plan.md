@@ -4,13 +4,14 @@ Status: finite known-law panel qualification passes; earlier single-path searche
 remain failed. Ten indicator variants have produced no qualified indicator;
 unchanged candidates fail monthly equity portability. A chronology control's
 19.72% two-year development gain fails its frozen outer check; that branch is
-stopped. Next is one prospective, price-only paper-archive vertical slice.
-No promotion.
+stopped. The first prospective, price-only operational paper witness is issued
+and independently reproduced; no forecast outcome is mature. No promotion.
 Updated 2026-11-07.
 
-This is the canonical plan for the next benchmark. Current implemented results
-remain in [DCA evidence](dca_evidence.md). This replaces the older Phase 1/2
-planning narrative; Git preserves its implementation history. Published scoring,
+This is the canonical maintainer record for the research benchmark, its measured
+results and next bounded work. Legacy strategy-specific results remain in
+[DCA evidence](dca_evidence.md). This replaces the older Phase 1/2 planning
+narrative; Git preserves its implementation history. Published scoring,
 acceptance policy and canonical metrics are unchanged. Local producer causality
 corrections below are unaccepted source revisions and have not been published.
 
@@ -54,9 +55,9 @@ of real-market generalization.
 - Deliverable: reviewed design, bounded synthetic experiments and an operational
   retrospective market scorecard with portable data and an exposure ledger.
   Research readouts are fitted; production market models are unchanged. No
-  adopted investor objective, data vendor or production-gate change.
-- Constraints: local/offline development, reproducible snapshots, bounded compute,
-  existing free infrastructure; no incidental paid services.
+  adopted investor objective, production data-vendor contract or production-gate change.
+- Constraints: local development and reproducible snapshots, plus one explicit
+  bounded no-key live paper capture; existing free infrastructure and no paid services.
 - Expected useful negative result: a candidate has no incremental information, is
   fragile across eras, or cannot be evaluated with the available mature outcomes.
   Each is a valid result, not a reason to loosen the benchmark after a run.
@@ -1717,9 +1718,9 @@ The next evidence must be archived before outcomes. No primary model has
 qualified; synthetic qualification, historical development and future market
 validation remain distinct claims.
 
-### Next bounded step: observed-vintage paper archive
+### Implemented observed-vintage paper archive
 
-Implement one source-to-shadow-archive vertical slice before further market
+One source-to-shadow-archive vertical slice is implemented before further market
 optimization. The current generic v2 archive remains frozen; it accepts a known
 publication assertion or unknown vintage, but cannot express the sufficient fact
 that exact public bytes were observed **by retrieval completion**. A current
@@ -1787,11 +1788,93 @@ spacing, 2 MiB per response, 10,000 rows and a subprocess wall deadline under
 positive consecutive closed daily prices; no interpolation, source stitching,
 open-bar values or silent replacement of prior captures. The pure registered
 producer performs no network I/O. Source/config/code/cohort registration and
-independent offline review must precede the one actual paper capture/append.
+independent offline review preceded the one actual paper capture/append.
 The expanded user goal
 is unmet: no candidate has demonstrated broad incremental market information or
 professional-use reliability. Synthetic qualification cannot supply missing
 multi-year outcomes, verified vintages or economic validation.
+
+### First live operational witness and next formal cohort
+
+The separately registered November 7 operational cohort was issued once after
+registration commit `e670866` and explicit runner commit `0ef13a7`.
+[Metadata](artifacts/paper-shadow-operational-2026-11-07-witness.json) and the
+[independent audit](artifacts/paper-shadow-operational-2026-11-07-audit.json)
+contain provenance, counts and hashes; provider prices and forecast atoms remain
+in ignored `output/paper-shadow-operational-2026-11-07/`. The eight original
+registered source files are preserved byte-identically in its `source_vintage/`
+directory and Git. Later validator corrections cannot relabel this observation.
+
+One successful HTTP response supplied 3,597 consecutive reference closes from
+January 2, 2017 through November 7, 2026. Capture ran from
+`2026-11-07T03:03:28.281695Z` to `03:03:28.829042Z`. Forecast content was issued at
+`03:03:29.541316Z`, committed at `03:03:29.574213Z` and durably published locally
+by `03:03:29.592073Z`, before the registered 22:00 UTC cutoff and November 8
+00:00 UTC reference entry. First-publication time remains unknown. The public
+scientific-state head is
+`09de3de1aa43f84d6c68bc674b2412b2299d10a677f7c308b1f5e422614b79a7`.
+
+Six forecasts cover three frozen baselines at 12/24 months: unconditional CDF,
+context CDF and Student-t/GARCH parameter-mixture simulation. The independent
+review reproduced all selected prices, mature-label pools, context weights,
+calendar endpoints and all 8,192 simulated atoms per horizon, with zero numerical
+difference. This is operational lineage evidence. There are **zero mature
+outcomes**, no measured prospective score and no professional-use qualification.
+The first 12-month label is available November 9, 2027; the first 24-month label
+November 9, 2028. Monthly overlapping observations will not become independent
+market cycles simply by accumulating more rows.
+
+The v3 boundary binds every scientific file, including failed/pending attempts
+and orphan captures, separately from event-chain linkage. It pins function bodies,
+default arguments, source files, configuration and runtime. Its
+[48-observation stress measurement](artifacts/paper-shadow-v3-2026-11-07-performance.json)
+used two 8,192-atom forecasts per observation: 27.6 seconds total, final append
+1.04 seconds and verification 0.92 seconds. Local clock/host integrity and pure
+producer behavior remain trusted; this is not an independent timestamp authority
+or a Python execution sandbox. Old v2 observations are not reclassified.
+
+Before any outcome matured, review found that the generic resolution API could
+assign different outcomes or source vintages to different models for the same
+observation/target/horizon. Correction `bdd2585` enforces one common numeric
+outcome, source capture identity and exact close timestamp across those models,
+at both public append and persisted replay boundaries. Different horizons remain
+distinct. Equal common outcomes are accepted. Independent guard-removal mutation
+produced five assertion failures; the original actual witness still verifies
+against its entire saved state and head, with zero resolutions. This guard does
+not itself derive a true market outcome: a future reviewed resolver must calculate
+the label from owned closed-price evidence before supplying it to this API.
+
+The November 30 formal monthly cohort remains **unissued** and separate. Its
+registration was refreshed before that future decision solely to bind the
+corrected validator: previous ID
+`82f968f419f9b63683ecc02fae0a64f409c609ee3266be54cd1470e7919d6000`
+is retained in Git at `e670866`; current ID is
+`8a5353903819c5702d29681cd90091138532b88cf0d75c052cce36171d2b2908`.
+Only `shadow_archive_v3.py` changed among its eight bound source files. Baseline
+parameters, numerical forecast producers, calendar, cohort dates and configuration
+are unchanged. The already-issued operational registration was not rewritten.
+The explicit runner rejects a missing live flag, a different current UTC day, changed
+source/config/runtime or reused output directory before acquisition. No scheduler
+is installed. On the registered day, before 22:00 UTC, the next bounded action is:
+
+```bash
+python scripts/run-paper-shadow.py \
+  --registration docs/artifacts/paper-shadow-monthly-2026-11-30-registration.json \
+  --output-dir output/paper-shadow-monthly-2026-11-30 \
+  --live-capture
+```
+
+Use the registered Python 3.12.16 / NumPy 2.4.6 / pandas 2.3.3 environment. A
+failed run leaves its reserved output directory and failure evidence. Do not
+retry under a new directory or registration, backdate, or alter a registration
+to make an observed result fit. The archive consumes an issuance day within that
+archive; it does not enforce a global attempt budget across separately created
+directories, and a capture failure can precede issuance. This protocol-level
+restriction depends on the trusted local operator preserving all attempts.
+The current noncommercial provider choice does not establish rights to use this
+feed in a professional trading product. The next scientific step is unchanged
+baseline collection, not another retrospective decoder rescue. An informative
+future baseline is a reference to beat, not evidence that a candidate beat it.
 
 ### Producer causality corrections
 
@@ -1930,7 +2013,8 @@ after the result.
 
 This task specifies the benchmark and implements synthetic pilots, a real-data
 retrospective measurement tool and a failed whole-path qualification. It does not
-demonstrate a better market indicator. No new market dataset was downloaded and
+demonstrate a better market indicator. External monthly-equity falsification
+and one local noncommercial live price capture are separately documented above;
 no production model was trained. Research readouts were fitted on strictly mature
 historical labels. Astra medium and two other model perspectives independently
 reviewed the design, timing and implementation. A reviewer caught cross-horizon
@@ -1978,21 +2062,25 @@ oracle is `631063b` and conditional randomization is `e5f26e2`. Josh explicitly
 requested keeping all commits local; no push or deployment is authorized. The
 remote advanced independently with automated data refresh `4d9789b`; it was not
 merged into this held research checkout or used to alter the frozen evidence.
-Reviewed research, causality repairs, full-reference guards, both new measurement
-campaigns and their portable audits are integrated into local main through
-`cbf50b8`. The full integrated backend suite passes **405 tests in 158.8 seconds**
-(`/private/tmp/risk-transport-final-backend-20261107.log`). No hosted CI or frontend
-check was required for these backend-only additions; existing pandas warnings
-remain. New decoder, boundary and producer bugs have failing reintroduction
-regressions, and actual experiments received independent arithmetic audits.
+Reviewed research, causality repairs, full-reference guards, actual outer
+falsification, v3 archive and bounded live collector are integrated into local
+main. Metadata-only first-witness evidence is committed at `ab3ea18`; actual raw
+provider data and issued atoms remain ignored. The integrated backend suite
+passes **454 tests in 170.0 seconds**, including the common-outcome correction
+(`/private/tmp/risk-paper-final-backend-20261107.log`). The explicit paper runner
+also passed negative live-flag/future-day checks and the independently audited
+actual capture-to-archive run. No hosted CI or frontend check was required for
+these backend-only additions; existing pandas warnings remain. New decoder,
+boundary and producer bugs have failing reintroduction regressions, and actual
+experiments received independent arithmetic audits.
 
-Completed branches were deleted after ancestry checks. Four completed managed
+Completed branches were deleted after ancestry checks. Five completed managed
 worktrees are archived; important ignored French source files were first
-preserved byte-identically in the original checkout. One active managed worktree,
-`/Users/josh/.codex/worktrees/swing-research-c/risk-metric`, is implementing the
-accepted outer falsification on `codex/transport-outer-falsification`; its source
-and actual execution are not yet integrated or approved for measurement. The
-original main checkout remains the integration owner. No force removal, push,
+preserved byte-identically in the original checkout. The reviewed common-outcome validator correction is merged locally; the
+original main checkout remains the integration owner. The final clean managed
+checkout, `/Users/josh/.codex/worktrees/prospective-capture/risk-metric`, remains
+detached because the app refused to remove its primary checkout. Its research
+branch is deleted after merge; no unfinished work is parked there. No force removal, push,
 remote merge or deployment occurred. The untracked user directories `.codex/`
 and `.github/hooks/` remain preserved.
 
@@ -2007,15 +2095,23 @@ skill self-improvement review found no additional global skill change necessary.
 | --- | --- | --- |
 | Detect useful information under dependent worlds | Gaussian oracle and registered panel test, 398/400 positive declarations | Pass in finite known-law panel scope; previous single-path searches still fail |
 | Control false promotion under declared dependent nulls | Whole-path CRT exchangeability under exact Q, full-search equivalence tests, 1,500 fresh null campaigns | Pass within the declared one-campaign synthetic scope |
-| Chronological/provenance integrity | Strict label boundaries, frozen measurement hashes, 43-column producer oracle and immutable receipts | Verified fixed-input mechanics; historical market vintages explicitly unverified |
+| Chronological/provenance integrity | Strict label boundaries, 43-column producer oracle, immutable receipts and first audited live operational witness | Fixed-input mechanics and current capture lineage verified; historical market vintages and future outcomes remain unverified |
 | Safe adaptive-search scope | Registered conditional tests, shared attempt/freeze/release ledger and explicit exposure lineage | Finite scope defined; unlimited human adaptation not qualified |
-| Local-only changes | Atomic commits integrated locally, portable evidence, four archived worktrees | No push/deployment; one isolated active outer-falsification branch |
+| Broad incremental BTC information | Ten indicator variants fail qualification; chronology improvement fails frozen outer check | Unmet; no professional-use candidate selected |
+| Prospective market validation | Six frozen forecasts issued in one operational observation; no mature outcomes | Pending future labels; no prospective performance claim |
+| Local-only changes | Atomic commits integrated locally, portable evidence, five archived worktrees | No push/deployment; all accepted contributions merged locally |
 
 Do not mark the goal complete while useful-signal sensitivity or the expanded
 market-improvement objective remains unmet. Panel qualification, honest market
 comparison and prospective validation are separate requirements. All work remains
 local. Full-reference guarding, monthly falsification, the three-slot campaign
 and the one decoder diagnostic are complete within their declared measurement
-scope. Next is the accepted, separately registered chronology-control outer
-falsification. Historical exposure, missing independent cycles and prospective
-validation remain unresolved; no result is relabeled a fresh holdout.
+scope. The chronology-control outer falsification is complete and failed. The
+first operational witness is issued; the next formal monthly decision is
+November 30, 2026, under its separately frozen protocol. Do not restart historical
+search merely to fill the waiting period. A new candidate needs a materially new
+registered information hypothesis and a credible fresh evaluation opportunity.
+Historical exposure, missing independent cycles, professional feed rights and
+prospective validation remain unresolved; no result is relabeled a fresh holdout.
+The requested professional-use indicator remains unqualified, so the expanded
+goal is unmet despite the completed benchmark and operational work.
