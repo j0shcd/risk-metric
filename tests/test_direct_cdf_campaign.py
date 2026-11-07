@@ -150,6 +150,54 @@ class CampaignTests(unittest.TestCase):
                 self.assertEqual(result['status'],'failed')
                 self.assertTrue('changed' in result['reason'] or 'hash mismatch' in result['reason'])
 
+    def test_abandon_interruption_consumes_budget_then_allows_freeze(self):
+        self.spec['worker_budgets']['b']=1
+        self.create();first=c.submit(self.target,self.request())
+        with patch.object(c,'run_trial',side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):c.submit(self.target,self.request('b'))
+        interrupted=next(r['attempt'] for r in c.status(self.target)['attempts'] if r['worker']=='b')
+        with self.assertRaisesRegex(ValueError,'reason'):c.abandon(self.target,interrupted,' ')
+        result=c.abandon(self.target,interrupted,'worker interrupted; operator closes reservation')
+        self.assertEqual(result['status'],'abandoned')
+        with self.assertRaisesRegex(ValueError,'budget'):c.submit(self.target,self.request('b'))
+        c.freeze(self.target,[first['attempt']]);self.assertEqual(c.status(self.target)['state'],'FROZEN')
+
+    def test_abandon_racing_completion_has_one_immutable_outcome(self):
+        self.create();first=c.submit(self.target,self.request())
+        completed=self.target/'attempts'/first['attempt']/'receipt.json';before=completed.read_bytes()
+        self.assertEqual(c.abandon(self.target,first['attempt'],'completion won')['status'],'completed')
+        self.assertEqual(completed.read_bytes(),before)
+        entered=threading.Event();resume=threading.Event();original=c.run_trial
+        def held(*args,**kwargs):
+            entered.set();self.assertTrue(resume.wait(5));return original(*args,**kwargs)
+        with patch.object(c,'run_trial',held),ThreadPoolExecutor(max_workers=1) as pool:
+            future=pool.submit(c.submit,self.target,self.request('b'))
+            self.assertTrue(entered.wait(5))
+            attempt=next(r['attempt'] for r in c.status(self.target)['attempts'] if r['worker']=='b')
+            abandoned=c.abandon(self.target,attempt,'operator stops pending worker')
+            receipt=self.target/'attempts'/attempt/'abandonment'/'receipt.json';before=receipt.read_bytes()
+            c.freeze(self.target,[first['attempt']])
+            resume.set();self.assertEqual(future.result(timeout=10),abandoned)
+            self.assertEqual(receipt.read_bytes(),before)
+        self.assertEqual(c.status(self.target)['state'],'FROZEN')
+
+    def test_abandon_preserves_partial_terminal_publication(self):
+        self.create();first=c.submit(self.target,self.request())
+        with patch.object(c,'run_trial',side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):c.submit(self.target,self.request('b'))
+        interrupted=next(r['attempt'] for r in c.status(self.target)['attempts'] if r['worker']=='b')
+        partial=self.target/'attempts'/interrupted/'receipt.json';partial.write_bytes(b'interrupted receipt bytes')
+        result=c.abandon(self.target,interrupted,'interrupted during terminal publication')
+        self.assertEqual(result['status'],'abandoned')
+        self.assertEqual(partial.read_bytes(),b'interrupted receipt bytes')
+        c.freeze(self.target,[first['attempt']])
+
+    def test_incomplete_freeze_is_explicit_and_fail_closed(self):
+        self.create();(self.target/'freeze').mkdir()
+        self.assertEqual(c.status(self.target)['state'],'FREEZE_RESERVED')
+        with self.assertRaisesRegex(ValueError,'closed'):c.submit(self.target,self.request())
+        with self.assertRaises(ValueError):c.release(self.target,{})
+
     def test_budget_boundary_matches_slot_format(self):
         self.spec.update(global_budget=999,worker_budgets={'a':999})
         manifest=self.create();self.assertEqual(manifest['global_budget'],999)

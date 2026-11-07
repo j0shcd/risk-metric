@@ -2,7 +2,8 @@
 
 CLI: create --bundle DIR --spec JSON --campaign DIR; submit --campaign DIR
 --request JSON; status --campaign DIR; freeze --campaign DIR --attempts SLOT...;
-release --campaign DIR --request JSON. Every request file is read once.
+release --campaign DIR --request JSON; abandon --campaign DIR --attempt SLOT
+--reason TEXT. Every request file is read once.
 
 Create spec: {global_budget: int, worker_budgets: {worker: int}, prior_exposure:
 {parents: [campaign IDs], statement: nonempty str, outer_history_exposed: bool}}.
@@ -19,8 +20,14 @@ producer, config, params}]}. All finalists must be present exactly once.
 New directories do not restore an unseen holdout. Explicit exposure lineage is
 required, but no local ledger proves researchers did not read public history or
 bypass this workflow. Interrupted slots consume budgets; unresolved submissions
-block freeze. A reserved outer release is consumed even after failure or a crash.
+block freeze until explicitly abandoned with a reason; abandonment never restores
+budget and late completion cannot overwrite it. A reserved outer release is consumed even after failure or a crash.
 Reproduction of an existing outer packet is not another validation release.
+Producer/config hashes attest only supplied artifacts: this wrapper does not
+execute the producer, bind its imports/weights/data closure, prove CSV derivation,
+or verify causal generation of future values. A changed outer suffix can pass
+with the same development prefix and declared artifacts. Partial administrative
+publication remains fail-closed and is reported explicitly; never reset budgets.
 """
 from __future__ import annotations
 import argparse
@@ -43,6 +50,8 @@ from .scorecard_artifacts import publish, safe_path, verify_packet, write_packet
 MAX_BYTES = 16 * 1024 * 1024
 MAX_BUNDLE_BYTES = 64 * 1024 * 1024
 MAX_DAILY_ROWS = 10000
+PROVENANCE_LIMITATION = ('Declared-artifact continuity only: producer is not executed; imports, weights and data closure, '
+                        'CSV derivation and causal future-value generation are not verified. No security seal or unseen holdout.')
 CODE_FILES = ('direct_cdf_campaign.py','indicator_trial.py','indicator_outer_replay.py',
               'market_information.py','market_dataset.py','market_scorecard.py',
               'distribution_readout.py','scorecard_artifacts.py')
@@ -88,6 +97,18 @@ def locked(target):
 def slots(target):
     return sorted((target/'attempts').iterdir())
 
+def terminal(slot):
+    packets=[path for path in (slot,slot/'abandonment') if (path/'COMPLETE').exists()]
+    if len(packets)>1: raise ValueError('conflicting terminal attempt receipts')
+    if not packets: return None
+    verify_packet(packets[0])
+    result=json.loads((packets[0]/'outcome.json').read_bytes())
+    if result['status']=='abandoned':
+        for name,expected in result['interrupted_file_hashes'].items():
+            if Path(name).name!=name or sha((slot/name).read_bytes())!=expected:
+                raise ValueError('abandoned attempt evidence changed')
+    return result
+
 def verify(target):
     verify_packet(target)
     manifest=json.loads((target/'manifest.json').read_bytes())
@@ -102,9 +123,8 @@ def verify(target):
         if not re.fullmatch(r'attempt-\d{3}--[a-zA-Z0-9_-]{1,40}',slot.name) or not slot.is_dir():
             raise ValueError('invalid ledger slot')
         safe_path(slot)
-        if (slot/'COMPLETE').exists():
-            verify_packet(slot)
-            outcome=json.loads((slot/'outcome.json').read_bytes())
+        outcome=terminal(slot)
+        if outcome is not None:
             if outcome['campaign_id']!=manifest['campaign_id'] or outcome['attempt']!=slot.name:
                 raise ValueError('foreign attempt receipt')
     if (target/'freeze'/'COMPLETE').exists():
@@ -178,14 +198,16 @@ def state(target):
                     raise ValueError('outer packet identity mismatch')
                 return 'RELEASE_COMPLETE'
         return 'RELEASE_RESERVED'
-    return 'FROZEN' if (target/'freeze').exists() else 'OPEN'
+    if (target/'freeze').exists():
+        return 'FROZEN' if (target/'freeze'/'COMPLETE').exists() else 'FREEZE_RESERVED'
+    return 'OPEN'
 
 def status(target):
     with locked(target) as target:
         manifest=verify(target)
         attempts=[]
         for slot in slots(target):
-            result=json.loads((slot/'outcome.json').read_bytes()) if (slot/'COMPLETE').exists() else {'status':'reserved_or_interrupted'}
+            result=terminal(slot) or {'status':'reserved_or_interrupted'}
             attempts.append({'attempt':slot.name,'worker':slot.name.split('--',1)[1],'status':result['status']})
         release_status='not_reserved'
         if (target/'release').exists():
@@ -215,7 +237,12 @@ def submit(target, request):
                'config.bin':read_once(request['config']),'params.json':canonical_bytes(request['params'])}
         identity={'producer_sha256':sha(files['producer.bin']),'config_sha256':sha(files['config.bin']),
                   'params_sha256':sha(files['params.json'])}
-        for name,payload in files.items(): owned(slot/name,payload);bound.append(name)
+        with locked(target):
+            verify(target)
+            completed=terminal(slot)
+            if completed is not None: return completed
+            if state(target)!='OPEN': raise ValueError('campaign closed during input capture')
+            for name,payload in files.items(): owned(slot/name,payload);bound.append(name)
         trial=run_trial(target/'bundle',slot/'candidate.csv',request['column'],request['name'],request['provenance'])
         outcome={'status':'completed','identity':identity,'candidate':trial['candidate']}
         payloads={'trial.json':canonical_bytes(trial)}
@@ -224,21 +251,44 @@ def submit(target, request):
     outcome.update({'campaign_id':manifest['campaign_id'],'attempt':slot.name})
     with locked(target):
         verify(target)
+        completed=terminal(slot)
+        if completed is not None: return completed
         if state(target)!='OPEN': raise ValueError('campaign closed during attempt')
         write_packet(slot,{**payloads,'outcome.json':canonical_bytes(outcome)},bound_existing=tuple(bound))
     return outcome
+
+def abandon(target, attempt, reason):
+    """Seal an interrupted reservation without reclaiming its budget or overwriting completion."""
+    if not isinstance(reason,str) or not reason.strip(): raise ValueError('abandonment requires a reason')
+    with locked(target) as target:
+        manifest=verify(target)
+        existing={s.name:s for s in slots(target)}
+        if attempt not in existing: raise ValueError('unknown campaign attempt')
+        slot=existing[attempt]
+        completed=terminal(slot)
+        if completed is not None: return completed
+        if state(target)!='OPEN': raise ValueError('cannot abandon after campaign closure')
+        # Preserve even an interrupted primary receipt; never overwrite its files.
+        existing_files={name:sha((slot/name).read_bytes()) for name in
+                        ('request.json','candidate.csv','producer.bin','config.bin','params.json','trial.json','outcome.json','receipt.json')
+                        if (slot/name).exists()}
+        outcome={'status':'abandoned','reason':reason.strip(),'campaign_id':manifest['campaign_id'],'attempt':attempt,
+                 'interrupted_file_hashes':existing_files}
+        (slot/'abandonment').mkdir(exist_ok=False)
+        write_packet(slot/'abandonment',{'outcome.json':canonical_bytes(outcome)})
+        return outcome
 
 def freeze(target, selected):
     with locked(target) as target:
         manifest=verify(target)
         if state(target)!='OPEN': raise ValueError('campaign already closed')
         existing={s.name:s for s in slots(target)}
-        if any(not (s/'COMPLETE').exists() for s in existing.values()): raise ValueError('unresolved reserved/interrupted attempts block freeze')
+        if any(terminal(s) is None for s in existing.values()): raise ValueError('unresolved reserved/interrupted attempts block freeze')
         if not selected or len(set(selected))!=len(selected) or any(s not in existing for s in selected):
             raise ValueError('select unique successful campaign attempts')
         finalists=[]
         for name in sorted(selected):
-            slot=existing[name];outcome=json.loads((slot/'outcome.json').read_bytes())
+            slot=existing[name];outcome=terminal(slot)
             if outcome['status']!='completed': raise ValueError('finalist must be a successful attempt')
             finalists.append({'attempt':name,'attempt_receipt_sha256':sha((slot/'receipt.json').read_bytes()),
                               'identity':outcome['identity'],'candidate':outcome['candidate'],
@@ -303,20 +353,23 @@ def release(target, request):
         outcome={'status':'completed','packet_receipt_sha256':sha((release_dir/'packet'/'receipt.json').read_bytes())}
     except Exception as error:
         outcome={'status':'failed','reason':str(error),'release_consumed':True}
-    outcome.update({'campaign_id':manifest['campaign_id'],'freeze_receipt_sha256':sha((target/'freeze'/'receipt.json').read_bytes())})
+    outcome.update({'campaign_id':manifest['campaign_id'],'freeze_receipt_sha256':sha((target/'freeze'/'receipt.json').read_bytes()),
+                    'limitations':[PROVENANCE_LIMITATION]})
     with locked(target):
         verify(target)
         write_packet(release_dir,{'outcome.json':canonical_bytes(outcome)},bound_existing=tuple(bound))
     return outcome
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('command',choices=['create','submit','status','freeze','release'])
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('command',choices=['create','submit','status','freeze','release','abandon'])
     p.add_argument('--campaign',type=Path,required=True);p.add_argument('--bundle',type=Path);p.add_argument('--spec',type=Path)
-    p.add_argument('--request',type=Path);p.add_argument('--attempts',nargs='+');a=p.parse_args()
+    p.add_argument('--request',type=Path);p.add_argument('--attempts',nargs='+')
+    p.add_argument('--attempt');p.add_argument('--reason');a=p.parse_args()
     if a.command=='create': result=create_campaign(a.bundle,a.campaign,json.loads(read_once(a.spec)))
     elif a.command=='submit': result=submit(a.campaign,json.loads(read_once(a.request)))
     elif a.command=='freeze': result=freeze(a.campaign,a.attempts)
     elif a.command=='release': result=release(a.campaign,json.loads(read_once(a.request)))
+    elif a.command=='abandon': result=abandon(a.campaign,a.attempt,a.reason)
     else: result=status(a.campaign)
     print(json.dumps(result))
 
