@@ -1,0 +1,113 @@
+{
+  "atlas_id": "7aa8b4a800a573227eba12738b2ef7953096fe448d83fec783e654329328dbfb",
+  "atlas_sha256": "22b67b6dc9ea4aaa661ff220a6dff372b7d2ef54de64044f6d6ab961e07834db",
+  "code_sha256": {
+    "benchmark_frontier.py": "cdd24b9042fdf3b0bf5f129654378b9ccce0fc87fd43321aa3b1f0f843bb6d1a",
+    "distribution_readout.py": "c356b0e1769f9eb5ddee7507f520b5cc834cacd19f8de2f984325f0a6ebd7c19",
+    "generative_forecast_scorecard.py": "71bf3fc92c0679697d3bba3b7abd2f72fa93105eea05b3cd83de388a1374c23f",
+    "generative_price_baseline.py": "801dfc49b518adc5aadc29935e0621655bd971154ecd5340d9b268f689344680",
+    "market_dataset.py": "679222de6b2a98337790d5b5686af03d7f630b118e2165d93512f3f6898cace4",
+    "market_information.py": "018077dc749fdd7dda11ddee78898c48a8788dc6c9c0f7c304d7aa65443c45ce",
+    "market_scorecard.py": "78719677d169579f92b9c3c1e6b5b04cb2979905e2c84680fe4b814b448d791a",
+    "readout_study.py": "27013d5c05805ecc1f5d8c54b1159ea57a7f83b9cb39f6cbc9bea01f7c0ac05a",
+    "scorecard_artifacts.py": "ac01f75b625e0c728316eb61eebf3d0c4f18b4af63a546eb81a1f0316a356ab1"
+  },
+  "packet_receipt_sha256": "88033e890488b9e875701b1b8471112b2ce2eed8c987ea507d813343f352adeb",
+  "parents": {
+    "generative-baseline-development-2026-11-07-registered": "bae8ebd6721969534be60d4b5bf6d8cc2a2723e810251215d77e0d9d73007274",
+    "generative-reference-development-2026-11-07": "03cacd533153919da7ddbbd6b6349445184f8ef5d01dfc4249b2e412f8ba0014"
+  },
+  "portable_zip": "benchmark-frontier-development-2026-11-07.zip",
+  "protocol": {
+    "horizons": [
+      12,
+      24,
+      48
+    ],
+    "id": "benchmark-frontier-v1",
+    "mc_guard": "both gains positive; replica difference <20% of smaller gain, separately per loss",
+    "promotion": "none; completed means valid measurement only"
+  },
+  "reference_inventory": [
+    [
+      "direct_cdf:dca_risk",
+      null
+    ],
+    [
+      "direct_cdf:dca_top_reversal_component",
+      null
+    ],
+    [
+      "direct_cdf:dca_bottom_reversal_component",
+      null
+    ],
+    [
+      "direct_cdf:dca_cycle_extension_component",
+      null
+    ],
+    [
+      "direct_cdf:dca_cycle_regime_component",
+      null
+    ],
+    [
+      "direct_cdf:price_trend_12m",
+      null
+    ],
+    [
+      "direct_cdf:price_volatility_90d",
+      null
+    ],
+    [
+      "direct_cdf:price_drawdown_12m",
+      null
+    ],
+    [
+      "direct_cdf:price_ath_drawdown",
+      null
+    ],
+    [
+      "direct_cdf:price_log_sma_200d",
+      null
+    ],
+    [
+      "direct_cdf:time_years_since_2012",
+      null
+    ],
+    [
+      "direct_cdf:calendar_cycle_sin_4y",
+      null
+    ],
+    [
+      "direct_cdf:calendar_cycle_cos_4y",
+      null
+    ],
+    [
+      "context",
+      null
+    ],
+    [
+      "unconditional",
+      null
+    ],
+    [
+      "generative",
+      0
+    ],
+    [
+      "generative",
+      1
+    ]
+  ],
+  "runtime": {
+    "machine": "arm64",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "platform": "macOS-26.5-arm64-arm-64bit",
+    "python": "3.12.16"
+  },
+  "schema": "benchmark-frontier-artifact-v1",
+  "scope": "Existing frozen development references only; no new market fits or candidate trials; no automatic promotion or market significance.",
+  "source_sha256": "ef6f3f337ca828d56c6a45c829b0244985f5a931add3307acd822ae26dedbe28",
+  "zip_bytes": 1092139,
+  "zip_sha256": "8bfad5b81af29fbc0136a4c88cc6b69a4e9a625f4aee1436b9c9ba3915c2a433"
+}

@@ -1452,10 +1452,51 @@ matching requires a stable serialization, not an independently rounded rewrite.
 The locked trial harness also now parses the same captured source/candidate bytes
 that it hashes; path-replacement regressions and exact original-byte replay pass.
 
-Next bounded work: make the stronger generative benchmarks part of future
-candidate comparison guards, then implement one external-market falsification
-adapter. Further indicator search must inherit all exposed results and keep the
-same horizon/target/metric distinctions; no primary model has qualified.
+**Implemented v2 stronger-reference guard.** `research/benchmark_frontier.py`
+constructs a hash-bound atlas from the existing frozen reference and generative
+packets. Its [metadata](artifacts/benchmark-frontier-development-2026-11-07.json)
+and [portable atlas](artifacts/benchmark-frontier-development-2026-11-07.zip) pin
+all 13 fixed direct-CDF references, context/unconditional distributions and both
+generative replicas. No new market fitting or candidate trial built this atlas.
+The file SHA-256 is
+`22b67b6dc9ea4aaa661ff220a6dff372b7d2ef54de64044f6d6ab961e07834db`.
+
+Every new `shared-direct-cdf-campaign-v2` requires `benchmark_atlas` in its create
+specification. Shared validation rejects missing/weakened reference inventories,
+wrong source/code/runtime/protocol, and resealed substitutes for the registered
+Student-t5 family, 8,192 iid paths and seeds 20270529/20270530. Per-record replica,
+seed, sample shape and score interpretation must also agree. Synthetic tests patch
+private expected identities explicitly; no public synthetic override exists.
+The v1 historical receipts remain unchanged and are not accepted as v2 campaigns.
+
+Candidate issued-CDF losses are recomputed from atoms/weights without ensemble
+correction. Generative fair losses retain their distinct estimand. Comparisons
+use identical origin/outcome support; extra generative-only dates are excluded.
+Failures and unavailable cells remain visible, with incomplete means withheld.
+CRPS, event Brier loss, interval coverage/width and ordering are separate. The
+numerical Monte Carlo guard requires both replica gains positive and their
+absolute difference below 20% of the smaller gain, separately per loss; this is
+not significance or market error control. Completion/freeze means valid
+measurement, **not promotion**. Supplied artifact hashes remain cooperative
+continuity checks, not proof that producers executed or a security seal.
+
+Thirty-five focused tests, failing bug mutations and an independent 765-cell /
+90-guard arithmetic review cover the atlas and campaign handoff. The independent
+review found and closed a weaker-family substitution bug at the shared validator.
+
+A [new divergent development campaign](artifacts/divergent-campaign-v2-registration-2026-11-07.json)
+was created with three total reserved slots, one per Astra worker; failures and
+interruptions count. Campaign ID is
+`4ffb8ade2609c2f80e8faad8d84f35cd8cb403c3efeb59c8dc318e7ee70ecbf4`,
+local path `output/divergent-campaign-v2-2026-11-07/`. All earlier development,
+outer and generative results are declared exposed. Single specifications must be
+reviewed and committed before submission; no new candidate score has been read
+at this registration point. Further search inherits those exposures and the full
+reference frontier. No primary model has qualified.
+
+Next bounded work: finish review of the registered monthly portability runner,
+then execute its one unchanged-candidate falsification; independently complete
+and measure the three new development arms under the v2 budget.
 The expanded user goal
 is unmet: no candidate has demonstrated broad incremental market information or
 professional-use reliability. Synthetic qualification cannot supply missing
@@ -1671,4 +1712,5 @@ Do not mark the goal complete while useful-signal sensitivity or the expanded
 market-improvement objective remains unmet. Panel qualification, honest market
 comparison and prospective validation are separate requirements. All work remains
 local. The next bounded implementation is a frozen stronger-reference comparison
-guard for future campaigns, followed by one external-market falsification adapter.
+guard is now implemented; next are the registered monthly falsification run and
+three-slot divergent development campaign. Neither is a new unseen BTC holdout.
