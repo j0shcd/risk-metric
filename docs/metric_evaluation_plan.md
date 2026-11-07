@@ -1994,12 +1994,13 @@ not itself derive a true market outcome: a future reviewed resolver must calcula
 the label from owned closed-price evidence before supplying it to this API.
 
 The November 30 formal monthly cohort remains **unissued** and separate. Its
-registration was refreshed before that future decision solely to bind the
+registration was first refreshed before that future decision to bind the
 corrected validator: previous ID
 `82f968f419f9b63683ecc02fae0a64f409c609ee3266be54cd1470e7919d6000`
-is retained in Git at `e670866`; current ID is
+is retained in Git at `e670866`; the validator revision was
 `8a5353903819c5702d29681cd90091138532b88cf0d75c052cce36171d2b2908`.
-Only `shadow_archive_v3.py` changed among its eight bound source files. Baseline
+Only `shadow_archive_v3.py` changed among the eight bound source files at that
+step. The subsequent transport-only revision below is now current. Baseline
 parameters, numerical forecast producers, calendar, cohort dates and configuration
 are unchanged. The already-issued operational registration was not rewritten.
 The explicit runner rejects a missing live flag, a different current UTC day, changed
@@ -2258,11 +2259,35 @@ macOS aliases are resolved before the archive's strict ownership checks. A new
 regression supplies a synthetic native temp root through a symlink and requires
 the canonical parent. All 16 focused tests pass locally and under the exact CI
 environment in independent review. Reintroducing the hardcoded path fails the
-regression. The underlying primitive was checked across the test suite; other
-`/private/tmp` strings are inert synthetic config paths, not directory creation.
-No benchmark, candidate, producer, configuration, recorded result or acceptance
-policy changed. A follow-up publication and hosted verification are required;
-the first push's backend failure is not reported as a passing CI run.
+regression. The initial sweep was limited to tests and missed the collector's own hardcoded
+worker directory. This first repair changed no benchmark, producer or result.
+Its approved publication reached main at `2f46056`; hosted
+[CI 42370953200](https://github.com/j0shcd/risk-metric/actions/runs/42370953200)
+ran 460 tests and failed one remaining runtime use of the same path, while security
+and web checks again passed. The first repair was incomplete; neither hosted
+backend run is reported as passing.
+
+The complete correction changes only the collector worker's temporary root to
+`Path(tempfile.gettempdir()).resolve()`. Before fixing it, a new mechanical oracle
+failed both a scan of all versioned Python tempfile creators and a runtime
+public timeout-capture test that makes `/private/tmp` unavailable. After correction,
+all 46 focused archive/collector/oracle tests pass under the CI settings; an
+independent 19-test portability/adapter run also passes. The source sentinel covers
+keyword and positional literal roots (including Path-wrapped roots), with positive
+witnesses; it is not a universal alias/dataflow proof. Current source inventory
+has no alias bypass. Other surviving `/private/tmp` strings are inert synthetic
+config paths, not actual directory creation.
+
+The transport source change requires a new **unissued** November 30 registration:
+`39ec7003ecfb24f4adae5a8f4634990766cac27f80cd0cb6aaa063a6a413dbe9`.
+Only `coinmetrics_shadow.py` changes among its bound source files, and only the
+loaded `fetch` function changes semantic identity. Forecast calculations, all
+parameters, dates and input/label conventions are unchanged. The already-issued
+operational registration, all six forecasts and the entire saved archive state
+still verify unchanged. Its original source vintage remains preserved. No new
+live capture or research fitness trial was run for these portability fixes.
+A new approved publication and hosted verification complete the repair workflow;
+research results and the frozen benchmark remain unchanged.
 
 ### Active-goal completion audit
 

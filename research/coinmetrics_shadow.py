@@ -214,7 +214,7 @@ def fetch(request_metadata):
     if not isinstance(request_metadata,dict) or set(request_metadata)!={'query_day'}:raise CaptureError('invalid request metadata')
     _day(request_metadata['query_day'])
     env={k:v for k,v in os.environ.items() if k in ('PATH','LANG','LC_ALL','SYSTEMROOT')}
-    with tempfile.TemporaryDirectory(prefix='coinmetrics-owned-',dir='/private/tmp') as temporary:
+    with tempfile.TemporaryDirectory(prefix='coinmetrics-owned-',dir=Path(tempfile.gettempdir()).resolve()) as temporary:
         checkpoint=Path(temporary)/'partial.json'
         try:
             result=subprocess.run([sys.executable,'-m','research.coinmetrics_shadow','--collector-worker',str(checkpoint)],
