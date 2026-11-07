@@ -1,0 +1,67 @@
+{
+  "availability": "Month-end is an observation anchor, not a verified publication or execution timestamp.",
+  "classification": "broad-US research-market total return; not S&P500 or a tradable index",
+  "fixture": {
+    "bytes": 140609,
+    "columns": [
+      "market_excess_return",
+      "smb_return",
+      "hml_return",
+      "risk_free_return",
+      "market_total_return",
+      "market_total_return_index"
+    ],
+    "cutoff": "2022-12-31",
+    "excluded_after_cutoff": 45,
+    "first_month": "1926-07-31",
+    "index_base": "1 immediately before first observed month; scale-invariant return reconstruction",
+    "last_month": "2022-12-31",
+    "market_total_return": "(provider Mkt-RF percent + provider RF percent)/100",
+    "numeric_units": "decimal monthly simple returns; compounded index dimensionless",
+    "path": "data/external_private/french_monthly_2026-11-07/monthly_through_2022.csv",
+    "rows": 1158,
+    "sha256": "54b4aeb41fc12fb4d77034d946bb13be6036742e0a61fa63551d6ceb7d2b5374"
+  },
+  "licence": "Redistribution not cleared; raw and derived numeric provider data remain ignored/private.",
+  "methodology": "Current CIZ-format provider history; revised historical returns, not point-in-time vintages.",
+  "producer_sha256": "65531036277390d65bbc7649435617bdc5a28abfcdbc04fd2a323eebbb0028bc",
+  "raw_coverage": {
+    "annual_rows_excluded": 99,
+    "first_month": "1926-07-31",
+    "last_month": "2026-09-30",
+    "monthly_rows": 1203,
+    "provider_database_vintage": "202609"
+  },
+  "rebuild_verified_after_boundary_hardening": true,
+  "retrieval": {
+    "bytes": 13078,
+    "headers": {
+      "accept-ranges": "bytes",
+      "connection": "close",
+      "content-length": "13078",
+      "content-type": "application/x-zip-compressed",
+      "date": "Sat, 07 Nov 2026 01:24:01 GMT",
+      "etag": "\"207a85762666dd1:0\"",
+      "last-modified": "Tue, 27 Oct 2026 15:18:47 GMT",
+      "server": "Microsoft-IIS/10.0"
+    },
+    "redirects_permitted": false,
+    "requested_url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip",
+    "resolved_url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip",
+    "retrieved_at_utc": "2026-11-07T01:24:01.784286+00:00",
+    "sha256": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+    "started_at_utc": "2026-11-07T01:24:00.634946+00:00",
+    "status": 200,
+    "tls_certificate_verification": true
+  },
+  "schema": "private-french-monthly-research-market-v1",
+  "scope": "Monthly-observation falsification fixture only; no daily drawdown, model fit or scoring performed.",
+  "validation": "Strict percent conversion; finite values; no sentinels; market return>-1; unique consecutive months.",
+  "zip_member": {
+    "bytes": 52533,
+    "compressed_bytes": 12886,
+    "name": "F-F_Research_Data_Factors.csv",
+    "sha256": "a3894d74d553cab812eabbe706bdbf443c97eb20b24b05e3e5f3ce47e46b90bb",
+    "zip_crc32": "21925f06"
+  }
+}
