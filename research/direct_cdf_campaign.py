@@ -5,7 +5,7 @@ CLI: create --bundle DIR --spec JSON --campaign DIR; submit --campaign DIR
 release --campaign DIR --request JSON; abandon --campaign DIR --attempt SLOT
 --reason TEXT. Every request file is read once.
 
-Create spec: {global_budget: int, worker_budgets: {worker: int}, prior_exposure:
+Create spec: {benchmark_atlas: path, global_budget: int, worker_budgets: {worker: int}, prior_exposure:
 {parents: [campaign IDs], statement: nonempty str, outer_history_exposed: bool}}.
 Submit request: {worker, candidate_csv, column, name, provenance, producer, config,
 params: object}. Paths name files captured into the reserved slot before parsing.
@@ -42,6 +42,7 @@ import re
 import numpy as np
 import pandas as pd
 from .indicator_trial import CUTOFF, run_trial
+from .benchmark_frontier import read_atlas, compare_trial, readable as frontier_readable
 from .indicator_outer_replay import candidate_from_csv, run_replay, readable
 from .market_dataset import canonical_bytes, digest, load_snapshot
 from .market_information import baseline_candidates, PROTOCOL as READOUT_PROTOCOL
@@ -54,8 +55,9 @@ PROVENANCE_LIMITATION = ('Declared-artifact continuity only: producer is not exe
                         'CSV derivation and causal future-value generation are not verified. No security seal or unseen holdout.')
 CODE_FILES = ('direct_cdf_campaign.py','indicator_trial.py','indicator_outer_replay.py',
               'market_information.py','market_dataset.py','market_scorecard.py',
-              'distribution_readout.py','scorecard_artifacts.py')
-PROTOCOL = {'id':'shared-direct-cdf-campaign-v1','readout':READOUT_PROTOCOL,
+              'distribution_readout.py','scorecard_artifacts.py','benchmark_frontier.py',
+              'generative_forecast_scorecard.py','generative_price_baseline.py','readout_study.py')
+PROTOCOL = {'id':'shared-direct-cdf-campaign-v2','readout':READOUT_PROTOCOL,
             'development_cutoff':CUTOFF,'horizons':[12,24,48],'mature_pool':24,
             'budget':'all reserved slots count; malformed, failed and interrupted included',
             'exposure':'historical reconstruction, never an unseen holdout'}
@@ -116,6 +118,9 @@ def verify(target):
         raise ValueError('campaign protocol/code/runtime identity changed')
     if manifest['campaign_id']!=digest({k:v for k,v in manifest.items() if k!='campaign_id'}):
         raise ValueError('campaign identity mismatch')
+    atlas=read_atlas(target/'benchmark_atlas.json',manifest['source_sha256'])
+    if atlas['atlas_id']!=manifest['benchmark_atlas_id'] or sha((target/'benchmark_atlas.json').read_bytes())!=manifest['benchmark_atlas_sha256']:
+        raise ValueError('campaign benchmark atlas identity mismatch')
     verify_packet(target/'bundle')
     if sha((target/'bundle'/'receipt.json').read_bytes())!=manifest['bundle_receipt_sha256']:
         raise ValueError('campaign bundle identity mismatch')
@@ -125,6 +130,8 @@ def verify(target):
         safe_path(slot)
         outcome=terminal(slot)
         if outcome is not None:
+            if outcome['status']=='completed' and outcome.get('benchmark_atlas_id')!=manifest['benchmark_atlas_id']:
+                raise ValueError('attempt lacks registered frontier comparison')
             if outcome['campaign_id']!=manifest['campaign_id'] or outcome['attempt']!=slot.name:
                 raise ValueError('foreign attempt receipt')
     if (target/'freeze'/'COMPLETE').exists():
@@ -155,6 +162,8 @@ def create_campaign(bundle, target, spec):
             or not isinstance(exposure.get('statement'),str) or not exposure['statement'].strip()
             or type(exposure.get('outer_history_exposed')) is not bool):
         raise ValueError('explicit prior-exposure lineage required; a directory is not a fresh holdout')
+    if not spec.get('benchmark_atlas'): raise ValueError('benchmark_atlas is required for campaign v2')
+    atlas_bytes=read_once(spec['benchmark_atlas'])
     target=safe_path(Path(target));target.mkdir(exist_ok=False)
     (target/'.lock').touch();(target/'attempts').mkdir();(target/'bundle').mkdir()
     manifest_bytes=read_once(Path(bundle)/'manifest.json'); inputs=json.loads(manifest_bytes)
@@ -177,14 +186,17 @@ def create_campaign(bundle, target, spec):
     write_packet(target/'bundle',payloads)
     for file in (target/'bundle').iterdir(): file.chmod(0o400)
     snapshot=bounded_snapshot(target/'bundle'/'development_scores.csv')
+    owned(target/'benchmark_atlas.json',atlas_bytes)
+    atlas=read_atlas(target/'benchmark_atlas.json',snapshot['source_sha256'])
     references=baseline_candidates(snapshot)
     manifest={'protocol':PROTOCOL,'code_hashes':code_hashes(),'runtime':runtime(),
               'global_budget':spec['global_budget'],'worker_budgets':workers,'prior_exposure':exposure,
               'bundle_receipt_sha256':sha((target/'bundle'/'receipt.json').read_bytes()),
               'source_sha256':snapshot['source_sha256'],'references_id':digest(references),
-              'support':[r['date'] for r in snapshot['monthly']]}
+              'support':[r['date'] for r in snapshot['monthly']],
+              'benchmark_atlas_id':atlas['atlas_id'],'benchmark_atlas_sha256':sha(atlas_bytes)}
     manifest['campaign_id']=digest(manifest)
-    write_packet(target,{'manifest.json':canonical_bytes(manifest),'references.json':canonical_bytes(references)})
+    write_packet(target,{'manifest.json':canonical_bytes(manifest),'references.json':canonical_bytes(references)},bound_existing=('benchmark_atlas.json',))
     return manifest
 
 def state(target):
@@ -244,8 +256,11 @@ def submit(target, request):
             if state(target)!='OPEN': raise ValueError('campaign closed during input capture')
             for name,payload in files.items(): owned(slot/name,payload);bound.append(name)
         trial=run_trial(target/'bundle',slot/'candidate.csv',request['column'],request['name'],request['provenance'])
-        outcome={'status':'completed','identity':identity,'candidate':trial['candidate']}
-        payloads={'trial.json':canonical_bytes(trial)}
+        comparison=compare_trial(read_atlas(target/'benchmark_atlas.json',manifest['source_sha256']),trial)
+        outcome={'status':'completed','interpretation':'valid measurement, never automatic promotion',
+                 'identity':identity,'candidate':trial['candidate'],'benchmark_atlas_id':comparison['atlas_id']}
+        payloads={'trial.json':canonical_bytes(trial),'frontier.json':canonical_bytes(comparison),
+                  'frontier.md':frontier_readable(comparison)}
     except Exception as error:
         outcome={'status':'failed','reason':str(error)};payloads={}
     outcome.update({'campaign_id':manifest['campaign_id'],'attempt':slot.name})
@@ -270,7 +285,7 @@ def abandon(target, attempt, reason):
         if state(target)!='OPEN': raise ValueError('cannot abandon after campaign closure')
         # Preserve even an interrupted primary receipt; never overwrite its files.
         existing_files={name:sha((slot/name).read_bytes()) for name in
-                        ('request.json','candidate.csv','producer.bin','config.bin','params.json','trial.json','outcome.json','receipt.json')
+                        ('request.json','candidate.csv','producer.bin','config.bin','params.json','trial.json','frontier.json','frontier.md','outcome.json','receipt.json')
                         if (slot/name).exists()}
         outcome={'status':'abandoned','reason':reason.strip(),'campaign_id':manifest['campaign_id'],'attempt':attempt,
                  'interrupted_file_hashes':existing_files}
