@@ -10,7 +10,7 @@ import argparse
 import json
 from pathlib import Path
 import numpy as np
-from .market_dataset import TARGETS, canonical_bytes, digest
+from .market_dataset import TARGETS, COMPONENTS, canonical_bytes, digest
 from .market_information import PROTOCOL as DIRECT_PROTOCOL
 from .generative_forecast_scorecard import (PROTOCOL as GENERATIVE_PROTOCOL,
     code_identity as scorecard_code, runtime_identity, distribution_summary, sha)
@@ -21,6 +21,9 @@ PROTOCOL = {'id':'benchmark-frontier-v1','horizons':[12,24,48],
             'promotion':'none; completed means valid measurement only'}
 IDENTITY = ('source_sha256','dataset_id','snapshot_id','code_sha256','protocol','as_of',
             'development_cutoff','outer_start','minimum_training')
+DIRECT_NAMES = (*COMPONENTS, 'price_trend_12m', 'price_volatility_90d', 'price_drawdown_12m',
+                'price_ath_drawdown', 'price_log_sma_200d', 'time_years_since_2012',
+                'calendar_cycle_sin_4y', 'calendar_cycle_cos_4y')
 METRICS = ('crps','brier','coverage_50','coverage_80','width_50','width_80')
 MAX_ATLAS_BYTES = 16*1024*1024
 
@@ -108,7 +111,8 @@ def validate_atlas(atlas, source_sha256):
     if len(set(names))!=len(names) or ('generative',0) not in names or ('generative',1) not in names or ('unconditional',None) not in names or ('context',None) not in names:
         raise ValueError('atlas reference family incomplete')
     direct=[m for m in models if m['name'].startswith('direct_cdf:')]
-    if not direct: raise ValueError('atlas lacks named direct references')
+    if {m['name'] for m in direct}!={'direct_cdf:'+name for name in DIRECT_NAMES} or len(models)!=len(DIRECT_NAMES)+4:
+        raise ValueError('atlas requires every frozen direct reference and both generative replicas')
     base=mapping(direct[0]['records'])
     for model in models:
         records=mapping(model['records'])

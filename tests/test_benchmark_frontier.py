@@ -9,7 +9,11 @@ from research import benchmark_frontier as f
 from research.market_dataset import digest, canonical_bytes
 from research.scorecard_artifacts import write_packet
 from research.generative_forecast_scorecard import evaluate, MODEL_FILE
-from tests.test_generative_forecast_scorecard import fixture,references,registration,ToyModel
+from tests.test_generative_forecast_scorecard import fixture,registration,ToyModel
+from research.market_information import baseline_candidates, score_candidate
+
+def references(snapshot):
+    return [score_candidate(snapshot,c) for c in baseline_candidates(snapshot)]
 
 
 def seal(atlas):
@@ -22,7 +26,7 @@ def minimal_atlas(source):
     return seal({'protocol':f.PROTOCOL,'identity':{'source_sha256':source},'code_sha256':f.code_identity(),
                  'runtime':f.runtime_identity(),'models':[
                      {'name':name,'replica':replica,'kind':kind,'records':[]}
-                     for name,replica,kind in [('direct_cdf:fixture',None,'issued_cdf'),('context',None,'issued_cdf'),
+                     for name,replica,kind in [*[("direct_cdf:"+name,None,"issued_cdf") for name in f.DIRECT_NAMES],('context',None,'issued_cdf'),
                                               ('unconditional',None,'issued_cdf'),('generative',0,'iid_predictive_law_draws'),
                                               ('generative',1,'iid_predictive_law_draws')]]})
 
@@ -68,6 +72,8 @@ class FrontierTests(unittest.TestCase):
             with self.assertRaises(ValueError):f.compare_trial(self.atlas,bad)
         bad=deepcopy(self.atlas);bad['models'].pop()
         with self.assertRaises(ValueError):f.validate_atlas(bad,self.atlas['identity']['source_sha256'])
+        bad=deepcopy(self.atlas);bad['models'].pop(0);bad['reference_inventory']=[(m['name'],m['replica']) for m in bad['models']];seal(bad)
+        with self.assertRaisesRegex(ValueError,'every frozen'):f.validate_atlas(bad,self.atlas['identity']['source_sha256'])
         with patch.object(f,'code_identity',return_value={'changed':'code'}):
             with self.assertRaisesRegex(ValueError,'code'):f.compare_trial(self.atlas,self.trial)
 
@@ -97,6 +103,31 @@ class FrontierTests(unittest.TestCase):
         report=f.compare_trial(seal(atlas),self.trial)
         self.assertTrue(any(g['numerically_stable_gain'] for g in report['mc_guards'] if g['metric']=='crps'))
         self.assertFalse(any(g['numerically_stable_gain'] for g in report['mc_guards'] if g['metric']=='brier'))
+
+    def test_synthetic_campaign_end_to_end_without_comparison_mocks(self):
+        from research import direct_cdf_campaign as campaign
+        from research.market_dataset import load_snapshot
+        from tests.test_market_scorecard import write_source
+        import pandas as pd
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary).resolve();bundle=root/'bundle';bundle.mkdir()
+            source=bundle/'development_scores.csv';write_source(source,fixture('2022-12-31'))
+            snapshot=load_snapshot(source);refs=references(snapshot);raw=canonical_bytes({'references':refs})
+            (bundle/'manifest.json').write_bytes(canonical_bytes({'cutoff':'2022-12-31','sources':{source.name:{'development_sha256':f.sha(source.read_bytes())}}}))
+            reg=registration();reg.update(reference_replay_sha256=f.sha(raw),source_sha256=snapshot['source_sha256'],model_source_sha256=f.sha(MODEL_FILE.read_bytes()))
+            gen=evaluate(snapshot,refs,ToyModel(),reg)
+            direct=root/'direct';direct.mkdir();write_packet(direct,{'replay.json':raw})
+            generated=root/'generated';generated.mkdir();write_packet(generated,{'scorecard.json':canonical_bytes(gen),'registration.json':canonical_bytes(reg)})
+            atlas=f.build_atlas(direct,generated);atlas_path=root/'atlas.json';atlas_path.write_bytes(canonical_bytes(atlas))
+            target=root/'campaign';campaign.create_campaign(bundle,target,{'benchmark_atlas':str(atlas_path),'global_budget':1,'worker_budgets':{'test':1},'prior_exposure':{'parents':[],'statement':'synthetic end-to-end only','outer_history_exposed':False}})
+            candidate=root/'candidate.csv';pd.DataFrame({'Date':[r['date'] for r in snapshot['monthly']],'value':[r['dca_risk'] for r in snapshot['monthly']]}).to_csv(candidate,index=False)
+            producer=root/'producer';producer.write_text('synthetic');config=root/'config';config.write_text('{}')
+            result=campaign.submit(target,{'worker':'test','candidate_csv':str(candidate),'column':'value','name':'toy','provenance':'synthetic','producer':str(producer),'config':str(config),'params':{}})
+            self.assertEqual(result['status'],'completed',result)
+            comparison=json.loads((target/'attempts'/result['attempt']/'frontier.json').read_bytes())
+            self.assertEqual(comparison['atlas_id'],atlas['atlas_id'])
+            self.assertTrue(all(c['reference_minus_candidate']['crps']==0 for c in comparison['cells'] if c['reference']=='direct_cdf:dca_risk' and c['scored_n']))
+            campaign.freeze(target,[result['attempt']]);self.assertEqual(campaign.status(target)['state'],'FROZEN')
 
     def test_failures_and_pending_not_dropped(self):
         atlas=deepcopy(self.atlas);r=next(r for r in atlas['models'][-1]['records'] if r['status']=='scored' and f.key(r) in f.mapping(atlas['models'][0]['records']))
