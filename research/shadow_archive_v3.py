@@ -14,7 +14,6 @@ from datetime import timedelta
 import fcntl
 import inspect
 import json
-import marshal
 import math
 from pathlib import Path
 import platform
@@ -43,6 +42,22 @@ def keys(value,names):
     if not isinstance(value,dict) or set(value)!=set(names):raise ValueError('unexpected/missing fields')
 def finite(value):
     if type(value) not in (int,float) or not math.isfinite(value):raise ValueError('finite numeric value required')
+def code_hash(code):
+    """Stable semantic bytecode hash; marshal's intern-reference encoding can drift."""
+    def constant(value):
+        if isinstance(value,types.CodeType):return {'code':code_hash(value)}
+        if isinstance(value,bytes):return {'bytes':value.hex()}
+        if isinstance(value,tuple):return {'tuple':[constant(v) for v in value]}
+        if isinstance(value,frozenset):return {'frozenset':sorted([constant(v) for v in value],key=repr)}
+        if value is Ellipsis:return {'ellipsis':True}
+        if isinstance(value,complex):return {'complex':[value.real,value.imag]}
+        return value
+    return digest({'bytecode':code.co_code.hex(),'constants':[constant(v) for v in code.co_consts],
+                   'names':code.co_names,'variables':code.co_varnames,'free':code.co_freevars,'cells':code.co_cellvars,
+                   'argcount':code.co_argcount,'posonly':code.co_posonlyargcount,'kwonly':code.co_kwonlyargcount,
+                   'flags':code.co_flags,'exceptiontable':code.co_exceptiontable.hex()})
+
+
 def source_identity(producer,paths):
     if not inspect.isfunction(producer) or producer.__closure__ or '<locals>' in producer.__qualname__:raise ValueError('top-level pure Python producer required')
     paths=sorted({str(cap.safe(p).resolve()) for p in paths})
@@ -56,9 +71,9 @@ def source_identity(producer,paths):
         if not location or str(Path(location).resolve()) not in paths:continue
         for name,value in vars(module).copy().items():
             if inspect.isfunction(value) and value.__module__==module.__name__:
-                loaded[module.__name__+'.'+name]=cap.sha(marshal.dumps(value.__code__))
+                loaded[module.__name__+'.'+name]=code_hash(value.__code__)
     return {'entrypoint':producer.__module__+':'+producer.__qualname__,'code':{p:cap.sha(cap.read(p,cap.MAX_RESPONSE_BYTES)) for p in paths},
-            'loaded_functions':loaded,'callable_code':cap.sha(marshal.dumps(producer.__code__)),'runtime':runtime()}
+            'loaded_functions':loaded,'callable_code':code_hash(producer.__code__),'runtime':runtime()}
 
 
 def register(cohort,producer,code_paths,config):

@@ -189,6 +189,15 @@ class ContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'publication'):a.issue(archive,[capture],toy_producer)
         with self.assertRaisesRegex(ValueError,'publication'):a.verify(archive)
 
+    def test_repeated_days_preserve_loaded_code_identity(self):
+        days=['2026-11-07','2026-11-08']
+        archive=self.archive(days=days)
+        for index,day in enumerate(days):
+            Clock.value=datetime.fromisoformat(day+'T12:00:00+00:00')
+            capture=self.capture('repeat-'+day,close=day+'T00:00:00Z',value=index)
+            a.issue(archive,[capture],toy_producer)
+        self.assertEqual(a.verify(archive)['observation_count'],2)
+
     def test_write_sink_inventory(self):
         expected={c:{'frozen_write','capture_response'},a:{'initialize','_own_capture','_append','issue'}}
         for module,sinks in expected.items():
