@@ -1,6 +1,6 @@
 # Direct dependencies and security floors. Compile the hashed requirements.txt
 # for Python 3.11; keep pandas 2 until a separate model-compatibility migration.
-numpy>=1.24,<3
+numpy>=2.5.4,<3
 pandas>=2.0,<3
 requests>=2.34.2,<3
 urllib3>=2.8.0,<3
