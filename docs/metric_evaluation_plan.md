@@ -2242,6 +2242,28 @@ README's general benchmark entry point remains accurate and links here; no new
 user-facing claim or documentation owner was needed. The skill-harvest and loaded-
 skill self-improvement review found no additional global skill change necessary.
 
+### Hosted publication check and portable test correction
+
+The authorized 155-commit publication reached main at `cbb00db`. Hosted
+[CI 42369901823](https://github.com/j0shcd/risk-metric/actions/runs/42369901823)
+passed dependency security and the web test/build job. The backend job ran all 459
+tests and failed only two archive fixture setups: both hardcoded macOS's
+`/private/tmp`, which is absent on the Linux runner. These were test errors, not
+forecast-score or model-acceptance failures. The legacy diagnostic was skipped
+following the unit-test failure.
+
+The test-only correction creates those temporary roots beneath
+`Path(tempfile.gettempdir()).resolve()`: the platform chooses the location and
+macOS aliases are resolved before the archive's strict ownership checks. A new
+regression supplies a synthetic native temp root through a symlink and requires
+the canonical parent. All 16 focused tests pass locally and under the exact CI
+environment in independent review. Reintroducing the hardcoded path fails the
+regression. The underlying primitive was checked across the test suite; other
+`/private/tmp` strings are inert synthetic config paths, not directory creation.
+No benchmark, candidate, producer, configuration, recorded result or acceptance
+policy changed. A follow-up publication and hosted verification are required;
+the first push's backend failure is not reported as a passing CI run.
+
 ### Active-goal completion audit
 
 | Requirement | Current authoritative evidence | Status |

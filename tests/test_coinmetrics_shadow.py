@@ -16,6 +16,12 @@ from research.shadow_capture import capture_response, verify_capture, CaptureFai
 from research.distribution_readout import weighted_crps
 
 
+def archive_temporary_directory():
+    # Native temp roots differ by platform; resolve macOS aliases before the
+    # archive's deliberate no-symlink ownership boundary sees the path.
+    return tempfile.TemporaryDirectory(dir=Path(tempfile.gettempdir()).resolve())
+
+
 def url(day,token=None):
     params=c._parameters(day)
     if token:params['next_page_token']=token
@@ -59,6 +65,14 @@ class Clock:
 
 
 class CollectorTests(unittest.TestCase):
+    def test_archive_temp_root_uses_resolved_platform_directory(self):
+        with tempfile.TemporaryDirectory() as root:
+            parent=Path(root).resolve();native=parent/'platform-temp';native.mkdir()
+            alias=parent/'alias';alias.symlink_to(native,target_is_directory=True)
+            with patch.object(tempfile,'gettempdir',return_value=str(alias)):
+                with archive_temporary_directory() as child:
+                    self.assertEqual(Path(child).parent,native)
+
     def collect(self,responses):
         day=datetime.now(timezone.utc).date().isoformat();opener=Opener(responses);clock=Clock();saved=[]
         with patch.object(c.request,'build_opener',return_value=opener),patch.object(c.time,'monotonic',clock.monotonic),patch.object(c.time,'sleep',clock.sleep):
@@ -169,7 +183,7 @@ class CollectorTests(unittest.TestCase):
             self.assertEqual(kw['timeout'],55);self.assertNotIn('HTTPS_PROXY',kw['env']);self.assertNotIn('shell',kw)
             Path(args[-1]).write_bytes(partial)
             raise subprocess.TimeoutExpired(args,55)
-        with tempfile.TemporaryDirectory(dir='/private/tmp') as t,patch.object(c.subprocess,'run',side_effect=hung):
+        with archive_temporary_directory() as t,patch.object(c.subprocess,'run',side_effect=hung):
             dest=Path(t)/'capture'
             with self.assertRaises(CaptureFailure):capture_response(dest,{'query_day':day},c.fetch)
             self.assertEqual((dest/'partial.bin').read_bytes(),partial)
@@ -265,7 +279,7 @@ class ProducerTests(unittest.TestCase):
             @classmethod
             def now(cls,tz):return datetime(2026,11,7,12,tzinfo=timezone.utc)
         day='2026-11-07';raw=envelope(day,synthetic(day))
-        with tempfile.TemporaryDirectory(dir='/private/tmp') as temp,patch.object(cap,'datetime',FixedDate):
+        with archive_temporary_directory() as temp,patch.object(cap,'datetime',FixedDate):
             root=Path(temp);captured=root/'capture';store=root/'archive'
             cap.capture_response(captured,{'query_day':day},lambda request:(raw,{'status':'complete','synthetic':True}))
             reg=archive.register({'kind':'operational_witness','decision_days':[day],
