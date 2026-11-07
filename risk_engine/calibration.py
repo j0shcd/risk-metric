@@ -521,9 +521,9 @@ def calibrate_primary_outputs(
 
     monthly = monthly.dropna(subset=["price"]) 
 
-    if len(monthly) < (min_train_months + resolution_horizon_months + 6):
-        return CalibrationResult(series=output, metadata={"calibration_applied": 0.0})
-
+    # Apply causal transforms from the first origin. The selectors below
+    # already fall back to the base score until their own labels are mature;
+    # total-history gating would rewrite earlier outputs when a suffix arrives.
     price_percentile = _expanding_percentile(monthly["price"], min_history=min_train_months)
     momentum_6m = monthly["price"].pct_change(6, fill_method=None)
     momentum_pct = _expanding_percentile(momentum_6m, min_history=min_train_months)
