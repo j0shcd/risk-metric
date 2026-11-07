@@ -8,7 +8,8 @@ import unittest
 from unittest.mock import patch
 import pandas as pd
 from research import direct_cdf_campaign as c
-from research.market_dataset import load_snapshot
+from research.market_dataset import load_snapshot, canonical_bytes
+from tests.test_benchmark_frontier import minimal_atlas
 from tests.test_market_scorecard import snapshot, write_source
 
 class CampaignTests(unittest.TestCase):
@@ -25,11 +26,15 @@ class CampaignTests(unittest.TestCase):
         self.config=self.root/'config.json';self.config.write_text('{"fixed":true}')
         self.target=self.root/'campaign'
         self.spec={'global_budget':4,'worker_budgets':{'a':2,'b':2},'prior_exposure':{'parents':[],'statement':'synthetic fixtures only; no prior campaign','outer_history_exposed':True}}
+        self.atlas=self.root/'atlas.json';self.atlas.write_bytes(canonical_bytes(minimal_atlas(data['source_sha256'])))
+        self.spec['benchmark_atlas']=str(self.atlas)
+        self.frontier=patch.object(c,'compare_trial',return_value={'atlas_id':json.loads(self.atlas.read_bytes())['atlas_id'],'cells':[],'mc_guards':[],'ordering_diagnostics':[]})
+        self.frontier.start()
         self.scorer=patch('research.indicator_trial.score_candidate',return_value={'dataset_id':'fixture','code_sha256':{},'cells':[]})
         self.references=patch('research.indicator_trial.baseline_candidates',return_value=[])
         self.scorer.start();self.references.start()
     def tearDown(self):
-        self.references.stop();self.scorer.stop();self.temporary.cleanup()
+        self.frontier.stop();self.references.stop();self.scorer.stop();self.temporary.cleanup()
     def create(self):return c.create_campaign(self.bundle,self.target,self.spec)
     def request(self,worker='a'):
         return {'worker':worker,'candidate_csv':str(self.csv),'column':'signal','name':'fixture_'+worker,
@@ -42,6 +47,15 @@ class CampaignTests(unittest.TestCase):
         return {'source':str(source),'source_sha256':c.sha(source.read_bytes()),'candidates':[{
             'attempt':attempt,'csv':str(self.csv),'csv_sha256':c.sha(self.csv.read_bytes()),
             'producer':str(self.producer),'config':str(self.config),'params':{'alpha':.08}}]}
+
+    def test_atlas_required_and_copied_bound_before_submit(self):
+        bad={k:v for k,v in self.spec.items() if k!='benchmark_atlas'}
+        with self.assertRaisesRegex(ValueError,'required'):c.create_campaign(self.bundle,self.target,bad)
+        self.create();self.atlas.write_text('external mutation')
+        result=c.submit(self.target,self.request());self.assertEqual(result['status'],'completed')
+        self.assertTrue((self.target/'attempts'/result['attempt']/'frontier.json').exists())
+        atlas=self.target/'benchmark_atlas.json';atlas.chmod(0o600);atlas.write_text('{}')
+        with self.assertRaises(ValueError):c.status(self.target)
 
     def test_parallel_global_and_worker_caps(self):
         self.spec.update(global_budget=3,worker_budgets={'a':2,'b':2});self.create()
