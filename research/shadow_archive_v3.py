@@ -132,10 +132,10 @@ def _registration(reg):
 
 
 def initialize(root,registration):
-    _registration(registration);root=cap.safe(root);root.mkdir(exist_ok=False)
+    _registration(registration);root=cap.safe(root);cap.new_directory(root)
     cap.frozen_write(root/'registration.json',canonical_bytes(registration))
     cap.frozen_write(root/'archive.lock',b'')
-    for name in ('events','captures','attempts','publications'):(root/name).mkdir()
+    for name in ('events','captures','attempts','publications'):cap.new_directory(root/name)
     return verify(root)
 
 
@@ -163,7 +163,7 @@ def _own_capture(root,directory):
     size=sum(cap.safe(p).stat().st_size for p in (root/'captures').rglob('*') if p.is_file())
     payloads={'raw.bin':raw,'capture.json':canonical_bytes(receipt),'request.json':canonical_bytes(receipt['request'])}
     if size+sum(map(len,payloads.values()))>cap.MAX_CAPTURE_BYTES:raise ValueError('archive capture budget')
-    target.mkdir()
+    cap.new_directory(target)
     for name,data in payloads.items():cap.frozen_write(target/name,data)
     return receipt
 

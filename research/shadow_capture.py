@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 from .scorecard_artifacts import publish
 from .market_dataset import canonical_bytes
@@ -41,15 +42,31 @@ def read(path,limit):
     if len(raw)>limit:raise ValueError('byte limit')
     return raw
 
+def sync_directory(path):
+    directory=os.open(safe(path),os.O_RDONLY | os.O_DIRECTORY)
+    try:os.fsync(directory)
+    finally:os.close(directory)
+
+
+def new_directory(path):
+    """Exclusive creation; parent must exist and its new entry is persisted."""
+    path=safe(path);path.mkdir(exist_ok=False);sync_directory(path.parent)
+
+
 def frozen_write(path,raw):
-    publish(safe(path),raw);Path(path).chmod(0o444)
+    path=safe(path)
+    publish(path,raw);path.chmod(0o444)
+    # Persist permission metadata and the newly linked name before callers sample
+    # the publication upper bound. This is local filesystem durability, not auth.
+    with path.open('rb') as stream:os.fsync(stream.fileno())
+    sync_directory(path.parent)
 
 
 def capture_response(directory,request,fetch):
     """fetch(request copy) -> (bytes, response metadata). Never import a provider."""
     directory=safe(directory);request_raw=canonical_bytes(request)
     if len(request_raw)>MAX_METADATA_BYTES or not isinstance(request,dict):raise ValueError('request metadata limit/shape')
-    directory.mkdir(parents=True,exist_ok=False)
+    new_directory(directory)
     started=now();frozen_write(directory/'request.json',request_raw)
     try:
         raw,response=fetch(json.loads(request_raw));completed=now()

@@ -3,6 +3,8 @@ from datetime import datetime,timezone,timedelta
 from pathlib import Path
 import ast
 import inspect
+import os
+import stat
 import json
 import tempfile
 import unittest
@@ -221,13 +223,32 @@ class ContractTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'drift'):a.issue(archive,[capture],toy_producer)
         finally:toy_producer.__kwdefaults__=original_defaults
 
+    def test_directory_durability_before_publication_witness(self):
+        original=os.fsync;calls=[]
+        def observe(fd):
+            calls.append('directory' if stat.S_ISDIR(os.fstat(fd).st_mode) else 'file')
+            return original(fd)
+        with patch.object(c.os,'fsync',observe):c.frozen_write(self.root/'durable',b'sentinel')
+        self.assertGreaterEqual(calls.count('file'),2)
+        self.assertEqual(calls[-1],'directory')
+        archive=self.archive();capture=self.capture()
+        events_inode=(archive/'events').stat().st_ino
+        def fail_event_directory(fd):
+            info=os.fstat(fd)
+            if stat.S_ISDIR(info.st_mode) and info.st_ino==events_inode:raise OSError('directory durability failure')
+            return original(fd)
+        with patch.object(c.os,'fsync',fail_event_directory),self.assertRaises(OSError):a.issue(archive,[capture],toy_producer)
+        self.assertEqual(len(list((archive/'events').iterdir())),1)
+        self.assertEqual(list((archive/'publications').iterdir()),[])
+        with self.assertRaises(FileNotFoundError):a.verify(archive)
+
     def test_write_sink_inventory(self):
-        expected={c:{'frozen_write','capture_response'},a:{'initialize','_own_capture','_append','issue'}}
+        expected={c:{'new_directory','frozen_write','capture_response'},a:{'initialize','_own_capture','_append','issue'}}
         for module,sinks in expected.items():
             actual=set()
             for node in ast.parse(inspect.getsource(module)).body:
                 if isinstance(node,ast.FunctionDef):
-                    if any(isinstance(x,ast.Call) and getattr(x.func,'id',getattr(x.func,'attr','')) in ('publish','frozen_write') for x in ast.walk(node)):actual.add(node.name)
+                    if any(isinstance(x,ast.Call) and getattr(x.func,'id',getattr(x.func,'attr','')) in ('publish','frozen_write','new_directory','mkdir') for x in ast.walk(node)):actual.add(node.name)
             self.assertEqual(actual,sinks)
 
 def canonical(value):return (json.dumps(value,sort_keys=True,separators=(',',':'))+'\n').encode()
