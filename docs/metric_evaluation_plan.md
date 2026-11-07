@@ -856,16 +856,31 @@ is a building block, not a substitute for this interval audit.
 
 ### Feasibility, not fictional fold counts
 
-The inspected stored score spans December 2014 through July 2026: 140 monthly
-values and 92 nominal completed 48-month entry outcomes. These are overlapping,
-not 92 independent four-year histories. At January 2019/2020/2021/2022 only
-1/13/25/37 monthly 48-month training labels, respectively, have matured from that
-score history. A calibrated stream starting January 2021 has only about 19
-nominal completed four-year entry predictions in that stored table. These are
-illustrations from the old timestamp convention, not v2 eligibility counts.
-Recompute them using actual execution and label-availability times, and after
-rejecting incomplete month-end bins: the stored daily artifact ends July 30 but
-the current resampler stamps its last value July 31.
+The [independent support audit](artifacts/btc-frozen-outcome-support-2026-11-07.json)
+uses the actual frozen benchmark's 139 complete month-end origins, December 2014–
+June 2026, with daily history through July 30. It independently reconstructs all
+417 horizon paths and checks endpoint-plus-one-day label availability. These are
+**all mature outcome rows**, not the smaller matched forecast samples:
+
+| Horizon | Mature monthly origins | Negative / nonnegative return | Entry loss >log(2) | Peak drawdown >log(2) | Maximum disjoint return intervals, negative / nonnegative |
+| --- | ---: | --- | ---: | ---: | --- |
+| 12 months | 127 | 32 / 95 | 23 | 56 | 5 / 9 |
+| 24 months | 115 | 21 / 94 | 30 | 77 | 3 / 5 |
+| 48 months | 91 | 0 / 91 | 30 | 90 | 0 / 2 |
+
+There are no mature outer four-year labels. The four-year return event has only
+one class, while the four-year peak-drawdown event has 90 positive examples and
+one negative. A low Brier loss can therefore reflect class prevalence; these
+samples cannot establish discrimination between four-year loss and gain regimes.
+Continuous return magnitudes remain scoreable as a separate claim. The audit
+retains per-role class counts and selected non-overlapping intervals.
+
+Disjoint means closed price intervals `[entry,end]` with the next entry strictly
+after the prior end. Earliest-finish greedy counts were checked independently by
+dynamic programming. Counts are maxima **within each class**; their sum is not a
+jointly disjoint sample. Even disjoint price paths can share market regimes and
+are not asserted statistically independent. Earlier nominal row counts using
+partial-month stamping are superseded by this exact-interval audit.
 
 Therefore do not promise a well-powered deeply nested four-year ML benchmark.
 The implementation must generate a feasibility table per outcome, candidate

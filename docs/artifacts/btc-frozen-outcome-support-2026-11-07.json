@@ -1,0 +1,1673 @@
+{
+  "schema": "frozen-btc-outcome-support-audit-v1",
+  "source_snapshot": "docs/artifacts/market-scorecard-2026-11-06-snapshot.json",
+  "source_snapshot_sha256": "05b3abae3e892be54f3f1d0bf52607dfb2ab88a9e71dc6528b63065a8021302e",
+  "original_source_sha256": "5f7f5f56ede4835cc1b1f10ff9bda49735524b2471d272dffeba623820add165",
+  "market_dataset_source_sha256": "679222de6b2a98337790d5b5686af03d7f630b118e2165d93512f3f6898cace4",
+  "as_of": "2026-07-30",
+  "daily_coverage": [
+    "2012-01-01",
+    "2026-07-30"
+  ],
+  "decision_coverage": [
+    "2014-12-31",
+    "2026-06-30"
+  ],
+  "decision_n": 139,
+  "outcome_records_checked": 417,
+  "definitions": {
+    "entry": "decision month-end +1 calendar day; daily close anchor, not verified execution/publication time",
+    "end": "entry + H calendar months, no horizon shortening",
+    "label_available": "end +1 calendar day; pending until available<=as_of; production training requires available<query",
+    "negative_return": "terminal_log_return<0; complement>=0",
+    "entry_loss_gt_log2": "log(entry_price/minimum_daily_close)>log(2); complement<=log(2)",
+    "peak_drawdown_gt_log2": "max log(running_peak_daily_close/current_daily_close)>log(2); complement<=log(2)",
+    "development": "complete label with available<=2022-12-31",
+    "outer": "complete label available after development cutoff and decision>=2023-01-01",
+    "retrospective_challenge": "complete label available after development cutoff with decision<2023-01-01",
+    "nonoverlap": "closed observed-price intervals [entry,end]; a next entry must be strictly greater than previous end",
+    "maximum": "earliest-finish greedy within each role/horizon/class; independently checked against dynamic programming",
+    "scope": "exact139 original benchmark origins; does not add earlier generative-only origins; no models or candidate trials"
+  },
+  "max_raw_outcome_reconstruction_error": 1.7763568394002505e-15,
+  "cells": [
+    {
+      "role": "development",
+      "horizon": 12,
+      "origin_n": 84,
+      "classified_mature_n": 84,
+      "classes": {
+        "negative_return": {
+          "count": 18,
+          "maximum_nonoverlapping_n": 3,
+          "selected_intervals": [
+            {
+              "date": "2017-10-31",
+              "entry": "2017-11-01",
+              "end": "2018-11-01",
+              "available": "2018-11-02"
+            },
+            {
+              "date": "2019-06-30",
+              "entry": "2019-07-01",
+              "end": "2020-07-01",
+              "available": "2020-07-02"
+            },
+            {
+              "date": "2021-02-28",
+              "entry": "2021-03-01",
+              "end": "2022-03-01",
+              "available": "2022-03-02"
+            }
+          ]
+        },
+        "nonnegative_return": {
+          "count": 66,
+          "maximum_nonoverlapping_n": 6,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2016-01-01",
+              "available": "2016-01-02"
+            },
+            {
+              "date": "2016-01-31",
+              "entry": "2016-02-01",
+              "end": "2017-02-01",
+              "available": "2017-02-02"
+            },
+            {
+              "date": "2017-02-28",
+              "entry": "2017-03-01",
+              "end": "2018-03-01",
+              "available": "2018-03-02"
+            },
+            {
+              "date": "2018-05-31",
+              "entry": "2018-06-01",
+              "end": "2019-06-01",
+              "available": "2019-06-02"
+            },
+            {
+              "date": "2019-07-31",
+              "entry": "2019-08-01",
+              "end": "2020-08-01",
+              "available": "2020-08-02"
+            },
+            {
+              "date": "2020-08-31",
+              "entry": "2020-09-01",
+              "end": "2021-09-01",
+              "available": "2021-09-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 18,
+          "maximum_nonoverlapping_n": 3,
+          "selected_intervals": [
+            {
+              "date": "2017-11-30",
+              "entry": "2017-12-01",
+              "end": "2018-12-01",
+              "available": "2018-12-02"
+            },
+            {
+              "date": "2019-06-30",
+              "entry": "2019-07-01",
+              "end": "2020-07-01",
+              "available": "2020-07-02"
+            },
+            {
+              "date": "2021-07-31",
+              "entry": "2021-08-01",
+              "end": "2022-08-01",
+              "available": "2022-08-02"
+            }
+          ]
+        },
+        "entry_loss_le_log2": {
+          "count": 66,
+          "maximum_nonoverlapping_n": 6,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2016-01-01",
+              "available": "2016-01-02"
+            },
+            {
+              "date": "2016-01-31",
+              "entry": "2016-02-01",
+              "end": "2017-02-01",
+              "available": "2017-02-02"
+            },
+            {
+              "date": "2017-02-28",
+              "entry": "2017-03-01",
+              "end": "2018-03-01",
+              "available": "2018-03-02"
+            },
+            {
+              "date": "2018-06-30",
+              "entry": "2018-07-01",
+              "end": "2019-07-01",
+              "available": "2019-07-02"
+            },
+            {
+              "date": "2019-09-30",
+              "entry": "2019-10-01",
+              "end": "2020-10-01",
+              "available": "2020-10-02"
+            },
+            {
+              "date": "2020-10-31",
+              "entry": "2020-11-01",
+              "end": "2021-11-01",
+              "available": "2021-11-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 50,
+          "maximum_nonoverlapping_n": 5,
+          "selected_intervals": [
+            {
+              "date": "2017-01-31",
+              "entry": "2017-02-01",
+              "end": "2018-02-01",
+              "available": "2018-02-02"
+            },
+            {
+              "date": "2018-02-28",
+              "entry": "2018-03-01",
+              "end": "2019-03-01",
+              "available": "2019-03-02"
+            },
+            {
+              "date": "2019-03-31",
+              "entry": "2019-04-01",
+              "end": "2020-04-01",
+              "available": "2020-04-02"
+            },
+            {
+              "date": "2020-06-30",
+              "entry": "2020-07-01",
+              "end": "2021-07-01",
+              "available": "2021-07-02"
+            },
+            {
+              "date": "2021-07-31",
+              "entry": "2021-08-01",
+              "end": "2022-08-01",
+              "available": "2022-08-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 34,
+          "maximum_nonoverlapping_n": 5,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2016-01-01",
+              "available": "2016-01-02"
+            },
+            {
+              "date": "2016-01-31",
+              "entry": "2016-02-01",
+              "end": "2017-02-01",
+              "available": "2017-02-02"
+            },
+            {
+              "date": "2018-11-30",
+              "entry": "2018-12-01",
+              "end": "2019-12-01",
+              "available": "2019-12-02"
+            },
+            {
+              "date": "2020-02-29",
+              "entry": "2020-03-01",
+              "end": "2021-03-01",
+              "available": "2021-03-02"
+            },
+            {
+              "date": "2021-04-30",
+              "entry": "2021-05-01",
+              "end": "2022-05-01",
+              "available": "2022-05-02"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "role": "development",
+      "horizon": 24,
+      "origin_n": 72,
+      "classified_mature_n": 72,
+      "classes": {
+        "negative_return": {
+          "count": 6,
+          "maximum_nonoverlapping_n": 2,
+          "selected_intervals": [
+            {
+              "date": "2017-11-30",
+              "entry": "2017-12-01",
+              "end": "2019-12-01",
+              "available": "2019-12-02"
+            },
+            {
+              "date": "2020-11-30",
+              "entry": "2020-12-01",
+              "end": "2022-12-01",
+              "available": "2022-12-02"
+            }
+          ]
+        },
+        "nonnegative_return": {
+          "count": 66,
+          "maximum_nonoverlapping_n": 3,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2017-01-01",
+              "available": "2017-01-02"
+            },
+            {
+              "date": "2017-01-31",
+              "entry": "2017-02-01",
+              "end": "2019-02-01",
+              "available": "2019-02-02"
+            },
+            {
+              "date": "2019-02-28",
+              "entry": "2019-03-01",
+              "end": "2021-03-01",
+              "available": "2021-03-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 14,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2017-10-31",
+              "entry": "2017-11-01",
+              "end": "2019-11-01",
+              "available": "2019-11-02"
+            }
+          ]
+        },
+        "entry_loss_le_log2": {
+          "count": 58,
+          "maximum_nonoverlapping_n": 3,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2017-01-01",
+              "available": "2017-01-02"
+            },
+            {
+              "date": "2017-01-31",
+              "entry": "2017-02-01",
+              "end": "2019-02-01",
+              "available": "2019-02-02"
+            },
+            {
+              "date": "2019-02-28",
+              "entry": "2019-03-01",
+              "end": "2021-03-01",
+              "available": "2021-03-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 59,
+          "maximum_nonoverlapping_n": 3,
+          "selected_intervals": [
+            {
+              "date": "2016-01-31",
+              "entry": "2016-02-01",
+              "end": "2018-02-01",
+              "available": "2018-02-02"
+            },
+            {
+              "date": "2018-02-28",
+              "entry": "2018-03-01",
+              "end": "2020-03-01",
+              "available": "2020-03-02"
+            },
+            {
+              "date": "2020-03-31",
+              "entry": "2020-04-01",
+              "end": "2022-04-01",
+              "available": "2022-04-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 13,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2017-01-01",
+              "available": "2017-01-02"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "role": "development",
+      "horizon": 48,
+      "origin_n": 48,
+      "classified_mature_n": 48,
+      "classes": {
+        "negative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "nonnegative_return": {
+          "count": 48,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2019-01-01",
+              "available": "2019-01-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 11,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2017-10-31",
+              "entry": "2017-11-01",
+              "end": "2021-11-01",
+              "available": "2021-11-02"
+            }
+          ]
+        },
+        "entry_loss_le_log2": {
+          "count": 37,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2019-01-01",
+              "available": "2019-01-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 48,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2019-01-01",
+              "available": "2019-01-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        }
+      }
+    },
+    {
+      "role": "retrospective_challenge",
+      "horizon": 12,
+      "origin_n": 13,
+      "classified_mature_n": 13,
+      "classes": {
+        "negative_return": {
+          "count": 6,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2021-12-31",
+              "entry": "2022-01-01",
+              "end": "2023-01-01",
+              "available": "2023-01-02"
+            }
+          ]
+        },
+        "nonnegative_return": {
+          "count": 7,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2022-06-30",
+              "entry": "2022-07-01",
+              "end": "2023-07-01",
+              "available": "2023-07-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 5,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2021-12-31",
+              "entry": "2022-01-01",
+              "end": "2023-01-01",
+              "available": "2023-01-02"
+            }
+          ]
+        },
+        "entry_loss_le_log2": {
+          "count": 8,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2022-05-31",
+              "entry": "2022-06-01",
+              "end": "2023-06-01",
+              "available": "2023-06-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 5,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2021-12-31",
+              "entry": "2022-01-01",
+              "end": "2023-01-01",
+              "available": "2023-01-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 8,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2022-05-31",
+              "entry": "2022-06-01",
+              "end": "2023-06-01",
+              "available": "2023-06-02"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "role": "retrospective_challenge",
+      "horizon": 24,
+      "origin_n": 25,
+      "classified_mature_n": 25,
+      "classes": {
+        "negative_return": {
+          "count": 13,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2020-12-31",
+              "entry": "2021-01-01",
+              "end": "2023-01-01",
+              "available": "2023-01-02"
+            }
+          ]
+        },
+        "nonnegative_return": {
+          "count": 12,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2022-01-31",
+              "entry": "2022-02-01",
+              "end": "2024-02-01",
+              "available": "2024-02-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 16,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2021-01-31",
+              "entry": "2021-02-01",
+              "end": "2023-02-01",
+              "available": "2023-02-02"
+            }
+          ]
+        },
+        "entry_loss_le_log2": {
+          "count": 9,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2020-12-31",
+              "entry": "2021-01-01",
+              "end": "2023-01-01",
+              "available": "2023-01-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 17,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2020-12-31",
+              "entry": "2021-01-01",
+              "end": "2023-01-01",
+              "available": "2023-01-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 8,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2022-05-31",
+              "entry": "2022-06-01",
+              "end": "2024-06-01",
+              "available": "2024-06-02"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "role": "retrospective_challenge",
+      "horizon": 48,
+      "origin_n": 43,
+      "classified_mature_n": 43,
+      "classes": {
+        "negative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "nonnegative_return": {
+          "count": 43,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2018-12-31",
+              "entry": "2019-01-01",
+              "end": "2023-01-01",
+              "available": "2023-01-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 19,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2019-06-30",
+              "entry": "2019-07-01",
+              "end": "2023-07-01",
+              "available": "2023-07-02"
+            }
+          ]
+        },
+        "entry_loss_le_log2": {
+          "count": 24,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2018-12-31",
+              "entry": "2019-01-01",
+              "end": "2023-01-01",
+              "available": "2023-01-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 42,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2018-12-31",
+              "entry": "2019-01-01",
+              "end": "2023-01-01",
+              "available": "2023-01-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 1,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2022-05-31",
+              "entry": "2022-06-01",
+              "end": "2026-06-01",
+              "available": "2026-06-02"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "role": "outer",
+      "horizon": 12,
+      "origin_n": 30,
+      "classified_mature_n": 30,
+      "classes": {
+        "negative_return": {
+          "count": 8,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2024-11-30",
+              "entry": "2024-12-01",
+              "end": "2025-12-01",
+              "available": "2025-12-02"
+            }
+          ]
+        },
+        "nonnegative_return": {
+          "count": 22,
+          "maximum_nonoverlapping_n": 2,
+          "selected_intervals": [
+            {
+              "date": "2023-01-31",
+              "entry": "2023-02-01",
+              "end": "2024-02-01",
+              "available": "2024-02-02"
+            },
+            {
+              "date": "2024-02-29",
+              "entry": "2024-03-01",
+              "end": "2025-03-01",
+              "available": "2025-03-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_le_log2": {
+          "count": 30,
+          "maximum_nonoverlapping_n": 3,
+          "selected_intervals": [
+            {
+              "date": "2023-01-31",
+              "entry": "2023-02-01",
+              "end": "2024-02-01",
+              "available": "2024-02-02"
+            },
+            {
+              "date": "2024-02-29",
+              "entry": "2024-03-01",
+              "end": "2025-03-01",
+              "available": "2025-03-02"
+            },
+            {
+              "date": "2025-03-31",
+              "entry": "2025-04-01",
+              "end": "2026-04-01",
+              "available": "2026-04-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 1,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2025-06-30",
+              "entry": "2025-07-01",
+              "end": "2026-07-01",
+              "available": "2026-07-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 29,
+          "maximum_nonoverlapping_n": 3,
+          "selected_intervals": [
+            {
+              "date": "2023-01-31",
+              "entry": "2023-02-01",
+              "end": "2024-02-01",
+              "available": "2024-02-02"
+            },
+            {
+              "date": "2024-02-29",
+              "entry": "2024-03-01",
+              "end": "2025-03-01",
+              "available": "2025-03-02"
+            },
+            {
+              "date": "2025-03-31",
+              "entry": "2025-04-01",
+              "end": "2026-04-01",
+              "available": "2026-04-02"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "role": "outer",
+      "horizon": 24,
+      "origin_n": 18,
+      "classified_mature_n": 18,
+      "classes": {
+        "negative_return": {
+          "count": 2,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2024-03-31",
+              "entry": "2024-04-01",
+              "end": "2026-04-01",
+              "available": "2026-04-02"
+            }
+          ]
+        },
+        "nonnegative_return": {
+          "count": 16,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2023-01-31",
+              "entry": "2023-02-01",
+              "end": "2025-02-01",
+              "available": "2025-02-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_le_log2": {
+          "count": 18,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2023-01-31",
+              "entry": "2023-02-01",
+              "end": "2025-02-01",
+              "available": "2025-02-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 1,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2024-06-30",
+              "entry": "2024-07-01",
+              "end": "2026-07-01",
+              "available": "2026-07-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 17,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2023-01-31",
+              "entry": "2023-02-01",
+              "end": "2025-02-01",
+              "available": "2025-02-02"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "role": "outer",
+      "horizon": 48,
+      "origin_n": 0,
+      "classified_mature_n": 0,
+      "classes": {
+        "negative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "nonnegative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        }
+      }
+    },
+    {
+      "role": "pending",
+      "horizon": 12,
+      "origin_n": 12,
+      "classified_mature_n": 0,
+      "classes": {
+        "negative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "nonnegative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        }
+      }
+    },
+    {
+      "role": "pending",
+      "horizon": 24,
+      "origin_n": 24,
+      "classified_mature_n": 0,
+      "classes": {
+        "negative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "nonnegative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        }
+      }
+    },
+    {
+      "role": "pending",
+      "horizon": 48,
+      "origin_n": 48,
+      "classified_mature_n": 0,
+      "classes": {
+        "negative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "nonnegative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        }
+      }
+    },
+    {
+      "role": "outcome_unavailable",
+      "horizon": 12,
+      "origin_n": 0,
+      "classified_mature_n": 0,
+      "classes": {
+        "negative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "nonnegative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        }
+      }
+    },
+    {
+      "role": "outcome_unavailable",
+      "horizon": 24,
+      "origin_n": 0,
+      "classified_mature_n": 0,
+      "classes": {
+        "negative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "nonnegative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        }
+      }
+    },
+    {
+      "role": "outcome_unavailable",
+      "horizon": 48,
+      "origin_n": 0,
+      "classified_mature_n": 0,
+      "classes": {
+        "negative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "nonnegative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "entry_loss_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "peak_drawdown_le_log2": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        }
+      }
+    },
+    {
+      "role": "all_mature",
+      "horizon": 12,
+      "origin_n": 127,
+      "classified_mature_n": 127,
+      "classes": {
+        "negative_return": {
+          "count": 32,
+          "maximum_nonoverlapping_n": 5,
+          "selected_intervals": [
+            {
+              "date": "2017-10-31",
+              "entry": "2017-11-01",
+              "end": "2018-11-01",
+              "available": "2018-11-02"
+            },
+            {
+              "date": "2019-06-30",
+              "entry": "2019-07-01",
+              "end": "2020-07-01",
+              "available": "2020-07-02"
+            },
+            {
+              "date": "2021-02-28",
+              "entry": "2021-03-01",
+              "end": "2022-03-01",
+              "available": "2022-03-02"
+            },
+            {
+              "date": "2022-03-31",
+              "entry": "2022-04-01",
+              "end": "2023-04-01",
+              "available": "2023-04-02"
+            },
+            {
+              "date": "2024-11-30",
+              "entry": "2024-12-01",
+              "end": "2025-12-01",
+              "available": "2025-12-02"
+            }
+          ]
+        },
+        "nonnegative_return": {
+          "count": 95,
+          "maximum_nonoverlapping_n": 9,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2016-01-01",
+              "available": "2016-01-02"
+            },
+            {
+              "date": "2016-01-31",
+              "entry": "2016-02-01",
+              "end": "2017-02-01",
+              "available": "2017-02-02"
+            },
+            {
+              "date": "2017-02-28",
+              "entry": "2017-03-01",
+              "end": "2018-03-01",
+              "available": "2018-03-02"
+            },
+            {
+              "date": "2018-05-31",
+              "entry": "2018-06-01",
+              "end": "2019-06-01",
+              "available": "2019-06-02"
+            },
+            {
+              "date": "2019-07-31",
+              "entry": "2019-08-01",
+              "end": "2020-08-01",
+              "available": "2020-08-02"
+            },
+            {
+              "date": "2020-08-31",
+              "entry": "2020-09-01",
+              "end": "2021-09-01",
+              "available": "2021-09-02"
+            },
+            {
+              "date": "2022-06-30",
+              "entry": "2022-07-01",
+              "end": "2023-07-01",
+              "available": "2023-07-02"
+            },
+            {
+              "date": "2023-07-31",
+              "entry": "2023-08-01",
+              "end": "2024-08-01",
+              "available": "2024-08-02"
+            },
+            {
+              "date": "2024-08-31",
+              "entry": "2024-09-01",
+              "end": "2025-09-01",
+              "available": "2025-09-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 23,
+          "maximum_nonoverlapping_n": 3,
+          "selected_intervals": [
+            {
+              "date": "2017-11-30",
+              "entry": "2017-12-01",
+              "end": "2018-12-01",
+              "available": "2018-12-02"
+            },
+            {
+              "date": "2019-06-30",
+              "entry": "2019-07-01",
+              "end": "2020-07-01",
+              "available": "2020-07-02"
+            },
+            {
+              "date": "2021-07-31",
+              "entry": "2021-08-01",
+              "end": "2022-08-01",
+              "available": "2022-08-02"
+            }
+          ]
+        },
+        "entry_loss_le_log2": {
+          "count": 104,
+          "maximum_nonoverlapping_n": 9,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2016-01-01",
+              "available": "2016-01-02"
+            },
+            {
+              "date": "2016-01-31",
+              "entry": "2016-02-01",
+              "end": "2017-02-01",
+              "available": "2017-02-02"
+            },
+            {
+              "date": "2017-02-28",
+              "entry": "2017-03-01",
+              "end": "2018-03-01",
+              "available": "2018-03-02"
+            },
+            {
+              "date": "2018-06-30",
+              "entry": "2018-07-01",
+              "end": "2019-07-01",
+              "available": "2019-07-02"
+            },
+            {
+              "date": "2019-09-30",
+              "entry": "2019-10-01",
+              "end": "2020-10-01",
+              "available": "2020-10-02"
+            },
+            {
+              "date": "2020-10-31",
+              "entry": "2020-11-01",
+              "end": "2021-11-01",
+              "available": "2021-11-02"
+            },
+            {
+              "date": "2022-05-31",
+              "entry": "2022-06-01",
+              "end": "2023-06-01",
+              "available": "2023-06-02"
+            },
+            {
+              "date": "2023-06-30",
+              "entry": "2023-07-01",
+              "end": "2024-07-01",
+              "available": "2024-07-02"
+            },
+            {
+              "date": "2024-07-31",
+              "entry": "2024-08-01",
+              "end": "2025-08-01",
+              "available": "2025-08-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 56,
+          "maximum_nonoverlapping_n": 6,
+          "selected_intervals": [
+            {
+              "date": "2017-01-31",
+              "entry": "2017-02-01",
+              "end": "2018-02-01",
+              "available": "2018-02-02"
+            },
+            {
+              "date": "2018-02-28",
+              "entry": "2018-03-01",
+              "end": "2019-03-01",
+              "available": "2019-03-02"
+            },
+            {
+              "date": "2019-03-31",
+              "entry": "2019-04-01",
+              "end": "2020-04-01",
+              "available": "2020-04-02"
+            },
+            {
+              "date": "2020-06-30",
+              "entry": "2020-07-01",
+              "end": "2021-07-01",
+              "available": "2021-07-02"
+            },
+            {
+              "date": "2021-07-31",
+              "entry": "2021-08-01",
+              "end": "2022-08-01",
+              "available": "2022-08-02"
+            },
+            {
+              "date": "2025-06-30",
+              "entry": "2025-07-01",
+              "end": "2026-07-01",
+              "available": "2026-07-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 71,
+          "maximum_nonoverlapping_n": 8,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2016-01-01",
+              "available": "2016-01-02"
+            },
+            {
+              "date": "2016-01-31",
+              "entry": "2016-02-01",
+              "end": "2017-02-01",
+              "available": "2017-02-02"
+            },
+            {
+              "date": "2018-11-30",
+              "entry": "2018-12-01",
+              "end": "2019-12-01",
+              "available": "2019-12-02"
+            },
+            {
+              "date": "2020-02-29",
+              "entry": "2020-03-01",
+              "end": "2021-03-01",
+              "available": "2021-03-02"
+            },
+            {
+              "date": "2021-04-30",
+              "entry": "2021-05-01",
+              "end": "2022-05-01",
+              "available": "2022-05-02"
+            },
+            {
+              "date": "2022-05-31",
+              "entry": "2022-06-01",
+              "end": "2023-06-01",
+              "available": "2023-06-02"
+            },
+            {
+              "date": "2023-06-30",
+              "entry": "2023-07-01",
+              "end": "2024-07-01",
+              "available": "2024-07-02"
+            },
+            {
+              "date": "2024-07-31",
+              "entry": "2024-08-01",
+              "end": "2025-08-01",
+              "available": "2025-08-02"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "role": "all_mature",
+      "horizon": 24,
+      "origin_n": 115,
+      "classified_mature_n": 115,
+      "classes": {
+        "negative_return": {
+          "count": 21,
+          "maximum_nonoverlapping_n": 3,
+          "selected_intervals": [
+            {
+              "date": "2017-11-30",
+              "entry": "2017-12-01",
+              "end": "2019-12-01",
+              "available": "2019-12-02"
+            },
+            {
+              "date": "2020-11-30",
+              "entry": "2020-12-01",
+              "end": "2022-12-01",
+              "available": "2022-12-02"
+            },
+            {
+              "date": "2024-03-31",
+              "entry": "2024-04-01",
+              "end": "2026-04-01",
+              "available": "2026-04-02"
+            }
+          ]
+        },
+        "nonnegative_return": {
+          "count": 94,
+          "maximum_nonoverlapping_n": 5,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2017-01-01",
+              "available": "2017-01-02"
+            },
+            {
+              "date": "2017-01-31",
+              "entry": "2017-02-01",
+              "end": "2019-02-01",
+              "available": "2019-02-02"
+            },
+            {
+              "date": "2019-02-28",
+              "entry": "2019-03-01",
+              "end": "2021-03-01",
+              "available": "2021-03-02"
+            },
+            {
+              "date": "2022-01-31",
+              "entry": "2022-02-01",
+              "end": "2024-02-01",
+              "available": "2024-02-02"
+            },
+            {
+              "date": "2024-02-29",
+              "entry": "2024-03-01",
+              "end": "2026-03-01",
+              "available": "2026-03-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 30,
+          "maximum_nonoverlapping_n": 2,
+          "selected_intervals": [
+            {
+              "date": "2017-10-31",
+              "entry": "2017-11-01",
+              "end": "2019-11-01",
+              "available": "2019-11-02"
+            },
+            {
+              "date": "2021-01-31",
+              "entry": "2021-02-01",
+              "end": "2023-02-01",
+              "available": "2023-02-02"
+            }
+          ]
+        },
+        "entry_loss_le_log2": {
+          "count": 85,
+          "maximum_nonoverlapping_n": 5,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2017-01-01",
+              "available": "2017-01-02"
+            },
+            {
+              "date": "2017-01-31",
+              "entry": "2017-02-01",
+              "end": "2019-02-01",
+              "available": "2019-02-02"
+            },
+            {
+              "date": "2019-02-28",
+              "entry": "2019-03-01",
+              "end": "2021-03-01",
+              "available": "2021-03-02"
+            },
+            {
+              "date": "2022-05-31",
+              "entry": "2022-06-01",
+              "end": "2024-06-01",
+              "available": "2024-06-02"
+            },
+            {
+              "date": "2024-06-30",
+              "entry": "2024-07-01",
+              "end": "2026-07-01",
+              "available": "2026-07-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 77,
+          "maximum_nonoverlapping_n": 5,
+          "selected_intervals": [
+            {
+              "date": "2016-01-31",
+              "entry": "2016-02-01",
+              "end": "2018-02-01",
+              "available": "2018-02-02"
+            },
+            {
+              "date": "2018-02-28",
+              "entry": "2018-03-01",
+              "end": "2020-03-01",
+              "available": "2020-03-02"
+            },
+            {
+              "date": "2020-03-31",
+              "entry": "2020-04-01",
+              "end": "2022-04-01",
+              "available": "2022-04-02"
+            },
+            {
+              "date": "2022-04-30",
+              "entry": "2022-05-01",
+              "end": "2024-05-01",
+              "available": "2024-05-02"
+            },
+            {
+              "date": "2024-06-30",
+              "entry": "2024-07-01",
+              "end": "2026-07-01",
+              "available": "2026-07-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 38,
+          "maximum_nonoverlapping_n": 2,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2017-01-01",
+              "available": "2017-01-02"
+            },
+            {
+              "date": "2022-05-31",
+              "entry": "2022-06-01",
+              "end": "2024-06-01",
+              "available": "2024-06-02"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "role": "all_mature",
+      "horizon": 48,
+      "origin_n": 91,
+      "classified_mature_n": 91,
+      "classes": {
+        "negative_return": {
+          "count": 0,
+          "maximum_nonoverlapping_n": 0,
+          "selected_intervals": []
+        },
+        "nonnegative_return": {
+          "count": 91,
+          "maximum_nonoverlapping_n": 2,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2019-01-01",
+              "available": "2019-01-02"
+            },
+            {
+              "date": "2019-01-31",
+              "entry": "2019-02-01",
+              "end": "2023-02-01",
+              "available": "2023-02-02"
+            }
+          ]
+        },
+        "entry_loss_gt_log2": {
+          "count": 30,
+          "maximum_nonoverlapping_n": 2,
+          "selected_intervals": [
+            {
+              "date": "2017-10-31",
+              "entry": "2017-11-01",
+              "end": "2021-11-01",
+              "available": "2021-11-02"
+            },
+            {
+              "date": "2021-11-30",
+              "entry": "2021-12-01",
+              "end": "2025-12-01",
+              "available": "2025-12-02"
+            }
+          ]
+        },
+        "entry_loss_le_log2": {
+          "count": 61,
+          "maximum_nonoverlapping_n": 2,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2019-01-01",
+              "available": "2019-01-02"
+            },
+            {
+              "date": "2019-01-31",
+              "entry": "2019-02-01",
+              "end": "2023-02-01",
+              "available": "2023-02-02"
+            }
+          ]
+        },
+        "peak_drawdown_gt_log2": {
+          "count": 90,
+          "maximum_nonoverlapping_n": 2,
+          "selected_intervals": [
+            {
+              "date": "2014-12-31",
+              "entry": "2015-01-01",
+              "end": "2019-01-01",
+              "available": "2019-01-02"
+            },
+            {
+              "date": "2019-01-31",
+              "entry": "2019-02-01",
+              "end": "2023-02-01",
+              "available": "2023-02-02"
+            }
+          ]
+        },
+        "peak_drawdown_le_log2": {
+          "count": 1,
+          "maximum_nonoverlapping_n": 1,
+          "selected_intervals": [
+            {
+              "date": "2022-05-31",
+              "entry": "2022-06-01",
+              "end": "2026-06-01",
+              "available": "2026-06-02"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Non-overlapping price intervals are not necessarily statistically independent market regimes.",
+    "Maximum counts are class-specific; adding them does not give a jointly non-overlapping sample.",
+    "Public-history/reconstructed source and publication vintages remain unverified; support audit does not repair provenance.",
+    "One-class return labels cannot identify within-support discrimination between losses and gains; continuous return accuracy remains a different question."
+  ]
+}
