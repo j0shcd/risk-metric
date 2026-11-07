@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATA_PROFILE: extended
-      ENABLE_OPTIONAL_SOCIAL_SOURCES: "true"
+      ENABLE_OPTIONAL_SOCIAL_SOURCES: "false"
       ENABLE_GOOGLE_TRENDS_SOURCE: "false"
       ENABLE_PAID_SOURCES: "false"
       YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
@@ -51,6 +51,12 @@ jobs:
       - name: Setup verified Node 22
         uses: ./.github/actions/setup-node
 
+      - name: Require accepted model before refreshing dashboard
+        run: |
+          cp config/model_acceptance_runtime.json config/runtime.json
+          changed=$(python -m risk_engine.model_acceptance changed --canonical config/model_acceptance_canonical.json)
+          test "$changed" = false
+          python scripts/check-publication-runtime.py
 
       - name: Ensure BTC daily store exists
         run: python backfill.py --target btc-price
