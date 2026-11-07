@@ -1,0 +1,19 @@
+{
+  "observations": 48,
+  "atoms_per_forecast": 8192,
+  "forecasts_per_observation": 2,
+  "last_append_seconds": 1.0425176249991637,
+  "max_append_seconds": 1.0425176249991637,
+  "verify_seconds": 0.9189365829806775,
+  "total_seconds": 27.624815042014234,
+  "event_max_bytes": 587588,
+  "head_sha256": "2937d2e8696f2c6e25d0526628a5ecf93e9fdae9d0bae018f424e5a475da46c3",
+  "event_chain_head_sha256": "600990c8ad81285a2b7aa24818329e68005f819a837d150006c84af0983d7cad",
+  "scientific_file_count": 289,
+  "event_count": 48,
+  "archive_bytes": 28230612,
+  "capture_bytes": 24134,
+  "observation_count": 48,
+  "resolution_count": 0,
+  "pending_or_failed_days": []
+}
