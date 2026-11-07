@@ -52,7 +52,7 @@ class ContractTests(unittest.TestCase):
     def test_actual_callback_owned_bytes_and_stale_eligible(self):
         capture=self.capture(close='2026-11-01T00:00:00Z');archive=self.archive()
         event=a.issue(archive,[capture],toy_producer)
-        result=a.verify(archive,event['event_id']);self.assertEqual(result['observation_count'],1)
+        result=a.verify(archive,event['head_sha256']);self.assertEqual(result['observation_count'],1)
         record=json.loads(next((archive/'events').iterdir()).read_bytes())
         self.assertEqual(record['request']['features']['witness'],731)
         self.assertTrue(event['classification']['prospective_eligibility'])
@@ -183,7 +183,7 @@ class ContractTests(unittest.TestCase):
         result=a.issue(archive,[capture],toy_producer)
         event=json.loads(next((archive/'events').iterdir()).read_bytes())
         self.assertEqual(event['request']['forecasts'][0]['entry_at'],'2026-11-08T00:00:00.000000Z')
-        a.verify(archive,result['event_id'])
+        a.verify(archive,result['head_sha256'])
         archive=self.archive(config={'entry_observation_buffer_seconds':7200},name='at-buffer')
         Clock.sequence=[start,start,start,datetime(2026,11,7,22,tzinfo=UTC)]
         with self.assertRaisesRegex(ValueError,'publication'):a.issue(archive,[capture],toy_producer)
@@ -197,6 +197,13 @@ class ContractTests(unittest.TestCase):
             capture=self.capture('repeat-'+day,close=day+'T00:00:00Z',value=index)
             a.issue(archive,[capture],toy_producer)
         self.assertEqual(a.verify(archive)['observation_count'],2)
+
+    def test_trusted_head_binds_publication_upper_bound(self):
+        archive=self.archive();result=a.issue(archive,[self.capture()],toy_producer)
+        marker=next((archive/'publications').iterdir());value=json.loads(marker.read_bytes())
+        value['publication_completed_at']='2026-11-07T12:00:01.000000Z'
+        marker.chmod(0o644);marker.write_bytes(canonical(value))
+        with self.assertRaisesRegex(ValueError,'head'):a.verify(archive,result['head_sha256'])
 
     def test_write_sink_inventory(self):
         expected={c:{'frozen_write','capture_response'},a:{'initialize','_own_capture','_append','issue'}}

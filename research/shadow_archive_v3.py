@@ -234,7 +234,7 @@ def _read(root,expected_head=None):
             if event['classification'] is not None:raise ValueError('resolution classification')
             resolved.add(_validate_resolution(event,observations,resolved,root,cache))
         else:raise ValueError('event kind')
-        head,last=event_id,timestamp
+        head,last=digest({'event_id':event_id,'publication_receipt_sha256':cap.sha(marker_raw)}),timestamp
     if {p.name for p in (root/'publications').iterdir()}!={p.name+'.receipt' for p in files}:raise ValueError('publication inventory')
     # Include all captures (also orphans from interrupted issue) in the raw budget.
     capture_bytes=0
@@ -276,10 +276,11 @@ def _append(root,state,reg,kind,request,classification,commit):
     cap.frozen_write(root/'events'/filename,raw)
     completed=now()
     marker={'event_id':identity,'publication_completed_at':cap.stamp(completed)}
-    cap.frozen_write(root/'publications'/(filename+'.receipt'),canonical_bytes(marker))
+    marker_raw=canonical_bytes(marker)
+    cap.frozen_write(root/'publications'/(filename+'.receipt'),marker_raw)
     if completed<commit or (kind=='observation' and any(completed>=cap.time(f['entry_at'])-timedelta(seconds=reg['cohort']['entry_observation_buffer_seconds']) for f in request['forecasts'])):
         raise ValueError('publication clock reversal/entry boundary; archive invalid, no eligibility')
-    return {'event_id':identity,'committed_at':event['committed_at'],'publication_completed_at':cap.stamp(completed),'classification':classification}
+    return {'event_id':identity,'head_sha256':digest({'event_id':identity,'publication_receipt_sha256':cap.sha(marker_raw)}),'committed_at':event['committed_at'],'publication_completed_at':cap.stamp(completed),'classification':classification}
 
 
 def issue(root,capture_dirs,producer):
