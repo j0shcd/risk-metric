@@ -73,6 +73,29 @@ class ScoringBehaviorTests(unittest.TestCase):
         eff_weak = score_weak.category_breakdown["category_price_structure_effective_weight"].mean()
         self.assertGreater(float(eff_strong), float(eff_weak))
 
+    def test_ineligible_metrics_equal_removing_them_on_each_date(self):
+        primary = _bundle(self.index, "primary", "price_structure", "btc", .3, .4, .9)
+        missing = _bundle(self.index, "missing", "price_structure", "btc", np.nan, np.nan)
+        proxy = _bundle(self.index, "proxy", "price_structure", "btc", -.8, .7, .35)
+        proxy.frame["eligible"] = np.arange(len(self.index)) % 2 == 0
+        routed = score_target(self.index, [primary, missing, proxy], self.weights, "btc")
+        active = score_target(self.index, [primary, missing, _bundle(
+            self.index, "proxy", "price_structure", "btc", -.8, .7, .35)], self.weights, "btc")
+        inactive = score_target(self.index, [primary, missing], self.weights, "btc")
+        for enabled, expected in ((True, active), (False, inactive)):
+            dates = self.index[proxy.frame["eligible"].eq(enabled)]
+            for field in ("signal", "attention", "confidence", "coverage", "category_breakdown"):
+                actual_values, expected_values = getattr(routed, field).loc[dates], getattr(expected, field).loc[dates]
+                if isinstance(actual_values, pd.Series):
+                    pd.testing.assert_series_equal(actual_values, expected_values, check_exact=True)
+                else:
+                    pd.testing.assert_frame_equal(actual_values, expected_values, check_exact=True)
+            pd.testing.assert_frame_equal(routed.metric_breakdown.loc[dates, expected.metric_breakdown.columns],
+                                          expected.metric_breakdown.loc[dates], check_exact=True)
+        inactive_dates = self.index[~proxy.frame["eligible"]]
+        self.assertTrue(routed.metric_breakdown.loc[inactive_dates, "metric_proxy_effective_weight"].eq(0).all())
+        self.assertTrue(routed.metric_breakdown.loc[inactive_dates, "metric_proxy_signal"].isna().all())
+
 
 if __name__ == "__main__":
     unittest.main()
