@@ -18,7 +18,7 @@ UTC=timezone.utc
 def toy_producer(raw,config,day):
     payload=json.loads(raw[0]);mode=config.get('mode')
     if mode=='interrupt':raise KeyboardInterrupt
-    if mode=='failure':raise ValueError('synthetic failure')
+    if mode=='failure':raise ValueError(config.get('error','synthetic failure'))
     if mode=='mutate':config['changed']=True
     n=config.get('atoms',3)
     forecasts=[{'model':model,'interpretation':'issued_cdf' if model=='empirical' else 'iid_predictive_law_draws',
@@ -252,6 +252,22 @@ class ContractTests(unittest.TestCase):
         Clock.value=datetime(2026,11,8,12,tzinfo=UTC)
         a.issue(archive,[self.capture('good','2026-11-08T00:00:00Z')],toy_producer)
         self.assertEqual(a.verify(archive)['observation_count'],1)
+
+    def test_failure_message_unicode_byte_oracle(self):
+        for i,message in enumerate(['x'*5000,'🚀'*5000,'\ud800'*5000]):
+            with self.subTest(i=i):
+                evidence=c.failure_evidence(ValueError(message))
+                self.assertLess(len(canonical(evidence)),3500)
+                self.assertEqual(evidence['error_sha256'],c.sha(canonical(message)))
+                archive=self.archive(config={'mode':'failure','error':message},name='unicode-'+str(i))
+                with self.assertRaises(ValueError):a.issue(archive,[self.capture('unicode-capture-'+str(i))],toy_producer)
+                self.assertLess((archive/'attempts'/'2026-11-07.failure.json').stat().st_size,4096)
+                self.assertEqual(a.verify(archive)['pending_or_failed_days'],['2026-11-07'])
+                def fail(request):raise c.CaptureFailure(message,b'partial',{})
+                directory=self.root/('unicode-partial-'+str(i))
+                with self.assertRaises(c.CaptureFailure):c.capture_response(directory,{},fail)
+                failure=json.loads((directory/'failure.json').read_bytes())
+                self.assertEqual(failure['error_sha256'],c.sha(canonical(message)))
 
     def test_write_sink_inventory(self):
         expected={c:{'new_directory','frozen_write','capture_response'},a:{'initialize','_own_capture','_append','issue'}}
