@@ -2,9 +2,9 @@
 
 Status: finite known-law panel qualification passes; earlier single-path searches
 remain failed. Ten indicator variants have produced no qualified indicator;
-unchanged candidates also fail monthly equity portability. A fixed return-
-transport study improves two-year development CRPS by 19.72% using a chronology
-control, with a one-year regression. One frozen outer falsification is next.
+unchanged candidates fail monthly equity portability. A chronology control's
+19.72% two-year development gain fails its frozen outer check; that branch is
+stopped. Next is one prospective, price-only paper-archive vertical slice.
 No promotion.
 Updated 2026-11-07.
 
@@ -1674,10 +1674,120 @@ gain warrants **one frozen chronological falsification**, not promotion:
 - Explicitly record selection after inspecting 23 models and primary-target
   results, plus previously exposed outer history. This is not a fresh holdout.
 
-The wrapper/registration must be reviewed and committed before that one outer
-execution. No primary model has qualified; professional-use reliability remains
-unmet. The synthetic panel, development improvement and market validation remain
-distinct claims.
+**Completed outer falsification: both stopping conditions triggered.** The
+wrapper was independently reviewed and [registration](artifacts/transport-outer-registration-2026-11-07.json)
+committed at `21c94d2` before the one replay. Registration ID is
+`d25fd91dc7517d312d42b6241086be22efb46020fedd8c6100ccd7963c63d981`.
+[Full results](artifacts/transport-outer-2026-11-07.json) and the
+[owned-input/result/audit packet](artifacts/transport-outer-2026-11-07.zip)
+retain all 144 outer forecasts, 720 CDF peers and 108 comparisons. Archive SHA-256:
+`1261bec633496e438a4e29224aac16aaa968b9386234c4eaa836785c0d831378`.
+
+| Outer return forecaster | 12-month CRPS, 30 origins | 24-month CRPS, 18 origins |
+| --- | ---: | ---: |
+| Unconditional CDF | 0.520563 | 0.304205 |
+| Transport intercept | 0.523895 | 0.313330 |
+| Transport context | 0.444378 | 0.308208 |
+| Transport context + chronology | 0.538629 | 0.529023 |
+
+Chronology is about 74% worse than unconditional on primary two-year loss and
+also loses to matched transport context. Its two-year Brier loss is 0.304205 and
+80% coverage 50%; the development improvement did not persist. There are only two
+negative returns among 18 two-year outer origins and one disjoint two-year path;
+one-year outer has eight negatives among 30 origins and three disjoint paths.
+Disjoint paths are not asserted independent. The context model's one-year gain
+remains a separate mixed result, not a replacement primary objective.
+
+Independent audit recomputed all 144 outer forecasts and 216 prior development
+checks via full/deleted-label augmented least squares, plus all 720 issued-CDF
+peers, 108 cells, calendar/maturity/class/non-overlap/stopping logic. Maximum
+numerical difference was `4.44e-15`; aggregate differences were zero. Previously
+issued development forecasts remain exact. Both unavailable generative replicas
+stay explicit. Seven outer-wrapper tests pass, including a regression that fixes
+the historical 43-file test inventory rather than silently adding unrelated new
+research modules to it; its old behavior fails under simulated inventory growth.
+No measurement source, kernel, parameter or stored outcome changed in that fix.
+
+The chronology improvement branch and retrospective decoder-rescue path are
+**stopped**. Do not tune another penalty, phase, horizon or nearby feature to
+repair this result. A fresh reviewer using a different model independently agreed:
+the apparatus can establish correct scores on this reconstruction, while exposed
+history alone cannot establish the requested professional-use qualification.
+The next evidence must be archived before outcomes. No primary model has
+qualified; synthetic qualification, historical development and future market
+validation remain distinct claims.
+
+### Next bounded step: observed-vintage paper archive
+
+Implement one source-to-shadow-archive vertical slice before further market
+optimization. The current generic v2 archive remains frozen; it accepts a known
+publication assertion or unknown vintage, but cannot express the sufficient fact
+that exact public bytes were observed **by retrieval completion**. A current
+capture does not reveal first publication and cannot repair a historical decision.
+Never invent `published_at` from a bucket timestamp or retrieval time.
+
+The accepted v3 contract uses actual runtime capture, issuance and publication
+bounds; executes a registered producer on owned captured bytes; and binds raw
+responses, selected closed prefix, code/helpers, configuration, runtime and
+forecasts. Require every consumed parent to satisfy
+`selected close <= capture completion <= issuance <= content-publication bound < entry observation`.
+Clock reversals, future/open-bar use, capture after decision, unknown parents,
+changed bytes/config/runtime and cohort relabeling must fail. A postwrite clock
+sample bounds when immutable forecast content was published; incomplete/late
+publication remains visibly incomplete and ineligible. Source age remains a
+quality observation, separate from prospective chronology/lineage eligibility.
+Local hashes do not authenticate providers, clocks or an adversarial full rewrite;
+independently retained heads would be needed for stronger tamper evidence.
+
+Use only frozen baselines initially: unconditional/context empirical CDFs and the
+unchanged Student-t price model, terminal returns at 12/24 months. This is an
+operational paper witness, not a newly qualified indicator, strategy or forecast
+calibration claim. The first November 7 witness belongs to its own immutable
+`operational_witness` cohort. The next formal monthly decision is November 30;
+it cannot be issued or backdated now. No scheduler, alerts, trade, publication,
+paid service or production deployment is included.
+
+The source survey for this slice is recorded here, checked November 7:
+
+| Source | Decision for this bounded slice |
+| --- | --- |
+| [Coin Metrics Community](https://docs.coinmetrics.io/packages/coin-metrics-community-data) `btc/PriceUSD/1d` | Selected for local noncommercial paper research only; working no-key entitlement metadata verified below |
+| [Bitstamp OHLC](https://www.bitstamp.net/api/) | Runner-up, not adopted: commercial data agreement and exact historical/UTC coverage remain unresolved |
+| [Coinbase market data](https://www.coinbase.com/legal/market_data) | Excluded: current terms require prior consent for AI/ML development, validation, benchmarking and operation |
+| [Kraken OHLC](https://docs.kraken.com/api-reference/market-data/get-ohlc-data) | Latest 720 entries including open bar cannot supply the fixed 730-return fit/history requirement |
+| [CoinGecko Demo](https://www.coingecko.com/en/api/pricing) | Free history limitation does not meet the multiyear daily requirement; no account/paid upgrade adopted |
+| [Coin Metrics GitHub archive](https://github.com/coinmetrics/data) | Official but stale for this witness: latest BTC file commit May 24, 2026; not a current-close fallback |
+
+The [specific PriceUSD definition](https://docs.coinmetrics.io/network-data/network-data-overview/market/price#usd-denominated-closing-price)
+and [timestamp FAQ](https://docs.coinmetrics.io/service-and-support/faqs) give a
+beginning-of-day row timestamp for that day's closing price: row D means a close
+at D+1 00:00 UTC. Normalize to that **close instant**, not D's start. This is a
+provider USD reference close, not an asserted executable exchange price.
+At `2026-11-07T02:24:44.696638Z`, unauthenticated metadata from the documented
+[catalog query](https://community-api.coinmetrics.io/v4/catalog-v2/asset-metrics?assets=btc&metrics=PriceUSD)
+returned `community:true`, daily coverage from July 18, 2010 through the
+November 6 row (November 7 close). No price observations were fetched in that
+preflight. This verifies advertised access then, not continuity or price truth;
+the collector must check actual responses. Generic package documentation still
+names a conflicting hostname; the working documented community host is pinned.
+
+The current community documentation and official archive declare
+[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). Keep actual captures
+and forecasts local in ignored storage, with licence/provenance recorded.
+Commercial, professional and trading rights are not established by this research
+choice. No professional-use eligibility or redistribution permission is inferred.
+Public requests send no account identifiers, credentials or portfolio data;
+the provider can observe IP/request metadata, and no Swiss/EU-only log residency
+is claimed.
+
+Collector bounds: fixed verified-TLS no-key HTTPS host/path, no cookies/proxy
+credentials/cross-host redirects, six requests including retries, two-second
+spacing, 2 MiB per response, 10,000 rows and a subprocess wall deadline under
+60 seconds. Raw responses are retained before numeric parsing. Require finite
+positive consecutive closed daily prices; no interpolation, source stitching,
+open-bar values or silent replacement of prior captures. The pure registered
+producer performs no network I/O. Source/config/code/cohort registration and
+independent offline review must precede the one actual paper capture/append.
 The expanded user goal
 is unmet: no candidate has demonstrated broad incremental market information or
 professional-use reliability. Synthetic qualification cannot supply missing
