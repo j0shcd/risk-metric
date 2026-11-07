@@ -3,6 +3,8 @@ from datetime import datetime,timezone,timedelta
 from pathlib import Path
 import ast
 import inspect
+import os
+import stat
 import json
 import tempfile
 import unittest
@@ -47,12 +49,12 @@ class ContractTests(unittest.TestCase):
         c.capture_response(p,{'query_day':'2026-11-07'},lambda r:(payload,{'status':200}))
         return p
     def archive(self,config=None,kind='operational_witness',days=None,name='archive'):
-        reg=a.register({'kind':kind,'decision_days':days or ['2026-11-07']},toy_producer,[Path(__file__)],config or {})
+        reg=a.register({'kind':kind,'decision_days':days or ['2026-11-07'],'entry_observation_buffer_seconds':(config or {}).get('entry_observation_buffer_seconds',0)},toy_producer,[Path(__file__)],{'entry_observation_buffer_seconds':0,**(config or {})})
         p=self.root/name;a.initialize(p,reg);return p
     def test_actual_callback_owned_bytes_and_stale_eligible(self):
         capture=self.capture(close='2026-11-01T00:00:00Z');archive=self.archive()
         event=a.issue(archive,[capture],toy_producer)
-        result=a.verify(archive,event['event_id']);self.assertEqual(result['observation_count'],1)
+        result=a.verify(archive,event['head_sha256']);self.assertEqual(result['observation_count'],1)
         record=json.loads(next((archive/'events').iterdir()).read_bytes())
         self.assertEqual(record['request']['features']['witness'],731)
         self.assertTrue(event['classification']['prospective_eligibility'])
@@ -176,13 +178,88 @@ class ContractTests(unittest.TestCase):
             with patch.object(target[0],target[1],target[2]),self.assertRaises(ValueError):a.issue(archive,[first],toy_producer)
             self.assertEqual(len(list((archive/'events').iterdir())),0)
 
+    def test_buffered_publication_cutoff_keeps_label_anchors(self):
+        capture=self.capture()
+        archive=self.archive(config={'entry_observation_buffer_seconds':7200})
+        start=datetime(2026,11,7,21,59,59,tzinfo=UTC);Clock.sequence=[start,start,start,start]
+        result=a.issue(archive,[capture],toy_producer)
+        event=json.loads(next((archive/'events').iterdir()).read_bytes())
+        self.assertEqual(event['request']['forecasts'][0]['entry_at'],'2026-11-08T00:00:00.000000Z')
+        a.verify(archive,result['head_sha256'])
+        archive=self.archive(config={'entry_observation_buffer_seconds':7200},name='at-buffer')
+        Clock.sequence=[start,start,start,datetime(2026,11,7,22,tzinfo=UTC)]
+        with self.assertRaisesRegex(ValueError,'publication'):a.issue(archive,[capture],toy_producer)
+        with self.assertRaisesRegex(ValueError,'publication'):a.verify(archive)
+
+    def test_repeated_days_preserve_loaded_code_identity(self):
+        days=['2026-11-07','2026-11-08']
+        archive=self.archive(days=days)
+        for index,day in enumerate(days):
+            Clock.value=datetime.fromisoformat(day+'T12:00:00+00:00')
+            capture=self.capture('repeat-'+day,close=day+'T00:00:00Z',value=index)
+            a.issue(archive,[capture],toy_producer)
+        self.assertEqual(a.verify(archive)['observation_count'],2)
+
+    def test_trusted_head_binds_publication_upper_bound(self):
+        archive=self.archive();result=a.issue(archive,[self.capture()],toy_producer)
+        marker=next((archive/'publications').iterdir());value=json.loads(marker.read_bytes())
+        value['publication_completed_at']='2026-11-07T12:00:01.000000Z'
+        marker.chmod(0o644);marker.write_bytes(canonical(value))
+        with self.assertRaisesRegex(ValueError,'head'):a.verify(archive,result['head_sha256'])
+
+    def test_resealed_registration_semantics_and_defaults(self):
+        archive=self.archive();original=json.loads((archive/'registration.json').read_bytes())
+        for mode in ('formal','calendar','limits'):
+            reg=json.loads(json.dumps(original))
+            if mode=='formal':reg['cohort']['kind']='formal_monthly'
+            elif mode=='calendar':reg['calendar']['anchors']='same day entry'
+            else:reg['limits']['events']=99999
+            reg['registration_id']=a.digest({k:v for k,v in reg.items() if k!='registration_id'})
+            with self.assertRaises(ValueError):a.initialize(self.root/('bad-'+mode),reg)
+        capture=self.capture()
+        original_defaults=toy_producer.__kwdefaults__
+        try:
+            toy_producer.__kwdefaults__={'unused':.99}
+            with self.assertRaisesRegex(ValueError,'drift'):a.issue(archive,[capture],toy_producer)
+        finally:toy_producer.__kwdefaults__=original_defaults
+
+    def test_directory_durability_before_publication_witness(self):
+        original=os.fsync;calls=[]
+        def observe(fd):
+            calls.append('directory' if stat.S_ISDIR(os.fstat(fd).st_mode) else 'file')
+            return original(fd)
+        with patch.object(c.os,'fsync',observe):c.frozen_write(self.root/'durable',b'sentinel')
+        self.assertGreaterEqual(calls.count('file'),2)
+        self.assertEqual(calls[-1],'directory')
+        archive=self.archive();capture=self.capture()
+        events_inode=(archive/'events').stat().st_ino
+        def fail_event_directory(fd):
+            info=os.fstat(fd)
+            if stat.S_ISDIR(info.st_mode) and info.st_ino==events_inode:raise OSError('directory durability failure')
+            return original(fd)
+        with patch.object(c.os,'fsync',fail_event_directory),self.assertRaises(OSError):a.issue(archive,[capture],toy_producer)
+        self.assertEqual(len(list((archive/'events').iterdir())),1)
+        self.assertEqual(list((archive/'publications').iterdir()),[])
+        with self.assertRaises(FileNotFoundError):a.verify(archive)
+
+    def test_long_error_does_not_poison_later_cohort_day(self):
+        archive=self.archive(days=['2026-11-07','2026-11-08'])
+        capture=self.capture(value='x'*5000)
+        with self.assertRaises(ValueError):a.issue(archive,[capture],toy_producer)
+        failure=archive/'attempts'/'2026-11-07.failure.json'
+        self.assertLess(failure.stat().st_size,4096)
+        self.assertEqual(a.verify(archive)['pending_or_failed_days'],['2026-11-07'])
+        Clock.value=datetime(2026,11,8,12,tzinfo=UTC)
+        a.issue(archive,[self.capture('good','2026-11-08T00:00:00Z')],toy_producer)
+        self.assertEqual(a.verify(archive)['observation_count'],1)
+
     def test_write_sink_inventory(self):
-        expected={c:{'frozen_write','capture_response'},a:{'initialize','_own_capture','_append','issue'}}
+        expected={c:{'new_directory','frozen_write','capture_response'},a:{'initialize','_own_capture','_append','issue'}}
         for module,sinks in expected.items():
             actual=set()
             for node in ast.parse(inspect.getsource(module)).body:
                 if isinstance(node,ast.FunctionDef):
-                    if any(isinstance(x,ast.Call) and getattr(x.func,'id',getattr(x.func,'attr','')) in ('publish','frozen_write') for x in ast.walk(node)):actual.add(node.name)
+                    if any(isinstance(x,ast.Call) and getattr(x.func,'id',getattr(x.func,'attr','')) in ('publish','frozen_write','new_directory','mkdir') for x in ast.walk(node)):actual.add(node.name)
             self.assertEqual(actual,sinks)
 
 def canonical(value):return (json.dumps(value,sort_keys=True,separators=(',',':'))+'\n').encode()
