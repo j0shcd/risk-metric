@@ -6,6 +6,8 @@ Simulation must include next-day entry, then calendar holding days; model API
 owns path generation. Primary generative losses estimate the underlying predictive law with iid-draw
 U-statistic CRPS and fair Brier. Issued reference CDFs remain uncorrected.
 Replicas diagnose simulation variation, not significance.
+The CLI accepts only the fixed price-baseline module, checked by file hash before
+import. Registration bytes are captured before parsing and bound even on failure.
 """
 from __future__ import annotations
 
@@ -43,6 +45,8 @@ PROTOCOL = {
                        'https://scoringrules.readthedocs.io/en/latest/crps_estimators.html'],
 }
 METRICS = ('crps', 'brier', 'empirical_crps', 'crps_mc_correction', 'empirical_brier', 'brier_mc_correction', 'coverage_50', 'coverage_80', 'width_50', 'width_80', 'outside_atom_range')
+MODEL_MODULE = 'research.generative_price_baseline'
+MODEL_FILE = Path(__file__).with_name('generative_price_baseline.py')
 CODE_FILES = ('generative_forecast_scorecard.py', 'market_dataset.py', 'market_information.py',
               'readout_study.py', 'distribution_readout.py', 'scorecard_artifacts.py', 'market_scorecard.py')
 
@@ -350,6 +354,25 @@ def readable(result, support):
     return ('\n'.join(lines)+'\n').encode()
 
 
+def _import_model():
+    """Narrow injection seam for synthetic CLI tests; never registration-controlled."""
+    return importlib.import_module(MODEL_MODULE)
+
+
+def load_registered_model(registration):
+    if registration['model_module'] != MODEL_MODULE:
+        raise ValueError('CLI supports only the frozen generative_price_baseline family')
+    expected = registration['model_source_sha256']
+    if sha(MODEL_FILE.read_bytes()) != expected:
+        raise ValueError('registered model source mismatch before import')
+    model = _import_model()
+    if Path(model.__file__).resolve() != MODEL_FILE.resolve():
+        raise ValueError('loaded model file differs from registered fixed family')
+    if sha(MODEL_FILE.read_bytes()) != expected:
+        raise ValueError('model source changed while importing')
+    return model
+
+
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source',type=Path,required=True)
@@ -357,24 +380,33 @@ def main(argv=None):
     parser.add_argument('--registration',type=Path,required=True)
     parser.add_argument('--output-dir',type=Path,required=True)
     args=parser.parse_args(argv);target=safe_path(args.output_dir);target.mkdir(exist_ok=False)
-    raw=args.registration.read_bytes(); registration=json.loads(raw)
-    publish(target/'request.json',canonical_bytes({'source':str(args.source),'reference_replay':str(args.reference_replay),'registration':str(args.registration)}))
+    request={'source':str(args.source),'reference_replay':str(args.reference_replay),
+             'registration':str(args.registration),'registration_sha256':None}
+    bound=[]
     try:
+        raw=args.registration.read_bytes()
+        publish(target/'registration.json',raw)
+        bound.append('registration.json')
+        request['registration_sha256']=sha(raw)
+        publish(target/'request.json',canonical_bytes(request));bound.append('request.json')
+        registration=json.loads(raw)
+        canonical_bytes(registration)
         source=args.source.read_bytes();reference=args.reference_replay.read_bytes()
         if sha(source)!=registration['source_sha256'] or sha(reference)!=registration['reference_replay_sha256']:
             raise ValueError('registered input hash mismatch')
         if registration['scorecard_code_sha256']!=code_identity():raise ValueError('registered scorecard code mismatch')
-        model=importlib.import_module(registration['model_module'])
-        if sha(Path(model.__file__).read_bytes())!=registration['model_source_sha256']:
-            raise ValueError('registered model source mismatch')
+        if registration['runtime']!=runtime_identity():raise ValueError('registered runtime mismatch')
+        model=load_registered_model(registration)
         snapshot=load_snapshot(args.source)
         if snapshot['source_sha256']!=sha(source):raise ValueError('source changed while loading')
         result=evaluate(snapshot,json.loads(reference)['references'],model,registration)
     except Exception as error:
-        write_packet(target,{'error.json':canonical_bytes({'status':'ineligible','error':f'{type(error).__name__}: {error}'})},bound_existing=('request.json',))
+        if 'request.json' not in bound:
+            publish(target/'request.json',canonical_bytes(request));bound.append('request.json')
+        write_packet(target,{'error.json':canonical_bytes({'status':'ineligible','error':f'{type(error).__name__}: {error}'})},bound_existing=tuple(bound))
         raise
-    write_packet(target,{'registration.json':raw,'scorecard.json':canonical_bytes(result),
-                        **{support+'.md':readable(result,support) for support in PROTOCOL['supports']}},bound_existing=('request.json',))
+    write_packet(target,{'scorecard.json':canonical_bytes(result),
+                        **{support+'.md':readable(result,support) for support in PROTOCOL['supports']}},bound_existing=tuple(bound))
     print(json.dumps({'status':'retrospective_research_no_promotion','output':str(target)}));return 0
 
 

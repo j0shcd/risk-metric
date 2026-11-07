@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 from research.generative_forecast_scorecard import (
-    PROTOCOL, distribution_summary, evaluate, simulation_seed, main, sha, code_identity, runtime_identity,
+    PROTOCOL, distribution_summary, evaluate, simulation_seed, main, sha, code_identity, runtime_identity, MODEL_MODULE, MODEL_FILE, load_registered_model,
 )
 from research.market_dataset import COMPONENTS, digest, load_snapshot, canonical_bytes
 from research.scorecard_artifacts import verify_packet
@@ -194,16 +194,16 @@ class GenerativeScorecardTests(unittest.TestCase):
             directory=Path(temporary).resolve();source=directory/'source.csv'
             write_source(source,self.snapshot);snapshot=load_snapshot(source)
             reference=directory/'references.json';reference.write_bytes(canonical_bytes({'references':references(snapshot)}))
-            model=ToyModel();adapter=types.SimpleNamespace(PROTOCOL=model.PROTOCOL,fit=model.fit,simulate=model.simulate,__file__=__file__)
+            model=ToyModel();adapter=types.SimpleNamespace(PROTOCOL=model.PROTOCOL,fit=model.fit,simulate=model.simulate,__file__=str(MODEL_FILE))
             reg=registration();reg.update(source_sha256=sha(source.read_bytes()),reference_replay_sha256=sha(reference.read_bytes()),
-                                         scorecard_code_sha256=code_identity(),model_module='synthetic_only_adapter',
-                                         model_source_sha256=sha(Path(__file__).read_bytes()))
+                                         scorecard_code_sha256=code_identity(),model_module=MODEL_MODULE,
+                                         model_source_sha256=sha(MODEL_FILE.read_bytes()))
             registration_path=directory/'registration.json';registration_path.write_bytes(canonical_bytes(reg))
             output=directory/'run';args=['--source',str(source),'--reference-replay',str(reference),
                                          '--registration',str(registration_path),'--output-dir',str(output)]
-            with patch('research.generative_forecast_scorecard.importlib.import_module',return_value=adapter), redirect_stdout(io.StringIO()):
+            with patch('research.generative_forecast_scorecard._import_model',return_value=adapter), redirect_stdout(io.StringIO()):
                 self.assertEqual(main(args),0)
-            verify_packet(output)
+            self.assertIn('registration.json',verify_packet(output)['files'])
             self.assertTrue((output/'matched_direct_cdf.md').exists())
             self.assertTrue((output/'all_generative_eligible.md').exists())
             with self.assertRaises(FileExistsError):main(args)
@@ -212,6 +212,39 @@ class GenerativeScorecardTests(unittest.TestCase):
                 main(args[:-1]+[str(changed)])
             verify_packet(changed)
             self.assertTrue((changed/'error.json').exists())
+
+    def test_rejected_and_malformed_registration_bytes_are_receipt_bound(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory=Path(temporary).resolve(); source=directory/'source.csv'; source.write_text('synthetic')
+            reference=directory/'reference.json';reference.write_text('{}')
+            config=directory/'registration.json'
+            config.write_bytes(b'{ malformed registration')
+            original=config.read_bytes();output=directory/'malformed'
+            args=['--source',str(source),'--reference-replay',str(reference),
+                  '--registration',str(config),'--output-dir',str(output)]
+            with patch('research.generative_forecast_scorecard._import_model') as importer:
+                with self.assertRaises(json.JSONDecodeError):main(args)
+                importer.assert_not_called()
+            config.write_text('external file has changed')
+            self.assertIn('registration.json',verify_packet(output)['files'])
+            self.assertEqual((output/'registration.json').read_bytes(),original)
+            self.assertEqual(json.loads((output/'request.json').read_text())['registration_sha256'],sha(original))
+            self.assertTrue((output/'error.json').exists())
+            reg=registration();reg.update(source_sha256=sha(source.read_bytes()),
+                reference_replay_sha256=sha(reference.read_bytes()),model_module=MODEL_MODULE,
+                model_source_sha256=sha(MODEL_FILE.read_bytes()))
+            for index,change in enumerate(({'model_module':'unregistered_import_witness'},
+                                           {'model_source_sha256':'0'*64},
+                                           {'runtime':{'python':'wrong'}})):
+                altered={**reg,**change};config.write_bytes(canonical_bytes(altered));captured=config.read_bytes()
+                target=directory/f'rejected-{index}'
+                with patch('research.generative_forecast_scorecard.importlib.import_module') as importer:
+                    with self.assertRaises(ValueError):main(args[:-1]+[str(target)])
+                    importer.assert_not_called()
+                config.write_text('external file changed again')
+                self.assertIn('registration.json',verify_packet(target)['files'])
+                self.assertEqual((target/'registration.json').read_bytes(),captured)
+                self.assertEqual(json.loads((target/'request.json').read_text())['registration_sha256'],sha(captured))
 
     def test_runtime_and_boundary_helper_changes_fail_before_fit(self):
         model=ToyModel()
