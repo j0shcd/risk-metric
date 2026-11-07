@@ -205,6 +205,22 @@ class ContractTests(unittest.TestCase):
         marker.chmod(0o644);marker.write_bytes(canonical(value))
         with self.assertRaisesRegex(ValueError,'head'):a.verify(archive,result['head_sha256'])
 
+    def test_resealed_registration_semantics_and_defaults(self):
+        archive=self.archive();original=json.loads((archive/'registration.json').read_bytes())
+        for mode in ('formal','calendar','limits'):
+            reg=json.loads(json.dumps(original))
+            if mode=='formal':reg['cohort']['kind']='formal_monthly'
+            elif mode=='calendar':reg['calendar']['anchors']='same day entry'
+            else:reg['limits']['events']=99999
+            reg['registration_id']=a.digest({k:v for k,v in reg.items() if k!='registration_id'})
+            with self.assertRaises(ValueError):a.initialize(self.root/('bad-'+mode),reg)
+        capture=self.capture()
+        original_defaults=toy_producer.__kwdefaults__
+        try:
+            toy_producer.__kwdefaults__={'unused':.99}
+            with self.assertRaisesRegex(ValueError,'drift'):a.issue(archive,[capture],toy_producer)
+        finally:toy_producer.__kwdefaults__=original_defaults
+
     def test_write_sink_inventory(self):
         expected={c:{'frozen_write','capture_response'},a:{'initialize','_own_capture','_append','issue'}}
         for module,sinks in expected.items():

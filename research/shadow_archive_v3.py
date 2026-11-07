@@ -58,6 +58,25 @@ def code_hash(code):
                    'flags':code.co_flags,'exceptiontable':code.co_exceptiontable.hex()})
 
 
+def default_value(value):
+    """Bounded data defaults only; no repr/address-dependent object identities."""
+    if value is None or type(value) in (str,int,bool):return value
+    if type(value) is float:
+        finite(value);return value
+    if isinstance(value,bytes):return {'bytes':value.hex()}
+    if isinstance(value,(tuple,list)):return {type(value).__name__:[default_value(v) for v in value]}
+    if isinstance(value,(set,frozenset)):return {type(value).__name__:sorted([default_value(v) for v in value],key=canonical_bytes)}
+    if isinstance(value,dict):
+        if not all(isinstance(k,str) for k in value):raise ValueError('string default keys required')
+        return {k:default_value(v) for k,v in value.items()}
+    raise ValueError('unsupported non-data callable default')
+
+
+def function_identity(function):
+    return {'code':code_hash(function.__code__),'defaults':default_value(function.__defaults__),
+            'kwdefaults':default_value(function.__kwdefaults__)}
+
+
 def source_identity(producer,paths):
     if not inspect.isfunction(producer) or producer.__closure__ or '<locals>' in producer.__qualname__:raise ValueError('top-level pure Python producer required')
     paths=sorted({str(cap.safe(p).resolve()) for p in paths})
@@ -71,9 +90,9 @@ def source_identity(producer,paths):
         if not location or str(Path(location).resolve()) not in paths:continue
         for name,value in vars(module).copy().items():
             if inspect.isfunction(value) and value.__module__==module.__name__:
-                loaded[module.__name__+'.'+name]=code_hash(value.__code__)
+                loaded[module.__name__+'.'+name]=function_identity(value)
     return {'entrypoint':producer.__module__+':'+producer.__qualname__,'code':{p:cap.sha(cap.read(p,cap.MAX_RESPONSE_BYTES)) for p in paths},
-            'loaded_functions':loaded,'callable_code':code_hash(producer.__code__),'runtime':runtime()}
+            'loaded_functions':loaded,'callable_code':function_identity(producer),'runtime':runtime()}
 
 
 def register(cohort,producer,code_paths,config):
@@ -99,8 +118,17 @@ def register(cohort,producer,code_paths,config):
 def _registration(reg):
     keys(reg,('schema','cohort','config','producer','calendar','limits','registration_id'))
     if reg['schema']!=SCHEMA or reg['registration_id']!=digest({k:v for k,v in reg.items() if k!='registration_id'}):raise ValueError('v3 registration identity required; no v2 reclassification')
-    buffer=reg['cohort']['entry_observation_buffer_seconds']
-    if type(buffer) is not int or not 0<=buffer<86400 or reg['calendar']['entry_observation_buffer_seconds']!=buffer or reg['config'].get('entry_observation_buffer_seconds')!=buffer:raise ValueError('registered entry buffer mismatch')
+    cohort=reg['cohort'];keys(cohort,('kind','decision_days','entry_observation_buffer_seconds'))
+    days=cohort['decision_days']
+    if cohort['kind'] not in ('operational_witness','formal_monthly') or not isinstance(days,list) or not days or len(days)>MAX_EVENTS or days!=sorted(set(days)):raise ValueError('registered cohort definition')
+    for day in days:
+        date=pd.Timestamp(day)
+        if date.tz is not None or date.date().isoformat()!=day:raise ValueError('registered ISO day')
+        if cohort['kind']=='formal_monthly' and date!=date+pd.offsets.MonthEnd(0):raise ValueError('registered formal month end')
+    buffer=cohort['entry_observation_buffer_seconds']
+    if type(buffer) is not int or not 0<=buffer<86400 or not isinstance(reg['config'],dict) or reg['config'].get('entry_observation_buffer_seconds')!=buffer:raise ValueError('registered entry buffer mismatch')
+    if reg['calendar']!={'anchors':'next UTC day00 entry; calendar-month end; next-day label availability','entry_observation_buffer_seconds':buffer}:raise ValueError('registered calendar mismatch')
+    if reg['limits']!={'event_bytes':MAX_EVENT_BYTES,'archive_bytes':MAX_ARCHIVE_BYTES,'events':MAX_EVENTS,'capture_bytes':cap.MAX_CAPTURE_BYTES}:raise ValueError('registered limits mismatch')
 
 
 def initialize(root,registration):
