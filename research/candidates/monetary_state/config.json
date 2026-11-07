@@ -1,0 +1,1 @@
+{"candidate_id":"real_yield_tightening_12m_lag45","source_file":"fred_real_yield_10y.csv","source_column":"real_yield_10y","lag_calendar_days":45,"change_calendar_months":12,"maximum_endpoint_age_days":14,"scale_percentage_points":1.0,"neutral_score":50.0,"first_origin":"2014-12-31","last_origin":"2022-12-31","direction":"higher_risk"}
