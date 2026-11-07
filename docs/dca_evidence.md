@@ -123,12 +123,18 @@ The evaluator and unit tests assert that:
 
 Any causality-audit failure blocks DCA evidence claims.
 
-The automated model-acceptance gate uses equal-cashflow accumulation wealth versus
+The legacy production model-acceptance gate uses equal-cashflow accumulation wealth versus
 Fixed DCA as its primary improvement target. Exit-only wealth, one-BTC de-risking
 Calmar, and 48-month region ordering are non-inferiority guardrails; causality and
 source availability must remain true, and a dedicated gate prevents the signal
 horizon from silently reverting below 48 months. The former registered 6/12-month
 DCA AUC hypotheses are now exploratory and cannot promote a model.
+
+This gate now runs in the explicit `model-acceptance.yml` workflow, separately
+from research CI. Its thresholds are unchanged. Research commits do not approve
+a model; the daily publisher refuses unaccepted source and model-setting changes.
+See [ADR 0009](adr/0009-separate-research-ci-from-production-promotion.md) and the
+[research record](metric_evaluation_plan.md) for the programme's current objective.
 
 ## Reproduce
 

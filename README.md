@@ -1,21 +1,46 @@
 # risk-metric
 
-A personal experiment in composing a crypto "risk score" for Bitcoin from public data, and serving it as a small dashboard that keeps itself up to date.
+A small research programme studying whether public data can improve our understanding of Bitcoin's future returns and losses. We keep the benchmark fixed, test a few clearly recorded ideas at a time, and retain failures as well as successes.
 
 **Live dashboard →** https://risk-metric.pages.dev/
 
-> This is a learning project, not a financial product. Don't make investment decisions from it.
+> No indicator has yet demonstrated dependable improvement across our comparisons. The dashboard is an experimental display, not a validated trading signal.
 
-## Why this exists
+## Research first
 
-I wanted an excuse to wire together the full path from "messy public data" to "thing on the internet that updates by itself." Bitcoin made a good target: the data is open, the signals are varied (price, on-chain, macro, social), and there is no shortage of opinions on what "risk" should mean.
+The aim is gradual, measurable improvement rather than one promising backtest.
+Every candidate faces the same dates and outcomes, with information limited to
+what its declared historical reconstruction allows. We compare returns and losses
+separately; a change in investment size or contribution schedule cannot improve
+the information score. Historical data revisions and repeated inspection of the
+same market periods limit what these results establish.
 
-The interesting part wasn't picking the perfect formula — it was the end-to-end exercise:
+Start with the [research record](docs/metric_evaluation_plan.md). Its opening
+sections explain the current approaches, what worked, what failed and the active
+round. The same document owns the frozen benchmark, reproducible evidence,
+attempt history, data limitations and next steps. Legacy strategy-specific
+experiments remain in [DCA evidence](docs/dca_evidence.md).
 
-- **Heterogeneous sources.** Pulling from CoinGecko, Binance, FRED, Wikimedia pageviews, YouTube, Reddit, and the Fear & Greed Index — each with its own auth model, rate limits, and gaps. Building a single profile-driven layer that degrades gracefully when a key is missing or a source is down.
-- **Turning signals into a data model.** Normalizing time series onto a common index, scoring each metric, grouping them into categories (market, on-chain, sentiment, social, cycle), and combining them into a small set of composite indices without the result being purely arbitrary.
-- **Serving it on the web.** A React + Vite dashboard reads versioned JSON artifacts produced by the Python pipeline. The contract between backend and frontend is just a folder of JSON files, which kept the two sides decoupled and easy to iterate on.
-- **Keeping the data fresh.** A GitHub Action runs the pipeline daily, refreshes the cached sources, regenerates the JSON, and commits it back to the repo. Cloudflare Pages picks up the commit and redeploys. No server to babysit.
+The November 7 round explores three remaining ideas independently: unusual market
+states, a small supervised learner and a restrained ensemble. Each froze one
+candidate before benchmark feedback; all three failed the declared main comparison
+and are retained as reproducible negative evidence. A favorable historical result permits a
+further check; it does not automatically replace the dashboard model. Separately,
+six baseline forecasts were archived before their starting point; none has a
+mature outcome yet. The next registered monthly observation is November 30, 2026.
+
+## Existing dashboard
+
+The original dashboard combines market, on-chain, macro and attention inputs.
+Python produces versioned JSON and React displays it. Its scheduled refresh must
+refuse an engine/model identity that differs from the accepted production model,
+before fetching data or publishing. Research commits can therefore be published
+without silently promoting an experimental model. The legacy model-acceptance
+gate and canonical identity remain unchanged. Research CI checks correctness and
+security; production performance evaluation runs in the explicit
+`model-acceptance.yml` workflow. Current engine revisions are unaccepted, so the
+scheduled dashboard refresh is held and existing published artifacts remain.
+See [ADR 0009](docs/adr/0009-separate-research-ci-from-production-promotion.md).
 
 ## How it fits together
 

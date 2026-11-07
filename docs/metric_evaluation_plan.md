@@ -1,8 +1,8 @@
 # Indicator benchmark and evaluation plan
 
 Status: finite known-law panel qualification passes; earlier single-path searches
-remain failed. Ten indicator variants have produced no qualified indicator;
-unchanged candidates fail monthly equity portability. A chronology control's
+remain failed. Thirteen indicator variants have produced no qualified indicator;
+three earlier candidates fail monthly equity portability. A chronology control's
 19.72% two-year development gain fails its frozen outer check; that branch is
 stopped. The first prospective, price-only operational paper witness is issued
 and independently reproduced; no forecast outcome is mature. No promotion.
@@ -14,6 +14,155 @@ results and next bounded work. Legacy strategy-specific results remain in
 narrative; Git preserves its implementation history. Published scoring,
 acceptance policy and canonical metrics are unchanged. Local producer causality
 corrections below are unaccepted source revisions and have not been published.
+
+## Programme charter and current assessment
+
+On November 7 Josh made the project's purpose a **small continuing research
+programme**: keep the benchmark fixed, explore a few different ideas, record what
+happens, and gradually improve if the evidence permits. A useful round can reject
+an idea or reveal a measurement defect. It does not have to produce a trading
+winner. The professional-use ambition remains a long-term hypothesis, not this
+round's completion condition or a reason to wait without doing research.
+
+The research question stays predictive: does a candidate improve forecasts of
+future return or losses beyond strong simple references on identical dates?
+Outputs do not trigger trades. The monthly unit, fixed historical snapshots,
+12/24/48-month diagnostics, strict mature-label rules and separate outcome scores
+remain unchanged. This round's declared primary check is two-year return forecast
+error; improvement in another outcome cannot rescue its failure. We have no
+adopted combined investor utility or universal automatic promotion score.
+
+| Approach we have | Evidence and interpretation | Programme decision |
+| --- | --- | --- |
+| Existing composite and four components | Useful historical reference readings; no broad incremental information qualified; reconstructed vintages limit real-time claims | Keep as comparisons, not validated buy/sell advice |
+| Simple price references and unconditional history | Competitive, sometimes strongest; they establish how much a new idea must add | Keep every fixed reference in the benchmark |
+| Simulated price-path model | Better in some one-year return and entry-loss comparisons, worse in two-year return; uncertainty ranges often too narrow | Strong partial comparison, not an overall winner |
+| Ten previous indicator variants | Price anchors, adaptive trend, gain shape, monetary state and attention did not qualify broadly | Preserve failures; do not retune them to repair exposed later-period scores |
+| Chronology-assisted forecast | 19.7% development error reduction became about 74% worse than unconditional in the later check | Stop this branch; percentages concern forecast error, not investment returns |
+| Artificial-market qualification | Detected planted information 398/400 times and declared skill 24/1500 times under specified no-added-information cases | Useful check of the measuring procedure under those artificial laws; no market success-rate claim |
+| Archived live baselines | Six forecasts reproduced exactly, zero mature outcomes | Continue separate forward collection; correctness is not predictive success |
+
+### Active round: three different remaining ideas
+
+Registration `a36bd86` fixes three total benchmark attempts, one each for anomaly,
+small supervised learner and ensemble. All source/configuration choices must be
+frozen before any score. The shared v2 campaign is
+`9fb56bebaac599590446489b4917ed97f1dd8581f7e206a8820f9e460de1c20c`,
+retained under ignored `output/research-programme-round1-2026-11-07/`; its
+[registration](artifacts/research-programme-round1-2026-11-07-registration.json)
+binds the existing 17-family reference atlas and unchanged benchmark code.
+The December 2022 development cutoff is unchanged. All earlier attempts and the
+already-exposed later history remain part of the selection history. This is
+exploratory research, not a new untouched test set.
+
+Root independently executes each frozen generator and records its exact output,
+then spends its one centrally recorded slot. A candidate must improve the primary
+score against the strongest matched reference, retain the existing two-replica
+numerical check where applicable, and disclose probability/uncertainty and other
+horizon regressions. Only then is a frozen later-period falsification justified.
+Even a favorable later result is descriptive because that history was already
+seen. No reweighting, new decoder, changed target, changed benchmark or extra
+unrecorded attempt is permitted in this round.
+
+Source correctness, historical improvement and production suitability are separate
+judgments. Useful reviewed measurement fixes can be integrated independently.
+A failed candidate is retained as reproducible evidence and explicitly archived;
+it is not merged as a model improvement. A candidate that holds up can become an
+experimental programme contribution, without changing the published model or its
+canonical acceptance record. Professional use still needs stronger independent
+evidence and appropriate data rights.
+
+### Completed round and practical assessment
+
+All three experiments received their single registered measurement. None beats
+the strongest matched reference on the declared two-year return task:
+
+| Indicator approach | Two-year forecast error (lower is better) | Error relative to strongest reference |
+| --- | ---: | ---: |
+| Unconditional historical comparison | 0.331074 | Reference |
+| Existing composite | 0.433748 | 31.0% more |
+| New unusual-state/PCA indicator | 0.495501 | 49.7% more |
+| New small learned indicator | 0.432134 | 30.5% more |
+| New fixed valuation/rates/dollar ensemble | 0.540032 | 63.1% more |
+
+These are forecasting errors, not investment returns. All rows use the same 24
+monthly starts from December 2018 through November 2020. Their two-year outcomes
+overlap and include just one negative return, so this is a narrow exposed-history
+comparison, not 24 independent economic experiments. The existing composite's
+four components have errors 0.429641–0.481966 on this same task; none beats the
+unconditional comparison. The price-path model's two replicas are worse here
+(0.705190/0.706628), despite improvements in other tasks. Full 17-family scores,
+probability/uncertainty diagnostics and all candidate outcomes are retained in the
+[result summary](artifacts/research-programme-round1-2026-11-07.json).
+
+The anomaly representation fits usual relationships among short/long price trends
+and volatility, then measures deviations. It uses no labels, has 96 available dates
+and one neutral warm-up date. Its one-year peak-to-trough loss error improves
+slightly, 0.259573 versus the best reference 0.260172 (about 0.23%). That secondary
+finding cannot rescue the failed primary and is not a new chosen trading task.
+The small learner uses a two-leaf tree with fixed shrinkage, at most 60 strictly
+mature two-year labels, and price trend/drawdown inputs; 25 dates remain neutral.
+The equal-weight ensemble combines price valuation, real yields and broad-dollar
+appreciation; all 97 dates have all three coordinates available. Its 45-day macro
+lag is a conservative reconstruction convention, not proof of historical vintages.
+
+Each is tested as an extra scalar indicator through the **unchanged** forecast
+readout. This does not establish that all anomaly detectors, trees or ensembles
+fail, or that a different direct forecasting system would produce these scores.
+There was no feature/weight/decoder tuning after feedback and no later-period
+release. The protocol ledger remains OPEN with all three slots consumed: the
+existing freeze API requires a nonempty finalist list, and we did not manufacture
+an eligible finalist merely to change the administrative state.
+
+The [portable evidence packet](artifacts/research-programme-round1-2026-11-07.zip)
+contains captured inputs, all recorded comparisons, original code/configuration,
+archived tests and independent audit. SHA256:
+`2dc44327b609030f7739ecbbcacc0bf122bd569dbd3fb259905516a305aa296e`.
+After unpacking, `python replay-generators.py --packet UNPACKED_DIRECTORY
+--output-dir NEW_DIRECTORY` reproduces all 97 values of each candidate exactly in
+the registered environment. Root verified byte-identical reproduction separately
+from the worker outputs. Independent audit reconstructed 1,215 candidate forecast
+records, 6,075 fixed-CDF reference records and 2,295 frontier comparisons; maximum
+loss difference was 1.11e-15. A premeasurement captured-input parsing defect in the
+ensemble was fixed without changing any candidate value; its replacement oracle
+fails under the old behavior.
+
+Failed implementations are preserved in this packet and local archive tags
+`archive/research-anomaly-20261107` (`cd2402f`),
+`archive/research-learner-20261107` (`502c2d3`) and
+`archive/research-ensemble-20261107` (`8910b53`, including a test-only improvement).
+They are not adopted or merged as model improvements. Their unmerged branch refs
+are retained to obey the no-unmerged-branch-deletion rule; worker checkouts can be
+archived once idle. No failed research source is silently added to production.
+
+### Next bounded research step
+
+This round is complete without a model promotion. Keep its three-slot budget
+closed to further attempts. The next round should first establish historical
+availability of the chosen additional economic inputs, then register a small
+new hypothesis and attempt budget before scoring. Rates, balance-sheet/liquidity
+and on-chain valuation remain possible groups; no choice or additional fitness
+run is made here. Do not tune the failed round's weights or PCA dimensions to its
+observed scores. The archive's scheduled monthly observation remains a separate
+November 30 action, with no scheduler installed. Research can continue before its
+long-horizon live outcomes mature.
+
+### Publication and operations
+
+Josh explicitly authorized committing and pushing the accumulated work on
+November 7, superseding the earlier local-only hold. The remote-only automated
+refresh `4d9789b` is merged without rewriting any frozen research dataset.
+Workers never push. Each subsequent push still follows the global confirmation
+rule; authorization for this accumulated publication is already supplied.
+Publishing code is separate from approving a production model. The daily workflow
+now checks the accepted model identity before any data fetch/publish; unaccepted
+causality revisions must fail that check. The legacy acceptance commands move unchanged to a separate explicit
+production-evaluation workflow; research CI retains mandatory correctness/security
+checks. Daily source and resolved-configuration guards block unaccepted publication.
+No policy threshold or canonical identity changes. [ADR 0009](adr/0009-separate-research-ci-from-production-promotion.md)
+records this distinction. A full local legacy production-evaluation run was stopped
+after more than ten minutes; no completed production performance result is claimed.
+The source identity remains unaccepted, regardless of research CI success.
 
 ## Accepted requirements
 
@@ -1348,7 +1497,7 @@ all endpoints simultaneously.
 Josh requested actual divergent model experiments and meaningful improvement for
 multi-year Bitcoin swing decisions. This expands implementation scope while
 preserving a broad information objective, separate opportunity/downside reports,
-and the hold on all pushes. No combined strategy wealth score is accepted.
+and the historical push hold (superseded by explicit publication approval on November 7). No combined strategy wealth score is accepted.
 
 `research/market_information.py` implements a distinct **direct conditional
 empirical CDF**. Each origin uses the latest 24 strictly mature labels to fit
@@ -2059,30 +2208,34 @@ gate before publication; no canonical identity was rewritten. Earlier research c
 `573de0d`, `b260774`, `349b973`, `fe04721`, `e5d71b1` and `51bb110`; scorecard
 implementation is `a35a3f9`, whole-path qualification is `92e8a27`, the observed-score
 oracle is `631063b` and conditional randomization is `e5f26e2`. Josh explicitly
-requested keeping all commits local; no push or deployment is authorized. The
+initially requested keeping all commits local. On November 7 he explicitly
+authorized publishing the accumulated commits; this supersedes that hold. The
 remote advanced independently with automated data refresh `4d9789b`; it was not
-merged into this held research checkout or used to alter the frozen evidence.
-Reviewed research, causality repairs, full-reference guards, actual outer
-falsification, v3 archive and bounded live collector are integrated into local
-main. Metadata-only first-witness evidence is committed at `ab3ea18`; actual raw
-provider data and issued atoms remain ignored. The integrated backend suite
-passes **454 tests in 170.0 seconds**, including the common-outcome correction
-(`/private/tmp/risk-paper-final-backend-20261107.log`). The explicit paper runner
-also passed negative live-flag/future-day checks and the independently audited
-actual capture-to-archive run. No hosted CI or frontend check was required for
-these backend-only additions; existing pandas warnings remain. New decoder,
-boundary and producer bugs have failing reintroduction regressions, and actual
-experiments received independent arithmetic audits.
+used to alter the frozen evidence; it was subsequently merged for authorized
+publication, preserving the independent snapshots.
+Research correctness repairs and benchmark history are integrated into main.
+The three newly failed experimental implementations are retained under archive
+tags and in the portable evidence packet, rather than adopted into the model.
+The original main checkout remains the integration owner; ignored private paper
+captures and important French source files stay there. Untracked user directories
+`.codex/` and `.github/hooks/` remain untouched. No force push or manual deployment
+is part of this publication. Workers do not push.
 
-Completed branches were deleted after ancestry checks. Five completed managed
-worktrees are archived; important ignored French source files were first
-preserved byte-identically in the original checkout. The reviewed common-outcome validator correction is merged locally; the
-original main checkout remains the integration owner. The final clean managed
-checkout, `/Users/josh/.codex/worktrees/prospective-capture/risk-metric`, remains
-detached because the app refused to remove its primary checkout. Its research
-branch is deleted after merge; no unfinished work is parked there. No force removal, push,
-remote merge or deployment occurred. The untracked user directories `.codex/`
-and `.github/hooks/` remain preserved.
+Latest checks and publication scope: the full backend suite, unchanged web tests,
+script tests, build, release-integrity validation and existing security scan are
+run before the authorized main push. Workflow validation uses actionlint 1.7.12.
+The final integrated backend suite passed **459 tests in 426.0 seconds**
+(`/private/tmp/research-programme-backend-20261107.log`); the three archived arms
+separately passed 4, 5 and 7 focused tests, with deliberate defect mutations caught.
+Existing pandas future warnings remain. Node script tests passed 59/59; frontend
+checks passed 70/70, and the production build and both release-integrity checks
+passed. The locked dependency security scan passed 172 npm / 11 Python packages and
+its canaries. The slow legacy evaluator's cache-format-only rewrite was restored
+to the merged remote bytes after its process stopped; it is not published. Hosted CI
+results are observable in [Actions](https://github.com/j0shcd/risk-metric/actions)
+and are separate from these local checks; a passing research run does not grant
+production acceptance. Both production policy and canonical identity remain
+unchanged. A partial legacy evaluation was stopped and is not used as a finding.
 
 This document owns project-specific lessons and the next bounded contract.
 README's general benchmark entry point remains accurate and links here; no new
@@ -2097,14 +2250,14 @@ skill self-improvement review found no additional global skill change necessary.
 | Control false promotion under declared dependent nulls | Whole-path CRT exchangeability under exact Q, full-search equivalence tests, 1,500 fresh null campaigns | Pass within the declared one-campaign synthetic scope |
 | Chronological/provenance integrity | Strict label boundaries, 43-column producer oracle, immutable receipts and first audited live operational witness | Fixed-input mechanics and current capture lineage verified; historical market vintages and future outcomes remain unverified |
 | Safe adaptive-search scope | Registered conditional tests, shared attempt/freeze/release ledger and explicit exposure lineage | Finite scope defined; unlimited human adaptation not qualified |
-| Broad incremental BTC information | Ten indicator variants fail qualification; chronology improvement fails frozen outer check | Unmet; no professional-use candidate selected |
+| Broad incremental BTC information | Thirteen indicator variants fail qualification; chronology improvement fails frozen outer check | No candidate promoted; not a prerequisite for finishing a useful research round |
 | Prospective market validation | Six frozen forecasts issued in one operational observation; no mature outcomes | Pending future labels; no prospective performance claim |
-| Local-only changes | Atomic commits integrated locally, portable evidence, five archived worktrees | No push/deployment; all accepted contributions merged locally |
+| Publication control | Explicit approval for accumulated main push; daily source/effective-setting guards; unchanged production gate | Research may be shared; no model promoted |
 
-Do not mark the goal complete while useful-signal sensitivity or the expanded
-market-improvement objective remains unmet. Panel qualification, honest market
-comparison and prospective validation are separate requirements. All work remains
-local. Full-reference guarding, monthly falsification, the three-slot campaign
+The earlier professional-use qualification objective remains unmet. The active
+project direction is now the continuing research programme above; a completed
+round need not establish professional suitability. Panel qualification, honest
+market comparison and prospective validation remain separate requirements. Full-reference guarding, monthly falsification, the three-slot campaign
 and the one decoder diagnostic are complete within their declared measurement
 scope. The chronology-control outer falsification is complete and failed. The
 first operational witness is issued; the next formal monthly decision is
@@ -2113,5 +2266,6 @@ search merely to fill the waiting period. A new candidate needs a materially new
 registered information hypothesis and a credible fresh evaluation opportunity.
 Historical exposure, missing independent cycles, professional feed rights and
 prospective validation remain unresolved; no result is relabeled a fresh holdout.
-The requested professional-use indicator remains unqualified, so the expanded
-goal is unmet despite the completed benchmark and operational work.
+The requested professional-use indicator remains unqualified. The current
+programme continues by recording bounded research rounds, including negative
+results; live validation is one track rather than a block on all research.

@@ -5,6 +5,24 @@ Update it when an audit, runtime change, or monitoring activation changes the
 facts below. The [dated inventory](artifacts/dependency-audit-2026-10-27.json)
 retains the exact package versions and advisory IDs from this audit.
 
+## Research publication check: 7 November 2026
+
+The existing checksum-verified security gate passed for 172 locked npm packages
+and 11 hashed Python pins, including vulnerability and malware rejection canaries
+(`/private/tmp/research-publication-security-20261107.log`). No dependency was
+added for the research round. This does not clear the separate bundled-action
+findings below; the new explicit production-acceptance workflow reuses the same
+pinned checkout/Python actions with read-only permissions and no application
+credentials. The recorded bootstrap replacement remains the next remediation.
+
+Research CI remains mandatory. Production performance evaluation is now explicit,
+and the scheduled publisher checks accepted source identity and resolved model
+settings before fetching data or writing releases. The policy and canonical model
+were not changed. [ADR 0009](adr/0009-separate-research-ci-from-production-promotion.md)
+owns this distinction; the [research record](metric_evaluation_plan.md) owns the
+results and limitations. Publication approval does not approve an experimental
+model or establish professional data rights.
+
 ## Operational status on 2026-11-05
 
 Scheduled dependency scans now execute successfully. The latest verified
