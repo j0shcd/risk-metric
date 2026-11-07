@@ -81,11 +81,22 @@ def score_target(
         stacked_attention.columns = metric_names
         stacked_reliability.columns = metric_names
 
+        # Eligibility is distinct from missing observations: an inactive route
+        # contributes neither values nor an expected metric to coverage.
+        eligible = pd.concat([
+            bundle.frame.get("eligible", pd.Series(True, index=index))
+            for bundle in scoped_bundles
+        ], axis=1).fillna(False).astype(bool)
+        eligible.columns = metric_names
+        stacked_signal = stacked_signal.where(eligible)
+        stacked_attention = stacked_attention.where(eligible)
+        stacked_reliability = stacked_reliability.where(eligible)
         valid_count = stacked_signal.notna().sum(axis=1).astype(float)
-        total = float(len(scoped_bundles))
-        coverage = valid_count / total
+        total = eligible.sum(axis=1).astype(float)
+        coverage = valid_count / total.replace({0.0: np.nan})
 
         gate = pd.Series(1.0, index=index, dtype=float)
+        gate.loc[total.eq(0.0)] = 0.0
         under = coverage < 0.5
         gate.loc[under] = (coverage.loc[under] / 0.5).clip(lower=0.0, upper=1.0)
 
