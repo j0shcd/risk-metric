@@ -1575,7 +1575,13 @@ oracle is `631063b` and conditional randomization is `e5f26e2`. Josh explicitly
 requested keeping all commits local; no push or deployment is authorized. The
 remote advanced independently with automated data refresh `4d9789b`; it was not
 merged into this held research checkout or used to alter the frozen evidence.
-The two untracked
+All reviewed slices above are merged into local main at `948677b`. Completed
+task branches were deleted after ancestry and clean-tree checks. Two managed
+worktrees were archived; the app refuses to remove its primary checkout, so
+the remaining clean managed checkout is detached at the merged main revision.
+No force removal was attempted. Local main is 79 commits ahead and one automated
+data-refresh commit behind origin at this integration point; no push, remote
+merge or deployment occurred. The two untracked
 user directories `.codex/` and `.github/hooks/` are preserved. This document owns
 the project-specific lessons; the skill-harvest/self-improvement review found no
 additional global skill change necessary.
@@ -1588,9 +1594,10 @@ additional global skill change necessary.
 | Control false promotion under declared dependent nulls | Whole-path CRT exchangeability under exact Q, full-search equivalence tests, 1,500 fresh null campaigns | Pass within the declared one-campaign synthetic scope |
 | Chronological/provenance integrity | Strict label boundaries, frozen measurement hashes, 43-column producer oracle and immutable receipts | Verified fixed-input mechanics; historical market vintages explicitly unverified |
 | Safe adaptive-search scope | Registered conditional tests, shared attempt/freeze/release ledger and explicit exposure lineage | Finite scope defined; unlimited human adaptation not qualified |
-| Local-only changes | Atomic research branch commits; frozen receipts and portable evidence | Local-main integration pending; no push/deployment; user hold persists |
+| Local-only changes | Atomic commits integrated into local main, frozen evidence and completed-branch cleanup | No push/deployment; clean app-primary worktree retained by app constraint |
 
 Do not mark the goal complete while useful-signal sensitivity or the expanded
 market-improvement objective remains unmet. Panel qualification, honest market
 comparison and prospective validation are separate requirements. All work remains
-local; active research branches have not yet been integrated into local main.
+local. The next bounded implementation is a frozen stronger-reference comparison
+guard for future campaigns, followed by one external-market falsification adapter.
