@@ -1571,15 +1571,14 @@ and guards agreed. All three receipt trees and the extracted portable campaign
 were verified. These are failed development hypotheses, retained for reproducibility,
 not model promotions. Further search inherits every exposed result.
 
-**Next bounded diagnostic, accepted before its execution:** one return-transport
-readout study will distinguish a restrictive decoder from missing indicator
-information. Existing median bits use up to eight cells from 24 overlapping
+**Completed fixed return-transport diagnostic.** The registered study tested a
+restrictive decoder against missing indicator information. Existing median bits use up to eight cells from 24 overlapping
 labels, with fixed 50:50 shrinkage and no movement of outcome support; these
 restrictions are plausible bottlenecks, not an established explanation for failure.
 Prior continuous-rank experiments already failed to rescue broad performance.
 
-Freeze one ridge model (penalty 24, unpenalized intercept) on training-only
-percentile/center/scale features. Canonicalize duplicate/complement coordinates
+The study froze one ridge model (penalty 24, unpenalized intercept) on
+training-only percentile/center/scale features. Canonicalize duplicate/complement coordinates
 including query equivalence; query values cannot fit transforms. Forecast atoms
 are the full-fit query prediction plus signed PRESS residuals
 `e_i/(1-H_ii)`, with uniform weights. The feature design and penalty stay fixed
@@ -1602,11 +1601,81 @@ validate the fixed higher-risk direction.
 [Ridge's objective](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html)
 and [the jackknife literature](https://stat.cmu.edu/~ryantibs/papers/jackknife.pdf)
 provide methodological context, not a coverage theorem for these overlapping
-labels or this full-fit-centered residual CDF. Source, inventory and registration
-must be reviewed and committed before any actual fit. This is one retrospective
-decoder diagnostic, not a new unseen test or significance claim. If it fails,
-stop this decoder-rescue path; no further penalty/decoder sweep is accepted.
-No primary model has qualified, and professional-use reliability remains unmet.
+labels or this full-fit-centered residual CDF. Source and inventory were reviewed
+and [registration](artifacts/return-transport-registration-2026-11-07.json)
+committed at `f21176f` before fitting. Registration ID is
+`da57ed28fdb04e262c6d1f2bdb4da10f46f89d3f2858981e9d9dc2fd496dde7e`.
+[All results](artifacts/return-transport-2026-11-07.json) and the
+[self-contained input/result/audit packet](artifacts/return-transport-2026-11-07.zip)
+retain all 23 models, 1,656 forecasts, 782 comparisons, 276 availability strata,
+46 matched-decoder contrasts and 92 numerical Monte Carlo guards. Archive SHA-256:
+`835dbb9d5df73a1b4bf63adf51e12dcfc8df88c2309f27225bb8550233c735a6`.
+All 42 original input-role bytes/paths/hashes are retained without silently
+rebasing the registration. No outer or equity fit occurred in this study.
+
+The result is a **stronger chronology control**, not rescue of the new indicators:
+
+| 24-month return forecaster | CRPS | Event Brier | Central 80% coverage |
+| --- | ---: | ---: | ---: |
+| Original unconditional CDF, strongest prior reference | 0.331074 | 0.039424 | 70.8% |
+| Transport intercept only | 0.338484 | 0.043041 | 95.8% |
+| Transport context only | 0.434866 | 0.038267 | 62.5% |
+| Transport context + chronological age | 0.265783 | 0.036314 | 83.3% |
+
+The chronology model reduces primary CRPS by 19.72% versus the strongest old
+reference and improves the same-decoder context model. Its 80% intervals are
+narrower as well as covering more observed outcomes. But these are **24
+overlapping origins, December 2018–November 2020, with one negative return**.
+Event discrimination and calibration are not established. Training ranks make
+age equivalent to chronological position, with query rank one: this is a rolling
+trend/recency model for mature return labels. It does not establish an economic
+law about Bitcoin aging or a learned four-year cycle.
+
+At 12 months the chronology model regresses: CRPS 1.021460 versus unconditional
+0.858520 and generative 0.653258; 80% coverage is only 25%. Even the best
+12-month transport model loses to the generative reference. The new structural
+indicator helps this decoder's weak two-year context model (0.390000 versus
+0.434866) but loses to unconditional and chronology controls. Monetary and
+attention features do not rescue primary performance. Attention plus availability
+is worse than the matched mask-only model; fixed training-availability strata
+retain that result rather than selecting favorable periods.
+
+Independent audit reconstructed each of 1,656 forecasts using full and 24 deleted-
+label augmented least-squares fits, without calling the runner/scorer/generators.
+All transforms, mature pools, 782 cells, 276 strata, 46 contrasts and 92 guards
+were checked. Maximum CRPS discrepancy was `2.67e-15`; event/coverage/guard
+choices agreed exactly. Forty-three code files, 42 input identities, all parent
+receipts and runtime were verified. Eight new synthetic tests pass; reintroduced
+formula, query, warmup-support and missingness-reporting bugs fail their oracles.
+
+No further decoder or penalty search is accepted. The old/new indicator-rescue
+path has not produced a competitive indicator. The chronology control's narrow
+gain warrants **one frozen chronological falsification**, not promotion:
+
+- Preserve the exact rank/ridge/PRESS kernel and use only intercept, context,
+  context+age. No variants or horizon-specific tuning.
+- Original frozen full snapshot through July 2026, outer origins from 2023,
+  exactly 30 mature 12-month and 18 mature 24-month forecasts. Latest 24 labels
+  must be available strictly before each query. Raw daily/monthly history through
+  2022 is already verified byte-value identical to the owned development snapshot.
+- Previously issued development forecasts must stay exact. Newly matured older
+  origins remain separate from outer origins.
+- Compare with all 13 fixed CDF references and context/unconditional on identical
+  support. Both generative outer references are **unavailable**, not beaten;
+  extending that model is unnecessary for this stopping check.
+- Retain 12/24 CRPS, event Brier, interval coverage/width, event counts, overlap
+  diagnostics and every origin. Primary is 24-month return CRPS; no combined score.
+- Failure to improve same-decoder context rejects incremental chronology
+  assistance on this check. Losing to unconditional stops the claimed benchmark-
+  improvement path. Favorable or mixed results authorize neither tuning nor
+  promotion, and cannot establish superiority to unavailable generative forecasts.
+- Explicitly record selection after inspecting 23 models and primary-target
+  results, plus previously exposed outer history. This is not a fresh holdout.
+
+The wrapper/registration must be reviewed and committed before that one outer
+execution. No primary model has qualified; professional-use reliability remains
+unmet. The synthetic panel, development improvement and market validation remain
+distinct claims.
 The expanded user goal
 is unmet: no candidate has demonstrated broad incremental market information or
 professional-use reliability. Synthetic qualification cannot supply missing
