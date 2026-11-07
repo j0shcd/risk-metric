@@ -76,6 +76,47 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(opener.calls[1][0].full_url,next_url)
         self.assertTrue(all(t<=10 for _,t in opener.calls))
 
+    def test_response_metadata_allowlist_and_every_attempt(self):
+        headers={'Date':'Sat, 07 Nov 2026 12:00:00 GMT','ETag':'x'*1100,
+                 'Retry-After':'3','Set-Cookie':'secret','Authorization':'secret'}
+        (raw,_),_,clock,_=self.collect([Response(b'busy',503,headers),Response(b'{"data":[]}')])
+        state=json.loads(raw);self.assertEqual(clock.value,3.)
+        self.assertEqual(len(state['attempts']),2)
+        for i,(attempt,response) in enumerate(zip(state['attempts'],state['responses'])):
+            self.assertEqual(attempt['response_index'],i)
+            self.assertEqual(attempt['request_started_at'],response['request_started_at'])
+            self.assertEqual(attempt['finished_at'],response['body_completed_at'])
+            self.assertLessEqual(attempt['request_started_at'],attempt['finished_at'])
+        kept=state['responses'][0]['headers']
+        self.assertEqual(set(kept),{'date','etag','retry-after'})
+        self.assertTrue(kept['etag']['truncated']);self.assertEqual(len(kept['etag']['value']),1024)
+        self.assertNotIn(b'secret',raw)
+        day=datetime.now(timezone.utc).date().isoformat();opener=Opener([TimeoutError()]*6);clock=Clock()
+        with patch.object(c.request,'build_opener',return_value=opener),patch.object(c.time,'monotonic',clock.monotonic),patch.object(c.time,'sleep',clock.sleep):
+            with self.assertRaises(CaptureFailure) as got:c._collect({'query_day':day})
+        attempts=json.loads(got.exception.raw_bytes)['attempts']
+        self.assertEqual(len(attempts),6)
+        self.assertTrue(all(a['status'] is None and a['finished_at'] and a['error']=='TimeoutError' for a in attempts))
+
+    def test_retry_after_seconds_dates_and_budget_stop(self):
+        from datetime import timedelta
+        from email.utils import format_datetime
+        base=datetime.now(timezone.utc).replace(hour=12,minute=0,second=0,microsecond=0)
+        for status in (429,503):
+            for header in ('11',format_datetime(base+timedelta(seconds=11),usegmt=True)):
+                clock=Clock();opener=Opener([Response(b'busy',status,{'Retry-After':header}),Response(b'{"data":[]}')])
+                class WallClock(datetime):
+                    @classmethod
+                    def now(cls,tz):return base+timedelta(seconds=clock.value)
+                with patch.object(c,'datetime',WallClock),patch.object(c.request,'build_opener',return_value=opener),patch.object(c.time,'monotonic',clock.monotonic),patch.object(c.time,'sleep',clock.sleep):
+                    c._collect({'query_day':base.date().isoformat()})
+                self.assertEqual(clock.value,11.);self.assertEqual(len(opener.calls),2)
+        for header in ('51','50','999999999999999999999','bad-date','-1'):
+            opener=Opener([Response(b'busy',429,{'Retry-After':header}),Response(b'{"data":[]}')]);clock=Clock()
+            with patch.object(c.request,'build_opener',return_value=opener),patch.object(c.time,'monotonic',clock.monotonic),patch.object(c.time,'sleep',clock.sleep):
+                with self.assertRaisesRegex(CaptureFailure,'Retry-After'):c._collect({'query_day':base.date().isoformat()})
+            self.assertEqual(len(opener.calls),1);self.assertEqual(clock.value,0.)
+
     def test_url_oracle_rejects_credentials_redirects_and_changed_query(self):
         day='2026-11-07';valid=url(day)
         for bad in [valid.replace('https:','http:'),valid.replace(c.HOST,'evil.test'),valid.replace(c.HOST,'u:p@'+c.HOST),valid.replace(c.HOST,c.HOST+':443'),valid+'&api_key=x',valid+'&assets=btc',valid.replace('PriceUSD','Other'),valid+'#fragment']:
@@ -108,8 +149,10 @@ class CollectorTests(unittest.TestCase):
             pages.append(Response(c.canonical_bytes(body)))
         with self.assertRaisesRegex(CaptureFailure,'total byte limit') as got:self.collect(pages)
         self.assertLess(len(got.exception.raw_bytes),8*1024*1024)
-        opener=Opener([Response(b'{"data":[]}')]);times=iter([0.,0.,0.,51.])
-        with patch.object(c.request,'build_opener',return_value=opener),patch.object(c.time,'monotonic',side_effect=lambda:next(times)):
+        opener=Opener([Response(b'{"data":[]}')]);clock=Clock();original=opener.open
+        def delayed(*args,**kwargs):
+            response=original(*args,**kwargs);clock.value=51.;return response
+        with patch.object(c.request,'build_opener',return_value=opener),patch.object(opener,'open',side_effect=delayed),patch.object(c.time,'monotonic',clock.monotonic):
             with self.assertRaisesRegex(CaptureFailure,'deadline'):c._collect({'query_day':day})
 
     def test_partial_read_preserved_and_hard_timeout_archived(self):

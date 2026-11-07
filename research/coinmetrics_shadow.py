@@ -16,6 +16,7 @@ import sys
 import time
 import tempfile
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from urllib import error, parse, request
 import numpy as np
 import pandas as pd
@@ -81,6 +82,39 @@ class _NoRedirect(request.HTTPRedirectHandler):
     def redirect_request(self,*args,**kwargs):raise CaptureError('redirect forbidden')
 
 
+def _stamp():
+    return datetime.now(timezone.utc).isoformat(timespec='microseconds').replace('+00:00','Z')
+
+
+def _headers(headers):
+    """Bounded allowlist only; never retain cookies or authentication headers."""
+    names=('Date','Last-Modified','ETag','Cache-Control','Content-Type',
+           'Content-Length','Content-Encoding','Retry-After','X-Request-ID')
+    selected={}
+    for name in names:
+        value=headers.get(name)
+        if value is None:continue
+        value=str(value);raw=value.encode('utf8')
+        selected[name.lower()]={'value':raw[:1024].decode('utf8',errors='replace'),
+            'truncated':len(raw)>1024,'sha256':hashlib.sha256(raw).hexdigest()}
+    return selected
+
+
+def _retry_delay(value):
+    """RFC Retry-After seconds/date; malformed or overlong directives stop retries."""
+    if value is None:return 0.
+    value=str(value).strip()
+    if not value or len(value)>1024:raise CaptureError('invalid Retry-After')
+    if value.isascii() and value.isdigit():
+        if len(value)>6:raise CaptureError('Retry-After exceeds worker budget')
+        return float(int(value))
+    try:
+        until=parsedate_to_datetime(value)
+        if until.tzinfo is None:raise ValueError('timezone absent')
+        return max(0.,(until-datetime.now(timezone.utc)).total_seconds())
+    except (TypeError,ValueError,OverflowError) as exc:raise CaptureError('invalid Retry-After') from exc
+
+
 def _collect(metadata, checkpoint=None):
     """Internal worker; every obtained response is checkpointed before parsing."""
     if set(metadata)!={'query_day'}:raise CaptureError('only query_day request metadata allowed')
@@ -88,27 +122,36 @@ def _collect(metadata, checkpoint=None):
     if query_day!=datetime.now(timezone.utc).date().isoformat():raise CaptureError('capture requires actual current UTC day')
     url='https://'+HOST+PATH+'?'+parse.urlencode(_parameters(query_day))
     opener=request.build_opener(request.ProxyHandler({}),_NoRedirect())
-    state={'schema':'coinmetrics-exact-pages-v1','query_day':query_day,'complete':False,'responses':[],'pages':[],'errors':[]}
+    state={'schema':'coinmetrics-exact-pages-v1','query_day':query_day,'complete':False,'responses':[],'pages':[],'errors':[],'attempts':[]}
     def save():
         if checkpoint is not None:checkpoint(canonical_bytes(state))
     save()
-    started=time.monotonic();last=None;attempts=rows=0;seen=set()
+    started=time.monotonic();last=None;not_before=started;attempts=rows=0;seen=set()
     try:
         while url is not None:
             _url(url,query_day)
             if url in seen:raise CaptureError('repeated pagination URL')
             if attempts>=MAX_REQUESTS:raise CaptureError('six request budget exhausted')
-            if last is not None:time.sleep(max(0.,2-(time.monotonic()-last)))
+            current=time.monotonic()
+            wait=max(0.,not_before-current,0. if last is None else last+2-current)
+            if wait>=50-(current-started):raise CaptureError('Retry-After/rate wait exceeds worker budget')
+            if wait:time.sleep(wait)
             remaining=50-(time.monotonic()-started)
             if remaining<=0:raise CaptureError('collector deadline exceeded')
             last=time.monotonic();attempts+=1
+            attempt={'number':attempts,'url':url,'request_started_at':_stamp(),
+                     'finished_at':None,'status':None,'response_index':None,'error':None}
+            state['attempts'].append(attempt);save()
             try:
                 req=request.Request(url,headers={'Accept':'application/json','Accept-Encoding':'identity',
                                                 'User-Agent':'local-noncommercial-paper-witness/1'})
                 try:response=opener.open(req,timeout=min(10.,remaining))
                 except error.HTTPError as exc:response=exc
                 with response:
-                    entry={'url':url,'status':response.status,'body_base64':'','body_complete':False}
+                    entry={'url':url,'status':response.status,'headers':_headers(response.headers),
+                           'request_started_at':attempt['request_started_at'],'body_completed_at':None,
+                           'body_base64':'','body_complete':False}
+                    attempt.update(status=response.status,response_index=len(state['responses']))
                     state['responses'].append(entry);save()
                     previous_bytes=sum(len(base64.b64decode(r['body_base64'])) for r in state['responses'][:-1])
                     bound=min(MAX_BYTES,MAX_TOTAL_BYTES-previous_bytes)
@@ -119,14 +162,20 @@ def _collect(metadata, checkpoint=None):
                         raw+=chunk
                         entry['body_base64']=base64.b64encode(raw).decode('ascii');save()
                         if len(raw)>bound:raise CaptureError('response or total byte limit')
-                    entry['body_complete']=True;save()
+                    entry['body_complete']=True;entry['body_completed_at']=_stamp()
+                    attempt['finished_at']=entry['body_completed_at'];save()
                     if response.headers.get('Content-Encoding','identity')!='identity':raise CaptureError('compressed response forbidden')
                     if response.status!=200:
-                        if response.status in (429,500,502,503,504):continue
+                        if response.status in (429,500,502,503,504):
+                            delay=_retry_delay(response.headers.get('Retry-After')) if response.status in (429,503) else 0.
+                            not_before=time.monotonic()+delay
+                            if not_before-started>=50:raise CaptureError('Retry-After exceeds worker budget')
+                            continue
                         raise CaptureError('nonretryable HTTP status')
                     if time.monotonic()-started>50:raise CaptureError('collector deadline exceeded')
                     body=json.loads(raw,parse_float=str,parse_int=str,parse_constant=str)
             except (error.URLError,TimeoutError) as exc:
+                attempt.update(finished_at=_stamp(),error=type(exc).__name__)
                 state['errors'].append({'attempt':attempts,'error':type(exc).__name__});save();continue
             if not isinstance(body,dict) or not isinstance(body.get('data'),list):raise CaptureError('invalid response shape')
             rows+=len(body['data'])
@@ -141,6 +190,8 @@ def _collect(metadata, checkpoint=None):
             url=next_url
         state['complete']=True;save()
     except Exception as exc:
+        if state['attempts'] and state['attempts'][-1]['finished_at'] is None:
+            state['attempts'][-1].update(finished_at=_stamp(),error=type(exc).__name__)
         state['errors'].append({'attempt':attempts,'error':type(exc).__name__+': '+str(exc)[:400]});save()
         failure=CaptureError(str(exc));failure.raw_bytes=canonical_bytes(state)
         failure.response_metadata={'status':'failed','requests':attempts,'pages':len(state['pages'])}
