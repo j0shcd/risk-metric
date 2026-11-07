@@ -2,7 +2,8 @@
 
 Status: finite known-law panel qualification passes; earlier single-path searches
 remain failed. Seven indicator variants and two readout studies show no broad
-market improvement. One supporting policy lead remains unvalidated. No promotion.
+improvement. One generative baseline adds stronger partial benchmarks but fails
+the primary two-year return comparison and long-horizon calibration. No promotion.
 Updated 2026-11-07.
 
 This is the canonical plan for the next benchmark. Current implemented results
@@ -1380,9 +1381,10 @@ matching requires a stable serialization, not an independently rounded rewrite.
 The locked trial harness also now parses the same captured source/candidate bytes
 that it hashes; path-replacement regressions and exact original-byte replay pass.
 
-Next bounded work: execute the one registered generative development run below,
-retain failures and compare its matched forecasts/calibration before further
-indicator search. External calendar/data acquisition remains a later experiment.
+Next bounded work: make the stronger generative benchmarks part of future
+candidate comparison guards, then implement one external-market falsification
+adapter. Further indicator search must inherit all exposed results and keep the
+same horizon/target/metric distinctions; no primary model has qualified.
 The expanded user goal
 is unmet: no candidate has demonstrated broad incremental market information or
 professional-use reliability. Synthetic qualification cannot supply missing
@@ -1431,14 +1433,15 @@ the acceptance CLI reports `changed=true`. Published canonical identity stays
 unchanged. No source cache, market result, release acceptance or deployment was
 updated to conceal that difference.
 
-### Next registered family: direct daily-price forecast baseline
+### Registered daily-price forecast baseline and completed development run
 
 The CDF decoder's zero four-year development forecasts are a protocol-specific
 training-pool constraint. A model of daily returns can forecast a long holding
 path without 24 mature four-year labels. That does not create more independent
 four-year market cycles or establish calibration. Before further indicator
 tuning, test one conventional price-only predictive family as a stronger
-reference challenge. No generative market fitting has occurred yet.
+reference challenge. One registered development run is complete; source and
+parameters stayed fixed, with no outer fit or outcome-dependent retuning.
 
 Reviewed source `6150199` implements a fixed Student-t5 volatility path model,
 fitted on exactly 730 prior daily log returns. Its unit-variance shock is
@@ -1483,6 +1486,43 @@ particles as if they added information. The independence assumption is essential
 see [Ferro's fair scoring rules](https://empslocal.ex.ac.uk/people/staff/ferro/Publications/ferro2013.pdf)
 and the [scoringrules interpretation guide](https://scoringrules.readthedocs.io/en/latest/crps_estimators.html).
 
+The [completed results](artifacts/generative-baseline-development-2026-11-07.json)
+and [portable scorecard/reference/audit packet](artifacts/generative-baseline-development-2026-11-07.zip)
+bind all 109 successful fits, 1,962 generated records and 855 aggregate cells.
+Approximate wall time was 103 seconds. All 3,240 scored reference CRPS values
+reproduce exactly. Independent audit verified every input window, raw outcome,
+support, aggregate and replica comparison. Three fixed dates regenerated both
+replicas: posterior/sample hashes match, and 36 scored records agree with
+independent quadratic/U-statistic scores within 2.89e-15. Eighteen pending
+records stay unscored. The full backend suite passes **356 tests in 150 seconds**.
+
+Matched development CRPS (lower is better; two simulation replicas shown):
+
+| Months | Outcome | Generative replicas | Unconditional | Best fixed CDF |
+| --- | --- | --- | ---: | ---: |
+| 12 | Terminal log return | .6550 / .6533 | .8585 | .8109 |
+| 12 | Entry adverse loss | .3062 / .3059 | .3619 | .3512 |
+| 12 | Peak drawdown loss | .3283 / .3278 | .2823 | .2602 |
+| 24 | Terminal log return | .7052 / .7066 | .3311 | .4119 |
+| 24 | Entry adverse loss | .1545 / .1548 | .2494 | .2270 |
+| 24 | Peak drawdown loss | .2750 / .2760 | .3006 | .2740 |
+
+The one-year return CRPS improvement is about 19% versus the fixed-CDF envelope,
+but its loss-event Brier score is worse (~.277 versus ~.258) and nominal 80%
+coverage is only 47.9–50%. Entry-loss CRPS/Brier improve at both matched horizons;
+the two-year CRPS improvement is about 32% versus the fixed-CDF envelope. Neither
+finding repairs the primary two-year return regression. Across 60 additional
+four-year origins, return coverage is only 45–46.7% and peak-drawdown coverage
+28.3%. There is no matched four-year CDF comparator. These overlapping outcomes
+are not independent market cycles or a new holdout. More forecast availability
+does not establish better forecasting.
+
+Keep this model as a stronger *partial reference*, not the primary indicator or
+a calibrated risk forecast. The scorecard correctly exposes improvements in one
+loss alongside regressions in another; do not average them into a winner. No
+source, prior, recursion, numerical tolerance or simulation budget was tuned
+after the result.
+
 ## Verification and handoff
 
 This task specifies the benchmark and implements synthetic pilots, a real-data
@@ -1498,7 +1538,9 @@ The implementation plan now serves the requested information-indicator goal;
 strategy-specific wealth optimization is explicitly outside the primary score.
 Historical data quality, vintage eligibility, market false-positive rates and
 external-market transfer remain unverified. Market readout feasibility is measured
-under the stated protocol, with four-year forecasts explicitly unavailable.
+under each stated protocol: mature-label CDF four-year development/outer forecasts
+remain unavailable; the new generative four-year reconstruction is measurable
+and fails important calibration checks.
 Each synthetic experiment measures rates only under its specified procedure and
 generator; none establishes the market scorecard's automatic promotion validity.
 The strongest alternative explanation for an apparent future leaderboard gain
@@ -1544,8 +1586,8 @@ additional global skill change necessary.
 | --- | --- | --- |
 | Detect useful information under dependent worlds | Gaussian oracle and registered panel test, 398/400 positive declarations | Pass in finite known-law panel scope; previous single-path searches still fail |
 | Control false promotion under declared dependent nulls | Whole-path CRT exchangeability under exact Q, full-search equivalence tests, 1,500 fresh null campaigns | Pass within the declared one-campaign synthetic scope |
-| Chronological/provenance integrity | Strict longest-label boundaries, causal filter prefix tests, immutable data/results and unchanged source fingerprints | Verified mechanics; historical market vintages explicitly unverified |
-| Safe adaptive-search scope | Full 216-cell algorithm rerun per matrix; local custom ledger; documented correction/access limits | Finite scope defined; unlimited human adaptation not qualified |
+| Chronological/provenance integrity | Strict label boundaries, frozen measurement hashes, 43-column producer oracle and immutable receipts | Verified fixed-input mechanics; historical market vintages explicitly unverified |
+| Safe adaptive-search scope | Registered conditional tests, shared attempt/freeze/release ledger and explicit exposure lineage | Finite scope defined; unlimited human adaptation not qualified |
 | Local-only changes | Atomic research branch commits; frozen receipts and portable evidence | Local-main integration pending; no push/deployment; user hold persists |
 
 Do not mark the goal complete while useful-signal sensitivity or the expanded
