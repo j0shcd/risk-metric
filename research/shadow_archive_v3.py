@@ -226,6 +226,10 @@ def _validate_resolution(event,observations,resolved,root,cache):
     f=next((f for f in observations[r['observation_id']]['forecasts'] if (f['model'],f['target'],f['horizon_months'])==key[1:]),None)
     if f is None:raise ValueError('unknown model forecast')
     finite(r['outcome'])
+    # Models forecast the same realized target, not model-specific source vintages.
+    shared=(key[0],key[2],key[3]);evidence=(r['outcome'],r['capture_id'],r['closed_at'])
+    if any((k[0],k[2],k[3])==shared and prior!=evidence for k,prior in resolved.items()):
+        raise ValueError('conflicting shared outcome or source evidence')
     if r['target']!='terminal_log_return' and r['outcome']<0:raise ValueError('negative physical loss')
     _,capture=_capture(root,r['capture_id'],cache);commit=cap.time(event['committed_at']);closed=cap.time(r['closed_at'])
     if not cap.time(f['label_end_at'])<=closed<=cap.time(capture['completed_at'])<=commit or commit<cap.time(f['label_available_at']):raise ValueError('resolution chronology')
@@ -256,7 +260,7 @@ def _persisted_head(root,event_chain_head):
 def _read(root,expected_head=None):
     raw=cap.read(root/'registration.json',MAX_EVENT_BYTES);reg=json.loads(raw);_registration(reg)
     if {p.name for p in root.iterdir()}!={'registration.json','archive.lock','events','captures','attempts','publications'}:raise ValueError('archive inventory')
-    files=sorted((root/'events').iterdir());total=len(raw);head=cap.sha(raw);last=None;observations={};resolved=set();cache={};days=set()
+    files=sorted((root/'events').iterdir());total=len(raw);head=cap.sha(raw);last=None;observations={};resolved={};cache={};days=set()
     if len(files)>MAX_EVENTS:raise ValueError('event count cap')
     for seq,path in enumerate(files,1):
         data=cap.read(path,MAX_EVENT_BYTES);total+=len(data)
@@ -283,7 +287,8 @@ def _read(root,expected_head=None):
             observations[event_id]=event['request']
         elif event['kind']=='resolution':
             if event['classification'] is not None:raise ValueError('resolution classification')
-            resolved.add(_validate_resolution(event,observations,resolved,root,cache))
+            key=_validate_resolution(event,observations,resolved,root,cache)
+            resolved[key]=tuple(event['request'][k] for k in ('outcome','capture_id','closed_at'))
         else:raise ValueError('event kind')
         head,last=digest({'event_id':event_id,'publication_receipt_sha256':cap.sha(marker_raw)}),timestamp
     if {p.name for p in (root/'publications').iterdir()}!={p.name+'.receipt' for p in files}:raise ValueError('publication inventory')
