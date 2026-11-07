@@ -1,11 +1,11 @@
 {
   "version": 1,
   "scale": "0-100",
-  "release_id": "web-v2-3feea37f66e7aa3fd4f0598f9ba50d3e4ad3904d3b9e744b291df7e5b8186d1f",
+  "release_id": "web-v2-9a83225fb014cbbe200a1f6fe7a3676254b7c236ed489321464fde5bca6f090f",
   "notice": "Describes today's market against its own history. Not a signal to buy or sell. Not investment advice.",
-  "date": "2026-11-04",
+  "date": "2026-11-05",
   "status": "ok",
-  "reading": 34.7,
+  "reading": 34,
   "region": "middle",
   "regions": {
     "low": "reading <= 25",
@@ -16,7 +16,7 @@
   "sub_scores": {
     "looks_like_past_peaks": 23.3,
     "unlike_past_bottoms": 34,
-    "price_stretch": 31,
+    "price_stretch": 28.2,
     "speculation_and_hype": 50.3
   },
   "docs": "https://risk-metric.pages.dev/#data"
