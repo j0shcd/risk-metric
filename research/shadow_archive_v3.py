@@ -273,7 +273,7 @@ def _read(root,expected_head=None):
     attempts={}
     for path in (root/'attempts').iterdir():
         if path.name.endswith('.failure.json'):
-            failure=json.loads(cap.read(path,4096));keys(failure,('error','status'))
+            failure=json.loads(cap.read(path,4096));keys(failure,('error','error_sha256','status'))
             if failure['status']!='failed_no_reuse' or not (root/'attempts'/path.name.replace('.failure.json','.json')).is_file():raise ValueError('failure inventory')
             continue
         a=json.loads(cap.read(path,MAX_EVENT_BYTES));keys(a,('query_day','started_at','registration_id'))
@@ -348,7 +348,7 @@ def issue(root,capture_dirs,producer):
             classification=_validate_observation(event,reg,root,{})
             return _append(root,state,reg,'observation',request,classification,commit)
         except Exception as error:
-            cap.frozen_write(root/'attempts'/(day+'.failure.json'),canonical_bytes({'error':str(error),'status':'failed_no_reuse'}));raise
+            cap.frozen_write(root/'attempts'/(day+'.failure.json'),canonical_bytes({'error':str(error)[:1024],'error_sha256':cap.sha(str(error).encode()),'status':'failed_no_reuse'}));raise
 
 
 def resolve(root,observation_id,model,target,horizon_months,outcome,capture_dir,closed_at):

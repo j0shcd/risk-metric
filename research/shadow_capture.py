@@ -82,7 +82,7 @@ def capture_response(directory,request,fetch):
         frozen_write(directory/'capture.json',canonical_bytes(receipt))
         return receipt
     except Exception as error:
-        failure={'status':'failed_capture','error':str(error),'started_at':stamp(started),'failed_at':stamp(now()),
+        failure={'status':'failed_capture','error':str(error)[:1024],'error_sha256':sha(str(error).encode()),'started_at':stamp(started),'failed_at':stamp(now()),
                  'request_sha256':sha(request_raw)}
         if isinstance(error,CaptureFailure):
             partial=error.raw_bytes;metadata=canonical_bytes(error.response_metadata)

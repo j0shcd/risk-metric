@@ -242,6 +242,17 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(list((archive/'publications').iterdir()),[])
         with self.assertRaises(FileNotFoundError):a.verify(archive)
 
+    def test_long_error_does_not_poison_later_cohort_day(self):
+        archive=self.archive(days=['2026-11-07','2026-11-08'])
+        capture=self.capture(value='x'*5000)
+        with self.assertRaises(ValueError):a.issue(archive,[capture],toy_producer)
+        failure=archive/'attempts'/'2026-11-07.failure.json'
+        self.assertLess(failure.stat().st_size,4096)
+        self.assertEqual(a.verify(archive)['pending_or_failed_days'],['2026-11-07'])
+        Clock.value=datetime(2026,11,8,12,tzinfo=UTC)
+        a.issue(archive,[self.capture('good','2026-11-08T00:00:00Z')],toy_producer)
+        self.assertEqual(a.verify(archive)['observation_count'],1)
+
     def test_write_sink_inventory(self):
         expected={c:{'new_directory','frozen_write','capture_response'},a:{'initialize','_own_capture','_append','issue'}}
         for module,sinks in expected.items():
