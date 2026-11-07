@@ -5,11 +5,12 @@
     "baseline_days": 365,
     "lag_days": 2,
     "neutral": 0.5,
+    "max_count": 9007199254740991,
     "column": "attention_surge_risk"
   },
   "direction": "higher means higher risk",
   "source_sha256": "a277177c1f147940e72391361d8411d7c54c07d60f6f274fdca0a1b7a563e3cb",
-  "producer_sha256": "a79022f1bb22f9e0b5dbeee53d17246e023b0425b51475fea2da54c98527bcc5",
+  "producer_sha256": "fbf40aa2d730d47934e41dcd0989a52ff01f4fdad34c09c0060a411b1630d5af",
   "predictions_sha256": "56826dea207a25abb1ed51d9256bf5b3e034eef1ea136288fef1aee3c8b513ff",
   "rows": 97,
   "status_counts": {
@@ -20,5 +21,6 @@
   "source_nonmissing_rows": 2741,
   "source_first": "2015-07-01",
   "source_last": "2022-12-31",
-  "outcome_evaluation": "not performed; one variant fixed before shared campaign results"
+  "outcome_evaluation": "not performed; one variant fixed before shared campaign results",
+  "count_domain": "finite integral 0 <= count <= 2**53-1; otherwise neutral invalid history"
 }

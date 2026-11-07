@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 CONFIG = {"recent_days": 30, "baseline_days": 365, "lag_days": 2,
-          "neutral": 0.5, "column": "attention_surge_risk"}
+          "neutral": 0.5, "max_count": 2**53 - 1, "column": "attention_surge_risk"}
 
 
 def generate(observations: pd.DataFrame, dates: pd.DatetimeIndex) -> pd.DataFrame:
@@ -29,7 +29,7 @@ def generate(observations: pd.DataFrame, dates: pd.DatetimeIndex) -> pd.DataFram
         window = pd.date_range(end=end, periods=395, freq="D")
         # Select the past before numeric conversion: future poison is irrelevant.
         values = pd.to_numeric(series.reindex(window), errors="coerce").to_numpy(dtype=float)
-        valid = np.isfinite(values) & (values >= 0) & (values == np.floor(values))
+        valid = np.isfinite(values) & (values >= 0) & (values <= CONFIG["max_count"]) & (values == np.floor(values))
         complete = bool(valid.all())
         risk, reason = 0.5, "missing_or_invalid_history"
         if complete:

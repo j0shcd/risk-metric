@@ -19,6 +19,16 @@ class AttentionTests(unittest.TestCase):
         self.assertAlmostEqual(out.attention_surge_risk, .75)
         self.assertTrue(out.available)
 
+    def test_exact_safe_count_domain(self):
+        for count, available in [(2**53 - 1, True), (2**53, False), (1e308, False)]:
+            frame = self.frame.copy()
+            frame["wikipedia_pageviews"] = float(count)
+            row = generate(frame, [self.query]).iloc[0]
+            self.assertTrue(np.isfinite(row.attention_surge_risk))
+            self.assertEqual(row.attention_surge_risk, .5)
+            self.assertEqual(row.available, available)
+            self.assertEqual(row.valid_days, 395 if available else 0)
+
     def test_prefix_and_poisoned_future(self):
         queries = self.frame.Date.iloc[[400, 500, 700]]
         full = generate(self.frame, queries)
