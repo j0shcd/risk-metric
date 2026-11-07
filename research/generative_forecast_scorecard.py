@@ -38,16 +38,22 @@ PROTOCOL = {
     'crps_estimand': 'generative iid U-statistic uses n*(n-1) pair denominator; reference issued CDF exact uncorrected',
     'brier_estimand': 'generative empirical Brier minus p*(1-p)/(n-1); reference issued CDF uncorrected',
     'corrections': 'empirical scores and corrections retained; no clipping of corrected scores',
+    'atom_range': 'generative outside_atom_range is a finite Monte Carlo sample-range diagnostic, not zero probability outside model support',
     'method_sources': ['https://empslocal.ex.ac.uk/people/staff/ferro/Publications/ferro2013.pdf',
                        'https://scoringrules.readthedocs.io/en/latest/crps_estimators.html'],
 }
 METRICS = ('crps', 'brier', 'empirical_crps', 'crps_mc_correction', 'empirical_brier', 'brier_mc_correction', 'coverage_50', 'coverage_80', 'width_50', 'width_80', 'outside_atom_range')
 CODE_FILES = ('generative_forecast_scorecard.py', 'market_dataset.py', 'market_information.py',
-              'readout_study.py', 'distribution_readout.py')
+              'readout_study.py', 'distribution_readout.py', 'scorecard_artifacts.py', 'market_scorecard.py')
 
 
 def sha(payload):
     return hashlib.sha256(payload).hexdigest()
+
+
+def runtime_identity():
+    return {'python':platform.python_version(), 'numpy':np.__version__, 'pandas':pd.__version__,
+            'platform':platform.platform(), 'machine':platform.machine()}
 
 
 def code_identity():
@@ -170,6 +176,8 @@ def _reference_maps(snapshot, references, by_date):
 
 
 def evaluate(snapshot, references, model, registration):
+    if registration['runtime'] != runtime_identity(): raise ValueError('registered runtime mismatch')
+    if registration['scorecard_code_sha256'] != code_identity(): raise ValueError('registered scorecard code mismatch')
     if registration['protocol'] != PROTOCOL: raise ValueError('scorecard protocol mismatch')
     if registration['ensemble_interpretation'] != 'iid_predictive_law_draws':
         raise ValueError('fair score correction requires declared iid path draws')
@@ -263,7 +271,7 @@ def evaluate(snapshot, references, model, registration):
     return {'protocol':PROTOCOL, 'registration':registration, 'snapshot_id':digest(snapshot),
             'source_sha256':snapshot.get('source_sha256'), 'as_of':as_of, 'code_sha256':code_identity(),
             'reference_identity':digest(references), 'model_protocol':model.PROTOCOL,
-            'runtime':{'python':platform.python_version(),'numpy':np.__version__,'pandas':pd.__version__},
+            'runtime':runtime_identity(),
             'eligibility':eligibility, 'fits':fit_records, 'records':records, 'cells':cells,
             'replica_stability':replica_stability(cells),
             'limitations':['Public-history pseudo-out-of-sample reconstruction, not prospective evidence.',
@@ -331,7 +339,8 @@ def readable(result, support):
            'Fixed target/horizon/role/replica cells. No combined winner. Incomplete-support means are withheld.',
            'Extra eligible origins are not evidence of superiority. Two replicas are Monte Carlo diagnostics.',
            'Primary generative CRPS/Brier are iid-draw unbiased estimates; reference CDF scores are exact and uncorrected.',
-           'Empirical scores and corrections remain in JSON; corrected scores are not clipped.', '',
+           'Empirical scores and corrections remain in JSON; corrected scores are not clipped.',
+           'Generative outside_atom_range describes only the finite Monte Carlo sample range, not the predictive law support.', '',
            '| Role | Months | Target | Model | Replica | Requested / scored / failed | CRPS | Brier | 50% cover / width | 80% cover / width |',
            '|---|---:|---|---|---:|---:|---:|---:|---|---|']
     def show(value):return '—' if value is None else f'{value:.6f}'

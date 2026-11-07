@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 from research.generative_forecast_scorecard import (
-    PROTOCOL, distribution_summary, evaluate, simulation_seed, main, sha, code_identity,
+    PROTOCOL, distribution_summary, evaluate, simulation_seed, main, sha, code_identity, runtime_identity,
 )
 from research.market_dataset import COMPONENTS, digest, load_snapshot, canonical_bytes
 from research.scorecard_artifacts import verify_packet
@@ -59,7 +59,7 @@ def references(snapshot):
 
 def registration():
     return {'protocol':PROTOCOL,'ensemble_interpretation':'iid_predictive_law_draws','replica_seeds':[15001,25001],'sample_count':16,
-            'model_protocol':ToyModel.PROTOCOL}
+            'model_protocol':ToyModel.PROTOCOL, 'runtime':runtime_identity(), 'scorecard_code_sha256':code_identity()}
 
 
 class GenerativeScorecardTests(unittest.TestCase):
@@ -212,6 +212,20 @@ class GenerativeScorecardTests(unittest.TestCase):
                 main(args[:-1]+[str(changed)])
             verify_packet(changed)
             self.assertTrue((changed/'error.json').exists())
+
+    def test_runtime_and_boundary_helper_changes_fail_before_fit(self):
+        model=ToyModel()
+        bad=registration();bad['runtime']['numpy']='different-runtime'
+        with self.assertRaisesRegex(ValueError,'runtime mismatch'):
+            evaluate(self.snapshot,self.references,model,bad)
+        self.assertEqual(model.fit_inputs,[])
+        for helper in ('scorecard_artifacts.py','market_scorecard.py'):
+            bad=registration();self.assertIn(helper,bad['scorecard_code_sha256'])
+            changed=dict(code_identity());changed[helper]='0'*64
+            with patch('research.generative_forecast_scorecard.code_identity',return_value=changed):
+                with self.assertRaisesRegex(ValueError,'code mismatch'):
+                    evaluate(self.snapshot,self.references,model,bad)
+            self.assertEqual(model.fit_inputs,[])
 
     def test_missing_price_blocks_exactly_affected_history_windows(self):
         source=deepcopy(self.snapshot);source['daily'][1000]['price']=None
