@@ -47,7 +47,7 @@ class ContractTests(unittest.TestCase):
         c.capture_response(p,{'query_day':'2026-11-07'},lambda r:(payload,{'status':200}))
         return p
     def archive(self,config=None,kind='operational_witness',days=None,name='archive'):
-        reg=a.register({'kind':kind,'decision_days':days or ['2026-11-07']},toy_producer,[Path(__file__)],config or {})
+        reg=a.register({'kind':kind,'decision_days':days or ['2026-11-07'],'entry_observation_buffer_seconds':(config or {}).get('entry_observation_buffer_seconds',0)},toy_producer,[Path(__file__)],{'entry_observation_buffer_seconds':0,**(config or {})})
         p=self.root/name;a.initialize(p,reg);return p
     def test_actual_callback_owned_bytes_and_stale_eligible(self):
         capture=self.capture(close='2026-11-01T00:00:00Z');archive=self.archive()
@@ -175,6 +175,19 @@ class ContractTests(unittest.TestCase):
             if mode=='event':archive=self.archive(config={'atoms':8192},name='large-event')
             with patch.object(target[0],target[1],target[2]),self.assertRaises(ValueError):a.issue(archive,[first],toy_producer)
             self.assertEqual(len(list((archive/'events').iterdir())),0)
+
+    def test_buffered_publication_cutoff_keeps_label_anchors(self):
+        capture=self.capture()
+        archive=self.archive(config={'entry_observation_buffer_seconds':7200})
+        start=datetime(2026,11,7,21,59,59,tzinfo=UTC);Clock.sequence=[start,start,start,start]
+        result=a.issue(archive,[capture],toy_producer)
+        event=json.loads(next((archive/'events').iterdir()).read_bytes())
+        self.assertEqual(event['request']['forecasts'][0]['entry_at'],'2026-11-08T00:00:00.000000Z')
+        a.verify(archive,result['event_id'])
+        archive=self.archive(config={'entry_observation_buffer_seconds':7200},name='at-buffer')
+        Clock.sequence=[start,start,start,datetime(2026,11,7,22,tzinfo=UTC)]
+        with self.assertRaisesRegex(ValueError,'publication'):a.issue(archive,[capture],toy_producer)
+        with self.assertRaisesRegex(ValueError,'publication'):a.verify(archive)
 
     def test_write_sink_inventory(self):
         expected={c:{'frozen_write','capture_response'},a:{'initialize','_own_capture','_append','issue'}}

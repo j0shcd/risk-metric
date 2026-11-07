@@ -63,7 +63,7 @@ def source_identity(producer,paths):
 
 def register(cohort,producer,code_paths,config):
     """Pin explicit permissible UTC dates; operational and monthly cohorts differ."""
-    keys(cohort,('kind','decision_days'))
+    keys(cohort,('kind','decision_days','entry_observation_buffer_seconds'))
     days=cohort['decision_days']
     if cohort['kind'] not in ('operational_witness','formal_monthly') or not isinstance(days,list) or not days or len(days)>MAX_EVENTS or days!=sorted(set(days)):raise ValueError('cohort definition')
     for day in days:
@@ -71,9 +71,11 @@ def register(cohort,producer,code_paths,config):
         if date.tz is not None or date.date().isoformat()!=day:raise ValueError('ISO day required')
         if cohort['kind']=='formal_monthly' and date!=date+pd.offsets.MonthEnd(0):raise ValueError('formal cohort must use month ends')
     if not isinstance(config,dict):raise ValueError('config dict required')
+    buffer=cohort['entry_observation_buffer_seconds']
+    if type(buffer) is not int or not 0<=buffer<86400 or config.get('entry_observation_buffer_seconds')!=buffer:raise ValueError('cohort/config entry buffer mismatch')
     identity=source_identity(producer,[*code_paths,Path(__file__),Path(cap.__file__),Path(__file__).with_name('market_dataset.py'),Path(__file__).with_name('scorecard_artifacts.py'),Path(__file__).with_name('shadow_archive.py')])
     reg={'schema':SCHEMA,'cohort':cohort,'config':config,'producer':identity,
-         'calendar':'next UTC day00 entry; calendar-month end; next-day label availability',
+         'calendar':{'anchors':'next UTC day00 entry; calendar-month end; next-day label availability','entry_observation_buffer_seconds':buffer},
          'limits':{'event_bytes':MAX_EVENT_BYTES,'archive_bytes':MAX_ARCHIVE_BYTES,'events':MAX_EVENTS,'capture_bytes':cap.MAX_CAPTURE_BYTES}}
     reg=json.loads(canonical_bytes(reg));reg['registration_id']=digest(reg)
     return reg
@@ -82,6 +84,8 @@ def register(cohort,producer,code_paths,config):
 def _registration(reg):
     keys(reg,('schema','cohort','config','producer','calendar','limits','registration_id'))
     if reg['schema']!=SCHEMA or reg['registration_id']!=digest({k:v for k,v in reg.items() if k!='registration_id'}):raise ValueError('v3 registration identity required; no v2 reclassification')
+    buffer=reg['cohort']['entry_observation_buffer_seconds']
+    if type(buffer) is not int or not 0<=buffer<86400 or reg['calendar']['entry_observation_buffer_seconds']!=buffer or reg['config'].get('entry_observation_buffer_seconds')!=buffer:raise ValueError('registered entry buffer mismatch')
 
 
 def initialize(root,registration):
@@ -160,7 +164,7 @@ def _validate_observation(event,reg,root,cache):
     _forecast_shape(request['forecasts'])
     for f in request['forecasts']:
         entry,end,available=label_calendar(issue,f['horizon_months'])
-        if tuple(cap.time(f[k]) for k in ('entry_at','label_end_at','label_available_at'))!=(entry,end,available) or commit>=entry:raise ValueError('calendar/entry commitment boundary')
+        if tuple(cap.time(f[k]) for k in ('entry_at','label_end_at','label_available_at'))!=(entry,end,available) or commit>=entry-timedelta(seconds=reg['cohort']['entry_observation_buffer_seconds']):raise ValueError('calendar/entry commitment boundary')
     # Hash the exact producer-return shape, before archive-added calendar/hash fields.
     produced={'selected':[{k:v for k,v in s.items() if k!='prefix_sha256'} for s in selected],
               'features':request['features'],'forecasts':[{k:v for k,v in f.items() if k not in ('entry_at','label_end_at','label_available_at')} for f in request['forecasts']]}
@@ -209,7 +213,7 @@ def _read(root,expected_head=None):
             if cap.sha(attempt_raw)!=event['request']['attempt_sha256']:raise ValueError('attempt hash')
             attempt=json.loads(attempt_raw)
             if attempt['query_day']!=event['request']['query_day'] or cap.time(attempt['started_at'])>cap.time(event['request']['issued_at']):raise ValueError('attempt identity')
-            if any(timestamp>=cap.time(f['entry_at']) for f in event['request']['forecasts']):raise ValueError('publication missed entry boundary')
+            if any(timestamp>=cap.time(f['entry_at'])-timedelta(seconds=reg['cohort']['entry_observation_buffer_seconds']) for f in event['request']['forecasts']):raise ValueError('publication missed entry boundary')
             observations[event_id]=event['request']
         elif event['kind']=='resolution':
             if event['classification'] is not None:raise ValueError('resolution classification')
@@ -258,7 +262,7 @@ def _append(root,state,reg,kind,request,classification,commit):
     completed=now()
     marker={'event_id':identity,'publication_completed_at':cap.stamp(completed)}
     cap.frozen_write(root/'publications'/(filename+'.receipt'),canonical_bytes(marker))
-    if completed<commit or (kind=='observation' and any(completed>=cap.time(f['entry_at']) for f in request['forecasts'])):
+    if completed<commit or (kind=='observation' and any(completed>=cap.time(f['entry_at'])-timedelta(seconds=reg['cohort']['entry_observation_buffer_seconds']) for f in request['forecasts'])):
         raise ValueError('publication clock reversal/entry boundary; archive invalid, no eligibility')
     return {'event_id':identity,'committed_at':event['committed_at'],'publication_completed_at':cap.stamp(completed),'classification':classification}
 
