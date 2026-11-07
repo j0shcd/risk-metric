@@ -25,7 +25,11 @@ def fixture(root):
             o=row['outcomes'][str(h)]
             if o['status']=='complete' and o['available']<='2022-12-31' and len(m.pool(rows,i,h))==24:
                 old.extend(m.forecast(rows,features,i,h,name,'development') for name in m.MODELS)
-    current=m.identity();prior_code={name:h for name,h in current['code'].items() if name!='research/transport_outer_falsification.py'}
+    current=m.identity()
+    # The prior experiment's inventory is historical; unrelated new modules must
+    # not be retroactively added to that synthetic prior's 43-file closure.
+    prior_names=json.loads((m.ROOT/'docs/artifacts/return-transport-registration-2026-11-07.json').read_bytes())['code']
+    prior_code={name:current['code'][name] for name in prior_names}
     assert len(prior_code)==43
     priorreg={'protocol':m.KERNEL_PROTOCOL,'inputs':{'source':{'sha256':m.sha(development.read_bytes())}},'code':prior_code,'runtime':current['runtime']}
     priorreg['registration_id']=digest(priorreg)
@@ -83,7 +87,7 @@ class OuterFalsificationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'development forecast changed'):m.evaluate(payload)
 
     def test_prior_code_extension_and_drift(self):
-        self.assertEqual(len(self.reg['code']),44)
+        self.assertGreaterEqual(len(self.reg['code']),44)
         payload=deepcopy(self.payload);prior=json.loads(payload['prior:registration.json']);prior['code']['research/market_dataset.py']='0'*64
         prior['registration_id']=digest({k:v for k,v in prior.items() if k!='registration_id'});study=json.loads(payload['prior:study.json']);study['registration_id']=prior['registration_id']
         payload.update({'prior:registration.json':canonical_bytes(prior),'prior:study.json':canonical_bytes(study)})
@@ -112,6 +116,18 @@ class OuterFalsificationTests(unittest.TestCase):
               {'date':'2023-01-31'}]
         self.assertEqual(m.pool(tiny,2,12),[1])
         self.assertEqual(m.nonoverlap([{'entry':'2020-01-01','end':'2021-01-01'},{'entry':'2021-01-01','end':'2022-01-01'},{'entry':'2021-01-02','end':'2022-01-02'}]),2)
+
+    def test_unrelated_code_inventory_growth_preserves_prior_contract(self):
+        extended=deepcopy(m.identity())
+        extended['code']['research/unrelated_future_module.py']='9'*64
+        with tempfile.TemporaryDirectory() as temporary,patch.object(m,'identity',return_value=extended):
+            reg,payload=fixture(Path(temporary).resolve())
+            self.assertEqual(len(json.loads(payload['prior:registration.json'])['code']),43)
+            self.assertIn('research/unrelated_future_module.py',reg['code'])
+            snapshot,prior,refs=m.validate_inputs(payload)
+            self.assertEqual(len(snapshot['monthly']),139)
+            self.assertEqual(len(prior['records']),216)
+            self.assertEqual(len(refs),13)
 
     def test_registration_failures_bind_exact_bytes_without_fit(self):
         for name,raw in [('malformed',b'{'),('runtime',canonical_bytes({**self.reg,'runtime':{'wrong':True}}))]:
