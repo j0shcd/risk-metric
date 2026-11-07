@@ -216,6 +216,29 @@ class ProducerTests(unittest.TestCase):
         config=json.loads(Path(c.__file__).with_name('coinmetrics_shadow_config.json').read_bytes())
         self.assertEqual(config,c.CONFIG)
 
+    def test_actual_producer_through_v3_capture_issue_verify(self):
+        from research import shadow_capture as cap, shadow_archive_v3 as archive
+        class FixedDate(datetime):
+            @classmethod
+            def now(cls,tz):return datetime(2026,11,7,12,tzinfo=timezone.utc)
+        day='2026-11-07';raw=envelope(day,synthetic(day))
+        with tempfile.TemporaryDirectory(dir='/private/tmp') as temp,patch.object(cap,'datetime',FixedDate):
+            root=Path(temp);captured=root/'capture';store=root/'archive'
+            cap.capture_response(captured,{'query_day':day},lambda request:(raw,{'status':'complete','synthetic':True}))
+            reg=archive.register({'kind':'operational_witness','decision_days':[day],
+                'entry_observation_buffer_seconds':7200},c.produce,c.CODE_PATHS,c.CONFIG)
+            archive.initialize(store,reg)
+            event=archive.issue(store,[captured],c.produce)
+            self.assertEqual(archive.verify(store,event['head_sha256'])['observation_count'],1)
+            owned=next((store/'captures').iterdir())
+            self.assertEqual(cap.verify_capture(owned)[0],raw)
+            event_raw=next((store/'events').iterdir()).read_bytes()
+            self.assertLess(len(event_raw),1024*1024)
+            issued=json.loads(event_raw)['request']
+            self.assertEqual(len(issued['forecasts']),6)
+            self.assertEqual(len(issued['selected'][0]['prefix']['prices']),3597)
+            self.assertTrue(all(f['entry_at'].startswith('2026-11-08T00:00:00') for f in issued['forecasts']))
+
     def test_fit_failure_no_fallback_and_fixed_config(self):
         with patch.object(c.generative,'fit',side_effect=c.generative.FitError('synthetic failure')):
             with self.assertRaisesRegex(c.generative.FitError,'synthetic failure'):c.produce((self.raw,),c.CONFIG,self.day)

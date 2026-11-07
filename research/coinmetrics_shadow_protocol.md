@@ -108,7 +108,9 @@ Run `python -m unittest tests.test_coinmetrics_shadow tests.test_shadow_capture_
 The collector tests use fake HTTP responses and clocks. The producer test uses
 invented daily prices and the actual frozen fit/simulator, with networking and
 subprocess calls forbidden. Independent context, atom, median-cell weight and
-quadratic CRPS calculations check numerical meaning. Failure receipts, byte/rate/
+quadratic CRPS calculations check numerical meaning. The actual producer also runs
+through synthetic capture, registration, issue and receipt-bound head verification
+with the complete 2017–2026 prefix and six forecasts. Failure receipts, byte/rate/
 deadline limits, future poisoning, daily gaps, physical values, strict maturity,
 leap calendars and fixed configuration are covered. Deliberately reintroduced
 future-value access, bar-start dates, inclusive maturity, seventh request,
