@@ -96,6 +96,7 @@ def score_target(
         coverage = valid_count / total.replace({0.0: np.nan})
 
         gate = pd.Series(1.0, index=index, dtype=float)
+        gate.loc[total.eq(0.0)] = 0.0
         under = coverage < 0.5
         gate.loc[under] = (coverage.loc[under] / 0.5).clip(lower=0.0, upper=1.0)
 

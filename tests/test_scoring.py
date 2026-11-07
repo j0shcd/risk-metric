@@ -96,6 +96,20 @@ class ScoringBehaviorTests(unittest.TestCase):
         self.assertTrue(routed.metric_breakdown.loc[inactive_dates, "metric_proxy_effective_weight"].eq(0).all())
         self.assertTrue(routed.metric_breakdown.loc[inactive_dates, "metric_proxy_signal"].isna().all())
 
+    def test_wholly_ineligible_category_has_no_coverage_weight(self):
+        primary = _bundle(self.index, "primary", "price_structure", "btc", .3, .4, .9)
+        inactive = _bundle(self.index, "inactive", "social", "btc", -.8, .7, .35)
+        inactive.frame["eligible"] = False
+        weights = {"price_structure": .5, "social": .5}
+        expected = score_target(self.index, [primary], weights, "btc")
+        actual = score_target(self.index, [primary, inactive], weights, "btc")
+        for field in ("signal", "attention", "confidence", "coverage"):
+            pd.testing.assert_series_equal(getattr(actual, field), getattr(expected, field), check_exact=True)
+        self.assertTrue(actual.category_breakdown["category_social_effective_weight"].eq(0).all())
+        absent = score_target(self.index, [inactive], weights, "btc")
+        for field in ("signal", "attention", "confidence", "coverage"):
+            self.assertTrue(getattr(absent, field).isna().all())
+
 
 if __name__ == "__main__":
     unittest.main()
