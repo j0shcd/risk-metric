@@ -81,6 +81,15 @@ class BoundaryTests(unittest.TestCase):
             self.assertEqual(len(result['records']),23*72)
             self.assertEqual(len(result['cells']),23*2*17)
             self.assertEqual(len(result['matched_decoder_contrasts']),46)
+            groups=result['availability_contributions']
+            self.assertEqual(len(groups),23*2*2*3)
+            for name in ['context+arm0','context+availability+attention']:
+                for h in (12,24):
+                    selected=[g for g in groups if g['model']==name and g['horizon']==h]
+                    self.assertEqual(sum(g['n'] for g in selected),{12:48,24:24}[h])
+                    overall=next(c for c in result['matched_decoder_contrasts'] if c['model']==name and c['horizon']==h)
+                    self.assertAlmostEqual(sum(g['paired_gain_sum']['crps'] for g in selected),overall['reference_minus_model']['crps']*overall['n'])
+            self.assertTrue(any(g['n'] and g['train_availability_group']=='mixed' for g in groups))
             for row in result['records']:
                 self.assertEqual(len(row['train_dates']),24)
                 self.assertTrue(all(d<row['date'] for d in row['train_dates']))
@@ -101,3 +110,4 @@ class BoundaryTests(unittest.TestCase):
             receipt=verify_packet(root/'out')
             self.assertIn('registration.json',receipt['files'])
             self.assertIn('error.json',receipt['files'])
+

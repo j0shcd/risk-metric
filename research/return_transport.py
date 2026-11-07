@@ -23,6 +23,7 @@ PROTOCOL = {'id':'return-transport-v1','training_n':24,'ridge_lambda':24,
  'residuals':'fixed-design PRESS; fixed lambda24 in each23-label refit; uniform24 atoms',
  'support':'same48/24 development origins as frozen atlas; no support selection',
  'attention':'context+mask and context+mask+attention, plus ordinary context+attention',
+ 'availability_groups':'query false/true crossed with train none0/mixed1..23/all24; paired CRPS/Brier sums and means',
  'interpretation':'issued CDF, no fair ensemble correction; no calibration/significance/promotion',
  'slope_direction':'unconstrained; forecast information is not fixed higher-risk ordering',
  'stopping_rule':'one frozen study; no further lambda/decoder search if unsuccessful',
@@ -121,11 +122,19 @@ def evaluate(snapshot,candidates,availability,atlas):
                 cells.append(cell)
     contributions=[]
     for name in models:
+        comparator='context+availability' if name=='context+availability+attention' else 'context'
+        paired={(r['date'],r['horizon']):r for r in records if r['model']==comparator}
         for h in (12,24):
             for available in (False,True):
-                subset=[r for r in records if r['model']==name and r['horizon']==h and r['query_available']==available]
-                contributions.append({'model':name,'horizon':h,'query_available':available,'n':len(subset),
-                     'crps_sum':float(sum(r['crps'] for r in subset)),'crps_mean':float(np.mean([r['crps'] for r in subset])) if subset else None})
+                for group in ('none','mixed','all'):
+                    def train_group(n):return 'none' if n==0 else 'all' if n==24 else 'mixed'
+                    subset=[r for r in records if r['model']==name and r['horizon']==h and r['query_available']==available and train_group(r['train_available_n'])==group]
+                    contributions.append({'model':name,'reference':comparator,'horizon':h,
+                        'query_available':available,'train_availability_group':group,'n':len(subset),
+                        'crps_sum':float(sum(r['crps'] for r in subset)),
+                        'crps_mean':float(np.mean([r['crps'] for r in subset])) if subset else None,
+                        'paired_gain_sum':{metric:float(sum(paired[(r['date'],h)][metric]-r[metric] for r in subset)) for metric in ('crps','brier')},
+                        'paired_gain_mean':{metric:float(np.mean([paired[(r['date'],h)][metric]-r[metric] for r in subset])) if subset else None for metric in ('crps','brier')}})
     matched=[]
     for name in models:
         comparator='context+availability' if name=='context+availability+attention' else 'context'
