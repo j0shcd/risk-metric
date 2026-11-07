@@ -102,7 +102,8 @@ Historical input vintages and the source's UTC/executable close convention remai
 **unverified**. The snapshot preserves that status. The one-day observation-to-entry
 lag is a hypothetical research convention, not proof that historical macro inputs
 or reconstructed scores were available then. These results cannot be relabeled
-point-in-time or prospective. No macro or external-market data was downloaded.
+point-in-time or prospective. This BTC snapshot includes no newly acquired macro
+inputs; the separate monthly equity falsification fixture is described below.
 
 The scorecard has two separate panels within each target/horizon:
 
@@ -983,30 +984,83 @@ Long public return histories such as the
 can support this track. They do not validate BTC-specific features, and current
 historical files can be revised. Shared global shocks limit independent replication.
 
-The next bounded external experiment is **portability falsification**, not pooled
-pretraining. Candidate generators and readouts remain frozen. The first eligible
-source is the official [French daily factors ZIP](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip):
-reconstruct broad-US market total return from Mkt-RF + RF, then compound. This is
-a research portfolio, not the S&P 500 or an executable security. Record the
-[2025 CIZ methodology change and revisions](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html).
-The second proposed equity stress series is [Nasdaq Composite](https://fred.stlouisfed.org/series/NASDAQCOM),
-a price index with dividends excluded; its metadata includes copyright terms,
-and redistribution eligibility has not been established. These two series form
-one equity family. Gold's official World Bank monthly series is an average spot
-price, so it cannot enter daily drawdown/next-day policy tests. No external file
-has been downloaded or adopted in this task.
+The accepted first external experiment is **monthly portability falsification**,
+not pooled pretraining. The official [French monthly factors ZIP](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip)
+was captured once on 2026-11-07. The parser reconstructs broad-US research-market
+**total return** as `(Mkt-RF + RF)/100` and compounds it. This is neither the S&P 500
+nor an executable security. The [provider methodology](https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html)
+uses current CIZ-format revised historical values; observation dates and retrieval
+metadata do not establish historical publication availability.
 
-Before acquisition, freeze and test a trading-session calendar adapter. Monthly
-decisions must use available closes, execute on the next eligible session, and
-compute declared calendar-horizon endpoints without inventing weekend trades.
-Proposed unchanged-candidate audit origins are 1990–2017, with labels available
-by 2022; any training uses labels available by 1979, validation origins 1980–1984,
-and choices frozen before 1990. Exact maturity overrides approximate row gaps.
-Keep transformations causal and asset-specific, retain native log-loss units,
-and report asset/era cells separately. Resampling must preserve shared calendar
-shocks and multi-year dependence. Failure versus unconditional/price references
-or inverted ordering rejects this representation's portability claim; success
-does not add independent BTC cycles or validate a four-year Bitcoin forecast.
+[Acquisition metadata](../research/fixtures/french_monthly_2026-11-07.json) pins the
+13,078-byte ZIP (`b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618`),
+provider database 202609, 1,203 monthly observations and excluded annual section.
+The cropped fixture contains 1,158 consecutive months, July 1926–December 2022;
+45 later months are excluded. Its CSV SHA-256 is
+`54b4aeb41fc12fb4d77034d946bb13be6036742e0a61fa63551d6ceb7d2b5374`.
+Raw and derived numeric provider data remain in ignored
+`data/external_private/french_monthly_2026-11-07/`; redistribution permission has
+not been cleared. Only parser, invented test fixtures and metadata are committed.
+A separate decimal calculation verified every cropped return and compounded index.
+
+This monthly track replaces the proposed daily-first acquisition. It needs no
+invented daily interpolation or exchange-session adapter. Daily equity drawdowns
+and execution simulations remain unimplemented. Nasdaq Composite is still only a
+proposed price-index stress series; gold's World Bank monthly average spot price
+is not a month-end close. Neither was acquired or adopted.
+
+**Frozen monthly contract, before scoring:**
+
+- Feed consecutive monthly observations from January 1970, rebasing that first
+  index value to 100. Generate training origins from January 1980 after fixed
+  initialization. No BTC components or French factors become predictors.
+- Evaluate January 1990–December 2003 as the older-family falsification and
+  January 2004–December 2017 as the shared-era challenge. The candidates were
+  chosen after BTC development exposure; neither era is an unseen historical
+  holdout, and no claim of a pre-1990 freeze is made. Later equity outcomes share
+  macro shocks with exposed BTC outcomes. These are paired observations from one
+  equity family, not extra independent BTC cycles.
+- Preserve the three frozen generators and parameters: A `memory_weight=0`,
+  B `swing_b_adaptive`, C `window=24`. A's existing one-day observation lag uses
+  the previous monthly observation; B/C use the current completed month. Sparse
+  monthly sampling changes A's elapsed-time filter. Removing that lag or
+  rescaling a candidate would create another trial and is not allowed here.
+- At origin month-end, virtual entry is **next month-end**; exit is month-end
+  H months after entry for H=12/24/48. Label availability is exit plus one calendar
+  day and must be strictly before the query date. These are computational anchors,
+  not verified French publication or execution timestamps.
+- Score terminal log return, nonnegative entry adverse log loss, and true
+  peak-to-trough log loss on the **monthly-sampled** entry-to-exit path including
+  entry. Intramonth troughs/recoveries are invisible. Keep asset/frequency/protocol
+  identifiers distinct from BTC daily outcomes; no cross-frequency score pooling.
+- Use the existing direct empirical-CDF median decoder, latest 24 strictly mature
+  outcome rows, training-only median thresholds, `>` tie rule, 50:50 pooled/local
+  weights and exact fallback. No decoder or parameter selection. Primary diagnostic
+  coordinate is 24-month terminal return; every other coordinate remains visible.
+- Monthly context is trailing 12-month log return and sample standard deviation
+  (`ddof=1`) of the latest 12 monthly log returns, without annualization. This is
+  a new declared monthly context, not 90-day daily-volatility equivalence.
+- Eight fixed references are those two context coordinates; trailing 12-month peak
+  drawdown; expanding ATH drawdown since initialization; log index/arithmetic
+  12-month moving-average ratio; elapsed months since January 1970; and sine/cosine
+  of a fixed 48-month phase anchored January 1970. Calendar terms are nuisance
+  controls, not asserted equity cycles. Also report context-only and unconditional
+  forecasts. All candidate/reference comparisons use identical mature atoms/dates.
+- Report negative/nonnegative terminal-return counts, both loss-event prevalences,
+  training-pool class counts and non-overlapping outcome-window counts within each
+  class, per era/horizon. Events remain return `<0` and log loss `>log(2)`.
+  A single-class four-year sample cannot establish event discrimination; zero
+  reference-loss skill is undefined. Continuous CRPS/ordering remains descriptive.
+- Descriptive portability rejection patterns per candidate: negative 24-month
+  return alignment in **both** eras; or one fixed comparator with no worse CRPS
+  across all three 24-month outcomes in both eras and strict improvement somewhere.
+  Report every regression even without these patterns. Their absence establishes
+  neither significance nor portability. A retrospective best-reference envelope
+  is informative but is not an origin-time forecasting strategy.
+
+No external candidate scoring has run at this registration point. Success would
+not validate BTC-specific features, daily risk, four-year Bitcoin predictions or
+professional-use reliability. Failure cannot be repaired by tuning on these eras.
 
 ## 7. Candidate research queue
 
@@ -1069,7 +1123,7 @@ the legacy acceptance gate remains unchanged.
 | Baseline identity | Committed minimal snapshot, immutable manifests/receipts and byte-identical baseline replay | Snapshot is exposed and reconstructed, not new holdout evidence |
 | Experiment registry | Shared direct-CDF budgets, immutable finalists, one release and reasoned interrupted-attempt closure implemented | Declared producer artifacts are not executed/causally certified; public exposure cannot be erased |
 | Prospective archive | Bounded hash-chained observation/resolution API, synthetic CLI and independent review implemented | No live archive or verified input-publication adapter; hashes are not source authentication |
-| Synthetic / external suite | New independent-world conditional panel passes; earlier single-path search failures retained | No external-market data adopted; no market error-control transfer |
+| Synthetic / external suite | Independent-world conditional panel passes; private monthly equity fixture acquired and falsification contract frozen | External candidate scoring pending; no market error-control transfer |
 | Supporting policy accounting | Equal initial capital, no contributions, explicit costs, common dates and ex-post exposure matches | Candidate C's three-trade lead is exploratory; no policy winner or pathwise risk equivalence |
 
 Legacy acceptance/policy issues remain separate from the research protocol:
