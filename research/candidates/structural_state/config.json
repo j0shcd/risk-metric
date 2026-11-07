@@ -1,16 +1,17 @@
 {
   "column": "astra_b_upside_concentration",
   "input": "locked pre2023 development bundle btc_daily.csv only",
+  "input_sha256": "d6e0e23e4d84e32690cea42cc0bf69f44ddfe9d954939b54ba499635431ed04c",
   "missing_support": "neutral 0.5 with explicit status; retain all requested origins",
   "parameters": {
     "missing_risk": 0.5,
     "no_upside_risk": 0.0,
     "window_daily_returns": 730
   },
+  "producer_sha256": "995f42060aad9332971464a71559b34bd1908615ce4fcff33ae47d2457da8323",
   "protocol": "upside-gain-concentration-v1",
   "readout": "root locked direct-CDF full17-reference atlas; one submission",
   "slot": "astra_b",
-  "source_sha256": "995f42060aad9332971464a71559b34bd1908615ce4fcff33ae47d2457da8323",
   "source_vintage": "unverified",
   "status": "frozen_before_campaign_measurement",
   "training": "none"

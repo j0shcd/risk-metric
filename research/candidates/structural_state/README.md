@@ -35,7 +35,8 @@ API: generate(Date/Price frame, optional month-end dates) returns Date-indexed
 astra_b_upside_concentration plus status. CLI --inputs points to the locked
 bundle containing btc_daily.csv; --output exclusively creates a CSV. Root owns
 submission; no scorer was run during implementation. Config JSON freezes the
-protocol and source hash. Next step is independent source review, then exactly
+protocol, generator code hash (producer_sha256), and cropped BTC CSV hash
+(input_sha256, copied from the locked bundle manifest). Next step is independent source review, then exactly
 one root-owned registered development measurement; no parameter alternatives.
 
 Synthetic verification: python -m unittest tests.test_structural_state -q.
