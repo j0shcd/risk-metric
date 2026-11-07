@@ -1055,8 +1055,10 @@ is not a month-end close. Neither was acquired or adopted.
 - Monthly context is trailing 12-month log return and sample standard deviation
   (`ddof=1`) of the latest 12 monthly log returns, without annualization. This is
   a new declared monthly context, not 90-day daily-volatility equivalence.
-- Eight fixed references are those two context coordinates; trailing 12-month peak
-  drawdown; expanding ATH drawdown since initialization; log index/arithmetic
+- Eight fixed references are those two context coordinates; current signed log
+  distance below the trailing 12-month peak (13 month-end closes, distinct from
+  maximum historical peak-to-trough loss); expanding ATH drawdown since
+  initialization; log index/arithmetic
   12-month moving-average ratio; elapsed months since January 1970; and sine/cosine
   of a fixed 48-month phase anchored January 1970. Calendar terms are nuisance
   controls, not asserted equity cycles. Also report context-only and unconditional
