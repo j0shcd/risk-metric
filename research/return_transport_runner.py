@@ -74,6 +74,25 @@ def zip_candidate(raw,member):
         return json.loads(archive.read(member))['candidate']
 
 
+def common_frame(raw, dates):
+    """Accept historical warmup only; never expand or selectively thin support."""
+    frame=pd.read_csv(io.BytesIO(raw))
+    index=pd.DatetimeIndex(pd.to_datetime(frame.Date,errors='raise'))
+    required=pd.DatetimeIndex(dates)
+    if (index.empty or index.hasnans or index.has_duplicates or not index.is_monotonic_increasing
+            or index.tz is not None or not index.equals(index.normalize())
+            or any(d!=d+pd.offsets.MonthEnd(0) for d in index)
+            or not index.equals(pd.date_range(index.min(),index.max(),freq='ME'))
+            or index.max()>pd.Timestamp(model.PROTOCOL['cutoff'])
+            or not required.isin(index).all()
+            or any(d>=required[0] and d not in required for d in index)):
+        raise ValueError('candidate date support mismatch')
+    frame.index=index
+    selected=frame.loc[required].copy()
+    selected['Date']=list(dates)
+    return selected.reset_index(drop=True)
+
+
 def inputs(payloads):
     manifest=json.loads(payloads['manifest'])
     if manifest['cutoff']!='2022-12-31' or manifest['sources']['development_scores.csv']['development_sha256']!=hashlib.sha256(payloads['source']).hexdigest():raise ValueError('bundle mismatch')
@@ -93,8 +112,7 @@ def inputs(payloads):
                 raw=payloads[name+':parent:'+filename]
                 if hashlib.sha256(raw).hexdigest()!=expected:raise ValueError('corrupt new parent')
             if hashlib.sha256(payloads[name]).hexdigest()!=receipt['files']['candidate.csv']:raise ValueError('candidate/parent mismatch')
-            frame=pd.read_csv(io.BytesIO(payloads[name]))
-            if frame.Date.tolist()!=dates:raise ValueError('candidate date support mismatch')
+            frame=common_frame(payloads[name],dates)
             candidate={'name':name,'direction':'higher_risk','provenance':'registered captured campaign CSV',
                        'values':[{'date':d,'value':float(v)} for d,v in zip(dates,frame[column])]}
             if name=='attention_surge_risk':
