@@ -1,0 +1,1199 @@
+{
+  "attempts_consumed": 3,
+  "benchmark_unchanged": true,
+  "campaign_id": "34b036a70b46a11326879f94e13199811cc90c8ea098b6ccde16b97d499d16b4",
+  "candidates": {
+    "change": {
+      "attempt": "attempt-002--change",
+      "cells": [
+        {
+          "best_reference": "generative",
+          "best_reference_means": {
+            "brier": 0.27656696816190857,
+            "coverage_50": 0.2708333333333333,
+            "coverage_80": 0.5,
+            "crps": 0.6532579537286173,
+            "width_50": 0.8037055357647316,
+            "width_80": 1.5749773520810282
+          },
+          "best_replica": 1,
+          "candidate": {
+            "brier": 0.2900676359953704,
+            "coverage_50": 0.20833333333333334,
+            "coverage_80": 0.375,
+            "crps": 0.9091475311552379,
+            "width_50": 1.0949678560058997,
+            "width_80": 1.9136482874431942
+          },
+          "candidate_crps_relative_to_best": 0.3917129151908112,
+          "horizon": 12,
+          "scored_n": 48,
+          "target": "terminal_log_return"
+        },
+        {
+          "best_reference": "generative",
+          "best_reference_means": {
+            "brier": 0.3072363846818107,
+            "coverage_50": 0.25,
+            "coverage_80": 0.5416666666666666,
+            "crps": 0.305942032214925,
+            "width_50": 0.3326822415195698,
+            "width_80": 0.665045685696482
+          },
+          "best_replica": 1,
+          "candidate": {
+            "brier": 0.35489583333333335,
+            "coverage_50": 0.2708333333333333,
+            "coverage_80": 0.5833333333333334,
+            "crps": 0.3724969493060199,
+            "width_50": 0.32704533425705207,
+            "width_80": 0.7049279488748267
+          },
+          "candidate_crps_relative_to_best": 0.21754093940364472,
+          "horizon": 12,
+          "scored_n": 48,
+          "target": "entry_adverse_log_loss"
+        },
+        {
+          "best_reference": "direct_cdf:calendar_cycle_sin_4y",
+          "best_reference_means": {
+            "brier": 0.2564757772533211,
+            "coverage_50": 0.3958333333333333,
+            "coverage_80": 0.6666666666666666,
+            "crps": 0.2601718423688902,
+            "width_50": 0.26372365645309365,
+            "width_80": 0.5830068256074797
+          },
+          "best_replica": null,
+          "candidate": {
+            "brier": 0.3019118037840136,
+            "coverage_50": 0.375,
+            "coverage_80": 0.6458333333333334,
+            "crps": 0.29621488187268924,
+            "width_50": 0.26202741080908115,
+            "width_80": 0.5393197210175337
+          },
+          "candidate_crps_relative_to_best": 0.13853551243525675,
+          "horizon": 12,
+          "scored_n": 48,
+          "target": "peak_drawdown_log_loss"
+        },
+        {
+          "best_reference": "unconditional",
+          "best_reference_means": {
+            "brier": 0.03942418981481482,
+            "coverage_50": 0.7916666666666666,
+            "coverage_80": 0.9583333333333334,
+            "crps": 0.33107363984732724,
+            "width_50": 1.269630789015956,
+            "width_80": 2.1974544384875965
+          },
+          "best_replica": null,
+          "candidate": {
+            "brier": 0.03676576967592593,
+            "coverage_50": 0.2916666666666667,
+            "coverage_80": 0.9166666666666666,
+            "crps": 0.5055353793194647,
+            "width_50": 0.8666246293595238,
+            "width_80": 2.043246744876611
+          },
+          "candidate_crps_relative_to_best": 0.5269575057458198,
+          "horizon": 24,
+          "scored_n": 24,
+          "target": "terminal_log_return"
+        },
+        {
+          "best_reference": "generative",
+          "best_reference_means": {
+            "brier": 0.12344660895000674,
+            "coverage_50": 0.5,
+            "coverage_80": 0.7916666666666666,
+            "crps": 0.15452205832819724,
+            "width_50": 0.4915660717568551,
+            "width_80": 0.9825418662920513
+          },
+          "best_replica": 0,
+          "candidate": {
+            "brier": 0.13749638310185186,
+            "coverage_50": 0.375,
+            "coverage_80": 0.5416666666666666,
+            "crps": 0.22900365464227815,
+            "width_50": 0.20610510159328377,
+            "width_80": 0.5360058166568952
+          },
+          "candidate_crps_relative_to_best": 0.48201271145305147,
+          "horizon": 24,
+          "scored_n": 24,
+          "target": "entry_adverse_log_loss"
+        },
+        {
+          "best_reference": "direct_cdf:price_ath_drawdown",
+          "best_reference_means": {
+            "brier": 0.11978804976851852,
+            "coverage_50": 0.5416666666666666,
+            "coverage_80": 0.75,
+            "crps": 0.27400310276914147,
+            "width_50": 0.4565052624714671,
+            "width_80": 0.9360215337010201
+          },
+          "best_replica": null,
+          "candidate": {
+            "brier": 0.14386212384259262,
+            "coverage_50": 0.5416666666666666,
+            "coverage_80": 0.7083333333333334,
+            "crps": 0.32873817681960976,
+            "width_50": 0.45498185604454333,
+            "width_80": 0.8935533362110993
+          },
+          "candidate_crps_relative_to_best": 0.19976078189371727,
+          "horizon": 24,
+          "scored_n": 24,
+          "target": "peak_drawdown_log_loss"
+        },
+        {
+          "horizon": 48,
+          "scored_n": 0,
+          "status": "insufficient_support",
+          "target": "terminal_log_return"
+        },
+        {
+          "horizon": 48,
+          "scored_n": 0,
+          "status": "insufficient_support",
+          "target": "entry_adverse_log_loss"
+        },
+        {
+          "horizon": 48,
+          "scored_n": 0,
+          "status": "insufficient_support",
+          "target": "peak_drawdown_log_loss"
+        }
+      ],
+      "decision": "primary failure; archive without adoption/outer release/retuning",
+      "frontier_sha256": "21610574d7a5b55c9a99882886411d22cd46269d802d7485ba9ba54380231d7c",
+      "trial_sha256": "da8698629176e5c58e97f27329ef8659ae718d923e53fc15a009900a52ac769c"
+    },
+    "coupling": {
+      "attempt": "attempt-003--coupling",
+      "cells": [
+        {
+          "best_reference": "generative",
+          "best_reference_means": {
+            "brier": 0.27656696816190857,
+            "coverage_50": 0.2708333333333333,
+            "coverage_80": 0.5,
+            "crps": 0.6532579537286173,
+            "width_50": 0.8037055357647316,
+            "width_80": 1.5749773520810282
+          },
+          "best_replica": 1,
+          "candidate": {
+            "brier": 0.2096625434027778,
+            "coverage_50": 0.1875,
+            "coverage_80": 0.3541666666666667,
+            "crps": 0.8153436500560391,
+            "width_50": 0.9416609288700354,
+            "width_80": 1.8444649137948854
+          },
+          "candidate_crps_relative_to_best": 0.24811897873157318,
+          "horizon": 12,
+          "scored_n": 48,
+          "target": "terminal_log_return"
+        },
+        {
+          "best_reference": "generative",
+          "best_reference_means": {
+            "brier": 0.3072363846818107,
+            "coverage_50": 0.25,
+            "coverage_80": 0.5416666666666666,
+            "crps": 0.305942032214925,
+            "width_50": 0.3326822415195698,
+            "width_80": 0.665045685696482
+          },
+          "best_replica": 1,
+          "candidate": {
+            "brier": 0.32038483796296297,
+            "coverage_50": 0.3541666666666667,
+            "coverage_80": 0.5625,
+            "crps": 0.3491081924012298,
+            "width_50": 0.3397857640494042,
+            "width_80": 0.7075335034247239
+          },
+          "candidate_crps_relative_to_best": 0.14109261115184224,
+          "horizon": 12,
+          "scored_n": 48,
+          "target": "entry_adverse_log_loss"
+        },
+        {
+          "best_reference": "direct_cdf:calendar_cycle_sin_4y",
+          "best_reference_means": {
+            "brier": 0.2564757772533211,
+            "coverage_50": 0.3958333333333333,
+            "coverage_80": 0.6666666666666666,
+            "crps": 0.2601718423688902,
+            "width_50": 0.26372365645309365,
+            "width_80": 0.5830068256074797
+          },
+          "best_replica": null,
+          "candidate": {
+            "brier": 0.3116861979166667,
+            "coverage_50": 0.3541666666666667,
+            "coverage_80": 0.6458333333333334,
+            "crps": 0.28156696424773925,
+            "width_50": 0.21893305576902566,
+            "width_80": 0.4991943478696925
+          },
+          "candidate_crps_relative_to_best": 0.08223457882315155,
+          "horizon": 12,
+          "scored_n": 48,
+          "target": "peak_drawdown_log_loss"
+        },
+        {
+          "best_reference": "unconditional",
+          "best_reference_means": {
+            "brier": 0.03942418981481482,
+            "coverage_50": 0.7916666666666666,
+            "coverage_80": 0.9583333333333334,
+            "crps": 0.33107363984732724,
+            "width_50": 1.269630789015956,
+            "width_80": 2.1974544384875965
+          },
+          "best_replica": null,
+          "candidate": {
+            "brier": 0.03676576967592593,
+            "coverage_50": 0.125,
+            "coverage_80": 0.9166666666666666,
+            "crps": 0.5167876609051647,
+            "width_50": 0.667797478957216,
+            "width_80": 1.8870546934108408
+          },
+          "candidate_crps_relative_to_best": 0.5609447527851461,
+          "horizon": 24,
+          "scored_n": 24,
+          "target": "terminal_log_return"
+        },
+        {
+          "best_reference": "generative",
+          "best_reference_means": {
+            "brier": 0.12344660895000674,
+            "coverage_50": 0.5,
+            "coverage_80": 0.7916666666666666,
+            "crps": 0.15452205832819724,
+            "width_50": 0.4915660717568551,
+            "width_80": 0.9825418662920513
+          },
+          "best_replica": 0,
+          "candidate": {
+            "brier": 0.13749638310185186,
+            "coverage_50": 0.4166666666666667,
+            "coverage_80": 0.5416666666666666,
+            "crps": 0.2262691440105822,
+            "width_50": 0.18299120593465112,
+            "width_80": 0.5324736949305119
+          },
+          "candidate_crps_relative_to_best": 0.4643161400943656,
+          "horizon": 24,
+          "scored_n": 24,
+          "target": "entry_adverse_log_loss"
+        },
+        {
+          "best_reference": "direct_cdf:price_ath_drawdown",
+          "best_reference_means": {
+            "brier": 0.11978804976851852,
+            "coverage_50": 0.5416666666666666,
+            "coverage_80": 0.75,
+            "crps": 0.27400310276914147,
+            "width_50": 0.4565052624714671,
+            "width_80": 0.9360215337010201
+          },
+          "best_replica": null,
+          "candidate": {
+            "brier": 0.1550021701388889,
+            "coverage_50": 0.375,
+            "coverage_80": 0.7083333333333334,
+            "crps": 0.390372119009106,
+            "width_50": 0.33947705375586396,
+            "width_80": 0.8808654176815994
+          },
+          "candidate_crps_relative_to_best": 0.4246996295440131,
+          "horizon": 24,
+          "scored_n": 24,
+          "target": "peak_drawdown_log_loss"
+        },
+        {
+          "horizon": 48,
+          "scored_n": 0,
+          "status": "insufficient_support",
+          "target": "terminal_log_return"
+        },
+        {
+          "horizon": 48,
+          "scored_n": 0,
+          "status": "insufficient_support",
+          "target": "entry_adverse_log_loss"
+        },
+        {
+          "horizon": 48,
+          "scored_n": 0,
+          "status": "insufficient_support",
+          "target": "peak_drawdown_log_loss"
+        }
+      ],
+      "decision": "primary failure; archive without adoption/outer release/retuning",
+      "frontier_sha256": "acf21bd18066fb702be98646376f13a74d076f536b66c8370a63349701f41638",
+      "trial_sha256": "9bf88a234eefb2e25521f7362fcbe1fb566518b4c393bfd19fd7550b1d2cb8d8"
+    },
+    "level": {
+      "attempt": "attempt-001--level",
+      "cells": [
+        {
+          "best_reference": "generative",
+          "best_reference_means": {
+            "brier": 0.27656696816190857,
+            "coverage_50": 0.2708333333333333,
+            "coverage_80": 0.5,
+            "crps": 0.6532579537286173,
+            "width_50": 0.8037055357647316,
+            "width_80": 1.5749773520810282
+          },
+          "best_replica": 1,
+          "candidate": {
+            "brier": 0.3079758583120748,
+            "coverage_50": 0.25,
+            "coverage_80": 0.375,
+            "crps": 0.9529376807777187,
+            "width_50": 1.0921773580808918,
+            "width_80": 1.9214399774876618
+          },
+          "candidate_crps_relative_to_best": 0.45874638852632676,
+          "horizon": 12,
+          "scored_n": 48,
+          "target": "terminal_log_return"
+        },
+        {
+          "best_reference": "generative",
+          "best_reference_means": {
+            "brier": 0.3072363846818107,
+            "coverage_50": 0.25,
+            "coverage_80": 0.5416666666666666,
+            "crps": 0.305942032214925,
+            "width_50": 0.3326822415195698,
+            "width_80": 0.665045685696482
+          },
+          "best_replica": 1,
+          "candidate": {
+            "brier": 0.35999772578912187,
+            "coverage_50": 0.375,
+            "coverage_80": 0.5416666666666666,
+            "crps": 0.3646453452983567,
+            "width_50": 0.38422267338526345,
+            "width_80": 0.7009058175319854
+          },
+          "candidate_crps_relative_to_best": 0.1918772411179921,
+          "horizon": 12,
+          "scored_n": 48,
+          "target": "entry_adverse_log_loss"
+        },
+        {
+          "best_reference": "direct_cdf:calendar_cycle_sin_4y",
+          "best_reference_means": {
+            "brier": 0.2564757772533211,
+            "coverage_50": 0.3958333333333333,
+            "coverage_80": 0.6666666666666666,
+            "crps": 0.2601718423688902,
+            "width_50": 0.26372365645309365,
+            "width_80": 0.5830068256074797
+          },
+          "best_replica": null,
+          "candidate": {
+            "brier": 0.27593885708409854,
+            "coverage_50": 0.375,
+            "coverage_80": 0.6875,
+            "crps": 0.27959837966872175,
+            "width_50": 0.3045087882184779,
+            "width_80": 0.6010814170850807
+          },
+          "candidate_crps_relative_to_best": 0.07466810060209061,
+          "horizon": 12,
+          "scored_n": 48,
+          "target": "peak_drawdown_log_loss"
+        },
+        {
+          "best_reference": "unconditional",
+          "best_reference_means": {
+            "brier": 0.03942418981481482,
+            "coverage_50": 0.7916666666666666,
+            "coverage_80": 0.9583333333333334,
+            "crps": 0.33107363984732724,
+            "width_50": 1.269630789015956,
+            "width_80": 2.1974544384875965
+          },
+          "best_replica": null,
+          "candidate": {
+            "brier": 0.03676576967592593,
+            "coverage_50": 0.3333333333333333,
+            "coverage_80": 0.9166666666666666,
+            "crps": 0.49519372125016536,
+            "width_50": 0.8411223831106572,
+            "width_80": 1.9993318220872318
+          },
+          "candidate_crps_relative_to_best": 0.49572077522849955,
+          "horizon": 24,
+          "scored_n": 24,
+          "target": "terminal_log_return"
+        },
+        {
+          "best_reference": "generative",
+          "best_reference_means": {
+            "brier": 0.12344660895000674,
+            "coverage_50": 0.5,
+            "coverage_80": 0.7916666666666666,
+            "crps": 0.15452205832819724,
+            "width_50": 0.4915660717568551,
+            "width_80": 0.9825418662920513
+          },
+          "best_replica": 0,
+          "candidate": {
+            "brier": 0.13749638310185186,
+            "coverage_50": 0.4166666666666667,
+            "coverage_80": 0.5416666666666666,
+            "crps": 0.22041805122907754,
+            "width_50": 0.20112455391803732,
+            "width_80": 0.5173031013048947
+          },
+          "candidate_crps_relative_to_best": 0.426450395586373,
+          "horizon": 24,
+          "scored_n": 24,
+          "target": "entry_adverse_log_loss"
+        },
+        {
+          "best_reference": "direct_cdf:price_ath_drawdown",
+          "best_reference_means": {
+            "brier": 0.11978804976851852,
+            "coverage_50": 0.5416666666666666,
+            "coverage_80": 0.75,
+            "crps": 0.27400310276914147,
+            "width_50": 0.4565052624714671,
+            "width_80": 0.9360215337010201
+          },
+          "best_replica": null,
+          "candidate": {
+            "brier": 0.1032081886574074,
+            "coverage_50": 0.4166666666666667,
+            "coverage_80": 0.75,
+            "crps": 0.32328685821386227,
+            "width_50": 0.3805159361409299,
+            "width_80": 0.8971054479472421
+          },
+          "candidate_crps_relative_to_best": 0.17986568380666967,
+          "horizon": 24,
+          "scored_n": 24,
+          "target": "peak_drawdown_log_loss"
+        },
+        {
+          "horizon": 48,
+          "scored_n": 0,
+          "status": "insufficient_support",
+          "target": "terminal_log_return"
+        },
+        {
+          "horizon": 48,
+          "scored_n": 0,
+          "status": "insufficient_support",
+          "target": "entry_adverse_log_loss"
+        },
+        {
+          "horizon": 48,
+          "scored_n": 0,
+          "status": "insufficient_support",
+          "target": "peak_drawdown_log_loss"
+        }
+      ],
+      "decision": "primary failure; archive without adoption/outer release/retuning",
+      "frontier_sha256": "8e2e904418bfb854153e3eb426b97bed0f2a85a76a23b578159d9cb6d80282b7",
+      "trial_sha256": "ee50b47a13703b39113996f429b19c8f9e52495535615bde4e5cd94b5cc1ad07"
+    }
+  },
+  "independent_audit": {
+    "atlas_sha256": "22b67b6dc9ea4aaa661ff220a6dff372b7d2ef54de64044f6d6ab961e07834db",
+    "campaign_manifest_sha256": "b696f986e32fdd6dee8c91f6e314ac50f0aaea832b7b3735fe282c633ccd86a4",
+    "counts": {
+      "attempts": 3,
+      "candidate_scalar_values": 291,
+      "frontier_cells": 2295,
+      "mc_guards": 270,
+      "predictions": 1215,
+      "reference_models": 17,
+      "scored_predictions": 648
+    },
+    "limitations": [
+      "No scorer, generator or model modules imported/executed. No new trials, network or FRED payloads. Only admitted Board monthly levels and owned BTC used.",
+      "Generative reference fair losses trusted from immutable previously audited atlas; samples not regenerated.",
+      "Candidate source/config/worker/root reproduction byte identity verified; scalars independently reconstructed from two admitted owned inputs.",
+      "Reconstructed Tier B/C Board levels, zero verified originals; historical timing/revision limitations remain. Exposed development history is not fresh holdout. No secondary rescue or performance qualification."
+    ],
+    "max_absolute_errors": {
+      "atoms": 0,
+      "candidate_change": 7.105427357601002e-15,
+      "candidate_coupling": 1.4210854715202004e-14,
+      "candidate_level": 1.1102230246251565e-16,
+      "candidate_weights": 0,
+      "cell_candidate_brier": 5.551115123125783e-17,
+      "cell_candidate_coverage_50": 0,
+      "cell_candidate_coverage_80": 0,
+      "cell_candidate_crps": 7.771561172376096e-16,
+      "cell_candidate_width_50": 0,
+      "cell_candidate_width_80": 0,
+      "cell_delta_brier": 8.326672684688674e-17,
+      "cell_delta_coverage_50": 0,
+      "cell_delta_coverage_80": 0,
+      "cell_delta_crps": 7.355227538141662e-16,
+      "cell_delta_width_50": 0,
+      "cell_delta_width_80": 0,
+      "cell_reference_brier": 0,
+      "cell_reference_coverage_50": 0,
+      "cell_reference_coverage_80": 0,
+      "cell_reference_crps": 0,
+      "cell_reference_width_50": 0,
+      "cell_reference_width_80": 0,
+      "crps": 1.9984014443252818e-15,
+      "csv_values": 0,
+      "outcome": 0,
+      "primary_best_reference": 0,
+      "reference_weights": 0,
+      "thresholds": 0,
+      "trial_cell_crps": 7.771561172376096e-16
+    },
+    "primary24m_crps": {
+      "change": 0.5055353793194647,
+      "coupling": 0.5167876609051647,
+      "level": 0.4951937212501654
+    },
+    "script_sha256": "15c3fb4520078a2a63f3ffffa4c136de9ce452e1c8cdbbe22d39ab5240854c19",
+    "status": "PASS_arithmetic_with_direction_metadata_caveat",
+    "warnings": [
+      "level: API higher_risk metadata is arbitrary ordering convention; registered mechanism is undirected. Does not affect distribution losses.",
+      "change: API higher_risk metadata is arbitrary ordering convention; registered mechanism is undirected. Does not affect distribution losses.",
+      "coupling: API higher_risk metadata is arbitrary ordering convention; registered mechanism is undirected. Does not affect distribution losses."
+    ]
+  },
+  "independent_audit_report_sha256": "066dce340bb04a1a88536ea7e54e11407288d79f13dfeba0f2b9f7b7c8b6c2ac",
+  "inputs": {
+    "btc_daily.csv": "d6e0e23e4d84e32690cea42cc0bf69f44ddfe9d954939b54ba499635431ed04c",
+    "fed_published_monthly.csv": "0a34cb9981964f78f250bc278e6fba64a677d5828c4816a9cec930ac49aa2119"
+  },
+  "limitations": [
+    "Past BTC history and outer period already exposed; not fresh holdout.",
+    "Primary evaluation has24overlapping monthly starts, Dec2018..Nov2020, one negative two-year outcome; not24independent market experiments.",
+    "Four-year predictive readout has zero scored origins.",
+    "All three mechanisms are undirected. Fixed trialAPI higher_risk is arbitrary metadata, not registered favorable ordering.",
+    "Generator/input correctness and source-policy review do not establish predictive usefulness or original-vintage certification.",
+    "Previous known-law continuous forecast/conditional test panel is different from this exact97query/latest24mature direct-CDF pipeline; its measured power/errorcontrol cannot be transferred."
+  ],
+  "next_bounded_step": "Preregister a separate synthetic sensitivity audit of the unchanged direct-CDF readout at exact market calendar/maturity/sample size, across independent price worlds with null and fixed modest/strong leading signals, plus oracle reference. Do not tune decoder, rerun19failed arms, alter marketbenchmark or infer that failures prove its inability.",
+  "outer_released": false,
+  "preservation": {
+    "change": {
+      "commit": "fe2a333",
+      "tag": "archive/round3-change-20261108"
+    },
+    "coupling": {
+      "commit": "38eebdf",
+      "tag": "archive/round3-coupling-20261108"
+    },
+    "level": {
+      "commit": "6319778",
+      "tag": "archive/round3-level-20261108"
+    },
+    "policy": "Failed branches retained unmerged; source/config/tests and full recorded comparisons in portable packet. Archive tags local only."
+  },
+  "primary": {
+    "horizon_months": 24,
+    "lower_is_better": true,
+    "metric": "CRPS",
+    "target": "terminal_log_return"
+  },
+  "prior_indicator_attempts": 16,
+  "promoted_candidates": [],
+  "registered_attempts": 3,
+  "reproduction": {
+    "candidates": {
+      "change": {
+        "column": "balance_growth_acceleration",
+        "config_sha256": "3d19d18676e328de7ea07ea546594f6576669e46942cf5b7eec6902cb3b8fd9c",
+        "diagnostics": null,
+        "macro_evidence": {
+          "input_bytes": 27795,
+          "input_rows": 157,
+          "input_sha256": "0a34cb9981964f78f250bc278e6fba64a677d5828c4816a9cec930ac49aa2119"
+        },
+        "output_sha256": "9040f5216f23b08248e6408fa2bfad9554708fbc88c78f5f957f766ff736fefb",
+        "price_evidence": {
+          "input_bytes": 226726,
+          "input_rows": 4018,
+          "input_sha256": "d6e0e23e4d84e32690cea42cc0bf69f44ddfe9d954939b54ba499635431ed04c"
+        },
+        "producer_sha256": "69439000564b8fc994effd889753d6d86f8c8790ea28ec09fe94b67b3b53a084",
+        "rows": 97,
+        "source_commit": "fe2a333",
+        "worker_csv_exact": true
+      },
+      "coupling": {
+        "column": "coupling_state",
+        "config_sha256": "40f99e050548ee9d03b823ee05e38cc7aff4b2fc22fe75969bdc669c13a23819",
+        "diagnostics": [
+          {
+            "Date": "2014-12-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-01-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-02-28",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-03-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-04-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-05-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-06-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-07-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-08-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-09-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-10-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-11-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2015-12-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-01-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-02-29",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-03-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-04-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-05-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-06-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-07-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-08-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-09-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-10-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-11-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2016-12-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-01-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-02-28",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-03-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-04-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-05-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-06-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-07-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-08-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-09-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-10-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-11-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2017-12-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-01-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-02-28",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-03-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-04-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-05-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-06-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-07-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-08-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-09-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-10-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-11-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2018-12-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-01-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-02-28",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-03-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-04-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-05-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-06-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-07-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-08-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-09-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-10-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2019-11-30",
+            "status": "current_macro_missing",
+            "valid_pairs": 11
+          },
+          {
+            "Date": "2019-12-31",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-01-31",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-02-29",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-03-31",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-04-30",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-05-31",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-06-30",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-07-31",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-08-31",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-09-30",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-10-31",
+            "status": "available",
+            "valid_pairs": 10
+          },
+          {
+            "Date": "2020-11-30",
+            "status": "available",
+            "valid_pairs": 11
+          },
+          {
+            "Date": "2020-12-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-01-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-02-28",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-03-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-04-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-05-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-06-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-07-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-08-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-09-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-10-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-11-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2021-12-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-01-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-02-28",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-03-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-04-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-05-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-06-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-07-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-08-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-09-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-10-31",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-11-30",
+            "status": "available",
+            "valid_pairs": 12
+          },
+          {
+            "Date": "2022-12-31",
+            "status": "available",
+            "valid_pairs": 12
+          }
+        ],
+        "macro_evidence": {
+          "input_bytes": 27795,
+          "input_rows": 157,
+          "input_sha256": "0a34cb9981964f78f250bc278e6fba64a677d5828c4816a9cec930ac49aa2119"
+        },
+        "output_sha256": "0b865f2e2aa94a77721c1897e341e22bf284206d937b741ddd76517f718a3c80",
+        "price_evidence": {
+          "input_bytes": 226726,
+          "input_rows": 4018,
+          "input_sha256": "d6e0e23e4d84e32690cea42cc0bf69f44ddfe9d954939b54ba499635431ed04c"
+        },
+        "producer_sha256": "6f16ac3351fde327b47f7976f2ffce197ad833a501e13e8f70df2bce7852c66a",
+        "rows": 97,
+        "source_commit": "38eebdf",
+        "worker_csv_exact": true
+      },
+      "level": {
+        "column": "balance_sheet_state",
+        "config_sha256": "16373c0e9c336c620cf4d0d383bfe5397889736916d9cd040a5243a933703f98",
+        "diagnostics": null,
+        "macro_evidence": {
+          "input_bytes": 27795,
+          "input_rows": 157,
+          "input_sha256": "0a34cb9981964f78f250bc278e6fba64a677d5828c4816a9cec930ac49aa2119"
+        },
+        "output_sha256": "3a39d4b482ce43cbbb4a5bf46212bf1ff6bda50de0d23f5d4d9e652f7aff60bc",
+        "price_evidence": {
+          "input_bytes": 226726,
+          "input_rows": 4018,
+          "input_sha256": "d6e0e23e4d84e32690cea42cc0bf69f44ddfe9d954939b54ba499635431ed04c"
+        },
+        "producer_sha256": "139b42d035511f832934bfdce83ce9a85100ea910d410025788274eed19c9e3a",
+        "rows": 97,
+        "source_commit": "6319778",
+        "worker_csv_exact": true
+      }
+    },
+    "generation_freeze_sha256": "01268e59e0c4edd1d2952a39797d6ea5c047170cb1ab98a0afe0f4021eeddb45",
+    "inputs": {
+      "btc_daily.csv": "d6e0e23e4d84e32690cea42cc0bf69f44ddfe9d954939b54ba499635431ed04c",
+      "fed_published_monthly.csv": "0a34cb9981964f78f250bc278e6fba64a677d5828c4816a9cec930ac49aa2119"
+    },
+    "runtime": {
+      "numpy": "2.4.6",
+      "pandas": "2.3.3",
+      "python": "3.12.16"
+    }
+  },
+  "schema": "research-round-result-v1",
+  "scientific_assessment_sha256": "b7257db84d93d1b7c2e1c0d7f11d917f682b7a18de1642564b4d03052e5cd20e",
+  "source_audit": "fed-h41-2026-11-08-audit.json",
+  "source_limits": "ReconstructedTierB/C only, zero verified originals;156/157 monthly source levels,96/97benchmark, Nov2019 unavailable and fixedcandidate-specificneutral behavior. No newFREDnumeric inputs.",
+  "total_indicator_attempts": 19,
+  "verification": {
+    "all_candidate_CSVs_exact": true,
+    "backend_seconds": 163.799,
+    "backend_tests_passed": 482,
+    "controller_tamper_cases_rejected_before_python": 14,
+    "frames_independent_across_producers": true,
+    "old_parser_mutation_failures": 11,
+    "packet_unit_tests": 35,
+    "private_source_replay_tests": 3,
+    "source_levels_independently_matched": 156,
+    "source_parser_tests": 15,
+    "source_replay_freeze_sha256": "cedf5bb1fe13365cb25ffdb43ab1bea4f161ace49a3a2ca9bd937c32e47a68de",
+    "source_replay_scope": "CPython3.12.16 semantic version; compiler/build/executable hash is evidence only; private rawHTML required",
+    "standalone_controller_tests": 2
+  }
+}

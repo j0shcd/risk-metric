@@ -1,12 +1,12 @@
 # Indicator benchmark and evaluation plan
 
 Status: finite known-law panel qualification passes; earlier single-path searches
-remain failed. Sixteen indicator variants have produced no qualified indicator;
+remain failed. Nineteen indicator variants have produced no qualified indicator;
 three earlier candidates fail monthly equity portability. A chronology control's
 19.72% two-year development gain fails its frozen outer check; that branch is
 stopped. The first prospective, price-only operational paper witness is issued
 and independently reproduced; no forecast outcome is mature. No promotion.
-Updated 2026-11-07.
+Updated 2026-11-08.
 
 This is the canonical maintainer record for the research benchmark, its measured
 results and next bounded work. Legacy strategy-specific results remain in
@@ -39,7 +39,7 @@ adopted combined investor utility or universal automatic promotion score.
 | Simulated price-path model | Better in some one-year return and entry-loss comparisons, worse in two-year return; uncertainty ranges often too narrow | Strong partial comparison, not an overall winner |
 | Ten previous indicator variants | Price anchors, adaptive trend, gain shape, monetary state and attention did not qualify broadly | Preserve failures; do not retune them to repair exposed later-period scores |
 | Chronology-assisted forecast | 19.7% development error reduction became about 74% worse than unconditional in the later check | Stop this branch; percentages concern forecast error, not investment returns |
-| Artificial-market qualification | Detected planted information 398/400 times and declared skill 24/1500 times under specified no-added-information cases | Useful check of the measuring procedure under those artificial laws; no market success-rate claim |
+| Artificial-market qualification | A separate continuous forecast/conditional-test procedure detected planted information 398/400 times and declared skill 24/1500 times under specified no-added-information cases | Finite scope only; not a sensitivity certificate for the current 97-date scalar readout or a market success-rate claim |
 | Archived live baselines | Six forecasts reproduced exactly, zero mature outcomes | Continue separate forward collection; correctness is not predictive success |
 
 ### First completed round: three different remaining ideas
@@ -208,8 +208,8 @@ of the six scored horizon/outcome cells either. Some loss-probability errors
 parameter changes or model promotion followed. These are forecast errors, not
 investment returns. The primary comparison still has only 24 overlapping monthly
 starts and one negative two-year return; four-year predictive scoring has no
-eligible starts. Sixteen indicator variants have now been tried across the
-programme. This weak exposed-history sample cannot establish universal failure
+eligible starts. Sixteen indicator variants had been tried at the end of this round. The third
+round below adds three more. This weak exposed-history sample cannot establish universal failure
 of these model families or a reliable probability of future trading success.
 
 Before scoring, root captured every producer/configuration and reproduced all 97
@@ -293,18 +293,125 @@ and 35 different district-total witnesses. Parser correctness is separate from
 original-vintage uncertainty. Full site HTML stays private; public artifacts
 contain Board statistical levels, source URLs, hashes and audit metadata.
 
+### Third completed round: reconstructed balance-sheet information
+
+Registration `b6c8c7b` binds the
+[third-round contract](artifacts/research-programme-round3-2026-11-08-registration.json)
+and campaign `34b036a70b46a11326879f94e13199811cc90c8ea098b6ccde16b97d499d16b4`.
+Three Astra workers chose one independent mechanism each. The fixed reference
+atlas, twelve scoring modules, 97 evaluation dates, readout and declared primary
+objective stayed unchanged. Each source/configuration was committed before any
+fitness feedback. Root authenticated all inputs and code before execution, parsed
+fresh immutable price/macro bytes for each arm, and reproduced all 97 worker rows
+byte for byte. Fourteen tamper cases reject before captured Python loads;
+replacing original paths or mutating one arm's frames cannot change later arms.
+
+| Frozen hypothesis | Meaning | Available states / 97 | Two-year CRPS | Error above strongest reference |
+| --- | --- | ---: | ---: | ---: |
+| Relative balance-sheet level | Current assets' rank against 36 prior calendar months, requiring 30 valid observations | 96 | 0.495194 | 49.6% |
+| Balance-sheet growth acceleration | Latest six monthly log changes versus the previous six, normalized by total absolute change | 84 | 0.505535 | 52.7% |
+| Price/asset coupling | Trailing twelve monthly return/change correlation, requiring nine valid calendar pairs | 96 | 0.516788 | 56.1% |
+| Unconditional history | Mature historical outcomes without the extra scalar | — | 0.331074 | Reference |
+
+All three fail the primary comparison. None beats the lowest matched CRPS in any
+of the six scored horizon/outcome cells. Other probability and interval diagnostics
+remain separate in the [complete result summary](artifacts/research-programme-round3-2026-11-08.json);
+no favorable secondary statistic rescues the main failure. These are forecast
+errors, not investment returns. November 2019 is explicitly neutral. The growth
+arm's requirement for thirteen consecutive source levels propagates that gap
+through thirteen query windows; its missing rule was frozen before feedback.
+No date was removed from the common benchmark. Missing-data behavior is a
+limitation, not an established explanation for the losses.
+
+The independent audit reconstructed all 291 scalar readings, checked 1,215
+prediction records including 648 scored records, and verified all 2,295 frontier
+cells, 270 numerical guards and seventeen reference identities. Atoms, maturity
+pools, weights, outcomes, interval coverage and widths match exactly; maximum CRPS
+discrepancy is 2.00e-15. All three states are undirected, so the trial API's default
+`higher_risk` metadata must not be read as a favorable risk-ordering claim.
+
+There was no later-period release, retry, decoder change or parameter adjustment.
+The three slots are exhausted; the ledger stays administratively OPEN with no
+eligible finalist. Nineteen indicator variants have now been tried. Failed sources
+remain under local tags `archive/round3-level-20261108` (`6319778`),
+`archive/round3-change-20261108` (`fe2a333`) and
+`archive/round3-coupling-20261108` (`38eebdf`), and in the
+[portable evidence packet](artifacts/research-programme-round3-2026-11-08.zip).
+Packet SHA256: `afcf977f7c31ad79cc9cb7ee7209413171b6a1a7919f22312dd00c7cd10ebee9`.
+No failed candidate is merged as a model improvement; reviewed source extraction
+and measurement safeguards are useful programme contributions on their own.
+
+The packet contains both candidate inputs, sources/configurations/tests, recorded
+comparisons, independent arithmetic audit and verified replay tools. It excludes
+new FRED payloads, raw site HTML and the legacy raw macro bundle. Authenticate its
+external SHA first. In CPython 3.12.16 / NumPy 2.4.6 / pandas 2.3.3, unpack and run:
+
+```
+python replay-generators.py --packet . --output-dir NEW_GENERATOR_DIRECTORY
+python audit-scores.py --packet . --source-root benchmark-code --output NEW_REPORT.json
+python -m unittest discover -s tests
+python test-controller.py --packet . --report NEW_CONTROLLER_REPORT.json
+```
+
+Rebuilding the source CSV additionally needs the private owned Board capture
+directory `RAW`; use `source-audit/replay-source.py --packet source-audit
+--raw-root RAW --output-dir NEW_SOURCE_DIRECTORY`. It verifies all frozen
+source dependencies and 157 raw bodies before running trusted captured Python
+from private copies, then requires exact CSV identity. Tampering with exception
+tiers, code, bodies or runtime must fail before execution. Compiler/build and
+executable identity are evidence only; semantic CPython 3.12.16 is the source
+replay requirement. These checks do not sandbox Python or authenticate a jointly
+rewritten archive. Cross-platform candidate floating-point identity has not been
+independently demonstrated. Original reference samples are not regenerated by
+the arithmetic replay; their previously audited atlas is retained.
+
+### What the failures and earlier qualification establish
+
+The source audit succeeded, and the new predictive experiments failed. That does
+not prove macro information is universally useless or that the benchmark cannot
+detect it. It does show that these exact three scalars, missing rules and fixed
+readout did not add enough information on the exposed dates to beat strong simple
+references. The primary comparison still contains only 24 overlapping monthly
+starts and one negative two-year return; four-year predictive scoring has no
+eligible starts. No professional-use qualification follows.
+
+The earlier 398/400 positive declarations and 24/1500 null declarations concerned
+a **different** known-law procedure: a continuous location/scale forecast with a
+residual distribution, independent synthetic worlds and a conditional test.
+Those results remain valid within their registered finite scope. They do not
+measure sensitivity or error control for the present 97-query, latest-24-mature-
+label median-bin empirical-CDF readout. Neither may be used to certify the other.
+The [scientific assessment in the packet](artifacts/research-programme-round3-2026-11-08.zip)
+records the inspected code paths and the distinction.
+
+Brief versus delivered: the requested source-availability audit produced a
+qualified reconstructed dataset, not authenticated original history. The small
+registered research round used only admitted inputs and the unchanged benchmark;
+all three ideas failed and are preserved. No promised forecasting gain, new
+production model, FRED-use clearance or real-time historical certification was
+substituted for those results. Backend verification passes 482 tests. The packet passes 35 focused unit tests,
+two controller tests and three private-source replay tests; independent
+generator, score-arithmetic and source-data replays also pass.
+
 ### Next bounded research step
 
-Register a separate three-attempt campaign before any further score. Use only the
-owned Bitcoin prices and the exact reconstructed Board dataset above, with each
-candidate's missing-state handling frozen and all 97 benchmark dates retained.
-The primary two-year return task, all other outcome cells, strong reference atlas
-and scoring code remain unchanged. Historical exposure and all sixteen previous
-indicator attempts remain in the selection record. This source audit has run no
-new model or performance trial, and creates no extra slot in a completed round.
-November 30 collection remains a separately registered action; no scheduler was
-installed. Any further source-date repair must be recorded separately before a
-model uses it, without choosing values or rules to improve the financial score.
+Before another feature search, preregister a **synthetic sensitivity audit of the
+unchanged current readout**. Use its exact calendar, monthly spacing, maturity
+rules, 24-observation pool and overlap, across independent complete price histories.
+Include fixed no-information, modest-leading-information and strong-leading-
+information laws, with information genuinely available at forecast time, plus a
+known-law oracle. Report both available oracle information and how much the fixed
+decoder recovers; keep return/loss, probability and interval results separate.
+Treat whole histories as the uncertainty unit. Preserve fallback and missing-state
+behavior rather than silently scoring only successful cases. Do not attach real
+macro histories to unrelated synthetic prices.
+
+This is a separate diagnostic, not a change to the market benchmark or a rescue
+of nineteen failed variants. Freeze laws, strength settings, seeds, compute budget
+and reporting before running it. Do not tune decoder settings to its audit worlds
+or treat repeated human searches as covered by the earlier finite error-control
+result. No such new simulation has run in this round. November 30 collection
+remains a separate registered action; no scheduler was installed.
 
 ### Publication and operations
 
@@ -2456,7 +2563,7 @@ research results and the frozen benchmark remain unchanged.
 | Control false promotion under declared dependent nulls | Whole-path CRT exchangeability under exact Q, full-search equivalence tests, 1,500 fresh null campaigns | Pass within the declared one-campaign synthetic scope |
 | Chronological/provenance integrity | Strict label boundaries, 43-column producer oracle, immutable receipts and first audited live operational witness | Fixed-input mechanics and current capture lineage verified; historical market vintages and future outcomes remain unverified |
 | Safe adaptive-search scope | Registered conditional tests, shared attempt/freeze/release ledger and explicit exposure lineage | Finite scope defined; unlimited human adaptation not qualified |
-| Broad incremental BTC information | Sixteen indicator variants fail qualification; chronology improvement fails frozen outer check | No candidate promoted; not a prerequisite for finishing a useful research round |
+| Broad incremental BTC information | Nineteen indicator variants fail qualification; chronology improvement fails frozen outer check | No candidate promoted; not a prerequisite for finishing a useful research round |
 | Prospective market validation | Six frozen forecasts issued in one operational observation; no mature outcomes | Pending future labels; no prospective performance claim |
 | Publication control | Explicit approval for accumulated main push; daily source/effective-setting guards; unchanged production gate | Research may be shared; no model promoted |
 

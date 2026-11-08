@@ -27,7 +27,12 @@ volatility. None beat the strongest reference on the declared two-year return
 comparison. They remain reproducible negative evidence, with no model promotion.
 The macro audit found backfilled/revised history and unresolved source-use and
 original-version questions; no newly captured macro values entered round two.
-See the research record for the exact findings and next source-audit step.
+A third round used independently checked Federal Reserve Board releases,
+explicitly reconstructed rather than authenticated historical vintages.
+Its three new ideas also failed the primary comparison. The next bounded task
+is to measure the current readout's sensitivity in controlled artificial markets,
+keeping the market benchmark fixed; earlier artificial-market tests covered a
+different forecasting procedure. See the research record for evidence and limits.
 Separately, six baseline forecasts were archived before their starting point;
 none has a mature outcome yet. The next registered monthly observation is
 November 30, 2026.
