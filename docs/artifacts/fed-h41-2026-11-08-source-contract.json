@@ -1,0 +1,49 @@
+{
+  "acquisition_plan_sha256": "86ae81d7e25bb43260a19b41c573f1fefda02292f5ca153f4796cba8e00b81a6",
+  "admission_gates": {
+    "accepted_value_identity_and_semantics": "100 percent verified owned response hash, unique table/row/current column, release date, observation date and units",
+    "all_slots": 157,
+    "before_models": "Root explicit tierB/C assumption acceptance plus independent parser/version audit; freeze candidate source/config and new attempt budget before any fitness",
+    "benchmark_slots": 97,
+    "maximum_consecutive_missing_months": 1,
+    "maximum_release_age_calendar_days": 14,
+    "minimum_eligible_all": 150,
+    "minimum_eligible_benchmark": 93,
+    "rationale": "Prespecified operational completeness conditions, not confidence/significance thresholds; no BTC outcomes used. All97 scoring dates would remain fixed with any explicitly registered neutral/missing handling."
+  },
+  "benchmark": "All frozen scoring modules,17-family atlas,97 query dates,readout and12/24/48month outcomes unchanged; prior16indicator attempts and outer history exposed. No extra slot in completed campaigns.",
+  "calendar": {
+    "caveat": "Current retrospective calendar, not an authenticated original census",
+    "discovery": "Captured release index calls getJSON(releaseDates.json) and constructs /releases/h41/YYYYMMDD",
+    "sha256": "54e546e531ebc55dd31dd8204f031ca8df410c8768c685d8712ea5154375f0db",
+    "url": "https://www.federalreserve.gov/releases/h41/releaseDates.json"
+  },
+  "created_utc": "2026-11-08T17:44:55.345046+00:00",
+  "extraction": "Match consolidated-statement title, exact Total assets row, current Wednesday header/date and Millions of dollars; reject wrong table/unit/date, duplicate candidates and ambiguity. Never take eliminations, prior-year changes, district sums or weekly averages.",
+  "monthly_queries": {
+    "benchmark_count": 97,
+    "benchmark_first": "2014-12-31",
+    "benchmark_last": "2022-12-31",
+    "count": 157,
+    "first": "2009-12-31",
+    "last": "2022-12-31",
+    "warmup": "Five years before the first benchmark date; does not add forecast scoring dates"
+  },
+  "policy": {
+    "disclaimer": "https://www.federalreserve.gov/disclaimer.htm",
+    "fetch": "Same HTTPS Board host only; bounded source-listed URLs; stop on401/403/429 or challenge; no denied-access retries/host or agent changes; no FREDrequests",
+    "robots_meaning": "No explicit robots rules at checked endpoint, not blanket permission",
+    "robots_response": 404,
+    "rule": "Board information public-domain default unless otherwise indicated; source attribution required by project; excludes logos and non-Board material"
+  },
+  "release_selection": "Latest source-listed release with printed date <= query minus two calendar days (inclusive date threshold, not a claim the release was known at00UTC on that earlier date). Query is00UTC; conservative whole-date lag covers late US publication. Actual holidays come from calendar.",
+  "schema": "h41-source-admission-contract-v1",
+  "scope": "A reconstructed monthly published-level series for source audit and possible later registered research; not authenticated point-in-time data. No model or fitness authorized by this contract.",
+  "source": "Federal Reserve Board H.4.1 consolidated total assets, current Wednesday level, USD millions",
+  "version_tiers": {
+    "A": "Explicit original or independently established target-value original lineage; none presumed",
+    "B": "Dated current archive edition, documented correction confined to other fields. Target continuity remains a reconstruction assumption.",
+    "C": "Dated current archive edition, no identified target correction after scoped announcement review. Absence of notice is not proof of no revision.",
+    "D": "Target affected or correction scope/value unresolved; recover original lineage or exclude. Never backdate a corrected value."
+  }
+}
