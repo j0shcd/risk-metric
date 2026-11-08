@@ -250,29 +250,61 @@ archive tags or private captures.
 The campaign ledger remains OPEN with all three slots consumed and no eligible
 finalist, for the same administrative reason as round one. Do not reopen its budget.
 
+### Original Board release audit: implemented source reconstruction
+
+The November 8 source audit is implemented under a
+[contract frozen before monthly acquisition](artifacts/fed-h41-2026-11-08-source-contract.json).
+It covers 157 monthly queries from December 2009 through December 2022, including
+five years before the first benchmark date. The source's calendar JSON, discovered
+in its own release-index script, determines actual listed dates; selections include
+11 Fridays and three Mondays. No Thursday schedule was invented. A printed release
+date must be no later than query minus two calendar days. That is an inclusive date
+threshold, not a claim the release was known at midnight on the earlier date.
+
+All 157 selected pages were captured and their byte identities verified. The
+[public monthly dataset](artifacts/fed-h41-published-monthly-2026-11-08.csv) contains
+**156 usable levels, including 96 of 97 benchmark months**. The sole unavailable
+slot is November 2019: its indexed November 28 URL prints November 29, after that
+query's November 28 cutoff. The original selection remains missing; there is no
+silent older-release substitution. These counts pass the source contract's
+prespecified completeness conditions; they are not statistical confidence bounds.
+
+The [audit artifact](artifacts/fed-h41-2026-11-08-audit.json) records the exact source,
+contract and dataset identities. Nine accepted editions have a documented
+collateral-only correction; 147 have no identified total-assets correction after
+the scoped announcement review. **Zero editions are authenticated originals.**
+Root accepts the declared continuity assumptions for exploratory reconstructed
+research only. The announcement feed is not proven exhaustive. This dataset
+assembles published monthly levels from separate editions; it is not a complete
+historical revised curve available at each query, a certified real-time feed or
+professional-use clearance. Board statistical information has a different source
+policy from FRED services. No new FRED captures entered these inputs.
+
+The offline extractor matches the consolidated-statement title, units, exact total-
+assets row and current Wednesday column. It supports table renumbering and older
+text versus modern HTML layouts. Independent review found a malformed HTML span
+could disguise one cell as several columns. The repaired boundary requires five
+independent target cells, valid earlier Wednesday comparison dates and a current
+observation within seven days of release, including Monday holiday releases.
+Fifteen tests pass; restoring the old parser produces eleven regression failures.
+The repair changes none of the 156 accepted values. An independent text-stream
+extractor matches all values and dates exactly, including 35 nonzero-elimination
+and 35 different district-total witnesses. Parser correctness is separate from
+original-vintage uncertainty. Full site HTML stays private; public artifacts
+contain Board statistical levels, source URLs, hashes and audit metadata.
+
 ### Next bounded research step
 
-The next macro step is a source audit, not another parameter search: inventory one
-eligible original H.4.1 release per benchmark month and enough preceding releases
-for feature warm-up, including original/corrected links, publication timing and
-the exact current-Wednesday total-assets field.
-A narrower series assembled from verified published monthly levels is acceptable;
-it must be named that way rather than presented as a complete revised history.
-Exclude uncertain versions, quantify missing months, and freeze the extraction
-and eligibility rule before looking at model outcomes. If that route cannot
-supply enough verified history, obtain an appropriate source permission or select
-a different input. Only then register a small new hypothesis and attempt budget.
-This completed registration permits no additional model or score run.
-Do not tune either round's failed parameters to the exposed results. November 30
-collection remains a separate registered action; no scheduler was installed.
-
-Local verification passed 466 backend tests in 359.397 seconds, plus the new
-publication-boundary test separately. The portable packet passes 31 tests and
-its own byte-identity and independent arithmetic replay. Frozen benchmark code
-and reference atlas identities still match registration. Only measurement
-safeguards and the research record are integrated into main; candidate models
-remain archived. This round's commits await their own push confirmation; no
-production model or acceptance identity changed.
+Register a separate three-attempt campaign before any further score. Use only the
+owned Bitcoin prices and the exact reconstructed Board dataset above, with each
+candidate's missing-state handling frozen and all 97 benchmark dates retained.
+The primary two-year return task, all other outcome cells, strong reference atlas
+and scoring code remain unchanged. Historical exposure and all sixteen previous
+indicator attempts remain in the selection record. This source audit has run no
+new model or performance trial, and creates no extra slot in a completed round.
+November 30 collection remains a separately registered action; no scheduler was
+installed. Any further source-date repair must be recorded separately before a
+model uses it, without choosing values or rules to improve the financial score.
 
 ### Publication and operations
 

@@ -1,0 +1,97 @@
+{
+  "capture": {
+    "raw_manifest_sha256": "e976b87b981a1dc25d6629964a7d38c1bc111079ecf59816f9ef27e0a31b31d3",
+    "raw_path": "data/external_private/fed-h41-audit-2026-11-08",
+    "raw_redistribution": "Full site HTML remains private; public CSV contains only Board statistical levels and audit metadata.",
+    "raw_sha256_verified": 157,
+    "requests_planned": 157,
+    "responses_successful": 157
+  },
+  "contract": "fed-h41-2026-11-08-source-contract.json",
+  "contract_sha256": "71d6d2f45b03a8f9e960d79ab7a6a67928c8d37dcff600c63e6f2d28f3664287",
+  "dataset": "fed-h41-published-monthly-2026-11-08.csv",
+  "dataset_receipt": {
+    "available": 156,
+    "benchmark_available": 96,
+    "benchmark_rows": 97,
+    "capture_manifest_sha256": "e976b87b981a1dc25d6629964a7d38c1bc111079ecf59816f9ef27e0a31b31d3",
+    "contract_sha256": "71d6d2f45b03a8f9e960d79ab7a6a67928c8d37dcff600c63e6f2d28f3664287",
+    "dataset_sha256": "0a34cb9981964f78f250bc278e6fba64a677d5828c4816a9cec930ac49aa2119",
+    "exceptions_sha256": "f6eeddef576db6cecb427a51fec32e8306c37d88e47c89466a05d21461070ab2",
+    "maximum_consecutive_missing": 1,
+    "plan_sha256": "86ae81d7e25bb43260a19b41c573f1fefda02292f5ca153f4796cba8e00b81a6",
+    "rows": 157,
+    "scope": "Reconstructed Board published monthly assets; root accepts Tier B/C continuity assumptions for exploratory research only. No original/PIT certification or model qualification.",
+    "unavailable": [
+      {
+        "Date": "2019-11-30",
+        "assets_usd_millions": "",
+        "available": 0,
+        "indexed_release_date": "2019-11-28",
+        "observation_date": "",
+        "printed_release_date": "",
+        "source_sha256": "5570517ccfe5cd8a957657eae6bdbfd5c6ba6ecc9c876e614ecf7ebb0c22040d",
+        "source_url": "https://www.federalreserve.gov/releases/h41/20191128/",
+        "unavailable_reason": "release date missing/duplicate/mismatch",
+        "version_tier": "C"
+      }
+    ]
+  },
+  "date": "2026-11-08",
+  "limitations": [
+    "Current calendar is retrospective and may not enumerate every original release.",
+    "Printed dates and current archived bytes do not establish original-version retention.",
+    "The announcement feed is not proven exhaustive; identified corrections are scoped to fields and channels.",
+    "Monthly levels assemble values published in separate editions, not a complete latest-revised historical curve at each query.",
+    "Current-vintage Bitcoin histories and previously exposed historical tests remain separate limitations.",
+    "No newly captured FRED values or service responses entered this dataset.",
+    "No model score or production acceptance follows from this source audit."
+  ],
+  "next": "Freeze a separate small candidate campaign using this exact input, explicit missing-state behavior and the unchanged benchmark; retain all prior16 indicator attempts and outer-history exposure.",
+  "originality": {
+    "accepted_no_identified_target_correction_tier_C": 147,
+    "accepted_other_field_correction_tier_B": 9,
+    "interpretation": "No identified correction is not proof of no later revision. Root explicitly accepts Tier B/C reconstruction assumptions for exploratory research; not original-vintage/PIT or professional-use certification.",
+    "known_selected_total_assets_corrections": 0,
+    "verified_original_editions": 0
+  },
+  "reports": {
+    "independent_values": {
+      "path": "/private/tmp/h41-independent-values-a-20261108.json",
+      "sha256": "4eceaddc698ad984bf134795f0aae24620b5e062c02c3010c0c0dd0b08f48566"
+    },
+    "parser_boundary": {
+      "path": "/private/tmp/h41-boundary-after-results.json",
+      "sha256": "019235324154e311bde955d1cd0171b2442aecdda9ce71341ff9f92744f745ae"
+    },
+    "source_admission": {
+      "path": "/private/tmp/h41-source-admission-c-20261108.json",
+      "sha256": "2cd0e0d7b46ebd046c9d5077fc3a614531ceef245f896ec41f80ff81e451624a"
+    },
+    "version_exceptions": {
+      "path": "/private/tmp/h41-version-exceptions-a-20261108.json",
+      "sha256": "f6eeddef576db6cecb427a51fec32e8306c37d88e47c89466a05d21461070ab2"
+    }
+  },
+  "schema": "h41-reconstructed-source-audit-v1",
+  "scope": "Descriptive source-availability and extraction audit only; no predictive model or performance result.",
+  "source_attribution": "Board of Governors of the Federal Reserve System, H.4.1 statistical releases; source URL retained per row. No endorsement implied.",
+  "timing_exception": {
+    "cutoff": "2019-11-28",
+    "indexed_date": "2019-11-28",
+    "printed_date": "2019-11-29",
+    "query": "2019-11-30",
+    "source_sha256": "5570517ccfe5cd8a957657eae6bdbfd5c6ba6ecc9c876e614ecf7ebb0c22040d",
+    "status": "Unavailable under the original frozen latest-indexed-edition plan; no older-value substitution."
+  },
+  "validation": {
+    "actual_values_changed_by_boundary_repair": 0,
+    "capture_file_hashes_verified": 157,
+    "independent_different_district_total_witnesses": 35,
+    "independent_nonzero_elimination_witnesses": 35,
+    "independently_matched_accepted_values": 156,
+    "old_parser_regression_errors": 0,
+    "old_parser_regression_failures": 11,
+    "parser_tests_passed": 15
+  }
+}
