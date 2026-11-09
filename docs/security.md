@@ -5,6 +5,101 @@ Update it when an audit, runtime change, or monitoring activation changes the
 facts below. The [dated inventory](artifacts/dependency-audit-2026-10-27.json)
 retains the exact package versions and advisory IDs from this audit.
 
+## Hardening and validation: 9 November 2026
+
+Local implementation on `codex/security-hardening` addresses the four priorities
+from the deep source audit. It is not yet pushed, merged into main or deployed.
+The [dated evidence](artifacts/security-hardening-2026-11-09.json) records exact
+inputs, current metadata, action inventories and verification. This section
+supersedes earlier activation and dependency counts below; older sections are
+historical evidence.
+
+- Provider credentials now exist only in the refresh step. Channel selection is
+  also supplied to the pre-fetch acceptance guard so selection settings cannot
+  be introduced after approval. Checkout does not persist push credentials;
+  the final push receives its token through a transient credential helper.
+  Execution jobs have explicit deadlines: 60 minutes for publishing/model
+  acceptance, 30 minutes for ordinary CI; existing security/merge deadlines stay.
+- Every production provider GET passes through `sources/common.py`: HTTPS,
+  no userinfo, no redirects, 8 MiB declared/decoded response ceiling, at most
+  10 seconds socket inactivity and a 60-second elapsed check at streaming
+  checkpoints. A response hook rejects redirects before Requests can eagerly
+  buffer their bodies. These checkpoints are **not** hard per-request wall
+  deadlines: DNS and slow reads can delay control returning. Hosted job
+  deadlines provide an outer bound; a process-isolated acquisition worker is
+  the remaining option if a hard per-call deadline becomes necessary.
+- Binance/CoinGecko backfill loops cap work at 100 pages and check elapsed time
+  against 300 seconds. Budget failures occur before fetched frames overwrite
+  the existing cache. Oversized Binance/Coin Metrics row inventories are rejected.
+- Archive upload requires a separate `RELEASE_ARCHIVE_UPLOAD_ALLOWED_ORIGIN`
+  repository variable matching the HTTPS destination, rejects redirects and
+  userinfo/fragments, applies a 30-second abort deadline, cancels response bodies,
+  and reads at most the archive budget from one regular non-symlink descriptor.
+  With no URL it remains a no-op; a URL without approval now fails closed.
+  See the [upload contract](../README.md#release-operations).
+
+Verification: 53 focused Python tests and all 62 Node script tests passed in a
+disposable copy. Python 3.12.16 reused an existing environment matching all eleven
+hashed pins, without installing or adopting it as the application runtime;
+Node 24.22.2 satisfies the declared engine range. Seven deliberate scratch-copy
+mutations (redirect hook, byte budgets, publisher secret scope, pagination,
+archive origin, redirect policy and deadline) each failed the corresponding
+regression; restored guards passed. The user explicitly approved focused tests
+under normal Codex sandboxing because this Mac cannot provide the audit skill's
+complete isolation. Runs used an empty allowlisted environment, scratch home/
+temp/cache, CPU/file/wall limits and mocked transports. No browser, provider
+publication or hosted write was invoked. Actionlint 1.7.12 passed all five
+workflows; Python/JavaScript parsing and `git diff --check` passed. An independent
+source reviewer verified the connected paths; Claude CLI had no active login,
+so no Claude review is claimed. The full Python suite and hosted checks for
+these commits remain pending.
+
+Fresh OSV metadata-only scanning made 248 unique queries: all 172 npm lock entries
+and eleven Python pins had zero known matches; vulnerable Vite/Requests and
+Tensorlake malware canaries were detected. This is point-in-time known-feed
+coverage, not proof against undisclosed malware. Installed npm has 148 manifests
+matching the lock, no extras, and 24 omitted optional bindings incompatible with
+this OS/CPU. Metadata equality does not authenticate every installed file.
+The repository `.venv` is incomplete old Python 3.9 remnants; production Python
+inventory and native-library patch/backport status remain unestablished. No
+runtime or trust-store change was made.
+
+The exact pinned official action releases remain the latest: Checkout 7.0.1 and
+Setup Python 7.1.0. Current production-lock matches are eleven advisory IDs for
+Checkout's Undici 6.27.0, five for Setup Python's Undici 6.29.0, plus
+`GHSA-g3hv-75wg-m249` for Setup Python's minimatch 10.2.5. Shipped bundles contain
+corresponding library code; affected-function reachability is not established.
+No patched official pin exists to adopt. Do not suppress these matches or treat
+application scan success as clearing bundled actions. Next bootstrap step:
+prototype and verify a read-only dependency-free checkout, then a supported
+Python bootstrap; retain current pins until replacement behavior and provenance
+are proven. A speculative bootstrap replacement is not part of this patch.
+
+Current GitHub observations (read-only):
+
+| Control | Observed state and remaining work |
+| --- | --- |
+| Main protection | Strict/admin enforcement enabled, force push/deletion disabled, but required contexts/checks are **empty**. Add the three named CI checks only after exact-head CI is green and reconcile the existing direct-to-main data publisher with protection; do not enable a bypass as an incidental fix. The Dependabot merge guard currently withholds merging. |
+| Dependabot | Alerts/security updates enabled, zero open alerts, dependency graph populated (186 SBOM packages). Separate malware-alert setting and failure-notification delivery remain unverified. |
+| Secret protection | Secret scanning and push protection are disabled. Enabling these needs an explicit hosted-settings change; none was made here. |
+| Security run freshness | [Push scan 42526630796](https://github.com/j0shcd/risk-metric/actions/runs/42526630796) passed 8 November at the original reviewed `0e93227` head; [scheduled scan 42478102999](https://github.com/j0shcd/risk-metric/actions/runs/42478102999) also passed 8 November. These do not verify the new hardening commits. |
+| Publisher | [Scheduled run 42481189243](https://github.com/j0shcd/risk-metric/actions/runs/42481189243) failed at the accepted-model guard. Independent source-hash reconstruction confirms its model fingerprint differs from canonical. The guard is correctly withholding publication, rather than failing on credentials or HTTP hardening. |
+
+Acquisition code participates in the model fingerprint. The hardening therefore
+also needs the existing explicit frozen-data acceptance process before scheduled
+publication can resume. **Do not refresh canonical identity or weaken the gate
+merely to make publication pass.** No production model, acceptance thresholds,
+source data or generated web artifacts were changed.
+
+Remaining bounded work: push the reviewed commits with approval, observe exact-head
+hosted CI, then complete explicit model acceptance before publication. Hosted
+required checks/secret protection need deliberate settings work. Pages project/
+header/preview attachment, upload-origin configuration, native backport assurance
+and complete historical-secret scanning remain unverified. Lower-priority
+conditional design notes (same-owner filesystem races, evaluation IDs before
+service exposure, H41 depth before unattended import, atomic concurrent local
+exports) remain future boundaries, not silently claimed fixes.
+
 ## Research publication check: 7 November 2026
 
 The existing checksum-verified security gate passed for 172 locked npm packages
