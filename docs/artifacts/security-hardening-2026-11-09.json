@@ -1,0 +1,2629 @@
+{
+  "date": "2026-11-09",
+  "source_before_hardening": "0e93227252f4028cc5add67ca6e9e250d81a58f5",
+  "status": "branch published and hardening code verified by hosted CI; production acceptance remains pending",
+  "locked_input_sha256": {
+    "web/package-lock.json": "9cda5342206f6608d4af2e8b8e7527e0ba3521f21e48fa6d2d846d8dc4177d4e",
+    "requirements.txt": "e68a76a7307addae3921044e82855824859b76da0936394503f2b9b69b4a4fa1"
+  },
+  "validation_summary": {
+    "date": "2026-11-09",
+    "app_locked_osv": "zero current matches in exact172npm+11Python entries; all knownbad CVE/malware metadata canaries detected",
+    "osv_unique_queries": 248,
+    "osv_queried_at_utc": "2026-11-09T10:29:50.283122+00:00",
+    "installed_npm": "148 installed package manifests match lock,24 omitted entries all incompatible optional platform bindings, no extras",
+    "installed_python": "Repository .venv incomplete legacy Python3.9 stubs, no METADATA/RECORD/interpreter; active app dependency inventory unestablished",
+    "github": {
+      "repository": "j0shcd/risk-metric",
+      "allow_auto_merge": true,
+      "required_contexts": [],
+      "required_checks": [],
+      "strict": true,
+      "admin_enforced": true,
+      "dependabot_alerts_enabled": true,
+      "open_alerts": 0,
+      "dependency_graph_sbom_packages": 186,
+      "security_and_analysis": {
+        "secret_scanning": {
+          "status": "disabled"
+        },
+        "secret_scanning_push_protection": {
+          "status": "disabled"
+        },
+        "dependabot_security_updates": {
+          "status": "enabled"
+        },
+        "secret_scanning_non_provider_patterns": {
+          "status": "disabled"
+        },
+        "secret_scanning_validity_checks": {
+          "status": "disabled"
+        }
+      }
+    },
+    "source_code_execution": false,
+    "target_tests_executed": false,
+    "remote_mutations": false,
+    "scope": "Read-only metadata phase before separately approved target tests"
+  },
+  "osv": {
+    "queried_at_utc": "2026-11-09T10:29:50.283122+00:00",
+    "source": "https://api.osv.dev/v1/querybatch",
+    "method": "trusted standard-library metadata query only; no package code execution/install",
+    "unique_queries": 248,
+    "results": [
+      {
+        "ecosystem": "PyPI",
+        "name": "certifi",
+        "version": "2026.10.23",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "charset-normalizer",
+        "version": "3.5.2",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "idna",
+        "version": "3.20",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "numpy",
+        "version": "2.4.6",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "pandas",
+        "version": "2.3.3",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "python-dateutil",
+        "version": "3.0.0",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "pytz",
+        "version": "2026.5",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "requests",
+        "version": "2.31.0",
+        "origins": [
+          "canary-never-install"
+        ],
+        "advisories": [
+          "GHSA-9hjg-9r4m-mvj7",
+          "GHSA-9wx4-h78v-vm56",
+          "GHSA-gc5v-m9x4-r6x2",
+          "PYSEC-2026-1872",
+          "PYSEC-2026-1873",
+          "PYSEC-2026-2275"
+        ]
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "requests",
+        "version": "2.34.2",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "six",
+        "version": "1.17.0",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "tzdata",
+        "version": "2026.5",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "PyPI",
+        "name": "urllib3",
+        "version": "2.8.0",
+        "origins": [
+          "python-lock"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@actions/cache",
+        "version": "6.3.0",
+        "origins": [
+          "action:setup-python:node_modules/@actions/cache"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@actions/core",
+        "version": "3.0.1",
+        "origins": [
+          "action:checkout:node_modules/@actions/core",
+          "action:setup-python:node_modules/@actions/core"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@actions/exec",
+        "version": "3.0.0",
+        "origins": [
+          "action:checkout:node_modules/@actions/exec",
+          "action:setup-python:node_modules/@actions/exec"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@actions/github",
+        "version": "9.1.1",
+        "origins": [
+          "action:checkout:node_modules/@actions/github"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@actions/glob",
+        "version": "0.7.0",
+        "origins": [
+          "action:setup-python:node_modules/@actions/glob"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@actions/http-client",
+        "version": "3.0.2",
+        "origins": [
+          "action:checkout:node_modules/@actions/github/node_modules/@actions/http-client"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@actions/http-client",
+        "version": "4.0.1",
+        "origins": [
+          "action:checkout:node_modules/@actions/http-client",
+          "action:setup-python:node_modules/@actions/http-client"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@actions/io",
+        "version": "3.0.2",
+        "origins": [
+          "action:checkout:node_modules/@actions/io",
+          "action:setup-python:node_modules/@actions/io"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@actions/tool-cache",
+        "version": "4.0.0",
+        "origins": [
+          "action:checkout:node_modules/@actions/tool-cache",
+          "action:setup-python:node_modules/@actions/tool-cache"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@adobe/css-tools",
+        "version": "4.5.0",
+        "origins": [
+          "application-lock:node_modules/@adobe/css-tools"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@asamuzakjp/css-color",
+        "version": "5.1.11",
+        "origins": [
+          "application-lock:node_modules/@asamuzakjp/css-color"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@asamuzakjp/dom-selector",
+        "version": "7.1.1",
+        "origins": [
+          "application-lock:node_modules/@asamuzakjp/dom-selector"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@asamuzakjp/generational-cache",
+        "version": "1.0.1",
+        "origins": [
+          "application-lock:node_modules/@asamuzakjp/generational-cache"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@asamuzakjp/nwsapi",
+        "version": "2.3.9",
+        "origins": [
+          "application-lock:node_modules/@asamuzakjp/nwsapi"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/abort-controller",
+        "version": "2.2.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/abort-controller"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/core-auth",
+        "version": "1.11.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/core-auth"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/core-client",
+        "version": "1.11.1",
+        "origins": [
+          "action:setup-python:node_modules/@azure/core-client"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/core-http-compat",
+        "version": "2.5.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/core-http-compat"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/core-lro",
+        "version": "2.7.2",
+        "origins": [
+          "action:setup-python:node_modules/@azure/core-lro"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/core-paging",
+        "version": "1.7.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/core-paging"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/core-rest-pipeline",
+        "version": "1.23.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/core-rest-pipeline"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/core-rest-pipeline",
+        "version": "1.25.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/storage-common/node_modules/@azure/core-rest-pipeline"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/core-tracing",
+        "version": "1.4.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/core-tracing"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/core-util",
+        "version": "1.14.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/core-util"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/core-xml",
+        "version": "1.6.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/core-xml"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/logger",
+        "version": "1.4.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/logger"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/storage-blob",
+        "version": "12.31.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/storage-blob"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@azure/storage-common",
+        "version": "12.5.0",
+        "origins": [
+          "action:setup-python:node_modules/@azure/storage-common"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/code-frame",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/code-frame"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/compat-data",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/compat-data"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/core",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/core"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/generator",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/generator"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/helper-compilation-targets",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/helper-compilation-targets"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/helper-globals",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/helper-globals"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/helper-module-imports",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/helper-module-imports"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/helper-module-transforms",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/helper-module-transforms"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/helper-plugin-utils",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/helper-plugin-utils"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/helper-string-parser",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/helper-string-parser"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/helper-validator-identifier",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/helper-validator-identifier"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/helper-validator-option",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/helper-validator-option"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/helpers",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/helpers"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/parser",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/parser"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/plugin-transform-react-jsx-self",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/plugin-transform-react-jsx-self"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/plugin-transform-react-jsx-source",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/plugin-transform-react-jsx-source"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/runtime",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/runtime"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/template",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/template"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/traverse",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/traverse"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@babel/types",
+        "version": "7.29.7",
+        "origins": [
+          "application-lock:node_modules/@babel/types"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@bramus/specificity",
+        "version": "2.4.2",
+        "origins": [
+          "application-lock:node_modules/@bramus/specificity"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@csstools/color-helpers",
+        "version": "6.0.2",
+        "origins": [
+          "application-lock:node_modules/@csstools/color-helpers"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@csstools/css-calc",
+        "version": "3.2.1",
+        "origins": [
+          "application-lock:node_modules/@csstools/css-calc"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@csstools/css-color-parser",
+        "version": "4.1.8",
+        "origins": [
+          "application-lock:node_modules/@csstools/css-color-parser"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@csstools/css-parser-algorithms",
+        "version": "4.0.0",
+        "origins": [
+          "application-lock:node_modules/@csstools/css-parser-algorithms"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@csstools/css-syntax-patches-for-csstree",
+        "version": "1.1.5",
+        "origins": [
+          "application-lock:node_modules/@csstools/css-syntax-patches-for-csstree"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@csstools/css-tokenizer",
+        "version": "4.0.0",
+        "origins": [
+          "application-lock:node_modules/@csstools/css-tokenizer"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@exodus/bytes",
+        "version": "1.15.1",
+        "origins": [
+          "application-lock:node_modules/@exodus/bytes"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@iarna/toml",
+        "version": "3.0.0",
+        "origins": [
+          "action:setup-python:node_modules/@iarna/toml"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@jridgewell/gen-mapping",
+        "version": "0.3.13",
+        "origins": [
+          "application-lock:node_modules/@jridgewell/gen-mapping"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@jridgewell/remapping",
+        "version": "2.3.5",
+        "origins": [
+          "application-lock:node_modules/@jridgewell/remapping"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@jridgewell/resolve-uri",
+        "version": "3.1.2",
+        "origins": [
+          "application-lock:node_modules/@jridgewell/resolve-uri"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@jridgewell/sourcemap-codec",
+        "version": "1.6.0",
+        "origins": [
+          "application-lock:node_modules/@jridgewell/sourcemap-codec"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@jridgewell/trace-mapping",
+        "version": "0.3.31",
+        "origins": [
+          "application-lock:node_modules/@jridgewell/trace-mapping"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@kurkle/color",
+        "version": "0.3.4",
+        "origins": [
+          "application-lock:node_modules/@kurkle/color"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@nodable/entities",
+        "version": "3.1.0",
+        "origins": [
+          "action:setup-python:node_modules/@nodable/entities"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@octokit/auth-token",
+        "version": "6.0.0",
+        "origins": [
+          "action:checkout:node_modules/@octokit/auth-token"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@octokit/core",
+        "version": "7.0.6",
+        "origins": [
+          "action:checkout:node_modules/@octokit/core"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@octokit/endpoint",
+        "version": "11.0.3",
+        "origins": [
+          "action:checkout:node_modules/@octokit/endpoint"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@octokit/graphql",
+        "version": "9.0.3",
+        "origins": [
+          "action:checkout:node_modules/@octokit/graphql"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@octokit/openapi-types",
+        "version": "27.0.0",
+        "origins": [
+          "action:checkout:node_modules/@octokit/openapi-types"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@octokit/plugin-paginate-rest",
+        "version": "14.0.0",
+        "origins": [
+          "action:checkout:node_modules/@octokit/plugin-paginate-rest"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@octokit/plugin-rest-endpoint-methods",
+        "version": "17.0.0",
+        "origins": [
+          "action:checkout:node_modules/@octokit/plugin-rest-endpoint-methods"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@octokit/request",
+        "version": "10.0.10",
+        "origins": [
+          "action:checkout:node_modules/@octokit/request"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@octokit/request-error",
+        "version": "7.1.0",
+        "origins": [
+          "action:checkout:node_modules/@octokit/request-error"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@octokit/types",
+        "version": "16.0.0",
+        "origins": [
+          "action:checkout:node_modules/@octokit/types"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@oxc-project/types",
+        "version": "0.155.0",
+        "origins": [
+          "application-lock:node_modules/@oxc-project/types"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@protobuf-ts/runtime",
+        "version": "2.11.1",
+        "origins": [
+          "action:setup-python:node_modules/@protobuf-ts/runtime"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@protobuf-ts/runtime-rpc",
+        "version": "2.11.1",
+        "origins": [
+          "action:setup-python:node_modules/@protobuf-ts/runtime-rpc"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-android-arm-eabi",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-android-arm-eabi"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-android-arm64",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-android-arm64"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-darwin-arm64",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-darwin-arm64"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-darwin-x64",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-darwin-x64"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-freebsd-x64",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-freebsd-x64"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-linux-arm-gnueabihf",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-linux-arm-gnueabihf"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-linux-arm64-gnu",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-linux-arm64-gnu"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-linux-arm64-musl",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-linux-arm64-musl"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-linux-ppc64-gnu",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-linux-ppc64-gnu"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-linux-s390x-gnu",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-linux-s390x-gnu"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-linux-x64-gnu",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-linux-x64-gnu"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-linux-x64-musl",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-linux-x64-musl"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-openharmony-arm64",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-openharmony-arm64"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-win32-arm64-msvc",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-win32-arm64-msvc"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/binding-win32-x64-msvc",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/@rolldown/binding-win32-x64-msvc"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/pluginutils",
+        "version": "1.0.0-rc.3",
+        "origins": [
+          "application-lock:node_modules/@rolldown/pluginutils"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@rolldown/pluginutils",
+        "version": "1.0.1",
+        "origins": [
+          "application-lock:node_modules/rolldown/node_modules/@rolldown/pluginutils"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@testing-library/dom",
+        "version": "10.4.1",
+        "origins": [
+          "application-lock:node_modules/@testing-library/dom"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@testing-library/jest-dom",
+        "version": "6.9.1",
+        "origins": [
+          "application-lock:node_modules/@testing-library/jest-dom"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@testing-library/react",
+        "version": "16.3.3",
+        "origins": [
+          "application-lock:node_modules/@testing-library/react"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@types/aria-query",
+        "version": "5.0.4",
+        "origins": [
+          "application-lock:node_modules/@types/aria-query"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@types/babel__core",
+        "version": "7.20.5",
+        "origins": [
+          "application-lock:node_modules/@types/babel__core"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@types/babel__generator",
+        "version": "7.27.0",
+        "origins": [
+          "application-lock:node_modules/@types/babel__generator"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@types/babel__template",
+        "version": "7.4.4",
+        "origins": [
+          "application-lock:node_modules/@types/babel__template"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@types/babel__traverse",
+        "version": "7.28.0",
+        "origins": [
+          "application-lock:node_modules/@types/babel__traverse"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@types/chai",
+        "version": "5.2.3",
+        "origins": [
+          "application-lock:node_modules/@types/chai"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@types/deep-eql",
+        "version": "4.0.2",
+        "origins": [
+          "application-lock:node_modules/@types/deep-eql"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@types/estree",
+        "version": "1.0.9",
+        "origins": [
+          "application-lock:node_modules/@types/estree"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@types/hammerjs",
+        "version": "2.0.46",
+        "origins": [
+          "application-lock:node_modules/@types/hammerjs"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@typespec/ts-http-runtime",
+        "version": "0.3.9",
+        "origins": [
+          "action:setup-python:node_modules/@typespec/ts-http-runtime"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@vitejs/plugin-react",
+        "version": "5.2.0",
+        "origins": [
+          "application-lock:node_modules/@vitejs/plugin-react"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@vitest/mocker",
+        "version": "5.0.5",
+        "origins": [
+          "application-lock:node_modules/@vitest/mocker"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "@vitest/spy",
+        "version": "5.0.5",
+        "origins": [
+          "application-lock:node_modules/@vitest/spy"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "agent-base",
+        "version": "7.1.4",
+        "origins": [
+          "action:setup-python:node_modules/agent-base"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "ansi-regex",
+        "version": "5.0.1",
+        "origins": [
+          "application-lock:node_modules/ansi-regex"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "ansi-styles",
+        "version": "5.2.0",
+        "origins": [
+          "application-lock:node_modules/ansi-styles"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "anynum",
+        "version": "1.0.1",
+        "origins": [
+          "action:setup-python:node_modules/anynum"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "aria-query",
+        "version": "5.3.0",
+        "origins": [
+          "application-lock:node_modules/aria-query"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "assertion-error",
+        "version": "2.0.1",
+        "origins": [
+          "application-lock:node_modules/assertion-error"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "balanced-match",
+        "version": "4.0.4",
+        "origins": [
+          "action:setup-python:node_modules/balanced-match"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "baseline-browser-mapping",
+        "version": "2.11.33",
+        "origins": [
+          "application-lock:node_modules/baseline-browser-mapping"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "before-after-hook",
+        "version": "4.0.0",
+        "origins": [
+          "action:checkout:node_modules/before-after-hook"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "bidi-js",
+        "version": "1.0.3",
+        "origins": [
+          "application-lock:node_modules/bidi-js"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "brace-expansion",
+        "version": "5.0.12",
+        "origins": [
+          "action:setup-python:node_modules/brace-expansion"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "browserslist",
+        "version": "4.29.5",
+        "origins": [
+          "application-lock:node_modules/browserslist"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "caniuse-lite",
+        "version": "1.0.30001819",
+        "origins": [
+          "application-lock:node_modules/caniuse-lite"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "chai",
+        "version": "6.3.0",
+        "origins": [
+          "application-lock:node_modules/chai"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "chart.js",
+        "version": "4.5.1",
+        "origins": [
+          "application-lock:node_modules/chart.js"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "chartjs-plugin-zoom",
+        "version": "2.2.0",
+        "origins": [
+          "application-lock:node_modules/chartjs-plugin-zoom"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "content-type",
+        "version": "2.0.0",
+        "origins": [
+          "action:checkout:node_modules/content-type"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "convert-source-map",
+        "version": "2.0.0",
+        "origins": [
+          "application-lock:node_modules/convert-source-map"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "css-tree",
+        "version": "3.2.1",
+        "origins": [
+          "application-lock:node_modules/css-tree"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "css.escape",
+        "version": "1.5.1",
+        "origins": [
+          "application-lock:node_modules/css.escape"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "data-urls",
+        "version": "7.0.0",
+        "origins": [
+          "application-lock:node_modules/data-urls"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "debug",
+        "version": "4.4.3",
+        "origins": [
+          "application-lock:node_modules/debug",
+          "action:setup-python:node_modules/debug"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "decimal.js",
+        "version": "10.6.0",
+        "origins": [
+          "application-lock:node_modules/decimal.js"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "dequal",
+        "version": "2.0.3",
+        "origins": [
+          "application-lock:node_modules/dequal"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "detect-libc",
+        "version": "2.1.2",
+        "origins": [
+          "application-lock:node_modules/detect-libc"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "dom-accessibility-api",
+        "version": "0.5.16",
+        "origins": [
+          "application-lock:node_modules/dom-accessibility-api"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "dom-accessibility-api",
+        "version": "0.6.3",
+        "origins": [
+          "application-lock:node_modules/@testing-library/jest-dom/node_modules/dom-accessibility-api"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "electron-to-chromium",
+        "version": "1.5.465",
+        "origins": [
+          "application-lock:node_modules/electron-to-chromium"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "entities",
+        "version": "8.0.0",
+        "origins": [
+          "application-lock:node_modules/entities"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "es-module-lexer",
+        "version": "2.3.2",
+        "origins": [
+          "application-lock:node_modules/es-module-lexer"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "escalade",
+        "version": "3.2.0",
+        "origins": [
+          "application-lock:node_modules/escalade"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "estree-walker",
+        "version": "3.0.3",
+        "origins": [
+          "application-lock:node_modules/estree-walker"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "events",
+        "version": "3.3.0",
+        "origins": [
+          "action:setup-python:node_modules/events"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "expect-type",
+        "version": "1.4.0",
+        "origins": [
+          "application-lock:node_modules/expect-type"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "fast-xml-builder",
+        "version": "1.3.1",
+        "origins": [
+          "action:setup-python:node_modules/fast-xml-builder"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "fast-xml-parser",
+        "version": "5.11.2",
+        "origins": [
+          "action:setup-python:node_modules/fast-xml-parser"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "fdir",
+        "version": "6.5.0",
+        "origins": [
+          "application-lock:node_modules/fdir"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "fsevents",
+        "version": "2.3.3",
+        "origins": [
+          "application-lock:node_modules/fsevents"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "gensync",
+        "version": "1.0.0-beta.2",
+        "origins": [
+          "application-lock:node_modules/gensync"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "hammerjs",
+        "version": "2.0.8",
+        "origins": [
+          "application-lock:node_modules/hammerjs"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "html-encoding-sniffer",
+        "version": "6.0.0",
+        "origins": [
+          "application-lock:node_modules/html-encoding-sniffer"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "http-proxy-agent",
+        "version": "7.0.2",
+        "origins": [
+          "action:setup-python:node_modules/http-proxy-agent"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "https-proxy-agent",
+        "version": "7.0.6",
+        "origins": [
+          "action:setup-python:node_modules/https-proxy-agent"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "indent-string",
+        "version": "4.0.0",
+        "origins": [
+          "application-lock:node_modules/indent-string"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "is-potential-custom-element-name",
+        "version": "1.0.1",
+        "origins": [
+          "application-lock:node_modules/is-potential-custom-element-name"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "is-unsafe",
+        "version": "2.0.2",
+        "origins": [
+          "action:setup-python:node_modules/is-unsafe"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "js-tokens",
+        "version": "4.0.0",
+        "origins": [
+          "application-lock:node_modules/js-tokens"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "jsdom",
+        "version": "29.1.1",
+        "origins": [
+          "application-lock:node_modules/jsdom"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "jsesc",
+        "version": "3.1.0",
+        "origins": [
+          "application-lock:node_modules/jsesc"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "json-with-bigint",
+        "version": "3.5.8",
+        "origins": [
+          "action:checkout:node_modules/json-with-bigint"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "json5",
+        "version": "2.2.3",
+        "origins": [
+          "application-lock:node_modules/json5"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-android-arm64",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-android-arm64"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-darwin-arm64",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-darwin-arm64"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-darwin-x64",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-darwin-x64"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-freebsd-x64",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-freebsd-x64"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-linux-arm-gnueabihf",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-linux-arm-gnueabihf"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-linux-arm64-gnu",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-linux-arm64-gnu"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-linux-arm64-musl",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-linux-arm64-musl"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-linux-x64-gnu",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-linux-x64-gnu"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-linux-x64-musl",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-linux-x64-musl"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-win32-arm64-msvc",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-win32-arm64-msvc"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lightningcss-win32-x64-msvc",
+        "version": "1.33.0",
+        "origins": [
+          "application-lock:node_modules/lightningcss-win32-x64-msvc"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lru-cache",
+        "version": "11.5.1",
+        "origins": [
+          "application-lock:node_modules/jsdom/node_modules/lru-cache"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lru-cache",
+        "version": "5.1.1",
+        "origins": [
+          "application-lock:node_modules/lru-cache"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "lz-string",
+        "version": "1.5.0",
+        "origins": [
+          "application-lock:node_modules/lz-string"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "magic-string",
+        "version": "1.4.3",
+        "origins": [
+          "application-lock:node_modules/magic-string"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "mdn-data",
+        "version": "2.27.1",
+        "origins": [
+          "application-lock:node_modules/mdn-data"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "min-indent",
+        "version": "1.0.1",
+        "origins": [
+          "application-lock:node_modules/min-indent"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "minimatch",
+        "version": "10.2.5",
+        "origins": [
+          "action:setup-python:node_modules/minimatch"
+        ],
+        "advisories": [
+          "GHSA-g3hv-75wg-m249"
+        ]
+      },
+      {
+        "ecosystem": "npm",
+        "name": "ms",
+        "version": "2.1.3",
+        "origins": [
+          "application-lock:node_modules/ms",
+          "action:setup-python:node_modules/ms"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "nanoid",
+        "version": "3.3.20",
+        "origins": [
+          "application-lock:node_modules/nanoid"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "node-releases",
+        "version": "2.0.60",
+        "origins": [
+          "application-lock:node_modules/node-releases"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "obug",
+        "version": "3.0.0",
+        "origins": [
+          "application-lock:node_modules/obug"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "parse5",
+        "version": "8.0.1",
+        "origins": [
+          "application-lock:node_modules/parse5"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "path-expression-matcher",
+        "version": "1.6.2",
+        "origins": [
+          "action:setup-python:node_modules/path-expression-matcher"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "picocolors",
+        "version": "1.1.1",
+        "origins": [
+          "application-lock:node_modules/picocolors"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "picomatch",
+        "version": "4.0.7",
+        "origins": [
+          "application-lock:node_modules/picomatch"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "postcss",
+        "version": "8.5.32",
+        "origins": [
+          "application-lock:node_modules/postcss"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "pretty-format",
+        "version": "27.5.1",
+        "origins": [
+          "application-lock:node_modules/pretty-format"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "punycode",
+        "version": "2.3.1",
+        "origins": [
+          "application-lock:node_modules/punycode"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "react",
+        "version": "19.3.1",
+        "origins": [
+          "application-lock:node_modules/react"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "react-chartjs-2",
+        "version": "5.3.1",
+        "origins": [
+          "application-lock:node_modules/react-chartjs-2"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "react-dom",
+        "version": "19.3.1",
+        "origins": [
+          "application-lock:node_modules/react-dom"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "react-is",
+        "version": "17.0.2",
+        "origins": [
+          "application-lock:node_modules/react-is"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "react-refresh",
+        "version": "0.18.0",
+        "origins": [
+          "application-lock:node_modules/react-refresh"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "redent",
+        "version": "3.0.0",
+        "origins": [
+          "application-lock:node_modules/redent"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "require-from-string",
+        "version": "2.0.2",
+        "origins": [
+          "application-lock:node_modules/require-from-string"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "rolldown",
+        "version": "1.2.15",
+        "origins": [
+          "application-lock:node_modules/rolldown"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "saxes",
+        "version": "6.0.0",
+        "origins": [
+          "application-lock:node_modules/saxes"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "scheduler",
+        "version": "0.28.0",
+        "origins": [
+          "application-lock:node_modules/scheduler"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "semver",
+        "version": "6.3.1",
+        "origins": [
+          "application-lock:node_modules/semver"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "semver",
+        "version": "7.8.4",
+        "origins": [
+          "action:checkout:node_modules/@actions/tool-cache/node_modules/semver"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "semver",
+        "version": "7.8.5",
+        "origins": [
+          "action:setup-python:node_modules/semver"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "source-map-js",
+        "version": "1.2.2",
+        "origins": [
+          "application-lock:node_modules/source-map-js"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "std-env",
+        "version": "4.3.0",
+        "origins": [
+          "application-lock:node_modules/std-env"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "strip-indent",
+        "version": "3.0.0",
+        "origins": [
+          "application-lock:node_modules/strip-indent"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "strnum",
+        "version": "2.5.1",
+        "origins": [
+          "action:setup-python:node_modules/strnum"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "symbol-tree",
+        "version": "3.2.4",
+        "origins": [
+          "application-lock:node_modules/symbol-tree"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "tensorlake",
+        "version": "0.5.144",
+        "origins": [
+          "canary-never-install"
+        ],
+        "advisories": [
+          "MAL-2026-17650"
+        ]
+      },
+      {
+        "ecosystem": "npm",
+        "name": "tinybench",
+        "version": "6.2.2",
+        "origins": [
+          "application-lock:node_modules/tinybench"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "tinyexec",
+        "version": "1.3.1",
+        "origins": [
+          "application-lock:node_modules/tinyexec"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "tinyglobby",
+        "version": "0.2.17",
+        "origins": [
+          "application-lock:node_modules/tinyglobby"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "tldts",
+        "version": "7.4.3",
+        "origins": [
+          "application-lock:node_modules/tldts"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "tldts-core",
+        "version": "7.4.3",
+        "origins": [
+          "application-lock:node_modules/tldts-core"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "tough-cookie",
+        "version": "6.0.1",
+        "origins": [
+          "application-lock:node_modules/tough-cookie"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "tr46",
+        "version": "6.0.0",
+        "origins": [
+          "application-lock:node_modules/tr46"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "tslib",
+        "version": "2.8.1",
+        "origins": [
+          "action:setup-python:node_modules/tslib"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "tunnel",
+        "version": "0.0.6",
+        "origins": [
+          "action:checkout:node_modules/tunnel",
+          "action:setup-python:node_modules/tunnel"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "undici",
+        "version": "6.27.0",
+        "origins": [
+          "action:checkout:node_modules/undici"
+        ],
+        "advisories": [
+          "GHSA-2m5v-pch6-74hx",
+          "GHSA-3wwx-pv8p-q78v",
+          "GHSA-4qv8-2p9j-2685",
+          "GHSA-8xcm-r25x-g524",
+          "GHSA-9fm3-97px-rjf6",
+          "GHSA-m8rv-5g2x-5cg5",
+          "GHSA-qrxm-fqhp-jwvm",
+          "GHSA-r53p-7pc4-xj5r",
+          "GHSA-rfgv-xxqx-mfg5",
+          "GHSA-v3r7-h72x-cjcm",
+          "GHSA-xjj6-f33q-929c"
+        ]
+      },
+      {
+        "ecosystem": "npm",
+        "name": "undici",
+        "version": "6.29.0",
+        "origins": [
+          "action:setup-python:node_modules/undici"
+        ],
+        "advisories": [
+          "GHSA-2m5v-pch6-74hx",
+          "GHSA-4qv8-2p9j-2685",
+          "GHSA-9fm3-97px-rjf6",
+          "GHSA-qrxm-fqhp-jwvm",
+          "GHSA-xjj6-f33q-929c"
+        ]
+      },
+      {
+        "ecosystem": "npm",
+        "name": "undici",
+        "version": "7.30.1",
+        "origins": [
+          "application-lock:node_modules/undici"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "universal-user-agent",
+        "version": "7.0.3",
+        "origins": [
+          "action:checkout:node_modules/universal-user-agent"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "update-browserslist-db",
+        "version": "1.3.4",
+        "origins": [
+          "application-lock:node_modules/update-browserslist-db"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "vite",
+        "version": "8.0.16",
+        "origins": [
+          "canary-never-install"
+        ],
+        "advisories": [
+          "GHSA-587h-7wmj-h5pm",
+          "GHSA-698v-4r3x-3vcv",
+          "GHSA-9jrq-w75r-8gcw",
+          "GHSA-r825-w8mm-5pxw",
+          "GHSA-rq7h-c2jc-7f22"
+        ]
+      },
+      {
+        "ecosystem": "npm",
+        "name": "vite",
+        "version": "8.3.5",
+        "origins": [
+          "application-lock:node_modules/vite"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "vitest",
+        "version": "5.0.5",
+        "origins": [
+          "application-lock:node_modules/vitest"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "w3c-xmlserializer",
+        "version": "5.0.0",
+        "origins": [
+          "application-lock:node_modules/w3c-xmlserializer"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "webidl-conversions",
+        "version": "8.0.1",
+        "origins": [
+          "application-lock:node_modules/webidl-conversions"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "whatwg-mimetype",
+        "version": "5.0.0",
+        "origins": [
+          "application-lock:node_modules/whatwg-mimetype"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "whatwg-url",
+        "version": "16.0.1",
+        "origins": [
+          "application-lock:node_modules/whatwg-url"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "why-is-node-running",
+        "version": "3.2.1",
+        "origins": [
+          "application-lock:node_modules/why-is-node-running"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "xml-name-validator",
+        "version": "5.0.0",
+        "origins": [
+          "application-lock:node_modules/xml-name-validator"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "xml-naming",
+        "version": "0.3.0",
+        "origins": [
+          "action:setup-python:node_modules/xml-naming"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "xmlchars",
+        "version": "2.2.0",
+        "origins": [
+          "application-lock:node_modules/xmlchars"
+        ],
+        "advisories": []
+      },
+      {
+        "ecosystem": "npm",
+        "name": "yallist",
+        "version": "3.1.1",
+        "origins": [
+          "application-lock:node_modules/yallist"
+        ],
+        "advisories": []
+      }
+    ]
+  },
+  "upstream_actions": {
+    "checkout": {
+      "latest_release": {
+        "tag_name": "v7.0.1",
+        "published_at": "2026-07-20T15:10:05Z",
+        "html_url": "https://github.com/actions/checkout/releases/tag/v7.0.1"
+      },
+      "commit": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+      "production_inventory": {
+        "node_modules/@actions/core": "3.0.1",
+        "node_modules/@actions/exec": "3.0.0",
+        "node_modules/@actions/github": "9.1.1",
+        "node_modules/@actions/github/node_modules/@actions/http-client": "3.0.2",
+        "node_modules/@actions/http-client": "4.0.1",
+        "node_modules/@actions/io": "3.0.2",
+        "node_modules/@actions/tool-cache": "4.0.0",
+        "node_modules/@actions/tool-cache/node_modules/semver": "7.8.4",
+        "node_modules/@octokit/auth-token": "6.0.0",
+        "node_modules/@octokit/core": "7.0.6",
+        "node_modules/@octokit/endpoint": "11.0.3",
+        "node_modules/@octokit/graphql": "9.0.3",
+        "node_modules/@octokit/openapi-types": "27.0.0",
+        "node_modules/@octokit/plugin-paginate-rest": "14.0.0",
+        "node_modules/@octokit/plugin-rest-endpoint-methods": "17.0.0",
+        "node_modules/@octokit/request": "10.0.10",
+        "node_modules/@octokit/request-error": "7.1.0",
+        "node_modules/@octokit/types": "16.0.0",
+        "node_modules/before-after-hook": "4.0.0",
+        "node_modules/content-type": "2.0.0",
+        "node_modules/json-with-bigint": "3.5.8",
+        "node_modules/tunnel": "0.0.6",
+        "node_modules/undici": "6.27.0",
+        "node_modules/universal-user-agent": "7.0.3"
+      },
+      "undici_entries": {
+        "node_modules/undici": "6.27.0"
+      }
+    },
+    "setup-python": {
+      "latest_release": {
+        "tag_name": "v7.1.0",
+        "published_at": "2026-10-22T02:56:04Z",
+        "html_url": "https://github.com/actions/setup-python/releases/tag/v7.1.0"
+      },
+      "commit": "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+      "production_inventory": {
+        "node_modules/@actions/cache": "6.3.0",
+        "node_modules/@actions/core": "3.0.1",
+        "node_modules/@actions/exec": "3.0.0",
+        "node_modules/@actions/glob": "0.7.0",
+        "node_modules/@actions/http-client": "4.0.1",
+        "node_modules/@actions/io": "3.0.2",
+        "node_modules/@actions/tool-cache": "4.0.0",
+        "node_modules/@azure/abort-controller": "2.2.0",
+        "node_modules/@azure/core-auth": "1.11.0",
+        "node_modules/@azure/core-client": "1.11.1",
+        "node_modules/@azure/core-http-compat": "2.5.0",
+        "node_modules/@azure/core-lro": "2.7.2",
+        "node_modules/@azure/core-paging": "1.7.0",
+        "node_modules/@azure/core-rest-pipeline": "1.23.0",
+        "node_modules/@azure/core-tracing": "1.4.0",
+        "node_modules/@azure/core-util": "1.14.0",
+        "node_modules/@azure/core-xml": "1.6.0",
+        "node_modules/@azure/logger": "1.4.0",
+        "node_modules/@azure/storage-blob": "12.31.0",
+        "node_modules/@azure/storage-common": "12.5.0",
+        "node_modules/@azure/storage-common/node_modules/@azure/core-rest-pipeline": "1.25.0",
+        "node_modules/@iarna/toml": "3.0.0",
+        "node_modules/@nodable/entities": "3.1.0",
+        "node_modules/@protobuf-ts/runtime": "2.11.1",
+        "node_modules/@protobuf-ts/runtime-rpc": "2.11.1",
+        "node_modules/@typespec/ts-http-runtime": "0.3.9",
+        "node_modules/agent-base": "7.1.4",
+        "node_modules/anynum": "1.0.1",
+        "node_modules/balanced-match": "4.0.4",
+        "node_modules/brace-expansion": "5.0.12",
+        "node_modules/debug": "4.4.3",
+        "node_modules/events": "3.3.0",
+        "node_modules/fast-xml-builder": "1.3.1",
+        "node_modules/fast-xml-parser": "5.11.2",
+        "node_modules/http-proxy-agent": "7.0.2",
+        "node_modules/https-proxy-agent": "7.0.6",
+        "node_modules/is-unsafe": "2.0.2",
+        "node_modules/minimatch": "10.2.5",
+        "node_modules/ms": "2.1.3",
+        "node_modules/path-expression-matcher": "1.6.2",
+        "node_modules/semver": "7.8.5",
+        "node_modules/strnum": "2.5.1",
+        "node_modules/tslib": "2.8.1",
+        "node_modules/tunnel": "0.0.6",
+        "node_modules/undici": "6.29.0",
+        "node_modules/xml-naming": "0.3.0"
+      },
+      "undici_entries": {
+        "node_modules/undici": "6.29.0"
+      }
+    }
+  },
+  "action_bundles": [
+    {
+      "action": "checkout",
+      "commit": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+      "path": "dist/index.js",
+      "bytes": 1452487,
+      "sha256": "086f5d69833562b3e91940544a05ad3f7c50046768d8151d50fc18f5ebb6f0ac",
+      "source_module_markers": {
+        "node_modules/undici/": 1,
+        "lib/web/websocket": 0,
+        "lib/web/eventsource": 0,
+        "parseSetCookie": 4,
+        "globParts": 0,
+        "node_modules/minimatch/": 0
+      },
+      "limit": "Bundle source markers establish code presence, not affected-function reachability from this workflow"
+    },
+    {
+      "action": "setup-python",
+      "commit": "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+      "path": "dist/setup/index.js",
+      "bytes": 3671726,
+      "sha256": "b3c03ce5ef5469fed7e8497cc71d4ed927c3ce27b22e88f552fb4f522d9766f0",
+      "source_module_markers": {
+        "node_modules/undici/": 1,
+        "lib/web/websocket": 0,
+        "lib/web/eventsource": 0,
+        "parseSetCookie": 4,
+        "globParts": 33,
+        "node_modules/minimatch/": 6
+      },
+      "limit": "Bundle source markers establish code presence, not affected-function reachability from this workflow"
+    },
+    {
+      "action": "setup-python",
+      "commit": "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+      "path": "dist/cache-save/index.js",
+      "bytes": 3577544,
+      "sha256": "40851cda6adb156611810c50d3d0ffd19d6c916fd30a582c985555ab4c24610c",
+      "source_module_markers": {
+        "node_modules/undici/": 1,
+        "lib/web/websocket": 0,
+        "lib/web/eventsource": 0,
+        "parseSetCookie": 4,
+        "globParts": 33,
+        "node_modules/minimatch/": 6
+      },
+      "limit": "Bundle source markers establish code presence, not affected-function reachability from this workflow"
+    }
+  ],
+  "publisher_guard_reconstruction": {
+    "ref": "13f4dd4758e1337b53d4f6be7c2be6984064815f",
+    "method": "trusted independent SHA256 reconstruction of source algorithm; no target code executed",
+    "model_fingerprint": "71657a22230f4ebd5488b5c869731bb1f5ea4acadee083f3beefea006fde204d",
+    "canonical_fingerprints": [
+      "21a4b0160e184a67f141c57202b46e455ccc92791961430493c7d250ee5c053d"
+    ],
+    "changed": true,
+    "hash_file_count": 43
+  },
+  "actionlint": {
+    "tool": "actionlint",
+    "version": "1.7.12\ninstalled by downloading from release page\nbuilt with go1.26.1 compiler for darwin/arm64",
+    "release": "https://github.com/rhysd/actionlint/releases/tag/v1.7.12",
+    "archive_sha256": "aba9ced2dee8d27fecca3dc7feb1a7f9a52caefa1eb46f3271ea66b6e0e6953f",
+    "binary_sha256": "8db11704dc296f096216db4db65d86cd7f0ebfdf4c38453a1da276b137b88388",
+    "checksum_source": "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_checksums.txt",
+    "command": [
+      "/private/tmp/risk-hardening-validation-20261109/actionlint/actionlint",
+      "-shellcheck=",
+      "-pyflakes=",
+      "-no-color",
+      "-oneline",
+      "/Users/josh/Documents/03_Projects/risk-metric/.github/workflows/ci-quality-and-benchmark.yml",
+      "/Users/josh/Documents/03_Projects/risk-metric/.github/workflows/daily-web-publish.yml",
+      "/Users/josh/Documents/03_Projects/risk-metric/.github/workflows/dependabot-auto-merge.yml",
+      "/Users/josh/Documents/03_Projects/risk-metric/.github/workflows/dependency-security.yml",
+      "/Users/josh/Documents/03_Projects/risk-metric/.github/workflows/model-acceptance.yml"
+    ],
+    "workflow_files": [
+      ".github/workflows/ci-quality-and-benchmark.yml",
+      ".github/workflows/daily-web-publish.yml",
+      ".github/workflows/dependabot-auto-merge.yml",
+      ".github/workflows/dependency-security.yml",
+      ".github/workflows/model-acceptance.yml"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "",
+    "execution_scope": "Trusted standalone static parser only; shellcheck and pyflakes disabled; no target scripts executed"
+  },
+  "focused_tests": {
+    "python_tests_passed": 53,
+    "node_tests_passed": 62,
+    "python": "3.12.16; existing local environment matched all 11 lock pins",
+    "node": "24.22.2",
+    "working_copy": "disposable scratch copy; no installation or runtime adoption",
+    "environment_allowlist": [
+      "PATH",
+      "HOME",
+      "TMPDIR",
+      "XDG_CACHE_HOME",
+      "PYTHONDONTWRITEBYTECODE",
+      "PYTHONNOUSERSITE",
+      "LANG",
+      "LC_ALL",
+      "REFRESH_API_SOURCES",
+      "RISK_END_DATE"
+    ],
+    "limits": {
+      "cpu_seconds": 30,
+      "file_bytes": 8388608,
+      "wall_seconds_per_command": 60
+    },
+    "authorization": "Josh explicitly approved normal Codex sandbox with unavailable hard memory/process/disk isolation waived; sandbox-exec cannot apply inside host sandbox",
+    "commands": [
+      "python -m unittest discover -s tests -p test_provider_http.py",
+      "python -m unittest discover -s tests -p test_publication_security.py",
+      "python -m unittest discover -s tests -p test_*source*.py",
+      "python -m unittest discover -s tests -p test_btc_price_backfill.py",
+      "python -m unittest discover -s tests -p test_daily_publish_acceptance.py",
+      "python -m unittest discover -s tests -p test_workflow*.py",
+      "python -m unittest discover -s tests -p test_dependency_security.py",
+      "node --test scripts/lib/*.test.mjs"
+    ],
+    "mutation_checks": [
+      {
+        "mutation": "redirect-hook",
+        "exit_code": 1,
+        "detected": true
+      },
+      {
+        "mutation": "response-byte-budgets",
+        "exit_code": 1,
+        "detected": true
+      },
+      {
+        "mutation": "publisher-secret-scope",
+        "exit_code": 1,
+        "detected": true
+      },
+      {
+        "mutation": "page-budget",
+        "exit_code": 1,
+        "detected": true
+      },
+      {
+        "mutation": "archive-redirects",
+        "exit_code": 1,
+        "detected": true
+      },
+      {
+        "mutation": "archive-deadline",
+        "exit_code": 1,
+        "detected": true
+      },
+      {
+        "mutation": "archive-origin",
+        "exit_code": 1,
+        "detected": true
+      }
+    ],
+    "restored_guards": "all green",
+    "source_code_execution": true,
+    "test_python_executable": "/private/tmp/risk-readout-env-20261109/bin/python",
+    "scratch_evidence_root": "/private/tmp/risk-hardening-checks-20261109"
+  },
+  "limits": [
+    "Production model acceptance remains withheld; canonical unchanged",
+    "No hosted settings, deployments, credentials or global runtimes changed",
+    "Installed npm metadata matches; package bytes not fully authenticated by manifest version match",
+    "Test Python pins match; production/application Python runtime not adopted or independently proven",
+    "Native backport/patch status, Pages settings/header attachment, private upload configuration and full historical secret scan remain open"
+  ],
+  "implementation_commits": {
+    "workflow": "c654a22",
+    "providers": "9e82216",
+    "archive": "b5ad57c"
+  },
+  "hosted_validation": {
+    "pr": "https://github.com/j0shcd/risk-metric/pull/7",
+    "tested_code_head": "32e1d57baf669ffef706d7e162f359214fd2b8b9",
+    "ci_run": "https://github.com/j0shcd/risk-metric/actions/runs/42614869483",
+    "standalone_scan": "https://github.com/j0shcd/risk-metric/actions/runs/42614869375",
+    "correctness_jobs": "all success",
+    "python_tests": 492,
+    "python_runtime": "3.11.18",
+    "script_tests": 62,
+    "frontend_tests": 70,
+    "node_runtime": "22.23.4",
+    "build": "success",
+    "legacy_benchmark_diagnostic": {
+      "printed_status": "FAIL",
+      "exit_code": 1,
+      "nonblocking": true,
+      "production_model_accepted": false
+    },
+    "later_changes": "documentation/evidence only; code unchanged"
+  }
+}

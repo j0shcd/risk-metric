@@ -28,7 +28,7 @@ class DailyPublishAcceptanceTests(unittest.TestCase):
         text = WORKFLOW.read_text()
         self.assertLess(text.index(NAME), text.index('python backfill.py'))
         self.assertLess(text.index(NAME), text.index('python publish_web.py'))
-        self.assertLess(text.index(NAME), text.index('git push origin'))
+        self.assertLess(text.index(NAME), text.index('push origin HEAD:main'))
 
     def test_only_exact_unchanged_identity_can_pass(self):
         with tempfile.TemporaryDirectory() as temp:

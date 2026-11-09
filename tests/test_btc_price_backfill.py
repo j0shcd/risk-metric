@@ -62,7 +62,9 @@ class BtcPriceBackfillTests(unittest.TestCase):
                 [],
             ]
 
-            with patch("risk_engine.sources.btc_price_backfill._yesterday_utc", return_value=pd.Timestamp("2024-01-05")):
+            with patch("risk_engine.sources.btc_price_backfill._yesterday_utc", return_value=pd.Timestamp("2024-01-05")), \
+                    patch("risk_engine.sources.btc_price_backfill._fetch_coingecko_daily_range",
+                          return_value=pd.DataFrame(columns=["Date", "Price"])):
                 stats = refresh_btc_daily_from_binance(self._cfg(root))
 
             updated = pd.read_csv(csv_path)
@@ -72,15 +74,13 @@ class BtcPriceBackfillTests(unittest.TestCase):
             self.assertEqual(stats["rows_added"], 2)
             self.assertEqual(stats["fetch_mode"], "binance")
 
-    @patch("risk_engine.sources.btc_price_backfill.requests.get")
+    @patch("risk_engine.sources.btc_price_backfill.request_json")
     def test_refresh_bootstraps_when_btc_daily_missing(self, mocked_get) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             (root / "data").mkdir(parents=True, exist_ok=True)
 
-            mocked_response = mocked_get.return_value
-            mocked_response.raise_for_status.return_value = None
-            mocked_response.json.return_value = {
+            mocked_get.return_value = {
                 "prices": [
                     [1704067200000, 42000.0],  # 2024-01-01
                     [1704153600000, 43000.0],  # 2024-01-02
@@ -103,7 +103,7 @@ class BtcPriceBackfillTests(unittest.TestCase):
             self.assertEqual(stats["rows_after"], 2)
             self.assertEqual(stats["rows_added"], 2)
 
-    @patch("risk_engine.sources.btc_price_backfill.requests.get")
+    @patch("risk_engine.sources.btc_price_backfill.request_json")
     @patch("risk_engine.sources.btc_price_backfill._fetch_binance_klines_page")
     def test_refresh_falls_back_to_coingecko_when_binance_empty(self, mocked_fetch, mocked_get) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -125,9 +125,7 @@ class BtcPriceBackfillTests(unittest.TestCase):
 
             mocked_fetch.return_value = []
 
-            mocked_response = mocked_get.return_value
-            mocked_response.raise_for_status.return_value = None
-            mocked_response.json.return_value = {
+            mocked_get.return_value = {
                 "prices": [
                     [1704067200000, 42500.0],  # 2024-01-01
                     [1704153600000, 42900.0],  # 2024-01-02
@@ -150,7 +148,7 @@ class BtcPriceBackfillTests(unittest.TestCase):
             self.assertEqual(stats["rows_added"], 2)
             self.assertEqual(stats["fetch_mode"], "coingecko_fallback")
 
-    @patch("risk_engine.sources.btc_price_backfill.requests.get")
+    @patch("risk_engine.sources.btc_price_backfill.request_json")
     @patch("risk_engine.sources.btc_price_backfill._fetch_binance_klines_page")
     def test_refresh_fills_remaining_gap_with_coingecko_when_binance_partial(self, mocked_fetch, mocked_get) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -177,9 +175,7 @@ class BtcPriceBackfillTests(unittest.TestCase):
                 [],
             ]
 
-            mocked_response = mocked_get.return_value
-            mocked_response.raise_for_status.return_value = None
-            mocked_response.json.return_value = {
+            mocked_get.return_value = {
                 "prices": [
                     [1704326400000, 44200.0],  # 2024-01-04
                     [1704412800000, 44600.0],  # 2024-01-05
@@ -200,6 +196,33 @@ class BtcPriceBackfillTests(unittest.TestCase):
             self.assertIn("2024-01-05", updated["Date"].tolist())
             self.assertEqual(stats["rows_added"], 3)
             self.assertEqual(stats["fetch_mode"], "binance+coingecko_fallback")
+
+
+    @patch("risk_engine.sources.btc_price_backfill._fetch_binance_klines_page")
+    def test_page_budget_fails_before_overwriting_existing_cache(self, fetch):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); (root / "data").mkdir()
+            cache = root / "data/btc_daily.csv"
+            original = b"Date,Open,High,Low,Price,Vol.,Change %\n2024-01-01,1,1,1,1,1,0\n"
+            cache.write_bytes(original)
+            # One full response demands another page, exceeding the patched budget.
+            fetch.return_value = [_kline(1704153600000, 1, 1, 1, 1, 1)] * 1000
+            with patch("risk_engine.sources.btc_price_backfill.MAX_BACKFILL_PAGES", 1), \
+                    patch("risk_engine.sources.btc_price_backfill._fetch_coingecko_daily_range",
+                          side_effect=AssertionError("budget must stop before fallback")):
+                with self.assertRaisesRegex(RuntimeError, "page budget"):
+                    refresh_btc_daily_from_binance(self._cfg(root))
+            self.assertEqual(cache.read_bytes(), original)
+            self.assertEqual(fetch.call_count, 1)
+
+    def test_range_backfill_bounded_before_fetching_or_writing(self):
+        from risk_engine.sources.btc_price_backfill import _fetch_coingecko_daily_range
+        with patch("risk_engine.sources.btc_price_backfill.request_json", return_value={}) as fetch, \
+                patch("risk_engine.sources.btc_price_backfill.MAX_BACKFILL_PAGES", 1):
+            with self.assertRaisesRegex(RuntimeError, "page budget"):
+                _fetch_coingecko_daily_range(self._cfg(Path("unused")),
+                                            pd.Timestamp("2020-01-01"), pd.Timestamp("2021-01-01"))
+            self.assertEqual(fetch.call_count, 1)
 
 
 if __name__ == "__main__":

@@ -85,8 +85,13 @@ release IDs or unexpected artifact sets.
 `scripts/archive-release.mjs` appends one compact snapshot record per release
 to `data/web/archive/release_snapshots.ndjson`. It deduplicates release IDs and
 hard-fails before the prospective archive exceeds 250,000,000 bytes. Upload is
-a no-op by default. An optional HTTP PUT boundary can be enabled with
-`RELEASE_ARCHIVE_UPLOAD_URL` and, if needed, `RELEASE_ARCHIVE_UPLOAD_TOKEN`.
+a no-op by default. An optional HTTPS PUT boundary requires both
+`RELEASE_ARCHIVE_UPLOAD_URL` and `RELEASE_ARCHIVE_UPLOAD_ALLOWED_ORIGIN`
+(for example `https://archive.example`), plus `RELEASE_ARCHIVE_UPLOAD_TOKEN`
+if authentication is needed. The URL must match that exact approved origin;
+redirects are rejected, the upload has a 30-second deadline, and the input
+must be a regular file within the archive byte budget. A configured URL without
+an approved origin fails closed; no upload setting is changed automatically.
 Each record includes the normalized feature values consumed on that run,
 source/metric provenance, canonical content hashes, and model/config identity.
 

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: daily-web-publish
@@ -21,23 +21,21 @@ jobs:
   publish-web-data:
     needs: dependency-security
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
     env:
       DATA_PROFILE: extended
       ENABLE_OPTIONAL_SOCIAL_SOURCES: "false"
       ENABLE_GOOGLE_TRENDS_SOURCE: "false"
       ENABLE_PAID_SOURCES: "false"
-      YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
-      YOUTUBE_CHANNEL_IDS: ${{ secrets.YOUTUBE_CHANNEL_IDS }}
-      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-      FRED_API: ${{ secrets.FRED_API_KEY }}
-      WIKIMEDIA_API_TOKEN: ${{ secrets.WIKIMEDIA_API_TOKEN }}
-      WIKIMEDIA_API_USER_AGENT: ${{ secrets.WIKIMEDIA_API_USER_AGENT }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
@@ -52,6 +50,8 @@ jobs:
         uses: ./.github/actions/setup-node
 
       - name: Require accepted model before refreshing dashboard
+        env:
+          YOUTUBE_CHANNEL_IDS: ${{ secrets.YOUTUBE_CHANNEL_IDS }}
         run: |
           cp config/model_acceptance_runtime.json config/runtime.json
           changed=$(python -m risk_engine.model_acceptance changed --canonical config/model_acceptance_canonical.json)
@@ -64,6 +64,12 @@ jobs:
       - name: Refresh caches from APIs + publish web export
         env:
           REFRESH_API_SOURCES: "true"
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          YOUTUBE_CHANNEL_IDS: ${{ secrets.YOUTUBE_CHANNEL_IDS }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          FRED_API: ${{ secrets.FRED_API_KEY }}
+          WIKIMEDIA_API_TOKEN: ${{ secrets.WIKIMEDIA_API_TOKEN }}
+          WIKIMEDIA_API_USER_AGENT: ${{ secrets.WIKIMEDIA_API_USER_AGENT }}
         run: python publish_web.py
 
       - name: Verify cache-only execution
@@ -79,6 +85,7 @@ jobs:
       - name: Validate release and append prospective archive
         env:
           RELEASE_ARCHIVE_UPLOAD_URL: ${{ vars.RELEASE_ARCHIVE_UPLOAD_URL }}
+          RELEASE_ARCHIVE_UPLOAD_ALLOWED_ORIGIN: ${{ vars.RELEASE_ARCHIVE_UPLOAD_ALLOWED_ORIGIN }}
           RELEASE_ARCHIVE_UPLOAD_TOKEN: ${{ secrets.RELEASE_ARCHIVE_UPLOAD_TOKEN }}
         run: |
           node scripts/validate-web-release.mjs data/web/v2 web/public/data/v2
@@ -139,11 +146,13 @@ jobs:
 
       - name: Commit updated web artifacts and caches
         if: steps.detect_changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "risk-metric-bot"
           git config user.email "risk-metric-bot@users.noreply.github.com"
           git commit -m "chore(data): refresh caches + web v2 artifacts"
-          git push origin HEAD:main
+          git -c credential.helper= -c 'credential.helper=!f() { test "$1" = get && printf "%s\n" "username=x-access-token" "password=$GH_TOKEN"; }; f' push origin HEAD:main
 
       - name: No artifact changes
         if: steps.detect_changes.outputs.changed != 'true'

@@ -49,17 +49,74 @@ export function appendProspectiveArchive({ releaseRoot, archivePath, budgetBytes
   return { appended: true, bytes: projectedBytes, budgetBytes };
 }
 
-export async function uploadArchiveIfConfigured({ archivePath, env = process.env, fetchImpl = fetch }) {
+export const ARCHIVE_UPLOAD_TIMEOUT_MS = 30_000;
+
+export async function uploadArchiveIfConfigured({
+  archivePath, env = process.env, fetchImpl = fetch,
+  timeoutMs = ARCHIVE_UPLOAD_TIMEOUT_MS,
+}) {
   if (!env.RELEASE_ARCHIVE_UPLOAD_URL) return { uploaded: false, reason: "not_configured" };
+  // URL and approved origin are independent deployment settings. Never log either:
+  // signed URLs, userinfo and query strings can contain credentials.
+  let endpoint;
+  let approved;
+  try {
+    endpoint = new URL(env.RELEASE_ARCHIVE_UPLOAD_URL);
+    approved = new URL(env.RELEASE_ARCHIVE_UPLOAD_ALLOWED_ORIGIN);
+  } catch {
+    throw new Error("archive upload requires an HTTPS URL and approved origin");
+  }
+  if (endpoint.protocol !== "https:" || approved.protocol !== "https:"
+      || endpoint.username || endpoint.password || endpoint.hash
+      || approved.username || approved.password || approved.hash || approved.search
+      || approved.pathname !== "/" || endpoint.origin !== approved.origin) {
+    throw new Error("archive upload destination is outside the approved HTTPS origin");
+  }
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > ARCHIVE_UPLOAD_TIMEOUT_MS) {
+    throw new Error("invalid archive upload deadline");
+  }
+  // Read at most the existing archive budget from one regular-file descriptor.
+  // This also bounds growth between stat and read without following a symlink.
+  const fd = fs.openSync(archivePath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+  let body;
+  try {
+    const info = fs.fstatSync(fd);
+    if (!info.isFile() || info.size > ARCHIVE_BUDGET_BYTES) throw new Error("archive upload file exceeds budget or is not regular");
+    body = Buffer.alloc(info.size);
+    let offset = 0;
+    while (offset < body.length) {
+      const count = fs.readSync(fd, body, offset, body.length - offset, offset);
+      if (!count) throw new Error("archive changed while preparing upload");
+      offset += count;
+    }
+    const after = fs.fstatSync(fd);
+    if (after.size !== info.size || after.mtimeMs !== info.mtimeMs || after.ctimeMs !== info.ctimeMs) {
+      throw new Error("archive changed while preparing upload");
+    }
+  } finally {
+    fs.closeSync(fd);
+  }
   const headers = { "Content-Type": "application/x-ndjson" };
   if (env.RELEASE_ARCHIVE_UPLOAD_TOKEN) headers.Authorization = `Bearer ${env.RELEASE_ARCHIVE_UPLOAD_TOKEN}`;
-  const response = await fetchImpl(env.RELEASE_ARCHIVE_UPLOAD_URL, {
-    method: "PUT",
-    headers,
-    body: fs.readFileSync(archivePath),
-  });
-  if (!response.ok) throw new Error(`archive upload failed: ${response.status}`);
-  return { uploaded: true };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetchImpl(endpoint.href, {
+      method: "PUT", redirect: "error", signal: controller.signal, headers, body,
+    });
+    try {
+      if (!response.ok) throw new Error("archive upload returned a non-success response");
+    } finally {
+      // Do not buffer an untrusted response body or leave a connection running.
+      await response.body?.cancel();
+    }
+    return { uploaded: true };
+  } catch {
+    throw new Error("archive upload failed or exceeded its deadline");
+  } finally {
+    clearTimeout(timer);
+    controller.abort();
+  }
 }
 
 async function main() {
