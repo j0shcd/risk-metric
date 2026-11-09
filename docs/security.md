@@ -7,8 +7,9 @@ retains the exact package versions and advisory IDs from this audit.
 
 ## Hardening and validation: 9 November 2026
 
-Local implementation on `codex/security-hardening` addresses the four priorities
-from the deep source audit. It is not yet pushed, merged into main or deployed.
+Implementation in [PR #7](https://github.com/j0shcd/risk-metric/pull/7) addresses
+the four priorities from the deep source audit. Code verification and production
+model acceptance are separate; the hardening does not approve publication.
 The [dated evidence](artifacts/security-hardening-2026-11-09.json) records exact
 inputs, current metadata, action inventories and verification. This section
 supersedes earlier activation and dependency counts below; older sections are
@@ -51,8 +52,17 @@ temp/cache, CPU/file/wall limits and mocked transports. No browser, provider
 publication or hosted write was invoked. Actionlint 1.7.12 passed all five
 workflows; Python/JavaScript parsing and `git diff --check` passed. An independent
 source reviewer verified the connected paths; Claude CLI had no active login,
-so no Claude review is claimed. The full Python suite and hosted checks for
-these commits remain pending.
+so no Claude review is claimed.
+
+[Hosted CI 42614869483](https://github.com/j0shcd/risk-metric/actions/runs/42614869483)
+passed for code head `32e1d57baf669ffef706d7e162f359214fd2b8b9`: 492 Python tests
+on Python 3.11.18, 62 Node script tests, 70 frontend tests and the web build on
+Node 22.23.4. Its dependency scan and the [standalone PR security scan
+42614869375](https://github.com/j0shcd/risk-metric/actions/runs/42614869375) passed.
+The legacy benchmark diagnostic printed `Gate status: FAIL` and exited 1;
+`continue-on-error` deliberately makes it nonblocking under ADR 0009. A green
+correctness job therefore does not establish model-performance acceptance.
+This later documentation-only update does not change the tested code.
 
 Fresh OSV metadata-only scanning made 248 unique queries: all 172 npm lock entries
 and eleven Python pins had zero known matches; vulnerable Vite/Requests and
@@ -91,9 +101,9 @@ publication can resume. **Do not refresh canonical identity or weaken the gate
 merely to make publication pass.** No production model, acceptance thresholds,
 source data or generated web artifacts were changed.
 
-Remaining bounded work: push the reviewed commits with approval, observe exact-head
-hosted CI, then complete explicit model acceptance before publication. Hosted
-required checks/secret protection need deliberate settings work. Pages project/
+Remaining bounded work: complete explicit model acceptance before publication;
+correctness CI is now verified for the hardening code. Hosted required checks/
+secret protection need deliberate settings work. Pages project/
 header/preview attachment, upload-origin configuration, native backport assurance
 and complete historical-secret scanning remain unverified. Lower-priority
 conditional design notes (same-owner filesystem races, evaluation IDs before
