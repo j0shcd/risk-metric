@@ -142,6 +142,41 @@ acceptance decision. The separate information-value contract remains the open
 decision in the research plan. No model, canonical baseline, threshold, provider
 setting or deployment approval was changed by this replay.
 
+## Underperformance diagnosis: scope and fixed diagnostic arms
+
+Status: investigation in progress against source `4362633`. Reuse the accepted
+equal-budget brief above: 48 monthly contributions, full terminal deployment,
+no borrowing or sales, 0.20% purchase costs, zero cash yield for the matched-spend
+comparison. This is a deterministic decomposition on the same exposed price
+path, not evidence of market causation or a new protected test. The decision is
+which failure mechanism and bounded follow-up deserve attention; no production
+model, threshold or research acceptance contract will change.
+
+Before any counterfactual arm is scored, fix these 17 diagnostic arms and retain
+every result: Fixed DCA; incumbent; price-only; raw directed four-component mean
+without the second min/max transform; each of four existing normalized components
+alone; each of four leave-one-component-out means; causal expanding percentile
+of the composite (24 observations before use, incumbent during warm-up); inverted
+composite as a direction diagnostic; incumbent with a six-month FIFO deployment
+deadline; a blind six-month delay; and 80% Fixed DCA plus 20% incumbent as an exact
+allocation identity. All score decisions use the previous month. The final sweep
+is identical across arms. The six-month deadline follows the glossary's intended
+indicator horizon; it is an exploratory control, not an adopted investor rule.
+
+Quantify score/action frequency, repeated component information, FIFO waiting
+times, budget still awaiting the terminal sweep, contribution-cohort BTC gains
+or losses, and calendar-era differences. Compare alternative ledgers with the
+already published incumbent and Fixed DCA outputs before interpreting them.
+No threshold/weight search, hidden retries, significance leaderboard or winner
+promotion is permitted. These arms add exposure history; they do not reopen the
+research programme's spent trials or run new market-information benchmark trials.
+The current forecast readout's synthetic limitation and the proposed separate
+readout study remain owned by [the research record](metric_evaluation_plan.md).
+
+Next bounded step: run the frozen mechanical decompositions and ablations, check
+them against independent budget/price identities, then replace this pending status
+with the findings, retained evidence and explicitly unvalidated recommendations.
+
 ## Performance diagnostic and acceptance investigation: 9 November 2026
 
 Scope: reproduce the existing ADR 0008/0009 contract, explain the failing legacy
