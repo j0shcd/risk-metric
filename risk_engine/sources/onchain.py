@@ -5,7 +5,7 @@ from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
-import requests
+from .common import request_json
 
 from ..config import RuntimeConfig
 
@@ -25,7 +25,7 @@ def _fetch_coinmetrics_asset_metrics(
         return None
 
     try:
-        response = requests.get(
+        payload = request_json(
             "https://community-api.coinmetrics.io/v4/timeseries/asset-metrics",
             params={
                 "assets": "btc",
@@ -34,15 +34,13 @@ def _fetch_coinmetrics_asset_metrics(
                 "start_time": cfg.start_date,
                 "page_size": 10000,
             },
-            timeout=cfg.request_timeout_seconds,
+            timeout_seconds=cfg.request_timeout_seconds,
         )
-        response.raise_for_status()
-        payload = response.json()
     except Exception:
         return None
 
     data = payload.get("data", [])
-    if not data:
+    if not isinstance(data, list) or not data or len(data) > 10000:
         return None
 
     frame = pd.DataFrame(data)

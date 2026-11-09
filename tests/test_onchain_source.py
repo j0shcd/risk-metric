@@ -21,21 +21,11 @@ class OnchainSourceTests(unittest.TestCase):
             refresh_api_sources=True,
         )
 
-    @patch("risk_engine.sources.onchain.requests.get")
+    @patch("risk_engine.sources.onchain.request_json")
     def test_fetch_and_persist_onchain_metrics(self, mocked_get) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             (root / "data").mkdir(parents=True, exist_ok=True)
-
-            class _Resp:
-                def __init__(self, payload):
-                    self._payload = payload
-
-                def raise_for_status(self) -> None:
-                    return None
-
-                def json(self):
-                    return self._payload
 
             dates = pd.date_range("2023-01-01", periods=420, freq="D")
             rows = []
@@ -48,7 +38,7 @@ class OnchainSourceTests(unittest.TestCase):
                         "IssTotUSD": str(100_000_000 + 2_000_000 * np.sin(i / 22.0)),
                     }
                 )
-            mocked_get.return_value = _Resp({"data": rows})
+            mocked_get.return_value = {"data": rows}
 
             cfg = self._cfg(root)
             index = pd.date_range("2023-01-01", periods=420, freq="D")
@@ -68,7 +58,7 @@ class OnchainSourceTests(unittest.TestCase):
             self.assertIn("puell_multiple", stored.columns)
             self.assertIn("mvrv_implied_profitability_proxy", stored.columns)
 
-    @patch("risk_engine.sources.onchain.requests.get")
+    @patch("risk_engine.sources.onchain.request_json")
     def test_existing_store_preserved_when_fetch_unavailable(self, mocked_get) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

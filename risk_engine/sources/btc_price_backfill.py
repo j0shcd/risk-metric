@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import List
 
 import pandas as pd
-import requests
+from .common import request_json
 
 from ..config import RuntimeConfig
 
@@ -13,6 +14,9 @@ BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
 BINANCE_US_KLINES_URL = "https://api.binance.us/api/v3/klines"
 COINGECKO_MARKET_CHART_URL = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart"
 COINGECKO_MARKET_CHART_RANGE_URL = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range"
+MAX_BACKFILL_PAGES = 100
+MAX_BACKFILL_SECONDS = 300
+
 _BTC_DAILY_COLUMNS = ["Date", "Open", "High", "Low", "Price", "Vol.", "Change %"]
 
 
@@ -51,17 +55,15 @@ def _fetch_binance_klines_page(
 
     for base_url in (BINANCE_KLINES_URL, BINANCE_US_KLINES_URL):
         try:
-            response = requests.get(
+            payload = request_json(
                 base_url,
                 params=params,
-                timeout=timeout_seconds,
+                timeout_seconds=timeout_seconds,
             )
-            response.raise_for_status()
-            payload = response.json()
         except Exception:
             continue
 
-        if isinstance(payload, list):
+        if isinstance(payload, list) and len(payload) <= limit:
             return payload
     return []
 
@@ -147,13 +149,11 @@ def _coingecko_payload_to_daily_frame(payload: dict, previous_close: float | Non
 
 def _fetch_coingecko_daily_frame(cfg: RuntimeConfig, previous_close: float | None = None) -> pd.DataFrame:
     try:
-        response = requests.get(
+        payload = request_json(
             COINGECKO_MARKET_CHART_URL,
             params={"vs_currency": "usd", "days": "max"},
-            timeout=cfg.request_timeout_seconds,
+            timeout_seconds=cfg.request_timeout_seconds,
         )
-        response.raise_for_status()
-        payload = response.json()
     except Exception:
         return pd.DataFrame(columns=_BTC_DAILY_COLUMNS)
 
@@ -176,24 +176,27 @@ def _fetch_coingecko_daily_range(
     window_days = 90
     cursor = start.normalize()
     end_norm = end.normalize()
-    while cursor <= end_norm:
+    started = time.monotonic()
+    for page in range(MAX_BACKFILL_PAGES):
+        if cursor > end_norm:
+            break
+        if time.monotonic() - started >= MAX_BACKFILL_SECONDS:
+            raise RuntimeError("CoinGecko backfill elapsed budget exceeded")
         window_end = min(cursor + pd.Timedelta(days=window_days - 1), end_norm)
         from_ts = int(cursor.tz_localize("UTC").timestamp())
         # Inclusive end; add a full day to safely capture the last daily point.
         to_ts = int((window_end + pd.Timedelta(days=1)).tz_localize("UTC").timestamp())
 
         try:
-            response = requests.get(
+            payload = request_json(
                 COINGECKO_MARKET_CHART_RANGE_URL,
                 params={
                     "vs_currency": "usd",
                     "from": from_ts,
                     "to": to_ts,
                 },
-                timeout=cfg.request_timeout_seconds,
+                timeout_seconds=cfg.request_timeout_seconds,
             )
-            response.raise_for_status()
-            payload = response.json()
         except Exception:
             cursor = window_end + pd.Timedelta(days=1)
             continue
@@ -206,6 +209,11 @@ def _fetch_coingecko_daily_range(
                 prior_close = float(frame.iloc[-1]["Price"])
 
         cursor = window_end + pd.Timedelta(days=1)
+
+    if cursor <= end_norm:
+        raise RuntimeError("CoinGecko backfill page budget exceeded")
+    if time.monotonic() - started >= MAX_BACKFILL_SECONDS:
+        raise RuntimeError("CoinGecko backfill elapsed budget exceeded")
 
     if not frames:
         return pd.DataFrame(columns=_BTC_DAILY_COLUMNS)
@@ -250,7 +258,10 @@ def refresh_btc_daily_from_binance(cfg: RuntimeConfig, symbol: str = "BTCUSDT") 
     cursor_ms = next_start_ms
     interval_ms = 24 * 60 * 60 * 1000
 
-    while True:
+    started = time.monotonic()
+    for page in range(MAX_BACKFILL_PAGES):
+        if time.monotonic() - started >= MAX_BACKFILL_SECONDS:
+            raise RuntimeError("Binance backfill elapsed budget exceeded")
         batch = _fetch_binance_klines_page(
             symbol=symbol,
             interval="1d",
@@ -272,6 +283,11 @@ def refresh_btc_daily_from_binance(cfg: RuntimeConfig, symbol: str = "BTCUSDT") 
         cursor_ms = next_cursor_ms
         if len(batch) < 1000:
             break
+
+    else:
+        raise RuntimeError("Binance backfill page budget exceeded")
+    if time.monotonic() - started >= MAX_BACKFILL_SECONDS:
+        raise RuntimeError("Binance backfill elapsed budget exceeded")
 
     if fetched_frames:
         fetched = pd.concat(fetched_frames, ignore_index=True)
