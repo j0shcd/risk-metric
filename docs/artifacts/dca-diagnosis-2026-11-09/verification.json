@@ -1,0 +1,75 @@
+{
+  "date": "2026-11-09",
+  "classification": "Independent engineering/arithmetic verification, not predictive validation",
+  "focused_tests": 9,
+  "regression_negative_control": {
+    "test": "test_overlay_retains_forced_terminal_purchase_attribution",
+    "before_fix": "FAIL: zero attributed sweep versus 2.4 contribution units expected",
+    "after_fix": "PASS",
+    "effect": "terminal-sweep and scheduled-purchase labels only; BTC balances unchanged"
+  },
+  "independent_codex_review": {
+    "source": "diagnosis_review agent",
+    "reconstructed_arm_window_balances": 1632,
+    "maximum_btc_difference": 9.94e-17,
+    "incumbent_cohorts_reconciled": 4608,
+    "input_output_hashes_checked": true,
+    "prior_month_execution_checked": true,
+    "bottom_label_absence_checked": true,
+    "remaining_substantive_ledger_findings": 0,
+    "scientific_limit": "Component/scaling ablations change actions as well as representation; no intrinsic-information isolation or prospective claim."
+  },
+  "claude_review": {
+    "performed": false,
+    "reason": "Subscription session logged out; no API-billed review attempted"
+  },
+  "source_runtime": {
+    "python": "3.12.16",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3"
+  },
+  "plot_runtime": {
+    "python": "3.12",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "matplotlib": "3.11.2"
+  },
+  "retained_sha256": {
+    "applied_scores.csv": "4807791da6016c03ed8a2169320fc871eda41d2078d74b5a594df2a1c9f06e07",
+    "calibration_labels.csv": "9ef7c300696a4edd266044a5a8a8407a0f21bb9fe98a86ed53c3390e18670fba",
+    "comparison.png": "dafdb1e77852cb3b08f176ad2f159b9565eb6cd3b33c7b06af3336fdbbec1763",
+    "eras.csv": "5d1d93321de57a4cafe4d2f55146eec49704834fff47b4eb5cb89328259504c8",
+    "incumbent_cohorts.csv": "0b4fe02ff3d45203cdef33d63ae97eb54379969309bc8ff52b25f97f950b434d",
+    "monthly_components.csv": "22ca410c18e5c14f93fbd19f894b90d92f937818ce26471d6d3660aff319c390",
+    "protocol.json": "60eba85c18dda202d6c8a69f4086e2878198b09033a38434f54c78198769767f",
+    "summary.csv": "b32ea4ed73ce90ee6cbbc4f29cf2010402b92012d705f9b80c80b32a77c8ab12",
+    "summary.json": "76d29fe729ebc1a89ab95d22139ebbffd597d004d5eb72d10ff36e9192d9e388",
+    "windows.csv": "5efa5badee93904115668c7b92f88a63347981da92ed16ff381dd092cb1ecc23"
+  },
+  "portable_cumulative_funding_oracle": {
+    "arm_window_balances_checked": 1632,
+    "cohorts_checked": 4608,
+    "maximum_btc_difference": 1.0061396160665481e-16,
+    "passed": true
+  },
+  "portable_oracle_negative_controls": {
+    "wrong_output_hash": {
+      "detected": true,
+      "exit_code": 1
+    },
+    "wrong_sweep_classification": {
+      "detected": true,
+      "exit_code": 1
+    },
+    "wrong_cohort_balance": {
+      "detected": true,
+      "exit_code": 1
+    }
+  },
+  "implementation_sha256": {
+    "scripts/diagnose-dca-underperformance.py": "48ae23926188d068b236891e9a3a3f62f11e24ab76543ea89be48f8aec39ddea",
+    "scripts/check-dca-diagnosis.py": "73ca81d196eb0140f804dee3c3b2e110ae2c463851d06df1298286bd1972caa8",
+    "scripts/plot-dca-diagnosis.py": "9d3afde1e3f3441bb646caa172eccc6db435e0af94cc778c364a02074effc3f4",
+    "tests/test_dca_diagnosis.py": "32958e9da53d4a43bf8e53e7a33310e19eecf1dc42a191bcf0918f5383b71e2f"
+  }
+}

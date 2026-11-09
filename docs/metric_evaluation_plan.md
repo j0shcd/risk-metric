@@ -494,6 +494,17 @@ in this canonical record; skill-harvest identified no new global skill needed.
 
 ### Next bounded research step
 
+The separate [November 9 incumbent DCA diagnosis](dca_evidence.md#underperformance-diagnosis-scope-and-fixed-diagnostic-arms)
+now quantifies cash-deferral damage and confirms zero positive mature bottom labels
+under the legacy 36/48-month classification target. Its fixed policy/component
+ablations are exposed-history supporting simulations, not new market-information
+trials, a replacement primary objective or a rescue of the nineteen failed variants.
+The top-only positive median remains fragile across eras. Count these diagnostics
+in the exposure history; retain their adverse results when specifying any later
+market comparison. The label-feasibility issue is separate from the synthetic
+readout limitation above and strengthens the need to make target and fit/fallback
+status explicit before claiming a learned improvement.
+
 Pause more feature searches through this readout. Historical scores remain valid
 measurements of this procedure, but cannot be treated as a broad information test.
 Specify a separate limited readout study before execution: simple forecasters,
