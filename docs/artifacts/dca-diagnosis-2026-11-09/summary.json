@@ -1,0 +1,661 @@
+{
+  "protocol_sha256": "60eba85c18dda202d6c8a69f4086e2878198b09033a38434f54c78198769767f",
+  "script_sha256": "48ae23926188d068b236891e9a3a3f62f11e24ab76543ea89be48f8aec39ddea",
+  "daily_scores_sha256": "6462b0410b90f2cf8facc0adb4ac211326937bfb413de5f41fc45449f336d732",
+  "calibration_labels": {
+    "top": {
+      "mature_labels": 59,
+      "positives": 10,
+      "negatives": 49,
+      "eligible_selector_months_before_feature_missingness": 26,
+      "first_eligible_month": "2024-09-30"
+    },
+    "bottom": {
+      "mature_labels": 59,
+      "positives": 0,
+      "negatives": 59,
+      "eligible_selector_months_before_feature_missingness": 0,
+      "first_eligible_month": null
+    }
+  },
+  "component_correlation": {
+    "dca_top_reversal_component": {
+      "dca_top_reversal_component": 1.0,
+      "dca_bottom_reversal_component": 0.7118466592237114,
+      "dca_cycle_extension_component": 0.7603785933911418,
+      "dca_cycle_regime_component": 0.8358105438889488
+    },
+    "dca_bottom_reversal_component": {
+      "dca_top_reversal_component": 0.7118466592237114,
+      "dca_bottom_reversal_component": 1.0,
+      "dca_cycle_extension_component": 0.6576432559307637,
+      "dca_cycle_regime_component": 0.9081273938569212
+    },
+    "dca_cycle_extension_component": {
+      "dca_top_reversal_component": 0.7603785933911418,
+      "dca_bottom_reversal_component": 0.6576432559307637,
+      "dca_cycle_extension_component": 1.0,
+      "dca_cycle_regime_component": 0.7281800051762156
+    },
+    "dca_cycle_regime_component": {
+      "dca_top_reversal_component": 0.8358105438889488,
+      "dca_bottom_reversal_component": 0.9081273938569212,
+      "dca_cycle_extension_component": 0.7281800051762156,
+      "dca_cycle_regime_component": 1.0
+    }
+  },
+  "score_region_counts": {
+    "2014": {
+      "months": 1,
+      "low": 0,
+      "high": 0
+    },
+    "2015": {
+      "months": 12,
+      "low": 2,
+      "high": 3
+    },
+    "2016": {
+      "months": 12,
+      "low": 0,
+      "high": 6
+    },
+    "2017": {
+      "months": 12,
+      "low": 0,
+      "high": 11
+    },
+    "2018": {
+      "months": 12,
+      "low": 6,
+      "high": 1
+    },
+    "2019": {
+      "months": 12,
+      "low": 4,
+      "high": 0
+    },
+    "2020": {
+      "months": 12,
+      "low": 0,
+      "high": 2
+    },
+    "2021": {
+      "months": 12,
+      "low": 0,
+      "high": 6
+    },
+    "2022": {
+      "months": 12,
+      "low": 8,
+      "high": 0
+    },
+    "2023": {
+      "months": 12,
+      "low": 9,
+      "high": 0
+    },
+    "2024": {
+      "months": 12,
+      "low": 0,
+      "high": 0
+    },
+    "2025": {
+      "months": 12,
+      "low": 1,
+      "high": 0
+    },
+    "2026": {
+      "months": 10,
+      "low": 6,
+      "high": 0
+    }
+  },
+  "summary": [
+    {
+      "arm": "fixed_dca",
+      "windows": 96,
+      "wins": 0,
+      "median_delta": 1.1102230246251565e-16,
+      "p10_delta": -2.220446049250313e-16,
+      "p90_delta": 4.440892098500626e-16,
+      "median_wait_months": 0.0,
+      "median_terminal_sweep_share": 0.0
+    },
+    {
+      "arm": "incumbent",
+      "windows": 96,
+      "wins": 23,
+      "median_delta": -0.19215657787392054,
+      "p10_delta": -0.7225737290860904,
+      "p90_delta": 0.11543428820226054,
+      "median_wait_months": 14.090002561359649,
+      "median_terminal_sweep_share": 0.6147614558400059
+    },
+    {
+      "arm": "price_only",
+      "windows": 96,
+      "wins": 44,
+      "median_delta": -0.15452917246413272,
+      "p10_delta": -0.8163820261823052,
+      "p90_delta": 0.16702064545642137,
+      "median_wait_months": 12.666875829425102,
+      "median_terminal_sweep_share": 0.5045354603789641
+    },
+    {
+      "arm": "raw_directed_mean",
+      "windows": 96,
+      "wins": 2,
+      "median_delta": -0.2856959215146408,
+      "p10_delta": -0.6724342743879244,
+      "p90_delta": -0.018377782719119717,
+      "median_wait_months": 16.851283471770103,
+      "median_terminal_sweep_share": 0.6819990789692482
+    },
+    {
+      "arm": "single_top_reversal",
+      "windows": 96,
+      "wins": 56,
+      "median_delta": 0.024077536751967776,
+      "p10_delta": -0.43784059513354606,
+      "p90_delta": 0.10836084767924314,
+      "median_wait_months": 5.462379193657497,
+      "median_terminal_sweep_share": 0.125
+    },
+    {
+      "arm": "single_bottom_reversal",
+      "windows": 96,
+      "wins": 14,
+      "median_delta": -0.1683195222422358,
+      "p10_delta": -0.7539860674810701,
+      "p90_delta": 0.015361712914008896,
+      "median_wait_months": 14.500533476446414,
+      "median_terminal_sweep_share": 0.5836560721988447
+    },
+    {
+      "arm": "single_cycle_extension",
+      "windows": 96,
+      "wins": 10,
+      "median_delta": -0.21684816458248451,
+      "p10_delta": -0.7143340012982,
+      "p90_delta": -0.0012434406575250745,
+      "median_wait_months": 16.34673381991536,
+      "median_terminal_sweep_share": 0.6726313458489968
+    },
+    {
+      "arm": "single_cycle_regime",
+      "windows": 96,
+      "wins": 2,
+      "median_delta": -0.27766461648303997,
+      "p10_delta": -0.807875371701176,
+      "p90_delta": -0.03527032689237686,
+      "median_wait_months": 17.082922436232636,
+      "median_terminal_sweep_share": 0.7263369969696094
+    },
+    {
+      "arm": "without_top_reversal",
+      "windows": 96,
+      "wins": 0,
+      "median_delta": -0.25596525889644256,
+      "p10_delta": -0.758789954464297,
+      "p90_delta": -0.03470389608615354,
+      "median_wait_months": 16.793415182633417,
+      "median_terminal_sweep_share": 0.6955354105627395
+    },
+    {
+      "arm": "without_bottom_reversal",
+      "windows": 96,
+      "wins": 24,
+      "median_delta": -0.1762605510621575,
+      "p10_delta": -0.7219762973825374,
+      "p90_delta": 0.13420163526827278,
+      "median_wait_months": 13.271341263351143,
+      "median_terminal_sweep_share": 0.5588748798983755
+    },
+    {
+      "arm": "without_cycle_extension",
+      "windows": 96,
+      "wins": 23,
+      "median_delta": -0.19010854431451985,
+      "p10_delta": -0.7269245441130272,
+      "p90_delta": 0.12378760707140635,
+      "median_wait_months": 13.396751154230685,
+      "median_terminal_sweep_share": 0.5608793491694443
+    },
+    {
+      "arm": "without_cycle_regime",
+      "windows": 96,
+      "wins": 25,
+      "median_delta": -0.1829635329065183,
+      "p10_delta": -0.7193983322165076,
+      "p90_delta": 0.13866456528588633,
+      "median_wait_months": 13.687848213116958,
+      "median_terminal_sweep_share": 0.5850070439149277
+    },
+    {
+      "arm": "causal_rank_24",
+      "windows": 96,
+      "wins": 20,
+      "median_delta": -0.14542002920178543,
+      "p10_delta": -0.7162852346555209,
+      "p90_delta": 0.08736240513649385,
+      "median_wait_months": 10.378184571079885,
+      "median_terminal_sweep_share": 0.3910069701527499
+    },
+    {
+      "arm": "inverted_composite",
+      "windows": 96,
+      "wins": 0,
+      "median_delta": -0.4811528303416718,
+      "p10_delta": -0.6820087602739344,
+      "p90_delta": -0.22319044995747772,
+      "median_wait_months": 15.491167229518613,
+      "median_terminal_sweep_share": 0.6962832446462383
+    },
+    {
+      "arm": "six_month_deadline",
+      "windows": 96,
+      "wins": 27,
+      "median_delta": -0.09189261612737265,
+      "p10_delta": -0.3673239209403392,
+      "p90_delta": 0.07768875237766437,
+      "median_wait_months": 4.466755089010281,
+      "median_terminal_sweep_share": 0.12499999999999996
+    },
+    {
+      "arm": "blind_six_month_delay",
+      "windows": 96,
+      "wins": 0,
+      "median_delta": -0.20390945714593445,
+      "p10_delta": -0.40260023593290767,
+      "p90_delta": -0.060468490857734036,
+      "median_wait_months": 5.5625,
+      "median_terminal_sweep_share": 0.125
+    },
+    {
+      "arm": "fixed80_incumbent20",
+      "windows": 96,
+      "wins": 23,
+      "median_delta": -0.038431315574784075,
+      "p10_delta": -0.14451474581721813,
+      "p90_delta": 0.023086857640452596,
+      "median_wait_months": 2.8180005122719294,
+      "median_terminal_sweep_share": 0.12295229116800119
+    }
+  ],
+  "era_summary": [
+    {
+      "arm": "fixed_dca",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": 2.220446049250313e-16
+    },
+    {
+      "arm": "fixed_dca",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 0,
+      "median_delta": 0.0
+    },
+    {
+      "arm": "fixed_dca",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 0,
+      "median_delta": 2.220446049250313e-16
+    },
+    {
+      "arm": "incumbent",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.6358137361287411
+    },
+    {
+      "arm": "incumbent",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 5,
+      "median_delta": -0.18001182234581747
+    },
+    {
+      "arm": "incumbent",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 18,
+      "median_delta": 0.07553471502697362
+    },
+    {
+      "arm": "price_only",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.7354024644850472
+    },
+    {
+      "arm": "price_only",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 21,
+      "median_delta": 0.09022304464206377
+    },
+    {
+      "arm": "price_only",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 23,
+      "median_delta": 0.11768564514436486
+    },
+    {
+      "arm": "raw_directed_mean",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.5847786431994872
+    },
+    {
+      "arm": "raw_directed_mean",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 0,
+      "median_delta": -0.23947456464653172
+    },
+    {
+      "arm": "raw_directed_mean",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 2,
+      "median_delta": -0.02677077852430343
+    },
+    {
+      "arm": "single_top_reversal",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 4,
+      "median_delta": -0.3185572825297761
+    },
+    {
+      "arm": "single_top_reversal",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 30,
+      "median_delta": 0.0739868054547832
+    },
+    {
+      "arm": "single_top_reversal",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 22,
+      "median_delta": 0.04786083055622026
+    },
+    {
+      "arm": "single_bottom_reversal",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.6449884199806403
+    },
+    {
+      "arm": "single_bottom_reversal",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 1,
+      "median_delta": -0.13674425799384532
+    },
+    {
+      "arm": "single_bottom_reversal",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 13,
+      "median_delta": 0.0027998713985868395
+    },
+    {
+      "arm": "single_cycle_extension",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.5941587323524928
+    },
+    {
+      "arm": "single_cycle_extension",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 3,
+      "median_delta": -0.1822710158157076
+    },
+    {
+      "arm": "single_cycle_extension",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 7,
+      "median_delta": -0.06953402789990992
+    },
+    {
+      "arm": "single_cycle_regime",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.6416633909346776
+    },
+    {
+      "arm": "single_cycle_regime",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 0,
+      "median_delta": -0.23263202421598222
+    },
+    {
+      "arm": "single_cycle_regime",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 2,
+      "median_delta": -0.04432585146095125
+    },
+    {
+      "arm": "without_top_reversal",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.6371420610990288
+    },
+    {
+      "arm": "without_top_reversal",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 0,
+      "median_delta": -0.21145817387397714
+    },
+    {
+      "arm": "without_top_reversal",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 0,
+      "median_delta": -0.04198841297927336
+    },
+    {
+      "arm": "without_bottom_reversal",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.6294625506566343
+    },
+    {
+      "arm": "without_bottom_reversal",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 5,
+      "median_delta": -0.16751332522066276
+    },
+    {
+      "arm": "without_bottom_reversal",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 19,
+      "median_delta": 0.0729653847480154
+    },
+    {
+      "arm": "without_cycle_extension",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.6312050141764649
+    },
+    {
+      "arm": "without_cycle_extension",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 5,
+      "median_delta": -0.1848651288255061
+    },
+    {
+      "arm": "without_cycle_extension",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 18,
+      "median_delta": 0.07547984130581753
+    },
+    {
+      "arm": "without_cycle_regime",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.6003352350654501
+    },
+    {
+      "arm": "without_cycle_regime",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 6,
+      "median_delta": -0.17243977676534084
+    },
+    {
+      "arm": "without_cycle_regime",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 19,
+      "median_delta": 0.0729487554158661
+    },
+    {
+      "arm": "causal_rank_24",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.6048913836888316
+    },
+    {
+      "arm": "causal_rank_24",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 7,
+      "median_delta": -0.12522455205761096
+    },
+    {
+      "arm": "causal_rank_24",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 13,
+      "median_delta": 0.020701190354444732
+    },
+    {
+      "arm": "inverted_composite",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.28314755642388556
+    },
+    {
+      "arm": "inverted_composite",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 0,
+      "median_delta": -0.5036497890169509
+    },
+    {
+      "arm": "inverted_composite",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 0,
+      "median_delta": -0.5319022515230121
+    },
+    {
+      "arm": "six_month_deadline",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 5,
+      "median_delta": -0.3445454264415517
+    },
+    {
+      "arm": "six_month_deadline",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 6,
+      "median_delta": -0.09189261612737265
+    },
+    {
+      "arm": "six_month_deadline",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 16,
+      "median_delta": 0.07538068496555805
+    },
+    {
+      "arm": "blind_six_month_delay",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.387606425384457
+    },
+    {
+      "arm": "blind_six_month_delay",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 0,
+      "median_delta": -0.1837624471300513
+    },
+    {
+      "arm": "blind_six_month_delay",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 0,
+      "median_delta": -0.06904398043993765
+    },
+    {
+      "arm": "fixed80_incumbent20",
+      "start_years": "2014-2017",
+      "windows": 37,
+      "wins": 0,
+      "median_delta": -0.1271627472257485
+    },
+    {
+      "arm": "fixed80_incumbent20",
+      "start_years": "2018-2020",
+      "windows": 36,
+      "wins": 5,
+      "median_delta": -0.03600236446916322
+    },
+    {
+      "arm": "fixed80_incumbent20",
+      "start_years": "2021-2022",
+      "windows": 23,
+      "wins": 18,
+      "median_delta": 0.015106943005394724
+    }
+  ],
+  "checks": {
+    "published_reference_rows_reconciled": 288,
+    "all_arms_equal_budget": true,
+    "cohort_accounting_reconciles": true,
+    "overlay_linear_identity": true
+  },
+  "interpretation": "Finite exposed-history diagnostics, not generalization or production acceptance. No arm chosen or fitted.",
+  "output_sha256": {
+    "applied_scores.csv": "4807791da6016c03ed8a2169320fc871eda41d2078d74b5a594df2a1c9f06e07",
+    "calibration_labels.csv": "9ef7c300696a4edd266044a5a8a8407a0f21bb9fe98a86ed53c3390e18670fba",
+    "eras.csv": "5d1d93321de57a4cafe4d2f55146eec49704834fff47b4eb5cb89328259504c8",
+    "incumbent_cohorts.csv": "0b4fe02ff3d45203cdef33d63ae97eb54379969309bc8ff52b25f97f950b434d",
+    "monthly_components.csv": "22ca410c18e5c14f93fbd19f894b90d92f937818ce26471d6d3660aff319c390",
+    "summary.csv": "b32ea4ed73ce90ee6cbbc4f29cf2010402b92012d705f9b80c80b32a77c8ab12",
+    "windows.csv": "5efa5badee93904115668c7b92f88a63347981da92ed16ff381dd092cb1ecc23"
+  }
+}

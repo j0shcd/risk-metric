@@ -144,7 +144,8 @@ setting or deployment approval was changed by this replay.
 
 ## Underperformance diagnosis: scope and fixed diagnostic arms
 
-Status: investigation in progress against source `4362633`. Reuse the accepted
+Status: diagnosis complete against source `4362633`; all findings remain
+exploratory and no production model changed. Reuse the accepted
 equal-budget brief above: 48 monthly contributions, full terminal deployment,
 no borrowing or sales, 0.20% purchase costs, zero cash yield for the matched-spend
 comparison. This is a deterministic decomposition on the same exposed price
@@ -152,8 +153,8 @@ path, not evidence of market causation or a new protected test. The decision is
 which failure mechanism and bounded follow-up deserve attention; no production
 model, threshold or research acceptance contract will change.
 
-Before any counterfactual arm is scored, fix these 17 diagnostic arms and retain
-every result: Fixed DCA; incumbent; price-only; raw directed four-component mean
+Protocol commit `5000a26` fixed these 17 diagnostic arms before counterfactual
+measurement, retaining every result: Fixed DCA; incumbent; price-only; raw directed four-component mean
 without the second min/max transform; each of four existing normalized components
 alone; each of four leave-one-component-out means; causal expanding percentile
 of the composite (24 observations before use, incumbent during warm-up); inverted
@@ -173,9 +174,177 @@ research programme's spent trials or run new market-information benchmark trials
 The current forecast readout's synthetic limitation and the proposed separate
 readout study remain owned by [the research record](metric_evaluation_plan.md).
 
-Next bounded step: run the frozen mechanical decompositions and ablations, check
-them against independent budget/price identities, then replace this pending status
-with the findings, retained evidence and explicitly unvalidated recommendations.
+### Why the current policy loses
+
+The ledger identity is exact within the declared simulation. For monthly price
+`P_t` and gross purchases `b_t`, the BTC difference from Fixed DCA is
+`0.998 * sum((b_t - 1) / P_t)`, with `sum(b_t) = 48`. Equal final spend does not
+remove the cost of delaying a contribution through a price increase. No market
+impact, taxes, borrowing or changing transaction-cost curve is modeled.
+
+1. **The policy waits too long on this history.** Across the 96 windows, the median
+   dollar-weighted waiting time is 14.09 months. A median 61.48% of contributions
+   still require the final sweep; the median window has only 12 scheduled-buy
+   months. In the continuous incumbent ledger, two purchases in April/May 2015
+   are followed by **37 consecutive no-buy months, June 2015 through June 2018**.
+   The 0.25 threshold and three-contribution maximum purchase mean a later low
+   score may take many months to deploy accumulated cash. The legacy 48-month
+   rule only starts buying one contribution per month; it does not clear old cash.
+2. **The loss is concentrated in missed early funding opportunities.** The first
+   December 2014–November 2018 window loses 70.22% of BTC units. Under the stated
+   FIFO bookkeeping, its 2015 and 2016 contribution cohorts account for -45.49
+   and -24.39 percentage points of that window's difference. FIFO is one assignment
+   of fungible dollars, not a unique economic attribution; the total BTC difference
+   is independent of that convention. In this window, 83.09% of the budget waits
+   for the terminal sweep.
+3. **The bottom-weight selector never gets a learnable positive class.** Under
+   `_long_cycle_labels` with the accepted 36/48-month horizons and 24-month
+   lookback, there are 59 mature labels: **zero positive bottoms**, 59 negatives.
+   A positive must be a two-year price low and have sufficiently high subsequent
+   average 36/48-month returns, using frozen historical outcome cutoffs. The
+   selector requires at least three observations of each class, so it never fits
+   bottom weights in this snapshot. Its output is the base heuristic plus the
+   existing persistence transform. Top labels have 10 positives/49 negatives;
+   only 26 months are class-count eligible for top fitting, starting September
+   2024. The early losses cannot be described as a mature learned timing model
+   being repeatedly retrained throughout history.
+4. **Equal averaging adds several versions of cycle information.** The normalized
+   bottom and regime components have correlation 0.908 in these 143 months; all
+   pairwise component correlations range from 0.658 to 0.908. The four-way average
+   is not four independent confirmations. All-time min/max transforms also change
+   numerical scale as new extremes arrive, while the policy retains 0.25. These
+   are plausible construction weaknesses, not isolated causal explanations:
+   removing that transform outright makes the measured policy worse.
+
+### What the fixed controls actually improve
+
+Every row uses the same 96 windows and full 48-contribution deployment. Values
+are exact finite-history descriptions. The full
+[17-arm results](artifacts/dca-diagnosis-2026-11-09/summary.csv),
+[era breakdown](artifacts/dca-diagnosis-2026-11-09/eras.csv) and
+[dispersion figure](artifacts/dca-diagnosis-2026-11-09/comparison.png) retain failures
+as well as gains. The figure's bars are historical 10th–90th percentiles, not
+confidence intervals. No significance test or winner-selection rule was used.
+
+| Diagnostic arm | Median BTC difference vs Fixed DCA | Wins / 96 | Interpretation |
+| --- | ---: | ---: | --- |
+| Current composite | -19.22% | 23 | Reference being diagnosed |
+| Current score + six-month FIFO deployment cap | -9.19% | 27 | Reduces waiting damage; still loses overall |
+| Blind six-month delay | -20.39% | 0 | Delay control; not matched for realized exposure |
+| Normalized top-reversal component alone | +2.41% | 56 | Promising post-hoc simplification, fragile across eras |
+| Remove top-reversal component | -25.60% | 0 | Other components alone do not rescue this policy |
+| Causal percentile of current composite | -14.54% | 20 | Scale change reduces loss, without a reliable win |
+| Remove the extra min/max transform | -28.57% | 2 | Simple normalization removal fails |
+| Reverse the composite | -48.12% | 0 | The score is not fixed by flipping its direction |
+| 80% Fixed DCA + 20% current policy | -3.84% | 23 | Exact capital-allocation identity, not additional information |
+
+The overlay's percentage difference is exactly 20% of the incumbent's difference
+in each window, so its wins cannot improve. It reduces exposure to a losing policy.
+The six-month cap reduces the difference between reported medians by 10.03
+percentage points; the paired median window improvement is 12.27 points, a
+different summary. Neither result establishes six months as an optimal delay.
+The capped and blind controls also have different realized waiting times; their
+gap does not isolate the score's predictive information from exposure timing.
+
+Top-only earns its +2.41% median with a -43.78% tenth percentile. For 2014–2017
+starts its median is **-31.86%**, versus +7.40% in 2018–2020 and +4.79% in
+2021–2022. The latest window is +4.79%. Component/scaling ablations jointly change
+the score, trigger frequency and purchase size under the fixed numerical policy.
+They therefore do not isolate intrinsic information quality. A new top-only
+production model, optimized weights or a calibrated profit forecast do not follow.
+
+### What would improve the project next
+
+There are measured reductions in historical policy damage, but **no newly
+validated model improvement**. Recommended next work, in dependency order:
+
+1. **Make learnability explicit before another training attempt.** Retain strict
+   label maturity, and report per-selector class counts, fit count and fallback
+   state. The existing `walkforward_steps_bottom` is already zero; the broad
+   `calibration_applied` flag alone does not mean bottom weights were fitted.
+   A claim of learned/calibrated bottom skill must require actual eligible fits.
+   Specify a target with enough support to estimate, potentially continuous
+   opportunity/return and downside outcomes. Changing the target is a separately
+   registered study, not a silent repair of these labels or a new product claim.
+2. **Complete the already-proposed readout study before more feature searches.**
+   The [current sensitivity audit](metric_evaluation_plan.md#current-readout-sensitivity-audit--november-9)
+   found useful synthetic state worsened the research decoder's primary two-year
+   forecast loss. Its 24-label binning and limited outcome support are candidate
+   mechanisms. Compare a small frozen set of simple continuous/shrunk distribution
+   readouts with the unchanged decoder, using new synthetic histories and distinct
+   information laws. Require useful-input sensitivity, no-information controls
+   and calibrated uncertainty before spending another market candidate slot.
+   This is separate from the legacy model's empty bottom class. Neither finding
+   establishes that a new readout will beat Fixed DCA or that all market inputs
+   lack information.
+3. **Carry top-only and bounded deferral as hypotheses, not adopted fixes.**
+   After the measurement/target contract is settled, a bounded comparison can
+   retain the incumbent, Fixed DCA, top-only and one prespecified capped policy.
+   Count this diagnosis in the exposure ledger, keep all adverse eras, and test
+   new frozen observations without retuning on them. A DCA-heavy overlay can
+   constrain policy damage mechanically, but it cannot demonstrate timing alpha.
+
+Proper scoring rules assess the quality of a forecast distribution;
+[Gneiting and Raftery](https://sites.stat.washington.edu/people/raftery/Research/PDF/Gneiting2007jasa.pdf)
+provide the foundation. Correct loss arithmetic does not establish that a
+particular sparse forecast readout can extract useful information. Chronological
+splits must also respect outcome maturity; the official
+[TimeSeriesSplit documentation](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html)
+describes time ordering and an explicit training/test gap. A split label alone
+cannot certify historical input vintages or make overlapping BTC cycles independent.
+
+The stale recent macro inputs remain an operational and vintage limitation. They
+do not explain away the demonstrated 2015–2018 cash deferral, and refreshing them
+is not a measured model improvement. No providers were called in this diagnosis.
+
+### Verification, portability and remaining decisions
+
+The [protocol](artifacts/dca-diagnosis-2026-11-09/protocol.json),
+[result identity](artifacts/dca-diagnosis-2026-11-09/summary.json) and
+[verification record](artifacts/dca-diagnosis-2026-11-09/verification.json) bind
+the frozen arms, authenticated input bytes, scripts and retained outputs.
+`scripts/diagnose-dca-underperformance.py` regenerates the diagnosis from the
+previous replay's hash-checked `daily_scores.csv`; it parses captured bytes rather
+than reopening the source path. If that local file is gone, regenerate it with
+the earlier replay script and recorded source/data/runtime identities first.
+`scripts/plot-dca-diagnosis.py` regenerates the optional static figure without UI.
+The separate `scripts/check-dca-diagnosis.py` uses cumulative funding and interval
+overlap to reconstruct balances, waiting times, forced purchases and cohorts
+without importing the simulator. With the same pinned `<python>` environment and
+an absent `<diagnosis>` output directory:
+
+```sh
+<python> -I scripts/diagnose-dca-underperformance.py --root "$PWD" \
+  --daily-scores <replay>/tables/daily_scores.csv --output <diagnosis>
+<python> -I scripts/check-dca-diagnosis.py <diagnosis>
+```
+
+Nine focused tests pass, including deliberately failing the new overlay
+terminal-sweep regression before its classification fix. An independent Codex
+reviewer reconstructed all 1,632 arm/window BTC balances with separate cumulative
+funding logic (maximum discrepancy below 1.1e-16), checked all 4,608 incumbent cohorts,
+confirmed hashes/score lag and the zero-positive bottom class, and found no
+remaining substantive accounting/timing issue. The corrected overlay sweep share
+is 20% of the incumbent's, with median 12.2952%; the correction changes no BTC
+result, arm choice, parameter or weighting. Claude review was unavailable because
+its subscription session was logged out; no API-billed review was attempted.
+The portable arithmetic checker also passes all 1,632 balances and 4,608 cohorts.
+Deliberately corrupted output hashes, sweep classification and cohort balances
+are each rejected. All corrected result tables reproduce byte for byte on replay.
+
+Brief versus delivered: the existing equal-budget question, dates, prices, costs
+and prior-month execution are unchanged. This adds the fixed exploratory
+mechanism/ablation set and label-feasibility audit. No causal market inference,
+protected holdout, universal best indicator, adopted utility, prospective profit
+or production acceptance is delivered. The strongest alternative to an intrinsic
+signal-quality explanation is the demonstrated score-to-action/deferral policy
+interaction; the separate flawed research readout also limits broader inference.
+
+Next bounded implementation step: specify the small synthetic readout study and
+its target/learnability checks in the research record before execution. The genuinely
+open decisions remain the indicator's informational claim/outcome contract and an
+acceptable deployment-delay constraint if a trading policy is later adopted.
+No existing horizon or production gate was replaced by this diagnosis.
 
 ## Performance diagnostic and acceptance investigation: 9 November 2026
 
