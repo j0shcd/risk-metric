@@ -406,11 +406,19 @@ Treat whole histories as the uncertainty unit. Preserve fallback and missing-sta
 behavior rather than silently scoring only successful cases. Do not attach real
 macro histories to unrelated synthetic prices.
 
+The [November 9 preregistration](artifacts/direct-cdf-sensitivity-2026-11-09-registration.json)
+now freezes 64 paired histories per law, two Gaussian state/price laws and four
+features (constant, unrelated state, noisy state and exact state). It preserves
+the 97 query dates and the current decoder. Exact Gaussian terminal oracles
+condition on past prices and the current scalar; two 128-path banks give explicitly
+finite approximations for downside. Whole histories own uncertainty. The budget
+and seeds are fixed before implementation and before audit-world scores.
+
 This is a separate diagnostic, not a change to the market benchmark or a rescue
 of nineteen failed variants. Freeze laws, strength settings, seeds, compute budget
 and reporting before running it. Do not tune decoder settings to its audit worlds
 or treat repeated human searches as covered by the earlier finite error-control
-result. No such new simulation has run in this round. November 30 collection
+result. No audit-world simulation has run at this registration checkpoint. November 30 collection
 remains a separate registered action; no scheduler was installed.
 
 ### Publication and operations
