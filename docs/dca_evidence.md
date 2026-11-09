@@ -1,15 +1,146 @@
 # DCA Risk Evidence
 
-Status: three-test design implemented  
-Reference data window: 2014-12-31 through 2026-07-31  
-Last evaluated: 2026-08-01
+Status: current-source descriptive replay complete; production acceptance unresolved
+
+Latest replay window: 2014-12-31 through 2026-10-31
+
+Last evaluated: 2026-11-09
 
 The [indicator benchmark redesign](metric_evaluation_plan.md) is the current plan
 for future evaluation. It moves primary optimization from one contribution policy
 to information value on identical fixed-notional opportunities. This page records
 the implemented historical suite, not that proposed benchmark. Its policy cash
 'deadline' and entry-relative drawdown naming have limitations recorded in the
-plan; the historical numbers below have not been regenerated under new semantics.
+plan. The fresh replay below retains those policy semantics and adds an explicitly
+separate equal-deployment diagnostic. The August results remain historical.
+
+## Fresh comparison: 9 November 2026
+
+Status: replay complete against source `4211817`, with independent ledger checks.
+This is a descriptive rerun of the existing accumulation contract, not model
+selection or a production acceptance decision. Both strategies receive identical
+monthly cashflows, trade at the same closes, pay the same 0.20% costs, and use
+prior-month scores. The credential-free acceptance runtime fixture defines the
+current model configuration. Cached inputs are frozen and truncated before model
+execution at the last complete month, 31 October 2026; no provider refresh occurs.
+
+Equal contributions do **not** imply equal deployment. The unchanged policy may
+hold cash earning the existing assumed 3% annual yield. Report contributions,
+executed purchases, BTC units, ending cash and total wealth separately. Alongside
+the legacy variable-length windows sharing one endpoint, report every exact
+48-month window to distinguish early-start and horizon effects.
+
+A supplementary equal-deployment diagnostic uses the same 48 monthly budgets,
+no sales, no borrowing, zero cash interest and a final-date sweep of all unspent
+cash. Both strategies then spend exactly the same principal. BTC-unit advantage
+measures entry timing under that additional deadline policy; it must not be
+presented as the unchanged model policy or a deployment-independent measure of
+signal quality. Delayed exposure is part of a timing strategy's economic cost;
+equal final deployment does not equalize time in the market.
+
+The replay script is `scripts/evaluate-dca-snapshot.py`. It captures source and
+data bytes before importing the model, rejects network attempts, runs in its own
+captured checkout and records resolved configuration, versions and output hashes.
+Overlapping historical windows are dependent and already exposed to research.
+Report exact finite-history medians, quantiles and counts; do not attach IID
+confidence intervals or describe this as prospective evidence. Cached macro
+release vintages remain unverified, and some inputs end before the BTC cutoff.
+
+### Results under equal contributions and equal horizons
+
+Each row below covers the same 96 overlapping windows, each containing exactly
+48 monthly contributions. Starts range from December 2014 to November 2022;
+endpoints range from November 2018 to October 2026. Wealth includes all remaining
+cash. Changes are relative to Fixed DCA within each window, then summarized by
+the median; they are not medians of dollar balances or forecasts.
+
+| Risk-based accumulation scenario | Median wealth difference | Wins vs Fixed DCA | Median purchases / contributions |
+| --- | ---: | ---: | ---: |
+| Unchanged policy, cash allowed at 3% yield | -17.64% | 26/96 (27.08%) | 38.52% |
+| Same full budget deployed, final-date sweep, zero yield | -19.22% | 23/96 (23.96%) | 100.00% |
+
+In the equal-deployment row, the median BTC-unit difference is also **-19.22%**:
+both strategies spend exactly 48 contribution units, end with zero cash, and
+value their BTC at the same close. The central 80% of window differences runs
+from -72.26% to +11.54%; this is historical dispersion, not a confidence interval.
+The price-only comparator has a -15.45% median and wins 44/96 under the same
+equal-deployment rule. This does not identify a universal best policy.
+
+The early-history concern matters. An exploratory calendar split of the
+equal-deployment results gives:
+
+| Start years | Windows | Median BTC/wealth difference | Wins |
+| --- | ---: | ---: | ---: |
+| 2014–2017 | 37 | -63.58% | 0/37 |
+| 2018–2020 | 36 | -18.00% | 5/36 |
+| 2021–2022 | 23 | +7.55% | 18/23 |
+
+The latest window, November 2022 through October 2026, is -1.86% with full
+deployment, versus +0.15% with cash allowed. These post-hoc strata explain why a
+single headline is incomplete; recent windows still overlap and share endpoints
+and regimes, so they do not establish a new out-of-sample edge.
+
+The unchanged compact suite's variable-length windows, all ending October 2026,
+give a -21.95% median and 28/96 wins for accumulation. Fixed monthly buys plus
+risk-based sells have a -15.45% median; risk-based buys and sells have -29.17%.
+De-risking an existing one-BTC position retains its diagnostic pass, while the
+48-month signal-ordering test fails. These are different investment questions.
+Do not compare the new -21.95% directly with August's -21.46% as a pure source-code
+effect: the data snapshot and endpoint also changed.
+
+### Evidence, verification and remaining limits
+
+The [portable evidence](artifacts/dca-evaluation-2026-11-09/summary.json) binds the
+source/configuration/input inventory, raw and truncated identities, dependency
+versions, generated table hashes and checked summaries. The adjacent CSVs retain
+monthly price/score inputs and the per-window/full-period results. Raw macro
+captures are retained only in the local scratch replay and are not republished.
+The [static comparison figure](artifacts/dca-evaluation-2026-11-09/comparison.png)
+shows the full start-date distribution and corresponding deployment amounts.
+
+`scripts/check-dca-replay.py` independently reconciles cash and BTC ledgers,
+cashflows, fees, final spend and zero-cash equality. Wrong table hashes, corrupted
+cash accounting and unequal deployment were deliberately introduced in disposable
+copies; all three were rejected. No model source or repository data was changed.
+The compact suite's execution/suffix-invariance audit passed. This audit does not
+verify historical release vintages or full-pipeline point-in-time correctness.
+
+At the cutoff, DXY is 99 days stale, real yields 94 days, and YouTube 92 days.
+The pipeline's original source-health table measures age against the run date,
+so even a deliberately frozen BTC series can be marked stale there. Neither
+healthy-looking estimated availability rules nor this replay establish live data
+readiness. The pinned package versions were recovered offline from cached expanded
+distributions with RECORD integrity checks; original wheel hashes were not
+revalidated. Model execution used Python 3.12.16, rather than CI's 3.11.18.
+
+Reproduce in a disposable checkout of source `4211817` with the captured data
+inventory and the pinned requirements. With `<python>` naming that interpreter,
+and an absent `<run>` directory:
+
+```sh
+env -i PATH=/usr/bin:/bin HOME=/private/tmp TMPDIR=/private/tmp \
+  <python> -I scripts/evaluate-dca-snapshot.py \
+  --root "$PWD" --as-of 2026-10-31 --output <run>
+<python> -I scripts/check-dca-replay.py <run>
+```
+
+The replay/check scripts belong to this evidence commit and must be available in
+that source checkout. The optional checker `--plot <path>` flag requires matplotlib
+and saves a static figure without opening a window. The recorded figure used
+matplotlib 3.11.2 in a separate plotting environment; the model inputs and scores
+were generated with the pinned model environment.
+
+Brief versus delivered: descriptive current-model/Fixed-DCA comparison, identical
+monthly cashflows, prior-month actions and costs are as briefed. The user-confirmed
+full-deployment check and exact-length windows supplement the legacy suite; no
+threshold was optimized. Inference about future profitability, verified vintage
+availability, and formal production acceptance remain unanswered.
+
+Next bounded step: preserve these results without tuning on them; reproduce the
+canonical model and candidate on a common frozen protocol before any production
+acceptance decision. The separate information-value contract remains the open
+decision in the research plan. No model, canonical baseline, threshold, provider
+setting or deployment approval was changed by this replay.
 
 ## Performance diagnostic and acceptance investigation: 9 November 2026
 
@@ -96,8 +227,9 @@ Verified blockers and the next bounded work:
    snapshot and resolved settings, rerun canonical and candidate, retain manifests,
    score/table hashes and the seven policy checks, and inspect validation warnings.
    The workflow currently does not upload its candidate/report files; make failed
-   and successful evidence retrievable. No fresh complete candidate performance
-   result is claimed by this investigation.
+   and successful evidence retrievable. The investigation itself did not run a
+   fresh candidate; the later descriptive replay above covers the compact suite,
+   but has not completed the canonical/candidate production comparison.
 5. **Choose the promotion route explicitly:** a model candidate must satisfy the
    existing policy before a reviewed atomic canonical update binds its identity
    to its new metrics. A score-preserving maintenance edit has zero improvement
@@ -116,12 +248,17 @@ withheld until the applicable reviewed promotion and resolved-settings checks pa
 
 Brief versus delivered: existing contract reproduced from code, history, logs and
 hashes; no new predictive or causal conclusion, model search or policy adoption.
-Limitations: canonical metrics were not rerun, the current candidate's acceptance
-metrics are unknown, dependencies/as-of semantics remain unbound, and historical
-results remain exposed/reconstructed. The strongest alternative to a genuine
+Limitations at the time of investigation: canonical metrics were not rerun and
+candidate metrics/dependencies/as-of semantics remained unbound. The later replay
+above supplies current descriptive metrics and protocol identity; formal acceptance
+and historical-vintage verification remain unresolved. Historical results remain
+exposed/reconstructed. The strongest alternative to a genuine
 performance decline is the demonstrated change in accounting and label contracts.
 
 ## What is being tested
+
+This section preserves the August 2026 suite description and results. The fresh
+November replay above supersedes its current-performance claims.
 
 The suite separates three questions that the previous combined strategy test could not distinguish:
 
@@ -184,7 +321,7 @@ Cashflow-policy attribution adds the requested exit-only strategy under identica
 
 This is an important split: risk-based selling helped an investor who already held one BTC, but did not beat Fixed DCA when layered onto an ongoing contribution plan. Exit timing appears more valuable than purchase timing, yet its value depends strongly on the investor's starting exposure and cashflow problem.
 
-Verdict: historically promising for de-risking. This is the strongest evidence currently available, but it is reconstructed rather than prospective and the default thresholds were created with knowledge of Bitcoin history.
+Verdict: historically promising for de-risking. This was the strongest part of the August snapshot, but it is reconstructed rather than prospective and the default thresholds were created with knowledge of Bitcoin history.
 
 ## Test 3: policy-independent signal value
 

@@ -1,0 +1,1053 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-09",
+  "scope": "Descriptive current checked-in model versus Fixed DCA; not production acceptance or protected holdout validation",
+  "manifest": {
+    "source_head": "42118172aa5e034459d29659141b2443c6b5ebd0",
+    "runner_sha256": "b0e7537ec6911f3e63805a1b0fa7f691fc318fc488ce73103ba53ac661f4e3fb",
+    "as_of": "2026-10-31",
+    "identity_raw": {
+      "release_id": "2b17feaabdb5c0f6c8ba3bfc3bf60bb81d9219f9725653ea5129a28c162999b2",
+      "model_fingerprint": "a4f2c69510e02456586d3c0203b327e42ed3a7e6658fa5988c24c2da088e70d9",
+      "config_hash": "db8dba1a63017f52fa78fcf762742d795ee5851ea3fc594bdc3bce98d932dc03",
+      "data_fingerprint": "f3cb5602f161d4d901fe8d35443efaab3bae47f24b9cb053156c526d60c7eb5f"
+    },
+    "identity_truncated": {
+      "release_id": "466a5d3101ba1533ae17600c6d7c86e6f01e2a300068ddea4950f29a40e78060",
+      "model_fingerprint": "a4f2c69510e02456586d3c0203b327e42ed3a7e6658fa5988c24c2da088e70d9",
+      "config_hash": "db8dba1a63017f52fa78fcf762742d795ee5851ea3fc594bdc3bce98d932dc03",
+      "data_fingerprint": "88e91dd27429b7aaa900c0e0850bcc4a011c741061699cc64f38a579a8e43e08"
+    },
+    "input_inventory": {
+      "risk_engine/__init__.py": {
+        "sha256": "812ad69acf438d20c079f99cf0fb25bb4057921bb408353d05e64f2546383049",
+        "bytes": 98
+      },
+      "risk_engine/benchmark.py": {
+        "sha256": "7dc1058e6d5d9ffcbe8d1f25338aea19bb0b3b46c8523e1a93a179ca68769966",
+        "bytes": 25492
+      },
+      "risk_engine/benchmark_gate.py": {
+        "sha256": "e98e514282a941d726b8978f67beec3a85cccfd2419a815f51809d205194b9ef",
+        "bytes": 13482
+      },
+      "risk_engine/calibration.py": {
+        "sha256": "9cc2cbfce1924ab8c6a3fa1464a16272c8cecdc86562fc419cbb1c06d84cc478",
+        "bytes": 26039
+      },
+      "risk_engine/config.py": {
+        "sha256": "d7d028b5a6bf76561cc97d41fcde27b3ba7c76d609ce6ab89bc1f6192c641469",
+        "bytes": 25829
+      },
+      "risk_engine/cycle_model.py": {
+        "sha256": "f3763921109765809fb7fe4ad3de89f103f80d9761c759085be3c977b81cd346",
+        "bytes": 38241
+      },
+      "risk_engine/diagnostics.py": {
+        "sha256": "b19f04209afdf394419ad79cb5646047b56f88e5be7a7c473ec35f57bee087c7",
+        "bytes": 8108
+      },
+      "risk_engine/evaluation/__init__.py": {
+        "sha256": "feb12d196ac4f51feb972021f050dd1d3489312ced338a1ec4af64a26089133d",
+        "bytes": 474
+      },
+      "risk_engine/evaluation/academic.py": {
+        "sha256": "39036869374d2b2cd18332ac8728c4c09670dafcfa718334f82a01466ccba33d",
+        "bytes": 9067
+      },
+      "risk_engine/evaluation/checks.py": {
+        "sha256": "dcf727e02cc0e64d16d6bf0125000fa696a2754175b53985893d091aabce4def",
+        "bytes": 74736
+      },
+      "risk_engine/evaluation/cli.py": {
+        "sha256": "e52c1058ecbd5c51e0e179a928bf0a74a1802838b823fb728383066e9dd35185",
+        "bytes": 8696
+      },
+      "risk_engine/evaluation/config.py": {
+        "sha256": "91ad69da47896adb34e3d554ab183d2f7cb0dbf92eb2c1c54c9ee0e0f9d6425e",
+        "bytes": 7711
+      },
+      "risk_engine/evaluation/data.py": {
+        "sha256": "96287e6c439692401e359bc25988597a8e86e7e4c599de56291e3bf1bfe5dc4f",
+        "bytes": 1594
+      },
+      "risk_engine/evaluation/dca_evidence.py": {
+        "sha256": "e3db6ff8f0eaf6e595c608102be707466ca950f23f6e9e3cf8363240598d9406",
+        "bytes": 32806
+      },
+      "risk_engine/evaluation/practical.py": {
+        "sha256": "c7e3ce776ad0bb8628245b5bffb52b9944b9bd4954b93203b40d1d62a2cf361d",
+        "bytes": 35825
+      },
+      "risk_engine/evaluation/robustness.py": {
+        "sha256": "c2b4a787856f39bfe9f8181d9a9cdefe18c8d4d70bfbd0655a926f1ee10daa70",
+        "bytes": 14802
+      },
+      "risk_engine/evaluation/runner.py": {
+        "sha256": "4d20823dc67ecf185781447263f9ae6f7964dd9e50ff27d4ec9c6cdcaf6c1a36",
+        "bytes": 18434
+      },
+      "risk_engine/evaluation/schemas.py": {
+        "sha256": "72929395587d00b54c0141d9a18babd2ee6f6579259361a23cd94e2397f43e26",
+        "bytes": 4604
+      },
+      "risk_engine/evaluation/storage.py": {
+        "sha256": "c185787f4abe15547b2520eca433c3980c729c8065418f0ddeccd51ab801ee61",
+        "bytes": 6653
+      },
+      "risk_engine/evaluation/strength.py": {
+        "sha256": "0d780cbc91331bdc6b9843fb918a3df89bea31f4db56c28bdd5481d47d57d714",
+        "bytes": 10422
+      },
+      "risk_engine/evaluation/validity.py": {
+        "sha256": "53fe6ec6e2c4b6bce4742255622873ed3a24dd6e593ae7ef4fcde31949d69290",
+        "bytes": 10630
+      },
+      "risk_engine/evaluation/walkforward.py": {
+        "sha256": "9cb8480e0764ad7bfa04478a7491daca9a9561f76f5653cbc450a466011d1bd0",
+        "bytes": 22840
+      },
+      "risk_engine/evaluation/web_summary.py": {
+        "sha256": "a94a6a475fef168af12087e486f9d8e542e5a7e2703d996490315555d7b71ad7",
+        "bytes": 10297
+      },
+      "risk_engine/features/__init__.py": {
+        "sha256": "e522a2f202d05ac690b319d9bda37301caf83b0e60c83dba95c0b4ad54b6f16c",
+        "bytes": 278
+      },
+      "risk_engine/features/market_features.py": {
+        "sha256": "8df816e617dd50429f2436225de422903141e16d5313c95842b04a9122534a1e",
+        "bytes": 3261
+      },
+      "risk_engine/features/onchain_features.py": {
+        "sha256": "6702c43e6a0a72f708fcf350bbcdf7ffe8d8d55eee88b8fc049bd05d8edfaa59",
+        "bytes": 340
+      },
+      "risk_engine/features/social_features.py": {
+        "sha256": "1f52edacc3eaa142d189748f3680194d212f4b20a7a459d1482c34ab859bcac0",
+        "bytes": 515
+      },
+      "risk_engine/model_acceptance.py": {
+        "sha256": "a27edd90e43e412e602b1a575f45b335fb34c80b09f5c6acdf2ce102e77b653f",
+        "bytes": 11916
+      },
+      "risk_engine/normalization.py": {
+        "sha256": "3d59544761026c200e9731217fc2099910fbe239eb44ca730add31702274a65a",
+        "bytes": 6718
+      },
+      "risk_engine/pipeline.py": {
+        "sha256": "6c72369017174f7dddf8828cdffce00d7b7d2da01c2f54c99ae42567b7521863",
+        "bytes": 40666
+      },
+      "risk_engine/scoring.py": {
+        "sha256": "d5cf1ebfc9cda2bcb9200f883d0b174798cf23c980636839298f02062d47d199",
+        "bytes": 13107
+      },
+      "risk_engine/sources/__init__.py": {
+        "sha256": "2550e50eefb904326a552e262597cf69338808e589bd521c9c46064fca97bf20",
+        "bytes": 413
+      },
+      "risk_engine/sources/btc_price_backfill.py": {
+        "sha256": "04f17324b49765abc032e922b0f6cdb3731527beda751fe7df39e350958f77e2",
+        "bytes": 13141
+      },
+      "risk_engine/sources/common.py": {
+        "sha256": "b7462cec25200240612ccb745f978bf003384636091b7cfa2b4bc302f1312209",
+        "bytes": 4845
+      },
+      "risk_engine/sources/cycle.py": {
+        "sha256": "d07527c391afc557a0fb158db13a616ac3cf8a44eb2ea1f83747d710add66281",
+        "bytes": 18823
+      },
+      "risk_engine/sources/market.py": {
+        "sha256": "cbc819c4a388d94394b668b1dee253badbd37088153364534633b434c9b23e5a",
+        "bytes": 6899
+      },
+      "risk_engine/sources/onchain.py": {
+        "sha256": "7ece741ae168b46635ba33b8be63e7248457e6376e17143e9b3016403e7996b2",
+        "bytes": 7648
+      },
+      "risk_engine/sources/sentiment.py": {
+        "sha256": "40bdb7fc6b1e5dc0a47fc5a47e34ac2e9983c402dad12679b9f718b5f83a608e",
+        "bytes": 1998
+      },
+      "risk_engine/sources/social.py": {
+        "sha256": "3a4c1317f52c6960432936f91115e58bd6c7aed11f8e09085361af84316f4c5c",
+        "bytes": 17910
+      },
+      "risk_engine/types.py": {
+        "sha256": "7a079018cd67fc5184a93ca4c3082634be41a0ffd944ae7ed2d14716ab077919",
+        "bytes": 2907
+      },
+      "risk_engine/validation.py": {
+        "sha256": "7ef23335b702c69713a686a2438c350bb8063eb007582d4493527f49a2a87043",
+        "bytes": 17580
+      },
+      "risk_engine/web_export.py": {
+        "sha256": "5594a28516e447a6d0f73d84881009e86823a19ef61d1932b88e9d28ae21b146",
+        "bytes": 22407
+      },
+      "risk_engine/web_publish.py": {
+        "sha256": "f1eb0d18c0e42e23f0cee416ba1dbf5f3b4b8487e09cc5b2ad255920f1a4d5d9",
+        "bytes": 2460
+      },
+      "data/btc_daily.csv": {
+        "sha256": "e0bec321eb0e7acbdcaccf4f1b942417a7f7780ffff482831cddef18cf41603a",
+        "bytes": 307013,
+        "rows": 5423,
+        "first_date": "2012-01-01",
+        "last_date": "2026-11-05"
+      },
+      "data/btc_weekly.csv": {
+        "sha256": "4b35199a4adeb31d7358aca30a22e06a91be2fcda4bbe7377772625d12fb499c",
+        "bytes": 42764,
+        "rows": 747,
+        "first_date": "2012-01-01",
+        "last_date": "2026-04-20"
+      },
+      "data/btc_weekly_test.csv": {
+        "sha256": "534d0b73a1e900dafa677fd01c85f40d957a914d932d51ff3680d630be06197a",
+        "bytes": 36658,
+        "rows": 626,
+        "first_date": "2012-01-01",
+        "last_date": "2023-12-25"
+      },
+      "data/combined_data_no_standard.csv": {
+        "sha256": "bb81d64b8cd57bca62e669a5a13ea91f2722a2850064c47198c2591856a7546e",
+        "bytes": 420840,
+        "rows": 4385,
+        "first_date": "2012-01-01",
+        "last_date": "2024-01-02"
+      },
+      "data/combined_data_standard.csv": {
+        "sha256": "12761304295d8e193cfc4c95023a9bb0c7792c8d6d00037e15fe4291f2b772bf",
+        "bytes": 425250,
+        "rows": 4385,
+        "first_date": "2012-01-01",
+        "last_date": "2024-01-02"
+      },
+      "data/fear_greed_index.csv": {
+        "sha256": "cc254ad7fe95f3cdcdf5218fbeff6f22aa698f1e947078799324559b198cc077",
+        "bytes": 51132,
+        "rows": 3197,
+        "first_date": "2018-02-01",
+        "last_date": "2026-11-06"
+      },
+      "data/fred_dxy.csv": {
+        "sha256": "03f96ce64b4b380637c3a98263a004a4be7aefb26ec4400d9916b1d6a09d491d",
+        "bytes": 71389,
+        "rows": 3626,
+        "first_date": "2012-01-03",
+        "last_date": "2026-07-24"
+      },
+      "data/fred_real_yield_10y.csv": {
+        "sha256": "84c9fce9aba66d5b3f98e4ad6ea79ceb5e8dc937d1defb3cc5cbcd0683a7be37",
+        "bytes": 58886,
+        "rows": 3644,
+        "first_date": "2012-01-03",
+        "last_date": "2026-07-29"
+      },
+      "data/fred_rrpontsyd.csv": {
+        "sha256": "3602511910dd79e5112f5d61451e3d0bc4f90768c64edcfa057c67f5fed8d38e",
+        "bytes": 59671,
+        "rows": 3281,
+        "first_date": "2012-03-01",
+        "last_date": "2026-11-05"
+      },
+      "data/fred_walcl.csv": {
+        "sha256": "dddd15948afdc2a27012f66f613bedfbbe2e7e4b1a7244082022dce4b704996e",
+        "bytes": 16298,
+        "rows": 775,
+        "first_date": "2012-01-04",
+        "last_date": "2026-11-04"
+      },
+      "data/onchain_metrics.csv": {
+        "sha256": "2dd164cc689656bd17e7edbf6c9648f736a2d40eb0cb323edafbd1b487683961",
+        "bytes": 359983,
+        "rows": 5423,
+        "first_date": "2012-01-01",
+        "last_date": "2026-11-05"
+      },
+      "data/total_marketcap.csv": {
+        "sha256": "1528d49319a5070a2a7091f0c016ef1a48d294f829d012fceb2d9d0b5edb9a9e",
+        "bytes": 138696,
+        "rows": 4799,
+        "first_date": "2013-04-29",
+        "last_date": "2026-11-06"
+      },
+      "data/wikipedia_pageviews_btc.csv": {
+        "sha256": "b853ee2ef973a61fc73b2e482d58ba8ce078f022c9fb9765b43fad6cf84cabc9",
+        "bytes": 76904,
+        "rows": 4146,
+        "first_date": "2015-07-01",
+        "last_date": "2026-11-05"
+      },
+      "data/youtube_channel_ids.csv": {
+        "sha256": "94a54ba06fe37cb9b0ef2ca48883153e8c6dd015e6c11347a6e010be33286b27",
+        "bytes": 110,
+        "rows": 2,
+        "first_date": null,
+        "last_date": null
+      },
+      "data/youtube_interest.csv": {
+        "sha256": "b75e122ab029d1932c781d89d9bd984541bb2dd605cd4fa2fea45bd20112bcb6",
+        "bytes": 139,
+        "rows": 4,
+        "first_date": "2026-04-29",
+        "last_date": "2026-07-31"
+      },
+      "config/model_acceptance_runtime.json": {
+        "sha256": "bbc4b2502bb8ab03532e1482e5bc04cc72e97d22cb9636cd957f35b64f4b89d5",
+        "bytes": 1776
+      },
+      "config/model_acceptance.json": {
+        "sha256": "f3d6a31fab4576f8e8e33e77c045e97438354b63998dd07842452d3403c37ba8",
+        "bytes": 616
+      },
+      "config/ci_benchmark_baseline.json": {
+        "sha256": "d2b854730eb5cb2dd64e302cac9740fe3349ec7cc3117d8b2ce4caab42b6fd91",
+        "bytes": 4820
+      },
+      "config/ci_benchmark_foundation.json": {
+        "sha256": "d2b854730eb5cb2dd64e302cac9740fe3349ec7cc3117d8b2ce4caab42b6fd91",
+        "bytes": 4820
+      }
+    },
+    "cutoff_transformations": {
+      "btc_daily.csv": {
+        "excluded_after_cutoff": 5,
+        "retained_rows": 5418,
+        "sha256": "32ddecbd7435ffdd0cc3f265638102964328fd2bbbaf7b2707b19a45154939ad"
+      },
+      "btc_weekly.csv": {
+        "excluded_after_cutoff": 0,
+        "retained_rows": 747,
+        "sha256": "ceaa2c7e3246295dcffe902964447cd7ccd1601663f6707e52b746bcc9cac68b"
+      },
+      "btc_weekly_test.csv": {
+        "excluded_after_cutoff": 0,
+        "retained_rows": 626,
+        "sha256": "37f41e016906eb9efa9cc7f74ea040ad2c253bfeb649f716a1bd6e016d025cac"
+      },
+      "combined_data_no_standard.csv": {
+        "excluded_after_cutoff": 0,
+        "retained_rows": 4385,
+        "sha256": "b9fa15990ab412a6cb78beef7eafa4328827431a29aee97a0c9c867ec12a0221"
+      },
+      "combined_data_standard.csv": {
+        "excluded_after_cutoff": 0,
+        "retained_rows": 4385,
+        "sha256": "bf17ab2e07264cd67c8f9642ef07e2eebd9f282e7e59fb2b9e623b0f7e356803"
+      },
+      "fear_greed_index.csv": {
+        "excluded_after_cutoff": 6,
+        "retained_rows": 3191,
+        "sha256": "684162a3583a7cba3f8966dca18c8d1dadfd6fda4facc45b077d5b2fa4e77354"
+      },
+      "fred_dxy.csv": {
+        "excluded_after_cutoff": 0,
+        "retained_rows": 3626,
+        "sha256": "03f96ce64b4b380637c3a98263a004a4be7aefb26ec4400d9916b1d6a09d491d"
+      },
+      "fred_real_yield_10y.csv": {
+        "excluded_after_cutoff": 0,
+        "retained_rows": 3644,
+        "sha256": "84c9fce9aba66d5b3f98e4ad6ea79ceb5e8dc937d1defb3cc5cbcd0683a7be37"
+      },
+      "fred_rrpontsyd.csv": {
+        "excluded_after_cutoff": 4,
+        "retained_rows": 3277,
+        "sha256": "0ac8465ef710d9b9ac75c786bf9a863901f74c9a41049c06dcb3ca0ce4c15306"
+      },
+      "fred_walcl.csv": {
+        "excluded_after_cutoff": 1,
+        "retained_rows": 774,
+        "sha256": "5e5e94fdedef1a59f428722c89d12d20cd5e7f89f79c70a7880b6c7b30396af2"
+      },
+      "onchain_metrics.csv": {
+        "excluded_after_cutoff": 5,
+        "retained_rows": 5418,
+        "sha256": "093852de87218c06b6c1d022694a966e5d0071d83f258e9f2672bce75947be5b"
+      },
+      "total_marketcap.csv": {
+        "excluded_after_cutoff": 6,
+        "retained_rows": 4793,
+        "sha256": "15c1d681d893c73e734c387e5a212145aa97d2471d3bb7cce1d6e3148b06b337"
+      },
+      "wikipedia_pageviews_btc.csv": {
+        "excluded_after_cutoff": 5,
+        "retained_rows": 4141,
+        "sha256": "57bbcd2ca3dffdc3c99243c4a7e339e41baab425537fb2c60cca3aa96545919f"
+      },
+      "youtube_interest.csv": {
+        "excluded_after_cutoff": 0,
+        "retained_rows": 4,
+        "sha256": "b75e122ab029d1932c781d89d9bd984541bb2dd605cd4fa2fea45bd20112bcb6"
+      }
+    },
+    "resolved_runtime": {
+      "project_root": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot",
+      "data_dir": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data",
+      "output_dir": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/output",
+      "cache_dir": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data",
+      "start_date": "2012-01-01",
+      "end_date": "2026-10-31",
+      "data_profile": "extended",
+      "enable_paid_sources": false,
+      "enable_optional_social_sources": false,
+      "refresh_api_sources": false,
+      "enable_google_trends_source": false,
+      "glassnode_api_key": null,
+      "youtube_api_key": null,
+      "fred_api_key": null,
+      "wikimedia_api_token": null,
+      "google_trends_api_key": null,
+      "google_trends_api_url": null,
+      "cmc_api_key": null,
+      "coingecko_api_key": null,
+      "coinmetrics_api_key": null,
+      "youtube_channel_ids": [],
+      "google_trends_terms": [
+        "bitcoin"
+      ],
+      "total_marketcap_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/total_marketcap.csv",
+      "onchain_fallback_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/onchain_metrics.csv",
+      "youtube_fallback_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/youtube_interest.csv",
+      "google_trends_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/google_trends_interest.csv",
+      "coinbase_rank_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/coinbase_app_rank.csv",
+      "coingecko_btc_market_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/btc_market_coingecko.csv",
+      "wikipedia_pageviews_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/wikipedia_pageviews_btc.csv",
+      "reddit_posts_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/reddit_post_volume.csv",
+      "fred_dxy_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/fred_dxy.csv",
+      "fred_real_yield_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/fred_real_yield_10y.csv",
+      "fred_walcl_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/fred_walcl.csv",
+      "fred_rrp_csv": "/private/tmp/risk-fresh-dca-20261109/run-final/snapshot/data/fred_rrpontsyd.csv",
+      "apple_app_store_country": "us",
+      "coinbase_ios_app_id": "886427730",
+      "wikimedia_api_user_agent": "risk-metric/0.1 (github.com/risk-metric)",
+      "reddit_subreddits": [
+        "Bitcoin",
+        "CryptoCurrency"
+      ],
+      "enable_coinbase_app_rank": false,
+      "youtube_min_fetch_interval_hours": 24,
+      "youtube_max_handle_resolutions_per_run": 2,
+      "request_timeout_seconds": 20,
+      "category_weights": {
+        "onchain": 0.3,
+        "price_structure": 0.3,
+        "total_market_context": 0.2,
+        "social": 0.15,
+        "fear_greed": 0.05
+      },
+      "cycle_category_weights": {
+        "valuation": 0.35,
+        "speculation": 0.25,
+        "attention": 0.25,
+        "macro": 0.15
+      },
+      "cycle_confirmation_months": 2,
+      "cycle_cooldown_months": 3,
+      "cycle_buy_threshold": 0.75,
+      "cycle_sell_threshold": 0.75,
+      "cycle_min_history_months": 24,
+      "cycle_dynamic_dca_base_contribution": 1.0,
+      "cycle_dynamic_dca_max_buy_multiplier": 3.0,
+      "cycle_dynamic_dca_max_sell_fraction": 0.35,
+      "cycle_dynamic_dca_cash_buffer_ratio": 0.1,
+      "cycle_dynamic_dca_fee_rate": 0.001,
+      "cycle_dynamic_dca_slippage_rate": 0.001,
+      "cycle_dynamic_dca_buy_threshold": 0.75,
+      "cycle_dynamic_dca_sell_threshold": 0.75,
+      "cycle_financial_label_weight": 0.5,
+      "cycle_financial_kpi_weight": 0.5,
+      "cycle_calibration_horizons_months": [
+        36,
+        48
+      ],
+      "benchmark_enabled": true,
+      "benchmark_horizons_months": [
+        36,
+        48
+      ],
+      "benchmark_recent_window_months": 48,
+      "benchmark_alert_rate": 0.2,
+      "benchmark_label_families": [
+        "threshold",
+        "quantile",
+        "local_extrema"
+      ],
+      "benchmark_quantile_levels": [
+        0.15,
+        0.2,
+        0.25
+      ],
+      "benchmark_top_drawdown_thresholds": [
+        0.3,
+        0.4,
+        0.5
+      ],
+      "benchmark_bottom_rally_thresholds": [
+        0.5,
+        0.8,
+        1.2
+      ],
+      "benchmark_local_extrema_lookbacks": [
+        24,
+        36,
+        48
+      ],
+      "benchmark_local_extrema_forwards": [
+        36,
+        48
+      ],
+      "benchmark_event_weight_pivot": 5,
+      "benchmark_min_events_per_label": 3,
+      "operational_top_alert_rate": 0.15,
+      "operational_bottom_alert_rate": 0.25,
+      "operational_top_cooldown_months": 4,
+      "operational_bottom_cooldown_months": 2,
+      "operational_alert_min_history_months": 24,
+      "benchmark_delta_warn_top_recall": -0.02,
+      "benchmark_delta_warn_top_pr_auc": -0.01,
+      "benchmark_delta_warn_top_false_alarm": 0.03,
+      "benchmark_delta_warn_bottom_recall": -0.02,
+      "benchmark_delta_warn_bottom_pr_auc": -0.01,
+      "benchmark_delta_warn_bottom_false_alarm": 0.03,
+      "benchmark_delta_warn_dynamic_dca_cagr": -0.02,
+      "benchmark_delta_warn_dynamic_dca_calmar": -0.1,
+      "benchmark_delta_warn_dynamic_dca_max_drawdown": 0.05,
+      "benchmark_foundation_min_top_recall_delta": 0.0,
+      "benchmark_foundation_min_top_pr_auc_delta": -0.002,
+      "benchmark_foundation_max_top_false_alarm_delta": 0.05,
+      "benchmark_foundation_min_bottom_recall_delta": 0.0,
+      "benchmark_foundation_min_bottom_pr_auc_delta": 0.0,
+      "benchmark_foundation_max_bottom_false_alarm_delta": 0.05,
+      "benchmark_foundation_min_dynamic_dca_cagr_delta": 0.0,
+      "benchmark_foundation_min_dynamic_dca_calmar_delta": 0.0,
+      "benchmark_foundation_max_dynamic_dca_max_drawdown_delta": 0.05
+    },
+    "evaluation_config": {
+      "profile": "standard",
+      "output_dir": "/private/tmp/risk-fresh-dca-20261109/run-final",
+      "run_id": "fresh-dca-through-2026-10-31",
+      "seed": 1729,
+      "metric_definition_frozen_at": "2026-06-21",
+      "plan_path": "docs/metric_evaluation_plan.md",
+      "metrics": [
+        {
+          "name": "top_reversal_risk",
+          "semantic_type": "ordinal",
+          "primary_outcome": "future drawdown/top labels",
+          "confirmatory": true
+        },
+        {
+          "name": "bottom_reversal_risk",
+          "semantic_type": "ordinal",
+          "primary_outcome": "future rally/bottom labels",
+          "confirmatory": true
+        },
+        {
+          "name": "dca_risk",
+          "semantic_type": "policy_signal",
+          "primary_outcome": "monthly DCA timing quality",
+          "confirmatory": true
+        },
+        {
+          "name": "dca_top_reversal_component",
+          "semantic_type": "policy_signal_component",
+          "primary_outcome": "exploratory DCA timing component contribution",
+          "confirmatory": false
+        },
+        {
+          "name": "dca_bottom_reversal_component",
+          "semantic_type": "policy_signal_component",
+          "primary_outcome": "exploratory DCA timing component contribution",
+          "confirmatory": false
+        },
+        {
+          "name": "dca_cycle_extension_component",
+          "semantic_type": "policy_signal_component",
+          "primary_outcome": "exploratory DCA timing component contribution",
+          "confirmatory": false
+        },
+        {
+          "name": "dca_cycle_regime_component",
+          "semantic_type": "policy_signal_component",
+          "primary_outcome": "exploratory DCA timing component contribution",
+          "confirmatory": false
+        },
+        {
+          "name": "btc_risk_signal",
+          "semantic_type": "index",
+          "primary_outcome": "broad future downside/upside asymmetry",
+          "confirmatory": true
+        },
+        {
+          "name": "total_market_risk_signal",
+          "semantic_type": "index",
+          "primary_outcome": "broad market-cycle context",
+          "confirmatory": true
+        },
+        {
+          "name": "trend_composite_score",
+          "semantic_type": "index",
+          "primary_outcome": "trend/cycle extension",
+          "confirmatory": true
+        },
+        {
+          "name": "attention_score",
+          "semantic_type": "index",
+          "primary_outcome": "future realized volatility",
+          "confirmatory": true
+        },
+        {
+          "name": "headline_attention",
+          "semantic_type": "index",
+          "primary_outcome": "future volatility and crowdedness",
+          "confirmatory": true
+        },
+        {
+          "name": "cycle_extension_score",
+          "semantic_type": "ordinal",
+          "primary_outcome": "future drawdown risk",
+          "confirmatory": true
+        },
+        {
+          "name": "cycle_frenzy_score",
+          "semantic_type": "ordinal",
+          "primary_outcome": "top-risk outcomes",
+          "confirmatory": true
+        },
+        {
+          "name": "cycle_accumulation_score",
+          "semantic_type": "ordinal",
+          "primary_outcome": "bottom-opportunity outcomes",
+          "confirmatory": true
+        },
+        {
+          "name": "cycle_p_frenzy",
+          "semantic_type": "probability_like",
+          "primary_outcome": "fitted frenzy-regime probability",
+          "confirmatory": true
+        },
+        {
+          "name": "cycle_p_accumulation",
+          "semantic_type": "probability_like",
+          "primary_outcome": "fitted accumulation-regime probability",
+          "confirmatory": true
+        }
+      ],
+      "registered_hypotheses": [],
+      "claim_gates": {
+        "min_events_short_medium": 8,
+        "min_events_long": 5,
+        "min_effective_obs_short_medium": 30,
+        "min_effective_obs_long": 12,
+        "fdr_alpha": 0.1,
+        "max_event_year_share": 0.67,
+        "min_event_years": 2,
+        "max_cost_drag": 0.02,
+        "max_turnover_per_year": 6.0
+      },
+      "required_columns": [
+        "btc_price",
+        "top_reversal_risk",
+        "bottom_reversal_risk",
+        "dca_risk",
+        "dca_top_reversal_component",
+        "dca_bottom_reversal_component",
+        "dca_cycle_extension_component",
+        "dca_cycle_regime_component",
+        "btc_risk_signal",
+        "total_market_risk_signal",
+        "trend_composite_score",
+        "attention_score",
+        "headline_attention",
+        "cycle_extension_score",
+        "cycle_frenzy_score",
+        "cycle_accumulation_score",
+        "cycle_p_frenzy",
+        "cycle_p_accumulation"
+      ],
+      "smoke_mode": false,
+      "cycle_dynamic_dca_buy_threshold": 0.75,
+      "cycle_dynamic_dca_sell_threshold": 0.75,
+      "cycle_dynamic_dca_base_contribution": 1.0,
+      "cycle_dynamic_dca_max_buy_multiplier": 3.0,
+      "cycle_dynamic_dca_max_sell_fraction": 0.35,
+      "cycle_dynamic_dca_cash_buffer_ratio": 0.1,
+      "cycle_dynamic_dca_fee_rate": 0.001,
+      "cycle_dynamic_dca_slippage_rate": 0.001,
+      "source_latency_days": {
+        "btc_price": 1,
+        "total_market_cap": 1,
+        "fear_greed_index": 1,
+        "onchain::*": 3,
+        "social::*": 7,
+        "cycle::*": 1
+      },
+      "availability_rules": [
+        {
+          "name": "btc_price",
+          "entity_type": "source",
+          "latency_days": 1,
+          "availability_assumption": "daily close available next day",
+          "availability_confidence": "estimated",
+          "source_trust_tier": "high",
+          "data_processing_state": "cleaned"
+        },
+        {
+          "name": "total_market_cap",
+          "entity_type": "source",
+          "latency_days": 1,
+          "availability_assumption": "market-cap source available next day",
+          "availability_confidence": "estimated",
+          "source_trust_tier": "medium",
+          "data_processing_state": "cleaned"
+        },
+        {
+          "name": "fear_greed_index",
+          "entity_type": "source",
+          "latency_days": 1,
+          "availability_assumption": "daily index available next day",
+          "availability_confidence": "estimated",
+          "source_trust_tier": "medium",
+          "data_processing_state": "cleaned"
+        },
+        {
+          "name": "onchain::*",
+          "entity_type": "source",
+          "latency_days": 3,
+          "availability_assumption": "onchain provider lag estimated from typical daily availability",
+          "availability_confidence": "estimated",
+          "source_trust_tier": "medium",
+          "data_processing_state": "cleaned"
+        },
+        {
+          "name": "social::*",
+          "entity_type": "source",
+          "latency_days": 7,
+          "availability_assumption": "social/attention source lag estimated conservatively",
+          "availability_confidence": "estimated",
+          "source_trust_tier": "low",
+          "data_processing_state": "cleaned"
+        },
+        {
+          "name": "cycle::*",
+          "entity_type": "source",
+          "latency_days": 1,
+          "availability_assumption": "derived cycle context available after underlying daily close",
+          "availability_confidence": "estimated",
+          "source_trust_tier": "medium",
+          "data_processing_state": "derived"
+        }
+      ]
+    },
+    "cash_yield_annual": 0.03,
+    "python": "3.12.16",
+    "dependencies": {
+      "numpy": "2.4.6",
+      "pandas": "2.3.3",
+      "requests": "2.34.2",
+      "certifi": "2026.10.23",
+      "charset-normalizer": "3.5.2",
+      "idna": "3.20",
+      "python-dateutil": "3.0.0",
+      "pytz": "2026.5",
+      "six": "1.17.0",
+      "tzdata": "2026.5",
+      "urllib3": "2.8.0"
+    },
+    "network_attempts": [],
+    "source_modes": {
+      "btc_price": "local_csv",
+      "total_market_cap": "local_cache",
+      "fear_greed_index": "local_cache",
+      "onchain::mvrv_ratio_z_proxy": "local_cache",
+      "onchain::puell_multiple": "local_cache",
+      "onchain::mvrv_implied_profitability_proxy": "local_cache",
+      "social::youtube_interest": "local_cache",
+      "social::google_trends_interest": "future_upgrade",
+      "social::coinbase_app_rank_proxy": "disabled",
+      "cycle::btc_price": "local_csv",
+      "cycle::btc_volume_usd": "local_csv",
+      "cycle::google_trends_interest": "future_upgrade",
+      "cycle::wikipedia_pageviews": "local_cache",
+      "cycle::reddit_post_volume": "unavailable",
+      "cycle::dxy": "local_cache",
+      "cycle::real_yield_10y": "local_cache",
+      "cycle::fed_balance_sheet": "local_cache",
+      "cycle::reverse_repo_balance": "local_cache",
+      "cycle::net_liquidity": "derived_from_local_cache"
+    },
+    "monthly_rows": 143,
+    "first_month": "2014-12-31",
+    "missing_score_days": 1095,
+    "table_sha256": {
+      "availability_calendar.csv": "75245a485d709686a9e41b1385ba1c645b93595f93c8f391b7301a9103ec8808",
+      "daily_scores.csv": "6462b0410b90f2cf8facc0adb4ac211326937bfb413de5f41fc45449f336d732",
+      "dca_accumulation_windows.csv": "869e7b289ae8b08a6e7b07bca2094ea1ab158a56a4edd6a5fefc3251dc785946",
+      "dca_causality_audit.csv": "25cb1565a00f4c267c41790211edb8a4e4f64128d78e9d1bc5c4b4db098aaceb",
+      "dca_derisking_windows.csv": "eb55297e42e2ac7ad4bd19d85015c7298b7106f47926f4977aa6fbdc5a6eed85",
+      "dca_policy_attribution_windows.csv": "783fa3702e4bd969477c80da67e246d83de22b6c1843d553f8717ea2f8386fc7",
+      "dca_signal_value.csv": "d01ab736715b47bcb6c19708a1bd4660528142ed93c2aeb6daf6a943f77d9d2e",
+      "dca_summary.csv": "d6d36f05634071295f8ca704fd4fd860d8ee8b626ce8417263e2a86d63b39f11",
+      "equal_horizon_windows.csv": "183a2fc5317eb61c133970d5361f8be3b72d30c58591fe5cd072d81bbd02e851",
+      "full_fixed_buys_risk_sells.csv": "ccfadf5e0bb70648a1e963617536d7143595faee3bc6b37c2bb1afbc205c8298",
+      "full_fixed_dca.csv": "5ef7c2b81d62c03f08567bc0e410b245ccb2bcc6bafd3c93a511dd98a6171d6b",
+      "full_period_summary.csv": "75f3768214620dd6acca7c25b375685e782bf4c14c4282648ef0f517d40fcafa",
+      "full_risk_accumulation.csv": "9926dc8854b914bd8b357d41914f9213939aae16406cdc59b70fa8bba08205ce",
+      "full_risk_buys_and_sells.csv": "6ad7e27fadf0518dd51bbb0818df777ecdfc6d268ff6dc82b64ab3a5912eded2",
+      "metric_health.csv": "d7baa36eb789a0607d421fb65939fc517279ca234374ef089d203970fa737886",
+      "monthly_inputs.csv": "fe0c3290183b7ae7c36501af44390defb04a603c70fb6674592524bee90db9ce",
+      "source_health.csv": "ab8cbf68ee2f1c548d43babfe9a3665320b417dde96632096285d9f9c4cd8f70"
+    },
+    "limitations": [
+      "Exposed historical data; not a protected holdout or prospective test.",
+      "Overlapping windows are dependent; finite-history descriptions, no sampling confidence intervals.",
+      "Cached macro values have no verified release-vintage availability.",
+      "Current checked-in model under credential-free acceptance runtime fixture; not proof of deployed model identity.",
+      "Terminal-sweep zero-interest diagnostic changes the trading policy and is not an acceptance result."
+    ]
+  },
+  "checked_results": {
+    "accounting_checks_passed": true,
+    "equal_horizon_summary": [
+      {
+        "strategy": "fixed_dca",
+        "matched_deployment": false,
+        "windows": 96,
+        "wins_vs_fixed": 0,
+        "median_wealth_delta": 0.0,
+        "p10_wealth_delta": 0.0,
+        "p90_wealth_delta": 0.0,
+        "median_purchase_spend_over_contributions": 1.0,
+        "median_btc_delta": 0.0
+      },
+      {
+        "strategy": "fixed_dca",
+        "matched_deployment": true,
+        "windows": 96,
+        "wins_vs_fixed": 0,
+        "median_wealth_delta": 0.0,
+        "p10_wealth_delta": 0.0,
+        "p90_wealth_delta": 0.0,
+        "median_purchase_spend_over_contributions": 1.0,
+        "median_btc_delta": 0.0
+      },
+      {
+        "strategy": "price_only_accumulation",
+        "matched_deployment": false,
+        "windows": 96,
+        "wins_vs_fixed": 45,
+        "median_wealth_delta": -0.13341860280667056,
+        "p10_wealth_delta": -0.8049427957003552,
+        "p90_wealth_delta": 0.1830636799565667,
+        "median_purchase_spend_over_contributions": 0.4954645396210358,
+        "median_btc_delta": -0.46991646646704316
+      },
+      {
+        "strategy": "price_only_accumulation",
+        "matched_deployment": true,
+        "windows": 96,
+        "wins_vs_fixed": 44,
+        "median_wealth_delta": -0.15452917246413275,
+        "p10_wealth_delta": -0.8163820261823052,
+        "p90_wealth_delta": 0.16702064545642126,
+        "median_purchase_spend_over_contributions": 1.0,
+        "median_btc_delta": -0.15452917246413275
+      },
+      {
+        "strategy": "risk_accumulation",
+        "matched_deployment": false,
+        "windows": 96,
+        "wins_vs_fixed": 26,
+        "median_wealth_delta": -0.1763998058488187,
+        "p10_wealth_delta": -0.7118841239782009,
+        "p90_wealth_delta": 0.1279451593031867,
+        "median_purchase_spend_over_contributions": 0.3852385441599941,
+        "median_btc_delta": -0.42285077725929654
+      },
+      {
+        "strategy": "risk_accumulation",
+        "matched_deployment": true,
+        "windows": 96,
+        "wins_vs_fixed": 23,
+        "median_wealth_delta": -0.1921565778739206,
+        "p10_wealth_delta": -0.7225737290860903,
+        "p90_wealth_delta": 0.11543428820226004,
+        "median_purchase_spend_over_contributions": 1.0,
+        "median_btc_delta": -0.1921565778739206
+      }
+    ],
+    "exploratory_start_year_strata": [
+      {
+        "start_years": [
+          2014,
+          2017
+        ],
+        "matched_deployment": false,
+        "windows": 37,
+        "wins": 0,
+        "median_wealth_delta": -0.6208845262626597
+      },
+      {
+        "start_years": [
+          2018,
+          2020
+        ],
+        "matched_deployment": false,
+        "windows": 36,
+        "wins": 5,
+        "median_wealth_delta": -0.16555799946084085
+      },
+      {
+        "start_years": [
+          2021,
+          2022
+        ],
+        "matched_deployment": false,
+        "windows": 23,
+        "wins": 21,
+        "median_wealth_delta": 0.0948791337014895
+      },
+      {
+        "start_years": [
+          2014,
+          2017
+        ],
+        "matched_deployment": true,
+        "windows": 37,
+        "wins": 0,
+        "median_wealth_delta": -0.635813736128741
+      },
+      {
+        "start_years": [
+          2018,
+          2020
+        ],
+        "matched_deployment": true,
+        "windows": 36,
+        "wins": 5,
+        "median_wealth_delta": -0.1800118223458172
+      },
+      {
+        "start_years": [
+          2021,
+          2022
+        ],
+        "matched_deployment": true,
+        "windows": 23,
+        "wins": 18,
+        "median_wealth_delta": 0.0755347150269736
+      }
+    ],
+    "finite_history_description_only": true,
+    "not_a_production_acceptance_result": true
+  },
+  "verification": {
+    "independent_ledger_checks": true,
+    "table_hashes_reproduced_exactly_in_second_run": 17,
+    "negative_controls": {
+      "wrong_hash": {
+        "rejected": true,
+        "last_error": "AssertionError: full_risk_accumulation.csv"
+      },
+      "wrong_cash_ledger": {
+        "rejected": true,
+        "last_error": "AssertionError: risk_accumulation"
+      },
+      "unequal_deployment": {
+        "rejected": true,
+        "last_error": "AssertionError"
+      }
+    },
+    "original_repo_inputs_unchanged": true
+  },
+  "runtime_setup": {
+    "method": "11 exact pinned versions copied offline from cached expanded distributions after RECORD file integrity checks",
+    "original_wheel_hashes_reverified": false,
+    "distribution_records": [
+      {
+        "distribution": "certifi-2026.10.23.dist-info",
+        "verified_record_files": 11,
+        "metadata_sha256": "e463e38f7fe7da36a11e6d3fecc5dfa5b97be8c8022620400750d79ae7d842bc"
+      },
+      {
+        "distribution": "charset_normalizer-3.5.2.dist-info",
+        "verified_record_files": 20,
+        "metadata_sha256": "89ce6362bb7be88558f4be99a98f5d1b4da93d19cd0323e5ee0bac05cf883dfb"
+      },
+      {
+        "distribution": "idna-3.20.dist-info",
+        "verified_record_files": 15,
+        "metadata_sha256": "dbd8c14c1e4ca1e0c9824a6dbc7cbbf78884f38eb52d91148cd3025f671e4b85"
+      },
+      {
+        "distribution": "numpy-2.4.6.dist-info",
+        "verified_record_files": 910,
+        "metadata_sha256": "b082c52ccbe3b880bae177c35171b52ed6c947f3ad71e3762f2723f60a411de0"
+      },
+      {
+        "distribution": "pandas-2.3.3.dist-info",
+        "verified_record_files": 1512,
+        "metadata_sha256": "40ee953dc7ca155840b639a1881ff84578075187fce0ac20eeda55a7fa0d9a90"
+      },
+      {
+        "distribution": "python_dateutil-3.0.0.dist-info",
+        "verified_record_files": 26,
+        "metadata_sha256": "e10ead93598aed51bdb28aa30ef64ee5d6ccc871e88741d220e504e979af4695"
+      },
+      {
+        "distribution": "pytz-2026.5.dist-info",
+        "verified_record_files": 615,
+        "metadata_sha256": "4d20d16f6004b1d7f9b01a96f4d3eb462c0c2a8413d9aa878effe50a21535929"
+      },
+      {
+        "distribution": "requests-2.34.2.dist-info",
+        "verified_record_files": 25,
+        "metadata_sha256": "8c384ba3e979480faae2859d3c5e6c1276dd2c3616e322e124d52c8cfc556f27"
+      },
+      {
+        "distribution": "six-1.17.0.dist-info",
+        "verified_record_files": 5,
+        "metadata_sha256": "562042078c2752549f6d8a7c86dbc5dd708088a7be6d80672ec7b07100b72468"
+      },
+      {
+        "distribution": "tzdata-2026.5.dist-info",
+        "verified_record_files": 632,
+        "metadata_sha256": "e0780e8b6dc8882ce87e871a9d4589d59cb05a0c2d64f58b1ba62cde1ee91f6a"
+      },
+      {
+        "distribution": "urllib3-2.8.0.dist-info",
+        "verified_record_files": 41,
+        "metadata_sha256": "10898c620e8007c030e07fa5622b68358a43010025dfbd78a1cb797699de2bb4"
+      }
+    ]
+  },
+  "retained_files": {
+    "comparison.png": "80115c367ca7469a82bcdeaa65aa60d2ab1132dbcaa268e7bc8a94bf07130739",
+    "dca_accumulation_windows.csv": "869e7b289ae8b08a6e7b07bca2094ea1ab158a56a4edd6a5fefc3251dc785946",
+    "dca_causality_audit.csv": "25cb1565a00f4c267c41790211edb8a4e4f64128d78e9d1bc5c4b4db098aaceb",
+    "dca_derisking_windows.csv": "eb55297e42e2ac7ad4bd19d85015c7298b7106f47926f4977aa6fbdc5a6eed85",
+    "dca_policy_attribution_windows.csv": "783fa3702e4bd969477c80da67e246d83de22b6c1843d553f8717ea2f8386fc7",
+    "dca_signal_value.csv": "d01ab736715b47bcb6c19708a1bd4660528142ed93c2aeb6daf6a943f77d9d2e",
+    "dca_summary.csv": "d6d36f05634071295f8ca704fd4fd860d8ee8b626ce8417263e2a86d63b39f11",
+    "equal_horizon_windows.csv": "183a2fc5317eb61c133970d5361f8be3b72d30c58591fe5cd072d81bbd02e851",
+    "full_fixed_buys_risk_sells.csv": "ccfadf5e0bb70648a1e963617536d7143595faee3bc6b37c2bb1afbc205c8298",
+    "full_fixed_dca.csv": "5ef7c2b81d62c03f08567bc0e410b245ccb2bcc6bafd3c93a511dd98a6171d6b",
+    "full_period_summary.csv": "75f3768214620dd6acca7c25b375685e782bf4c14c4282648ef0f517d40fcafa",
+    "full_risk_accumulation.csv": "9926dc8854b914bd8b357d41914f9213939aae16406cdc59b70fa8bba08205ce",
+    "full_risk_buys_and_sells.csv": "6ad7e27fadf0518dd51bbb0818df777ecdfc6d268ff6dc82b64ab3a5912eded2",
+    "monthly_inputs.csv": "fe0c3290183b7ae7c36501af44390defb04a603c70fb6674592524bee90db9ce"
+  },
+  "local_full_replay": "/private/tmp/risk-fresh-dca-20261109/run-final",
+  "plot_environment": {
+    "python": "3.12",
+    "matplotlib": "3.11.2",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6"
+  },
+  "checker_sha256": "8a3952c81fdac9612ddf951c977632cf4b9c1548c22391526cd3e79908582de7"
+}
