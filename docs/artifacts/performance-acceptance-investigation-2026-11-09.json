@@ -1,0 +1,207 @@
+{
+  "source_ref": "357d26bb0df8739598ffacef4c2c68500869811d",
+  "scope": "mechanical reproduction of existing gate/reference definitions; no tuning or new predictive claim",
+  "canonical": {
+    "identity": {
+      "config_hash": "db8dba1a63017f52fa78fcf762742d795ee5851ea3fc594bdc3bce98d932dc03",
+      "data_fingerprint": "02ab928924278764adbe2a8a780891ef8155e17825bcdb4f89bdfa9ae4004f9c",
+      "model_fingerprint": "21a4b0160e184a67f141c57202b46e455ccc92791961430493c7d250ee5c053d",
+      "release_id": "bdd10956df08ed5cce7fdb80d2550f786c2b8c3909a981e1f72acca3224b89f5"
+    },
+    "metrics": {
+      "accumulation_terminal_wealth_delta_pct_vs_fixed": -0.21460619966488603,
+      "availability_gate_passed": true,
+      "dca_causality_gate_passed": true,
+      "derisking_calmar_delta_vs_hold": 0.4031656231427323,
+      "fixed_buys_risk_sells_terminal_wealth_delta_pct_vs_fixed": -0.09225145298606019,
+      "signal_horizon_48m_gate_passed": true,
+      "signal_low_minus_high_forward_return_48m": -9.386119768757766
+    }
+  },
+  "policy": {
+    "policy_id": "dca-risk-evidence-acceptance-v2",
+    "primary": {
+      "metric": "accumulation_terminal_wealth_delta_pct_vs_fixed",
+      "min_improvement": 0.01
+    },
+    "guardrails": [
+      {
+        "metric": "fixed_buys_risk_sells_terminal_wealth_delta_pct_vs_fixed",
+        "min_delta": -0.02
+      },
+      {
+        "metric": "derisking_calmar_delta_vs_hold",
+        "min_delta": -0.05
+      },
+      {
+        "metric": "signal_low_minus_high_forward_return_48m",
+        "min_delta": -0.1
+      }
+    ],
+    "required_true": [
+      "dca_causality_gate_passed",
+      "signal_horizon_48m_gate_passed",
+      "availability_gate_passed"
+    ]
+  },
+  "minimum_candidate_values": {
+    "accumulation_terminal_wealth_delta_pct_vs_fixed": -0.20460619966488602,
+    "fixed_buys_risk_sells_terminal_wealth_delta_pct_vs_fixed": -0.1122514529860602,
+    "derisking_calmar_delta_vs_hold": 0.3531656231427323,
+    "signal_low_minus_high_forward_return_48m": -9.486119768757765
+  },
+  "legacy_baselines_identical": true,
+  "current_data_fingerprint": "f3cb5602f161d4d901fe8d35443efaab3bae47f24b9cb053156c526d60c7eb5f",
+  "current_csv_profiles": {
+    "data/btc_daily.csv": {
+      "rows": 5423,
+      "first_line": "2012-01-01",
+      "last_line": "2026-11-05"
+    },
+    "data/fear_greed_index.csv": {
+      "rows": 3197,
+      "first_line": "2018-02-01",
+      "last_line": "2026-11-06"
+    },
+    "data/fred_dxy.csv": {
+      "rows": 3626,
+      "first_line": "2012-01-03",
+      "last_line": "2026-07-24"
+    },
+    "data/fred_real_yield_10y.csv": {
+      "rows": 3644,
+      "first_line": "2012-01-03",
+      "last_line": "2026-07-29"
+    },
+    "data/fred_rrpontsyd.csv": {
+      "rows": 3281,
+      "first_line": "2012-03-01",
+      "last_line": "2026-11-05"
+    },
+    "data/fred_walcl.csv": {
+      "rows": 775,
+      "first_line": "2012-01-04",
+      "last_line": "2026-11-04"
+    },
+    "data/onchain_metrics.csv": {
+      "rows": 5423,
+      "first_line": "2012-01-01",
+      "last_line": "2026-11-05"
+    },
+    "data/total_marketcap.csv": {
+      "rows": 4799,
+      "first_line": "2013-04-29",
+      "last_line": "2026-11-06"
+    },
+    "data/wikipedia_pageviews_btc.csv": {
+      "rows": 4146,
+      "first_line": "2015-07-01",
+      "last_line": "2026-11-05"
+    },
+    "data/youtube_interest.csv": {
+      "rows": 4,
+      "first_line": "2026-04-29",
+      "last_line": "2026-07-31"
+    }
+  },
+  "4995a45_data_fingerprint": "02ab928924278764adbe2a8a780891ef8155e17825bcdb4f89bdfa9ae4004f9c",
+  "4995a45_csv_profiles": {
+    "data/btc_daily.csv": {
+      "rows": 5325,
+      "first_line": "2012-01-01",
+      "last_line": "2026-07-30"
+    },
+    "data/fear_greed_index.csv": {
+      "rows": 3099,
+      "first_line": "2018-02-01",
+      "last_line": "2026-07-31"
+    },
+    "data/fred_dxy.csv": {
+      "rows": 3626,
+      "first_line": "2012-01-03",
+      "last_line": "2026-07-24"
+    },
+    "data/fred_real_yield_10y.csv": {
+      "rows": 3644,
+      "first_line": "2012-01-03",
+      "last_line": "2026-07-29"
+    },
+    "data/fred_rrpontsyd.csv": {
+      "rows": 3213,
+      "first_line": "2012-03-01",
+      "last_line": "2026-07-30"
+    },
+    "data/fred_walcl.csv": {
+      "rows": 761,
+      "first_line": "2012-01-04",
+      "last_line": "2026-07-29"
+    },
+    "data/onchain_metrics.csv": {
+      "rows": 5325,
+      "first_line": "2012-01-01",
+      "last_line": "2026-07-30"
+    },
+    "data/total_marketcap.csv": {
+      "rows": 4732,
+      "first_line": "2013-04-29",
+      "last_line": "2026-07-31"
+    },
+    "data/wikipedia_pageviews_btc.csv": {
+      "rows": 4048,
+      "first_line": "2015-07-01",
+      "last_line": "2026-07-30"
+    },
+    "data/youtube_interest.csv": {
+      "rows": 4,
+      "first_line": "2026-04-29",
+      "last_line": "2026-07-31"
+    }
+  },
+  "config_fingerprint": "db8dba1a63017f52fa78fcf762742d795ee5851ea3fc594bdc3bce98d932dc03",
+  "model_fingerprint": "a4f2c69510e02456586d3c0203b327e42ed3a7e6658fa5988c24c2da088e70d9",
+  "canonical_generation_commit": "4995a45",
+  "recovered_canonical_model_fingerprint": "21a4b0160e184a67f141c57202b46e455ccc92791961430493c7d250ee5c053d",
+  "canonical_source_recovery_verified": true,
+  "ci_evidence": {
+    "run": "https://github.com/j0shcd/risk-metric/actions/runs/42620541874",
+    "source_head": "357d26bb0df8739598ffacef4c2c68500869811d",
+    "gate": "legacy benchmark diagnostic; deliberately nonblocking",
+    "comparisons": {
+      "bottom_recall": {
+        "current": 0.451618,
+        "reference": 0.985714
+      },
+      "bottom_false_alarm_rate": {
+        "current": 0.372727,
+        "reference": 0.222024
+      },
+      "dynamic_dca_cagr": {
+        "current": 0.114427,
+        "reference": 0.800954
+      },
+      "dynamic_dca_calmar": {
+        "current": 0.495756,
+        "reference": 1.380571
+      }
+    },
+    "failure_conditions": [
+      "bottom recall vs SOTA and foundation",
+      "bottom false alarms vs SOTA and foundation",
+      "dynamic DCA CAGR vs SOTA and foundation",
+      "dynamic DCA Calmar vs SOTA and foundation"
+    ]
+  },
+  "provenance_changes": {
+    "reference_refresh": "9007fb5 (2026-05-15)",
+    "cashflow_accounting_and_signal": "426cea6 (2026-07-31)",
+    "outcome_label_causality": "335b2cc (2026-07-31)",
+    "prefix_invariant_calibration": "6da7fb0 (2026-11-07)"
+  },
+  "limits": [
+    "Source/log and hash reconstruction investigation only; no new full production evaluation or fresh candidate metrics",
+    "Historical output/evaluation files were not relabeled as current evidence",
+    "No change to model, source caches, canonical metrics, policy, publication or hosted settings",
+    "No quantitative attribution of metric deltas to individual historical changes",
+    "Current raw-data hash mismatch and source identity mismatch establish rejection prerequisites independently of candidate performance"
+  ]
+}
