@@ -1,19 +1,19 @@
 # Indicator benchmark and evaluation plan
 
-Status: finite known-law panel qualification passes; earlier single-path searches
-remain failed. Nineteen indicator variants have produced no qualified indicator;
-three earlier candidates fail monthly equity portability. A chronology control's
-19.72% two-year development gain fails its frozen outer check; that branch is
-stopped. The first prospective, price-only operational paper witness is issued
-and independently reproduced; no forecast outcome is mature. No promotion.
-Updated 2026-11-08.
+Status: the registered audit of the current readout found useful synthetic
+information without better primary two-year forecasts. Pause feature searches;
+specify a separate readout study. Nineteen historical indicator variants remain
+unqualified. An older, different finite known-law panel procedure passes only
+its own synthetic scope. The prospective paper witness has no mature outcomes.
+No production model or market benchmark changed. Updated 2026-11-09.
 
 This is the canonical maintainer record for the research benchmark, its measured
 results and next bounded work. Legacy strategy-specific results remain in
 [DCA evidence](dca_evidence.md). This replaces the older Phase 1/2 planning
 narrative; Git preserves its implementation history. Published scoring,
-acceptance policy and canonical metrics are unchanged. Local producer causality
-corrections below are unaccepted source revisions and have not been published.
+acceptance policy and canonical metrics are unchanged. Research causality
+corrections are published as code but remain unaccepted for production; no
+canonical production identity was rewritten.
 
 ## Programme charter and current assessment
 
@@ -40,6 +40,7 @@ adopted combined investor utility or universal automatic promotion score.
 | Ten previous indicator variants | Price anchors, adaptive trend, gain shape, monetary state and attention did not qualify broadly | Preserve failures; do not retune them to repair exposed later-period scores |
 | Chronology-assisted forecast | 19.7% development error reduction became about 74% worse than unconditional in the later check | Stop this branch; percentages concern forecast error, not investment returns |
 | Artificial-market qualification | A separate continuous forecast/conditional-test procedure detected planted information 398/400 times and declared skill 24/1500 times under specified no-added-information cases | Finite scope only; not a sensitivity certificate for the current 97-date scalar readout or a market success-rate claim |
+| Current scalar readout | Useful exact state worsens mean two-year forecast loss in the registered artificial law; nominal 80% intervals cover only 26.4% | Pause feature searches; preregister a separate readout study |
 | Archived live baselines | Six forecasts reproduced exactly, zero mature outcomes | Continue separate forward collection; correctness is not predictive success |
 
 ### First completed round: three different remaining ideas
@@ -393,33 +394,118 @@ substituted for those results. Backend verification passes 482 tests. The packet
 two controller tests and three private-source replay tests; independent
 generator, score-arithmetic and source-data replays also pass.
 
+### Current readout sensitivity audit — November 9
+
+Preregistration `56260b1` precedes implementation `6eb610d` and all audit-world
+scores. The [registration](artifacts/direct-cdf-sensitivity-2026-11-09-registration.json)
+and [implementation freeze](artifacts/direct-cdf-sensitivity-2026-11-09-implementation.json)
+bind the experiment. All twelve market benchmark modules remain unchanged.
+The caller is the actual `market_information.score_candidate`: the same latest
+24 strictly mature rows fit medians and supply outcome atoms, with the existing
+50:50 pooled/local weights. This differs from older split/residual procedures.
+
+All 128 world/law jobs completed: 64 independent history IDs paired across two
+price laws and four scalar inputs. Exact state, noisy observation and unrelated
+state share the same prices within a world. A constant input checks the no-split
+identity. One law has no predictable returns; the other has persistent Gaussian
+monthly drift, deliberately large as a stress test. Neither is a fitted Bitcoin
+model. The original 97 query dates give 48 scored one-year starts, 24 two-year
+starts and zero four-year starts per world. Daily warm-up creates no extra monthly
+training origins. Artificial controls do not add to the nineteen historical
+indicator variants or create additional Bitcoin cycles.
+
+Known-law forecasts condition on all past prices, optionally adding the current
+scalar; older scalar releases are deliberately excluded. Terminal forecasts are
+analytically Gaussian. Downside scores describe two finite 128-path ensembles,
+with simulation noise retained. These information sets and forecasting procedures
+differ from the decoder's two price contexts; the gaps below are separate
+estimands, not a proportion of information recovered. Gaussian filtering follows
+the [linear state-space calculation](https://www.stat.cmu.edu/~cshalizi/dst/26/lectures/08/lecture-08.html).
+
+For informative-law **two-year terminal returns**:
+
+| Input | Known-law gain from current input | Fixed decoder gain versus price contexts |
+| --- | ---: | ---: |
+| Noisy state | +.02356 [.01018, .03701] | −.03051 [−.04786, −.01213] |
+| Exact state | +.05937 [.03241, .08650] | −.02139 [−.04214, −.00032] |
+
+Values are mean CRPS differences in dimensionless log-return units; positive is
+lower loss. Brackets are pointwise 95% paired whole-history percentile bootstrap
+intervals over 64 IDs, using 4,000 resamples. They are not simultaneous intervals,
+a promotion rule or evidence of market error control. The exact-state decoder
+interval only narrowly excludes zero. No stable win-count claim follows.
+
+The useful exact input improves the known-law forecast but worsens the decoder's
+primary forecast on average. This establishes a limitation under this law, not
+universal insensitivity. Exact state improves one-year entry-loss CRPS versus
+contexts by .01533 [.00665, .02496], while remaining worse than pooled history
+by .03975 [.02549, .05626]. Every nonconstant input has worse mean CRPS than pooled
+history in every scored cell. The [complete results](artifacts/direct-cdf-sensitivity-2026-11-09.json)
+retain all horizons, outcomes, Brier scores, interval coverage/width and bank
+noise separately; coverage and width differences are not generic improvements.
+
+Informative-law two-year nominal 80% intervals cover 26.4% with exact state,
+27.5% for contexts and 29.2% for pooled history; the known-law exact-state forecast
+covers 79.4%. The median local input cell has three observations, and 63.2% of
+outcomes fall outside the historical atom range. Sparse, stale training pools and
+limited support are plausible contributors; no causal ablation was performed.
+Under the null law, oracle input gains are exactly zero and useless splits worsen
+mean forecast loss. That does not certify adaptive false-positive control.
+
+Independent reviews checked Gaussian conditioning, terminal covariance, endpoint
+timing and the unchanged caller. Thirteen engineering tests and 42 focused tests
+passed; the full backend suite passed 495 tests. A reviewer found an unbound
+scoring import before audit scores; the boundary regression failed before the
+fix and passes using the already-frozen scoring module. Decoder atoms/weights,
+actual outcomes, oracle moments and bank metrics are retained; oracle samples
+require deterministic regeneration. Effectively zero positive-world sign counts
+can change under floating-point summation order and are not used as win claims.
+
+A turn interruption removed temporary uncommitted results and documentation.
+The committed registration and implementation survived. Recovery uses those
+unchanged sources/seeds in persistent project output storage; it reproduces
+the already-recorded summary SHA
+`955a9db4f6ef7c68098b16783252c8ec21fb8585886f8c3664bb4226e7046d1d`.
+This is a reproducibility replay, not a new replication or scientific retry.
+
+Recovery completed all 128 jobs with no omitted worlds and reproduced the original
+summary SHA exactly. The independent result audit and packet tests pass.
+Packet SHA-256: `5d70273cbe489be289e7210a3ab2edd9850af230b92a1a0a47db3e4dbd8ea5ad`.
+
+The [portable packet](artifacts/direct-cdf-sensitivity-2026-11-09.zip) includes
+frozen source, registration, pinned dependencies, all world files and an
+independent arithmetic audit. Authenticate its external SHA recorded below before
+executing trusted Python; it is not a sandbox or an external authenticity seal.
+No raw macro captures or FRED payloads are included. CPython 3.12.16, NumPy 2.4.6
+and pandas 2.3.3 are required; cross-platform bitwise identity is unverified.
+From an unpacked packet, use new output/report paths:
+
+```sh
+python audit-results.py --packet . --results results --report NEW_AUDIT.json
+python -m unittest tests.test_readout_sensitivity tests.test_readout_synthetic_world
+python -m research.readout_sensitivity run --freeze docs/artifacts/direct-cdf-sensitivity-2026-11-09-implementation.json --output NEW_RESULTS_DIR
+```
+
+Brief versus delivered: the fixed-readout audit is complete under two declared
+laws. It found available information and a primary decoder regression. It did
+not qualify an indicator, alter the market benchmark or rescue prior failures.
+The older 398/400 and 24/1500 results concern a different procedure. Lessons stay
+in this canonical record; skill-harvest identified no new global skill needed.
+
 ### Next bounded research step
 
-Before another feature search, preregister a **synthetic sensitivity audit of the
-unchanged current readout**. Use its exact calendar, monthly spacing, maturity
-rules, 24-observation pool and overlap, across independent complete price histories.
-Include fixed no-information, modest-leading-information and strong-leading-
-information laws, with information genuinely available at forecast time, plus a
-known-law oracle. Report both available oracle information and how much the fixed
-decoder recovers; keep return/loss, probability and interval results separate.
-Treat whole histories as the uncertainty unit. Preserve fallback and missing-state
-behavior rather than silently scoring only successful cases. Do not attach real
-macro histories to unrelated synthetic prices.
-
-The [November 9 preregistration](artifacts/direct-cdf-sensitivity-2026-11-09-registration.json)
-now freezes 64 paired histories per law, two Gaussian state/price laws and four
-features (constant, unrelated state, noisy state and exact state). It preserves
-the 97 query dates and the current decoder. Exact Gaussian terminal oracles
-condition on past prices and the current scalar; two 128-path banks give explicitly
-finite approximations for downside. Whole histories own uncertainty. The budget
-and seeds are fixed before implementation and before audit-world scores.
-
-This is a separate diagnostic, not a change to the market benchmark or a rescue
-of nineteen failed variants. Freeze laws, strength settings, seeds, compute budget
-and reporting before running it. Do not tune decoder settings to its audit worlds
-or treat repeated human searches as covered by the earlier finite error-control
-result. No audit-world simulation has run at this registration checkpoint. November 30 collection
-remains a separate registered action; no scheduler was installed.
+Pause more feature searches through this readout. Historical scores remain valid
+measurements of this procedure, but cannot be treated as a broad information test.
+Specify a separate limited readout study before execution: simple forecasters,
+an explicit hypothesis about stale labels/discrete outcome support, fresh seeds,
+and both persistent-drift and distinct volatility/nonlinear information controls.
+Separate development laws from frozen assessment laws; keep the old decoder as a
+fixed reference and report return, downside and calibration separately. Only
+then consider a newly registered market comparison or benchmark version. Do not
+retune the frozen benchmark on these worlds to turn nineteen failures into wins.
+This study is proposed, not executed; the precise small candidate set and law
+contract remain to be preregistered. No alternative decoder is promoted.
+November 30 collection remains separate; no scheduler was installed.
 
 ### Publication and operations
 

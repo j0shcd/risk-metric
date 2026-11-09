@@ -29,10 +29,12 @@ The macro audit found backfilled/revised history and unresolved source-use and
 original-version questions; no newly captured macro values entered round two.
 A third round used independently checked Federal Reserve Board releases,
 explicitly reconstructed rather than authenticated historical vintages.
-Its three new ideas also failed the primary comparison. The next bounded task
-is to measure the current readout's sensitivity in controlled artificial markets,
-keeping the market benchmark fixed; earlier artificial-market tests covered a
-different forecasting procedure. See the research record for evidence and limits.
+Its three new ideas also failed the primary comparison. A registered artificial
+market audit then found useful input information without improved two-year
+forecasts from the current readout. Its uncertainty intervals were much too
+narrow. Further feature searches are paused while a separate readout study is
+specified; the market benchmark and historical verdicts stay fixed. The research
+record contains results, uncertainty and a portable replay packet.
 Separately, six baseline forecasts were archived before their starting point;
 none has a mature outcome yet. The next registered monthly observation is
 November 30, 2026.
