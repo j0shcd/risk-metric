@@ -11,6 +11,116 @@ the implemented historical suite, not that proposed benchmark. Its policy cash
 'deadline' and entry-relative drawdown naming have limitations recorded in the
 plan; the historical numbers below have not been regenerated under new semantics.
 
+## Performance diagnostic and acceptance investigation: 9 November 2026
+
+Scope: reproduce the existing ADR 0008/0009 contract, explain the failing legacy
+CI diagnostic and identify promotion prerequisites. This investigation changes no
+model, threshold, canonical metric, cached source or publication setting. The
+[dated source/hash evidence](artifacts/performance-acceptance-investigation-2026-11-09.json)
+is bound to `357d26bb0df8739598ffacef4c2c68500869811d`.
+
+The [main CI log](https://github.com/j0shcd/risk-metric/actions/runs/42620541874)
+reports eight threshold failures: bottom recall and false alarms, plus dynamic-DCA
+CAGR and Calmar, each against both reference files. Those two files are byte-identical,
+so this is four failed comparisons repeated, not independent corroboration.
+
+| Logged legacy metric | Current | May reference |
+| --- | ---: | ---: |
+| Bottom lead recall | 45.16% | 98.57% |
+| Bottom false-alarm rate | 37.27% | 22.20% |
+| Dynamic-DCA CAGR | 11.44% | 80.10% |
+| Dynamic-DCA Calmar | 0.496 | 1.381 |
+
+These deterministic logged estimates are descriptive, not uncertainty estimates or
+forecasts. They do not establish a like-for-like deterioration:
+
+- References were last refreshed in `9007fb5` (15 May). In `426cea6` (31 July),
+  dynamic DCA moved from contemporaneous frenzy/accumulation scores to lagged
+  `dca_risk`, and from contribution-inflated portfolio balances to cashflow-adjusted
+  time-weighted returns. Old raw balance growth and current investment returns
+  have different meanings. The old 80.10% CAGR is not a valid target for the new
+  accounting contract.
+- `335b2cc` replaced full-history outcome quantiles, partially resolved horizons
+  and event-count-dependent fallback labels with matured-outcome causal cutoffs
+  and fully resolved horizons. `6da7fb0` later removed total-history-dependent
+  calibration gating. Bottom recall is therefore being compared across changed
+  labels/calibration. No decomposition has quantified each change's contribution.
+- The reference JSONs carry no frozen data/runtime/protocol identity. Their
+  numerical thresholds cannot certify comparability on their own. Version and
+  replay a common correct measurement protocol before interpreting the delta;
+  do not refresh references or relax thresholds merely to make CI green.
+
+The diagnostic is intentionally nonblocking under ADR 0009. Production acceptance
+instead reads `dca_evidence_summary.csv` and three audit/calendar tables, then
+compares with `model_acceptance_canonical.json`. Its present minimum candidate
+values are mechanical policy arithmetic:
+
+| Acceptance metric | Canonical | Minimum candidate |
+| --- | ---: | ---: |
+| Accumulation wealth delta versus Fixed DCA | -21.4606% | -20.4606% |
+| Fixed-buy/risk-sell wealth delta versus Fixed DCA | -9.2251% | -11.2251% |
+| De-risking Calmar delta versus hold | 0.403166 | 0.353166 |
+| 48-month low-minus-high return spread (raw return units) | -9.386120 | -9.486120 |
+
+The primary requires **one percentage point better than canonical**, not a
+one-percent relative gain and not necessarily beating Fixed DCA. Passing these
+relative thresholds can still preserve poor absolute accumulation or ordering
+results. The horizon, suffix-invariance audit and availability booleans must also
+be true. Suffix invariance is a software timing check, not causal investment proof;
+the availability boolean only rejects `missing_rule`, not estimated/unknown vintages.
+
+Verified blockers and the next bounded work:
+
+1. **Recoverable reference:** commit `4995a45` reproduces both canonical data hash
+   `02ab9289…` and model hash `21a4b016…`; the tracked acceptance runtime fixture
+   plus unchanged policy also reproduce canonical config hash `db8dba1a…`.
+   Current cache hash is `f3cb5602…`, and current source with that fixture is
+   `a4f2c695…`. The existing workflow uses current caches, so `data_fingerprint_mismatch`
+   is inevitable before any performance-based approval. Recover that snapshot in
+   scratch, or deliberately version a new common snapshot and recompute *all*
+   reference metrics. Never put a new hash on old metrics.
+2. **Freeze the actual evaluation:** the workflow fixes `RISK_END_DATE=2026-05-14`,
+   while the recorded canonical evidence uses daily data through 30 July and
+   labels its monthly endpoint 31 July. Raw file hashes do not bind the resolved
+   as-of date, evaluator settings, dependency versions or generated score tables.
+   Recover the historical run manifest and reproduce the canonical metrics first;
+   settle a common complete-month cutoff. The partial-month resampler limitation
+   is already recorded in the research plan.
+3. **Bind evidence to the evaluated model:** `build_candidate_summary` currently
+   reads CSV tables then attaches the *current checkout's* identity. It does not
+   verify a producing manifest or score/config hashes. This is not evidence that
+   this workflow used stale tables, but it permits accidental relabeling when
+   the CLI is pointed at historical artifacts. Add boundary checks that reject
+   stale/wrong-revision tables before trusting a promotion summary.
+4. **Run the compact suite and full acceptance workflow:** on the same frozen
+   snapshot and resolved settings, rerun canonical and candidate, retain manifests,
+   score/table hashes and the seven policy checks, and inspect validation warnings.
+   The workflow currently does not upload its candidate/report files; make failed
+   and successful evidence retrievable. No fresh complete candidate performance
+   result is claimed by this investigation.
+5. **Choose the promotion route explicitly:** a model candidate must satisfy the
+   existing policy before a reviewed atomic canonical update binds its identity
+   to its new metrics. A score-preserving maintenance edit has zero improvement
+   and fails the primary rule by construction. A separately specified maintenance
+   route would need exact frozen-output equivalence, acquisition/error-mode tests,
+   reviewed scope and immutable identity binding; none exists today. Do not silently
+   exempt files or replace the canonical fingerprint.
+
+The [research record](metric_evaluation_plan.md#accepted-requirements) says the
+future product objective is information value, not wealth under one arbitrary DCA
+policy. That new production contract is not accepted yet. Recommendation: repair
+reference/evidence reproducibility first, then decide whether to retain the legacy
+policy or adopt a separately reviewed indicator contract. Do not tune a model to
+this obsolete CI diagnostic to unlock publication. Daily publishing should remain
+withheld until the applicable reviewed promotion and resolved-settings checks pass.
+
+Brief versus delivered: existing contract reproduced from code, history, logs and
+hashes; no new predictive or causal conclusion, model search or policy adoption.
+Limitations: canonical metrics were not rerun, the current candidate's acceptance
+metrics are unknown, dependencies/as-of semantics remain unbound, and historical
+results remain exposed/reconstructed. The strongest alternative to a genuine
+performance decline is the demonstrated change in accounting and label contracts.
+
 ## What is being tested
 
 The suite separates three questions that the previous combined strategy test could not distinguish:

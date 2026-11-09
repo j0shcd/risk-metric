@@ -1713,9 +1713,14 @@ Legacy acceptance/policy issues remain separate from the research protocol:
 - The acceptance availability boolean only rejects the literal `missing_rule`;
   it does not establish real-time vintage eligibility. Unknown/estimated
   availability must remain explicit and cannot support point-in-time claims.
-- Current cached input fingerprint differs from the canonical summary. Recover
-  and verify the canonical snapshot, or version and rerun every reference on a
-  new snapshot. Never copy a new hash onto old metrics to make comparison pass.
+- Current cached input fingerprint differs from the canonical summary. The
+  [9 November investigation](dca_evidence.md#performance-diagnostic-and-acceptance-investigation-9-november-2026)
+  recovered both canonical data and source fingerprints exactly from `4995a45`.
+  Reproduce its metrics with bound as-of/evaluator settings before comparison,
+  or version and rerun every reference on a new snapshot. Never copy a new hash
+  onto old metrics to make comparison pass. The acceptance builder also needs
+  manifest/table-to-model binding; the workflow cutoff and recorded canonical
+  evidence currently differ.
 - The month-end resampler can stamp an incomplete month as its future month end.
   Freeze as-of dates and require complete outcome horizons before scoring.
 
