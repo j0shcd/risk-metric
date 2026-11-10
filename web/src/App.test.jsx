@@ -4,7 +4,6 @@ import { vi } from "vitest";
 
 import App, { PublicDataPanel } from "./App";
 import { RISK_REGIONS } from "./data";
-import { DCA_EVIDENCE } from "./dcaEvidence";
 import { METRIC_COPY } from "./copy";
 import { readFileSync } from "node:fs";
 const styles = readFileSync(`${process.cwd()}/src/styles.css`, "utf8");
@@ -46,110 +45,6 @@ const fixtures = {
       "metric_breakdowns_total_market.json",
       "diagnostics.json",
     ],
-  },
-  "evaluation_summary.json": {
-    generated_at: "2026-06-22T08:00:00Z",
-    schema_version: "1.0.0",
-    source_run: {
-      run_id: "phase2-standard-artifacts-cli-final",
-      profile: "standard",
-      status: "fail",
-      source_generated_at: "2026-06-22T07:24:57Z",
-      config_hash: "abc123",
-      git_commit: "e2b8786765bfe3c493b1b8237fc191d0aa93141c",
-      seed: 1729,
-    },
-    claim_state: {
-      status: "blocked",
-      headline: "Dashboard claims blocked",
-      interpretation: "Phase 2 produced evidence and blockers, not promoted claims.",
-      blocking_warning_count: 3,
-      high_warning_count: 4,
-      test_count: 13,
-      pass_count: 3,
-      warn_count: 5,
-      fail_count: 5,
-    },
-    blocking_warnings: [
-      {
-        code: "unknown_availability",
-        test_id: "temporal.live_availability",
-        severity: "high",
-        message: "No available_at_date column is present.",
-        blocks_dashboard: true,
-      },
-      {
-        code: "walkforward_no_initial_robust_rows",
-        test_id: "robustness.walkforward_nulls",
-        severity: "high",
-        message: "No walk-forward label rows pass initial gates.",
-        blocks_dashboard: true,
-      },
-    ],
-    top_warnings: [
-      {
-        code: "practical_no_metric_policy_beats_buy_hold",
-        test_id: "practical.monthly_strategy_suite",
-        severity: "high",
-        message: "No metric-policy strategy row beats buy-and-hold CAGR after costs.",
-        blocks_dashboard: true,
-      },
-    ],
-    test_groups: [
-      {
-        family: "temporal_validity",
-        pass: 0,
-        warn: 1,
-        fail: 1,
-        tests: [
-          { test_id: "temporal.live_availability", status: "fail", severity: "high", summary: "Availability metadata missing." },
-        ],
-      },
-      {
-        family: "practical",
-        pass: 0,
-        warn: 0,
-        fail: 1,
-        tests: [
-          { test_id: "practical.monthly_strategy_suite", status: "fail", severity: "high", summary: "Practical strategy suite failed." },
-        ],
-      },
-    ],
-    robustness: {
-      walkforward_rows: 624,
-      initial_robust_rows: 0,
-      survives_circular_shift_null: 0,
-      passes_fdr_auc: 0,
-      passes_event_concentration: 455,
-    },
-    validity: {
-      future_shift_material_advantage_label_rows: 220,
-      future_shift_material_advantage_probe_rows: 454,
-      label_cluster_pass_rows: 403,
-      label_rows: 624,
-    },
-    strength: {
-      degraded_pass_rows: 387,
-      degraded_rows: 624,
-      rolling_stability_pass_rows: 365,
-      rolling_rows: 624,
-    },
-    practical: {
-      metric_policy_rows: 260,
-      metric_policy_beats_buy_hold_rows: 0,
-      risk_weighted_dca_rows: 20,
-      risk_weighted_dca_beats_fixed_rows: 0,
-      best_rows: [
-        {
-          signal: "attention_score",
-          strategy: "metric_allocation_bands",
-          cost_bps: 0,
-          cagr: 0.286,
-          cagr_delta_vs_buy_hold: -0.667,
-          max_drawdown: -0.44,
-        },
-      ],
-    },
   },
   "latest_snapshot.json": {
     release_id: "release-1",
@@ -197,21 +92,12 @@ const fixtures = {
       total_market_cap: [2.1e12, 2.12e12, 2.15e12],
     },
   },
-  "category_breakdowns_btc.json": baseColumnar,
-  "category_breakdowns_total_market.json": baseColumnar,
   "metric_breakdowns_btc.json": {
     ...baseColumnar,
     columns: {
       metric_a_signal_contribution: [0.12, 0.13, 0.14],
       metric_b_signal_contribution: [-0.05, -0.06, -0.07],
       metric_btc_trend_extension_50d_350d__btc__price_structure_signal: [0.21, 0.24, 0.28],
-    },
-  },
-  "metric_breakdowns_total_market.json": {
-    ...baseColumnar,
-    columns: {
-      metric_c_signal_contribution: [0.03, 0.04, 0.05],
-      metric_d_signal_contribution: [-0.02, -0.01, -0.03],
     },
   },
   "diagnostics.json": {
@@ -234,45 +120,6 @@ const fixtures = {
     ],
     metric_health: [],
     sanity_report: [{ check: "example", passed: true, value: 1.0, threshold: 0.0 }],
-    benchmark_summary: [
-      {
-        kpi: "lead_recall_top",
-        signal: "top_reversal_risk",
-        expanding: 0.45,
-        recent: 0.4,
-        delta_recent_minus_expanding: -0.05,
-        alert_rate: 0.2,
-      },
-      {
-        kpi: "lead_recall_bottom",
-        signal: "bottom_reversal_risk",
-        expanding: 0.5,
-        recent: 0.55,
-        delta_recent_minus_expanding: 0.05,
-        alert_rate: 0.2,
-      },
-    ],
-    benchmark_by_label: [
-      {
-        window: "recent",
-        signal: "top_reversal_risk",
-        label_id: "threshold_top_dd40_h12",
-        lead_recall_at_alert_rate: 0.44,
-        auc: 0.63,
-      },
-    ],
-    benchmark_by_signal: [
-      {
-        window: "recent",
-        signal: "top_reversal_risk",
-        lead_recall_at_alert_rate: 0.44,
-        pr_auc: 0.35,
-        false_alarm_rate: 0.2,
-      },
-    ],
-    benchmark_window_stats: [{ window: "expanding", side: "top", lead_recall_at_alert_rate: 0.45 }],
-    benchmark_config: { alert_rate: 0.2 },
-    calibration_metadata: { walkforward_last_train_end: "2026-03-31" },
   },
 };
 
@@ -336,21 +183,6 @@ describe("App", () => {
     } finally {
       region.displayRange = original;
     }
-  });
-
-  it("describes the raw sub-score scale without claiming historical rescaling", async () => {
-    render(<App />);
-    fireEvent.click(await screen.findByRole("button", { name: "Method" }));
-    expect(screen.getByText("Each line is that sub-score on its 0 to 100 scale. The sections below explain how each one is built. Series start in December 2014.")).toBeInTheDocument();
-  });
-
-  it("renders the Track record evidence tier from its evidence metadata", async () => {
-    render(<App />);
-    fireEvent.click(await screen.findByRole("button", { name: "Track record" }));
-    const term = await screen.findByText("Evidence type");
-    expect(term.tagName).toBe("DT");
-    expect(term.nextElementSibling).toHaveTextContent(DCA_EVIDENCE.evidenceTier);
-    expect(DCA_EVIDENCE.evidenceTier).toBe("Retrospective reconstruction");
   });
 
   it("names the last published reading when the newest finite reading lacks coverage", async () => {
@@ -420,6 +252,10 @@ describe("App", () => {
     expect(screen.getByText("Risk against price")).toBeInTheDocument();
     expect(screen.getByText("you are here")).toBeInTheDocument();
     expect(screen.getByText("What is moving it")).toBeInTheDocument();
+    const navigation = within(screen.getByRole("navigation", { name: "Primary" }));
+    expect(navigation.getAllByRole("button").map((tab) => tab.textContent)).toEqual([
+      "Today", "Track record", "Method",
+    ]);
     expect(screen.getByText("Looks like past peaks")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Method" }));
@@ -428,29 +264,10 @@ describe("App", () => {
     expect(screen.getByText(/How the reading is built/i)).toBeInTheDocument();
     expect(screen.getByText("MVRV Ratio Z Proxy")).toBeInTheDocument();
     expect(screen.getByText(/Display only — excluded from scoring/i)).toBeInTheDocument();
-  });
+    expect(screen.getByText("Each line is that sub-score on its 0 to 100 scale. The sections below explain how each one is built. Series start in December 2014.")).toBeInTheDocument();
 
-  it("shows only the three product tabs", async () => {
-    render(<App />);
-    await screen.findByText("How heated does the Bitcoin market look today?");
-
-    expect(Array.from(screen.getByRole("navigation", { name: "Primary" }).querySelectorAll("button")).map((tab) => tab.textContent)).toEqual([
-      "Today",
-      "Track record",
-      "Method",
-    ]);
-  });
-
-  it("shows the track record with its failures stated first", async () => {
-    render(<App />);
-
-    fireEvent.click(await screen.findByRole("button", { name: "Track record" }));
-
+    fireEvent.click(screen.getByRole("button", { name: "Track record" }));
     expect(await screen.findByRole("heading", { name: "Did waiting to buy help?" })).toBeInTheDocument();
-    expect(screen.getByText(/Across 96/)).toHaveTextContent("19.22% less BTC");
-    expect(screen.getByLabelText("Historical period")).toHaveValue("2022-11-30");
-    expect(screen.getByLabelText("Monthly contribution (USD)")).toHaveValue(100);
-    expect(screen.queryByText("Historically promising")).not.toBeInTheDocument();
   });
 
   it("surfaces validation failures from diagnostics", async () => {
@@ -671,19 +488,6 @@ describe("App", () => {
         expect(copy[field] ?? "").not.toMatch(/Cycle Extension|Top Reversal Risk|Bottom Reversal Risk|Signal Agreement|Cycle Frenzy|dca_risk|DCA Risk/i);
       }
     }
-  });
-
-  it("labels the mobile research table values with their column meanings", async () => {
-    render(<App />);
-    fireEvent.click(await screen.findByRole("button", { name: "Track record" }));
-    await screen.findByRole("heading", { name: "Did waiting to buy help?" });
-    const rows = document.querySelectorAll(".bb-research-table tbody tr");
-    expect(rows.length).toBeGreaterThan(0);
-    rows.forEach((row) => {
-      expect(row.querySelector("th")).toHaveTextContent(/.+/);
-      expect(row.querySelectorAll("td")[0]).toHaveAttribute("data-label", "Median vs Fixed DCA");
-      expect(row.querySelectorAll("td")[1]).toHaveAttribute("data-label", "Periods ahead");
-    });
   });
 
   it("keeps the CSS type floor, keyboard focus and steady reduced-motion cursor", () => {

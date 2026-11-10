@@ -6,10 +6,7 @@ const base = {
   "manifest.json": { version: "v2", release_id: "release-1" },
   "latest_snapshot.json": { confidence_score: 0.7, release_id: "release-1" },
   "history_core.json": { index: [], columns: {}, release_id: "release-1" },
-  "category_breakdowns_btc.json": { index: [], columns: {}, release_id: "release-1" },
-  "category_breakdowns_total_market.json": { index: [], columns: {}, release_id: "release-1" },
   "metric_breakdowns_btc.json": { index: [], columns: {}, release_id: "release-1" },
-  "metric_breakdowns_total_market.json": { index: [], columns: {}, release_id: "release-1" },
   "diagnostics.json": { source_modes: [], release_id: "release-1" },
 };
 
