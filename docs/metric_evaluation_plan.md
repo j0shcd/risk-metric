@@ -746,15 +746,19 @@ November 7, superseding the earlier local-only hold. The remote-only automated
 refresh `4d9789b` is merged without rewriting any frozen research dataset.
 Workers never push. Each subsequent push still follows the global confirmation
 rule; authorization for this accumulated publication is already supplied.
-Publishing code is separate from approving a production model. The daily workflow
+Publishing code is separate from approving a production model. The manual publisher
 now checks the accepted model identity before any data fetch/publish; unaccepted
-causality revisions must fail that check. The legacy acceptance commands move unchanged to a separate explicit
-production-evaluation workflow; research CI retains mandatory correctness/security
-checks. Daily source and resolved-configuration guards block unaccepted publication.
+causality revisions must fail that check. The explicit production-evaluation
+workflow retains the acceptance commands unchanged. Relevant local correctness
+and security checks remain mandatory, with hosted validation available manually.
+Following Josh's November 10 billing constraint, ordinary PRs/main pushes no
+longer start Actions jobs; performance diagnostics run locally and publishing is
+manual-only. The daily security scan remains scheduled. Publisher source and
+resolved-configuration guards block unaccepted publication.
 No policy threshold or canonical identity changes. [ADR 0009](adr/0009-separate-research-ci-from-production-promotion.md)
 records this distinction. A full local legacy production-evaluation run was stopped
 after more than ten minutes; no completed production performance result is claimed.
-The source identity remains unaccepted, regardless of research CI success.
+The source identity remains unaccepted, regardless of local or hosted check success.
 
 ## Accepted requirements
 

@@ -1,6 +1,6 @@
 name: Production Model Acceptance
 
-# Research CI checks correctness. This separate explicit workflow retains the
+# Local validation checks correctness. This separate explicit workflow retains the
 # unchanged legacy performance gate; neither a green CI run nor a push promotes a model.
 on:
   workflow_dispatch:

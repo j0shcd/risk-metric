@@ -257,7 +257,7 @@ function StatusTicker({ latestSnapshot, diagnostics }) {
   const scoreDate = latestSnapshot?.date ?? null;
   const age = daysSince(scoreDate);
   // The publication gate proves a release is internally consistent, not that it
-  // is recent. A stalled daily job otherwise reads as healthy.
+  // is recent. A held refresh otherwise reads as healthy.
   const isStale = age !== null && age > 3;
   const isFailing = validation.passed === false || sourceIssues.length > 0 || isStale;
 
@@ -265,7 +265,7 @@ function StatusTicker({ latestSnapshot, diagnostics }) {
     ? "Data check needed"
     : isStale
       ? `${age} days behind`
-      : "Updated daily";
+      : "Recent reading";
 
   return (
     <header className="bb-topbar">
@@ -604,7 +604,7 @@ export function PublicDataPanel() {
       <div className="bb-panel__head">
         <h2 className="bb-panel__title bb-panel__title--solo">Use the numbers yourself</h2>
       </div>
-      <p className="bb-data-intro">The reading and its four sub-scores are published as JSON after each daily refresh. Point a script, spreadsheet or automation tool at them and set your own rules.</p>
+      <p className="bb-data-intro">The reading and its four sub-scores are published as JSON with each data refresh. Point a script, spreadsheet or automation tool at them and set your own rules.</p>
       <PublicDataRow label="Today" path="/api/v1/latest.json" />
       <PublicDataRow label="Every day since 2014" path="/api/v1/history.json" />
       <p className="bb-dca-note">Free to use, no key needed. Values run 0 to 100. Fields only get added, never renamed. It describes the market against history and is not a signal to buy or sell.</p>
