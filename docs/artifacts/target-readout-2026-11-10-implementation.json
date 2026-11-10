@@ -1,0 +1,17 @@
+{
+  "schema": "target-readout-implementation-v1",
+  "code_sha256": {
+    "research/decision_readout.py": "009110ac36085020896f80b933512606eafb04d333494faa8b893540f46bc6c4",
+    "research/target_readout_study.py": "bd4c67d4059771f0aa69039c6b9bda8035555b63b45557b8fccce2f7db64b3cd",
+    "research/location_scale_readout.py": "76ea0092f75d51ea020b68fba63c24175449e63b55fba465923046540bd1f59d",
+    "research/distribution_readout.py": "c356b0e1769f9eb5ddee7507f520b5cc834cacd19f8de2f984325f0a6ebd7c19",
+    "tests/test_decision_readout.py": "cf9561a55a31e34ef8cc1a1e7212cea973033e72995ab731bc9b120096feeae8",
+    "tests/test_target_readout_study.py": "9a0b710555fd70a2d7b648d9a424498490a64d463aad3a4300258f5c1ee2850d",
+    "docs/artifacts/target-readout-2026-11-10-registration.json": "32d923c5329a475f201015e9487494b937212ae1f8b25cb3832cbc240b3359df"
+  },
+  "runtime": {
+    "python": "3.12.16",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3"
+  }
+}

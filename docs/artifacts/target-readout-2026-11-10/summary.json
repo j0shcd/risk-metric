@@ -1,0 +1,1610 @@
+{
+  "schema": "target-readout-result-v1",
+  "freeze_sha256": "17b3a4cf72d9ac33426f84c52a0736ceebc2a25c1d3016f48e42c333e4b83692",
+  "runtime": {
+    "python": "3.12.16",
+    "numpy": "2.4.6",
+    "pandas": "2.3.3"
+  },
+  "completed_world_law_jobs": 96,
+  "failures": [],
+  "network_attempts": [],
+  "synthetic": [
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "empirical_latest24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.13970175878633873,
+      "mean_brier": 0.3045107600980679,
+      "coverage80": 0.6285438144329896,
+      "mean_width80": 0.41597272305499866,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": 0.0
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "empirical_latest24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.14445285702472122,
+      "mean_brier": 0.3155407419491637,
+      "coverage80": 0.5856958762886598,
+      "mean_width80": 0.38644285877905116,
+      "gain_vs_own_price_only": -0.004751098238382462,
+      "gain_ci95_pointwise": [
+        -0.00606898183882364,
+        -0.0034725771745054805
+      ],
+      "gain_vs_old_price_only": -0.004751098238382462
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "empirical_latest24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.14447715440587192,
+      "mean_brier": 0.3113946117633348,
+      "coverage80": 0.5914948453608248,
+      "mean_width80": 0.3863642724567861,
+      "gain_vs_own_price_only": -0.004775395619533199,
+      "gain_ci95_pointwise": [
+        -0.006418662151213251,
+        -0.0032408704508791963
+      ],
+      "gain_vs_old_price_only": -0.004775395619533199
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "empirical_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.16083246772924653,
+      "mean_brier": 0.3579736861185625,
+      "coverage80": 0.4642396907216495,
+      "mean_width80": 0.31934660950651594,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.021130708942907788
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "empirical_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.1614553759173121,
+      "mean_brier": 0.358032708485832,
+      "coverage80": 0.4513530927835051,
+      "mean_width80": 0.311325778265812,
+      "gain_vs_own_price_only": -0.0006229081880655741,
+      "gain_ci95_pointwise": [
+        -0.0012609970757071476,
+        5.4706608038669233e-05
+      ],
+      "gain_vs_old_price_only": -0.02175361713097336
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "empirical_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.16171001509905897,
+      "mean_brier": 0.360811890941138,
+      "coverage80": 0.4548969072164949,
+      "mean_width80": 0.31225632001737247,
+      "gain_vs_own_price_only": -0.000877547369812443,
+      "gain_ci95_pointwise": [
+        -0.0014037834191175918,
+        -0.00031987981106118573
+      ],
+      "gain_vs_old_price_only": -0.02200825631272023
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "gaussian_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.3335431175470257,
+      "mean_brier": 0.3770918872168646,
+      "coverage80": 0.4729381443298969,
+      "mean_width80": 0.9928487508649098,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.193841358760687
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "gaussian_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.5231359211424957,
+      "mean_brier": 0.382548569127231,
+      "coverage80": 0.5170747422680412,
+      "mean_width80": 1.76506848383832,
+      "gain_vs_own_price_only": -0.18959280359547004,
+      "gain_ci95_pointwise": [
+        -0.36586252995986107,
+        -0.06836378283813035
+      ],
+      "gain_vs_old_price_only": -0.383434162356157
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "gaussian_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.5073501069460808,
+      "mean_brier": 0.3826840047591993,
+      "coverage80": 0.49613402061855666,
+      "mean_width80": 1.8170195448652544,
+      "gain_vs_own_price_only": -0.17380698939905523,
+      "gain_ci95_pointwise": [
+        -0.27601179877883614,
+        -0.08581021734087416
+      ],
+      "gain_vs_old_price_only": -0.36764834815974223
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "gaussian_expanding",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.1840543481953164,
+      "mean_brier": 0.36165536796662623,
+      "coverage80": 0.4375,
+      "mean_width80": 0.38716112382283574,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.044352589408977676
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "gaussian_expanding",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.21194912537141816,
+      "mean_brier": 0.36459737586297525,
+      "coverage80": 0.45393041237113396,
+      "mean_width80": 0.4911400061695824,
+      "gain_vs_own_price_only": -0.027894777176101764,
+      "gain_ci95_pointwise": [
+        -0.04945768356605647,
+        -0.012186540439752258
+      ],
+      "gain_vs_old_price_only": -0.07224736658507945
+    },
+    {
+      "law": "null",
+      "horizon": 6,
+      "method": "gaussian_expanding",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.1979393683368018,
+      "mean_brier": 0.3593479172202879,
+      "coverage80": 0.43588917525773196,
+      "mean_width80": 0.44383477453885734,
+      "gain_vs_own_price_only": -0.013885020141485398,
+      "gain_ci95_pointwise": [
+        -0.029377940686568262,
+        0.002281714301495089
+      ],
+      "gain_vs_old_price_only": -0.05823760955046308
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "empirical_latest24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.3589504627938451,
+      "mean_brier": 0.3661418782182444,
+      "coverage80": 0.33648255813953487,
+      "mean_width80": 0.5258616795042294,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": 0.0
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "empirical_latest24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.36043175225025603,
+      "mean_brier": 0.3747231065626886,
+      "coverage80": 0.31613372093023256,
+      "mean_width80": 0.4971543941821098,
+      "gain_vs_own_price_only": -0.0014812894564109852,
+      "gain_ci95_pointwise": [
+        -0.0056769491159334206,
+        0.0026487136609574476
+      ],
+      "gain_vs_old_price_only": -0.0014812894564109852
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "empirical_latest24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.3695105598708476,
+      "mean_brier": 0.3829896598884359,
+      "coverage80": 0.3125,
+      "mean_width80": 0.4920788062217192,
+      "gain_vs_own_price_only": -0.010560097077002447,
+      "gain_ci95_pointwise": [
+        -0.016760214183110474,
+        -0.005059262548129346
+      ],
+      "gain_vs_old_price_only": -0.010560097077002447
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "empirical_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.3934421187900196,
+      "mean_brier": 0.39060038818398,
+      "coverage80": 0.21656976744186046,
+      "mean_width80": 0.31803042759937494,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.034491655996174486
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "empirical_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.3955451006173091,
+      "mean_brier": 0.395313263977466,
+      "coverage80": 0.21148255813953487,
+      "mean_width80": 0.31154086734060693,
+      "gain_vs_own_price_only": -0.0021029818272894855,
+      "gain_ci95_pointwise": [
+        -0.003397252731150474,
+        -0.0009911143010144581
+      ],
+      "gain_vs_old_price_only": -0.03659463782346398
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "empirical_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.3935757993867083,
+      "mean_brier": 0.3914650953192566,
+      "coverage80": 0.2122093023255814,
+      "mean_width80": 0.310536563982318,
+      "gain_vs_own_price_only": -0.00013368059668867737,
+      "gain_ci95_pointwise": [
+        -0.001246918806672856,
+        0.0010333814192309814
+      ],
+      "gain_vs_old_price_only": -0.03462533659286316
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "gaussian_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.9018631755562141,
+      "mean_brier": 0.37816180706013913,
+      "coverage80": 0.3335755813953488,
+      "mean_width80": 1.3424191911095515,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.542912712762369
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "gaussian_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 1.2711100495992422,
+      "mean_brier": 0.3760069322332186,
+      "coverage80": 0.373546511627907,
+      "mean_width80": 2.2966050586965565,
+      "gain_vs_own_price_only": -0.36924687404302803,
+      "gain_ci95_pointwise": [
+        -0.6962130773604678,
+        -0.14894474705199656
+      ],
+      "gain_vs_old_price_only": -0.912159586805397
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "gaussian_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.9430448412756282,
+      "mean_brier": 0.3685825826932977,
+      "coverage80": 0.39098837209302323,
+      "mean_width80": 2.485646485129434,
+      "gain_vs_own_price_only": -0.04118166571941408,
+      "gain_ci95_pointwise": [
+        -0.33438227268675985,
+        0.3209493439140203
+      ],
+      "gain_vs_old_price_only": -0.584094378481783
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "gaussian_expanding",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.6510822064221808,
+      "mean_brier": 0.4206735680624553,
+      "coverage80": 0.251453488372093,
+      "mean_width80": 0.7035704573544037,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.29213174362833566
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "gaussian_expanding",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.8065010175277922,
+      "mean_brier": 0.3959576136215885,
+      "coverage80": 0.3175872093023256,
+      "mean_width80": 1.4767201060670665,
+      "gain_vs_own_price_only": -0.15541881110561145,
+      "gain_ci95_pointwise": [
+        -0.6359870658806608,
+        0.19916670708030237
+      ],
+      "gain_vs_old_price_only": -0.4475505547339471
+    },
+    {
+      "law": "null",
+      "horizon": 24,
+      "method": "gaussian_expanding",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.7049706710371418,
+      "mean_brier": 0.42347342228577706,
+      "coverage80": 0.27834302325581395,
+      "mean_width80": 1.1739619839490385,
+      "gain_vs_own_price_only": -0.05388846461496108,
+      "gain_ci95_pointwise": [
+        -0.2734571228481523,
+        0.17999535355659194
+      ],
+      "gain_vs_old_price_only": -0.3460202082432967
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "empirical_latest24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.33797413554724665,
+      "mean_brier": 0.3230129417703518,
+      "coverage80": 0.5260953608247423,
+      "mean_width80": 0.7542451487307795,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": 0.0
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "empirical_latest24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.34629713293400344,
+      "mean_brier": 0.33362013105225635,
+      "coverage80": 0.5077319587628866,
+      "mean_width80": 0.7177657566564564,
+      "gain_vs_own_price_only": -0.008322997386756795,
+      "gain_ci95_pointwise": [
+        -0.011278488321043379,
+        -0.005256099567876331
+      ],
+      "gain_vs_old_price_only": -0.008322997386756795
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "empirical_latest24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.3295857844207863,
+      "mean_brier": 0.3154507575741434,
+      "coverage80": 0.5135309278350515,
+      "mean_width80": 0.7111553650024883,
+      "gain_vs_own_price_only": 0.008388351126460362,
+      "gain_ci95_pointwise": [
+        0.004161289544218992,
+        0.01288193525770127
+      ],
+      "gain_vs_old_price_only": 0.008388351126460362
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "empirical_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.34474332686019205,
+      "mean_brier": 0.32804818527899776,
+      "coverage80": 0.3627577319587629,
+      "mean_width80": 0.47103610974057236,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.00676919131294535
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "empirical_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.34546912760175197,
+      "mean_brier": 0.3293996296838108,
+      "coverage80": 0.35309278350515466,
+      "mean_width80": 0.4587438511228096,
+      "gain_vs_own_price_only": -0.000725800741560003,
+      "gain_ci95_pointwise": [
+        -0.0020366359584495725,
+        0.0005914817647938995
+      ],
+      "gain_vs_old_price_only": -0.007494992054505353
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "empirical_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.3463301795486963,
+      "mean_brier": 0.3290433864092781,
+      "coverage80": 0.3540592783505155,
+      "mean_width80": 0.4596495992762982,
+      "gain_vs_own_price_only": -0.0015868526885043002,
+      "gain_ci95_pointwise": [
+        -0.0024842077892769463,
+        -0.0006844778899415982
+      ],
+      "gain_vs_old_price_only": -0.00835604400144965
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "gaussian_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 1.0075072838036923,
+      "mean_brier": 0.3682534381831506,
+      "coverage80": 0.3843427835051546,
+      "mean_width80": 2.4874427954332745,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.6695331482564456
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "gaussian_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 1.6176052332281012,
+      "mean_brier": 0.3700943204060737,
+      "coverage80": 0.4326675257731959,
+      "mean_width80": 4.717948436353771,
+      "gain_vs_own_price_only": -0.6100979494244089,
+      "gain_ci95_pointwise": [
+        -1.164203392156664,
+        -0.24565568629886061
+      ],
+      "gain_vs_old_price_only": -1.2796310976808545
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "gaussian_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 1.3165565725957422,
+      "mean_brier": 0.33585592378759505,
+      "coverage80": 0.44394329896907214,
+      "mean_width80": 3.712329806883124,
+      "gain_vs_own_price_only": -0.30904928879204996,
+      "gain_ci95_pointwise": [
+        -0.6488169028640777,
+        -0.019798911020734423
+      ],
+      "gain_vs_old_price_only": -0.9785824370484957
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "gaussian_expanding",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.4697847956334814,
+      "mean_brier": 0.3426473997880627,
+      "coverage80": 0.3543814432989691,
+      "mean_width80": 0.7771185148262635,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.1318106600862347
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "gaussian_expanding",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.4892169951161549,
+      "mean_brier": 0.34251408045998394,
+      "coverage80": 0.3682345360824742,
+      "mean_width80": 0.911093553265007,
+      "gain_vs_own_price_only": -0.019432199482673586,
+      "gain_ci95_pointwise": [
+        -0.05276069891466145,
+        0.026330755619198502
+      ],
+      "gain_vs_old_price_only": -0.1512428595689083
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 6,
+      "method": "gaussian_expanding",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.398606425347766,
+      "mean_brier": 0.2564931712237732,
+      "coverage80": 0.45103092783505155,
+      "mean_width80": 0.9528273616660693,
+      "gain_vs_own_price_only": 0.07117837028571536,
+      "gain_ci95_pointwise": [
+        0.02022323862394945,
+        0.11533819570287555
+      ],
+      "gain_vs_old_price_only": -0.060632289800519344
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "empirical_latest24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 1.1981353903080691,
+      "mean_brier": 0.3688210542412607,
+      "coverage80": 0.29796511627906974,
+      "mean_width80": 1.349423306356189,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": 0.0
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "empirical_latest24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 1.2034662348226326,
+      "mean_brier": 0.3742894790908937,
+      "coverage80": 0.28633720930232553,
+      "mean_width80": 1.295306377956452,
+      "gain_vs_own_price_only": -0.00533084451456351,
+      "gain_ci95_pointwise": [
+        -0.017100773749764663,
+        0.005843712216134507
+      ],
+      "gain_vs_old_price_only": -0.00533084451456351
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "empirical_latest24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 1.2160226139565924,
+      "mean_brier": 0.37584544482090854,
+      "coverage80": 0.2747093023255814,
+      "mean_width80": 1.281304327701916,
+      "gain_vs_own_price_only": -0.017887223648523475,
+      "gain_ci95_pointwise": [
+        -0.03410898347519842,
+        -0.0035377937761678375
+      ],
+      "gain_vs_old_price_only": -0.017887223648523475
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "empirical_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 1.2919880184385568,
+      "mean_brier": 0.4197092953733092,
+      "coverage80": 0.14534883720930233,
+      "mean_width80": 0.6271213078888813,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.09385262813048771
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "empirical_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 1.293636749495017,
+      "mean_brier": 0.42097201339656504,
+      "coverage80": 0.1431686046511628,
+      "mean_width80": 0.615259342426409,
+      "gain_vs_own_price_only": -0.0016487310564601322,
+      "gain_ci95_pointwise": [
+        -0.0035539424127804674,
+        0.00014707971075097684
+      ],
+      "gain_vs_old_price_only": -0.09550135918694784
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "empirical_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 1.2958626091984642,
+      "mean_brier": 0.420595872039465,
+      "coverage80": 0.14171511627906977,
+      "mean_width80": 0.6143451529811598,
+      "gain_vs_own_price_only": -0.003874590759907379,
+      "gain_ci95_pointwise": [
+        -0.007691114464414719,
+        -0.0006251263444226545
+      ],
+      "gain_vs_old_price_only": -0.09772721889039508
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "gaussian_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 5.948490059228046,
+      "mean_brier": 0.43082351872635927,
+      "coverage80": 0.22020348837209303,
+      "mean_width80": 8.475052036176372,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -4.750354668919978
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "gaussian_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 6.510640307853444,
+      "mean_brier": 0.42234959027464813,
+      "coverage80": 0.2761627906976744,
+      "mean_width80": 15.084401877107492,
+      "gain_vs_own_price_only": -0.5621502486253964,
+      "gain_ci95_pointwise": [
+        -3.2497498681349177,
+        2.772104446294819
+      ],
+      "gain_vs_old_price_only": -5.312504917545374
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "gaussian_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 6.922704363439944,
+      "mean_brier": 0.40967325580288483,
+      "coverage80": 0.28488372093023256,
+      "mean_width80": 15.230443197123098,
+      "gain_vs_own_price_only": -0.9742143042118971,
+      "gain_ci95_pointwise": [
+        -4.01660162420262,
+        1.8498620394412983
+      ],
+      "gain_vs_old_price_only": -5.724568973131875
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "gaussian_expanding",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 2.3221322479426596,
+      "mean_brier": 0.40134711811498713,
+      "coverage80": 0.2550872093023256,
+      "mean_width80": 4.416070026631725,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -1.1239968576345905
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "gaussian_expanding",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 2.360723081834832,
+      "mean_brier": 0.4164683133237196,
+      "coverage80": 0.21875,
+      "mean_width80": 3.8489289777069806,
+      "gain_vs_own_price_only": -0.03859083389217244,
+      "gain_ci95_pointwise": [
+        -0.5691950673408137,
+        0.6535949236375265
+      ],
+      "gain_vs_old_price_only": -1.1625876915267628
+    },
+    {
+      "law": "persistent_drift",
+      "horizon": 24,
+      "method": "gaussian_expanding",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 2.3733448792658525,
+      "mean_brier": 0.3806803269785868,
+      "coverage80": 0.2790697674418604,
+      "mean_width80": 7.154017493828391,
+      "gain_vs_own_price_only": -0.05121263132319334,
+      "gain_ci95_pointwise": [
+        -1.297125114487383,
+        0.9807516302261432
+      ],
+      "gain_vs_old_price_only": -1.1752094889577838
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "empirical_latest24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.1819662818704802,
+      "mean_brier": 0.30651281880892944,
+      "coverage80": 0.6153350515463918,
+      "mean_width80": 0.518974104916547,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": 0.0
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "empirical_latest24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.18754022227089734,
+      "mean_brier": 0.31559986697339254,
+      "coverage80": 0.5876288659793815,
+      "mean_width80": 0.48629923858337665,
+      "gain_vs_own_price_only": -0.005573940400417152,
+      "gain_ci95_pointwise": [
+        -0.007841330597375759,
+        -0.003242890970084323
+      ],
+      "gain_vs_old_price_only": -0.005573940400417152
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "empirical_latest24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.1865234664620334,
+      "mean_brier": 0.315723596233076,
+      "coverage80": 0.601159793814433,
+      "mean_width80": 0.49265178922765085,
+      "gain_vs_own_price_only": -0.004557184591553232,
+      "gain_ci95_pointwise": [
+        -0.006086438044173662,
+        -0.0031229747116845795
+      ],
+      "gain_vs_old_price_only": -0.004557184591553232
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "empirical_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.20345636404912137,
+      "mean_brier": 0.3595412933415957,
+      "coverage80": 0.4771262886597938,
+      "mean_width80": 0.4054437769289365,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.021490082178641203
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "empirical_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.20489962250536675,
+      "mean_brier": 0.36095250331661877,
+      "coverage80": 0.4648840206185567,
+      "mean_width80": 0.39370914282207514,
+      "gain_vs_own_price_only": -0.0014432584562453794,
+      "gain_ci95_pointwise": [
+        -0.0027353305962258445,
+        -0.0003380689015501081
+      ],
+      "gain_vs_old_price_only": -0.022933340634886584
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "empirical_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.2050144641777471,
+      "mean_brier": 0.36341494377363276,
+      "coverage80": 0.46713917525773196,
+      "mean_width80": 0.3944147769179424,
+      "gain_vs_own_price_only": -0.0015581001286257214,
+      "gain_ci95_pointwise": [
+        -0.002296520589129202,
+        -0.0008389748187245538
+      ],
+      "gain_vs_old_price_only": -0.023048182307266924
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "gaussian_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.7924870058833823,
+      "mean_brier": 0.38139672374747324,
+      "coverage80": 0.43492268041237114,
+      "mean_width80": 2.6178087043381577,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.6105207240129021
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "gaussian_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 1.3227685448243265,
+      "mean_brier": 0.39067966253946046,
+      "coverage80": 0.4742268041237113,
+      "mean_width80": 4.817570505497782,
+      "gain_vs_own_price_only": -0.5302815389409443,
+      "gain_ci95_pointwise": [
+        -1.019451730808997,
+        -0.14563440746645728
+      ],
+      "gain_vs_old_price_only": -1.1408022629538463
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "gaussian_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 1.0173844386284545,
+      "mean_brier": 0.3861536514322851,
+      "coverage80": 0.4896907216494845,
+      "mean_width80": 3.409016344701434,
+      "gain_vs_own_price_only": -0.2248974327450722,
+      "gain_ci95_pointwise": [
+        -0.5630127792139079,
+        0.10627643250934665
+      ],
+      "gain_vs_old_price_only": -0.8354181567579744
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "gaussian_expanding",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.2708658326944963,
+      "mean_brier": 0.3483655090152227,
+      "coverage80": 0.4455541237113402,
+      "mean_width80": 0.6002295655257436,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.08889955082401613
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "gaussian_expanding",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.3687240138873921,
+      "mean_brier": 0.35940988018893166,
+      "coverage80": 0.4378221649484536,
+      "mean_width80": 1.1777242440728517,
+      "gain_vs_own_price_only": -0.09785818119289579,
+      "gain_ci95_pointwise": [
+        -0.25082311874523905,
+        -0.010243636228444026
+      ],
+      "gain_vs_old_price_only": -0.1867577320169119
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 6,
+      "method": "gaussian_expanding",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.2729904902484958,
+      "mean_brier": 0.3500803611408667,
+      "coverage80": 0.4635953608247423,
+      "mean_width80": 0.7239890020479447,
+      "gain_vs_own_price_only": -0.0021246575539995358,
+      "gain_ci95_pointwise": [
+        -0.049341541293810666,
+        0.05047052588482543
+      ],
+      "gain_vs_old_price_only": -0.09102420837801567
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "empirical_latest24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.5243461385691972,
+      "mean_brier": 0.3808823776947349,
+      "coverage80": 0.31976744186046513,
+      "mean_width80": 0.6996201489783771,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": 0.0
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "empirical_latest24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.5326180167949822,
+      "mean_brier": 0.38263583110139365,
+      "coverage80": 0.31031976744186046,
+      "mean_width80": 0.6670537928529408,
+      "gain_vs_own_price_only": -0.00827187822578504,
+      "gain_ci95_pointwise": [
+        -0.014489559407844339,
+        -0.002243852117348498
+      ],
+      "gain_vs_old_price_only": -0.00827187822578504
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "empirical_latest24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.5301430472320593,
+      "mean_brier": 0.38469592635416305,
+      "coverage80": 0.30523255813953487,
+      "mean_width80": 0.6634162979861973,
+      "gain_vs_own_price_only": -0.005796908662862083,
+      "gain_ci95_pointwise": [
+        -0.011440392133774667,
+        -0.00033804708952327194
+      ],
+      "gain_vs_old_price_only": -0.005796908662862083
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "empirical_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 0.5639337851777653,
+      "mean_brier": 0.393483490052998,
+      "coverage80": 0.20712209302325582,
+      "mean_width80": 0.41774617767887656,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.03958764660856802
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "empirical_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.5656747052099325,
+      "mean_brier": 0.39578829419667577,
+      "coverage80": 0.20421511627906977,
+      "mean_width80": 0.4110909691336148,
+      "gain_vs_own_price_only": -0.0017409200321672619,
+      "gain_ci95_pointwise": [
+        -0.003817256673615605,
+        0.00048604745299981195
+      ],
+      "gain_vs_old_price_only": -0.04132856664073528
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "empirical_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 0.565341194996664,
+      "mean_brier": 0.395216243989117,
+      "coverage80": 0.20494186046511628,
+      "mean_width80": 0.4095174075264786,
+      "gain_vs_own_price_only": -0.0014074098188986747,
+      "gain_ci95_pointwise": [
+        -0.002799665761799699,
+        -0.0001439692083003694
+      ],
+      "gain_vs_old_price_only": -0.04099505642746669
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "gaussian_split24",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 1.9272506439876986,
+      "mean_brier": 0.41466690499852266,
+      "coverage80": 0.3103197674418605,
+      "mean_width80": 5.039153216230499,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -1.4029045054185016
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "gaussian_split24",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 2.5276201379839827,
+      "mean_brier": 0.39837123033252997,
+      "coverage80": 0.3539244186046512,
+      "mean_width80": 8.195394784918175,
+      "gain_vs_own_price_only": -0.600369493996284,
+      "gain_ci95_pointwise": [
+        -1.2135511392488905,
+        -0.01410408389987799
+      ],
+      "gain_vs_old_price_only": -2.0032739994147857
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "gaussian_split24",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 2.128758471243157,
+      "mean_brier": 0.3966898914657462,
+      "coverage80": 0.35029069767441867,
+      "mean_width80": 6.979575675108375,
+      "gain_vs_own_price_only": -0.2015078272554584,
+      "gain_ci95_pointwise": [
+        -0.9949490962243612,
+        0.7269208942181087
+      ],
+      "gain_vs_old_price_only": -1.6044123326739599
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "gaussian_expanding",
+      "arm": "price_only",
+      "worlds": 32,
+      "mean_crps": 1.004396792100001,
+      "mean_brier": 0.42623688066183907,
+      "coverage80": 0.25799418604651164,
+      "mean_width80": 1.4090648202328901,
+      "gain_vs_own_price_only": 0.0,
+      "gain_ci95_pointwise": [
+        0.0,
+        0.0
+      ],
+      "gain_vs_old_price_only": -0.4800506535308036
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "gaussian_expanding",
+      "arm": "nuisance",
+      "worlds": 32,
+      "mean_crps": 0.9142483598285068,
+      "mean_brier": 0.39974689316226775,
+      "coverage80": 0.30523255813953487,
+      "mean_width80": 1.6767907368293673,
+      "gain_vs_own_price_only": 0.09014843227149406,
+      "gain_ci95_pointwise": [
+        -0.0993704976621406,
+        0.33041190683291766
+      ],
+      "gain_vs_old_price_only": -0.3899022212593096
+    },
+    {
+      "law": "persistent_volatility",
+      "horizon": 24,
+      "method": "gaussian_expanding",
+      "arm": "exact",
+      "worlds": 32,
+      "mean_crps": 1.0609182514893252,
+      "mean_brier": 0.41730354436349204,
+      "coverage80": 0.3117732558139535,
+      "mean_width80": 2.4719163224445326,
+      "gain_vs_own_price_only": -0.056521459389324374,
+      "gain_ci95_pointwise": [
+        -0.5051857802362862,
+        0.3960915092061469
+      ],
+      "gain_vs_old_price_only": -0.536572112920128
+    }
+  ],
+  "market": {
+    "common_forecast_origins": [
+      "2018-02-28",
+      "2018-03-31",
+      "2018-04-30",
+      "2018-05-31",
+      "2018-06-30",
+      "2018-07-31",
+      "2018-08-31",
+      "2018-09-30",
+      "2018-10-31",
+      "2018-11-30",
+      "2018-12-31",
+      "2019-01-31",
+      "2019-02-28",
+      "2019-03-31",
+      "2019-04-30",
+      "2019-05-31",
+      "2019-06-30",
+      "2019-07-31",
+      "2019-08-31",
+      "2019-09-30",
+      "2019-10-31",
+      "2019-11-30",
+      "2019-12-31",
+      "2020-01-31",
+      "2020-02-29",
+      "2020-03-31",
+      "2020-04-30",
+      "2020-05-31",
+      "2020-06-30",
+      "2020-07-31",
+      "2020-08-31",
+      "2020-09-30",
+      "2020-10-31",
+      "2020-11-30",
+      "2020-12-31",
+      "2021-01-31",
+      "2021-02-28",
+      "2021-03-31",
+      "2021-04-30",
+      "2021-05-31",
+      "2021-06-30",
+      "2021-07-31",
+      "2021-08-31",
+      "2021-09-30",
+      "2021-10-31",
+      "2021-11-30",
+      "2021-12-31",
+      "2022-01-31",
+      "2022-02-28",
+      "2022-03-31",
+      "2022-04-30",
+      "2022-05-31",
+      "2022-06-30",
+      "2022-07-31",
+      "2022-08-31",
+      "2022-09-30",
+      "2022-10-31",
+      "2022-11-30",
+      "2022-12-31",
+      "2023-01-31",
+      "2023-02-28",
+      "2023-03-31",
+      "2023-04-30",
+      "2023-05-31",
+      "2023-06-30",
+      "2023-07-31",
+      "2023-08-31",
+      "2023-09-30",
+      "2023-10-31",
+      "2023-11-30",
+      "2023-12-31",
+      "2024-01-31",
+      "2024-02-29",
+      "2024-03-31",
+      "2024-04-30",
+      "2024-05-31",
+      "2024-06-30",
+      "2024-07-31",
+      "2024-08-31",
+      "2024-09-30",
+      "2024-10-31",
+      "2024-11-30",
+      "2024-12-31",
+      "2025-01-31",
+      "2025-02-28",
+      "2025-03-31",
+      "2025-04-30",
+      "2025-05-31",
+      "2025-06-30",
+      "2025-07-31",
+      "2025-08-31",
+      "2025-09-30",
+      "2025-10-31",
+      "2025-11-30",
+      "2025-12-31",
+      "2026-01-31",
+      "2026-02-28"
+    ],
+    "summary": [
+      {
+        "arm": "fixed_dca",
+        "windows": 96,
+        "wins": 0,
+        "median_delta": 0.0,
+        "p10_delta": 0.0,
+        "p90_delta": 0.0
+      },
+      {
+        "arm": "incumbent",
+        "windows": 96,
+        "wins": 23,
+        "median_delta": -0.1921565778739206,
+        "p10_delta": -0.7225737290860904,
+        "p90_delta": 0.1154342882022602
+      },
+      {
+        "arm": "incumbent_capped6",
+        "windows": 96,
+        "wins": 27,
+        "median_delta": -0.0918926161273727,
+        "p10_delta": -0.36732392094033944,
+        "p90_delta": 0.07768875237766426
+      },
+      {
+        "arm": "warmup_matched_incumbent",
+        "windows": 96,
+        "wins": 47,
+        "median_delta": -0.003402943812657877,
+        "p10_delta": -0.22510464697917754,
+        "p90_delta": 0.1154342882022602
+      },
+      {
+        "arm": "empirical_latest24",
+        "windows": 96,
+        "wins": 4,
+        "median_delta": -0.3124346534018703,
+        "p10_delta": -0.42960248687457714,
+        "p90_delta": -0.000578181268833744
+      },
+      {
+        "arm": "empirical_split24",
+        "windows": 96,
+        "wins": 5,
+        "median_delta": -0.39070402065670123,
+        "p10_delta": -0.5630798293814727,
+        "p90_delta": -0.019359889864895785
+      },
+      {
+        "arm": "gaussian_split24",
+        "windows": 96,
+        "wins": 16,
+        "median_delta": -0.1748360871371607,
+        "p10_delta": -0.3025794592272403,
+        "p90_delta": 0.003589419788327608
+      },
+      {
+        "arm": "gaussian_expanding",
+        "windows": 96,
+        "wins": 5,
+        "median_delta": -0.21910795078229228,
+        "p10_delta": -0.31208015698137176,
+        "p90_delta": -0.014073945944323707
+      },
+      {
+        "arm": "gaussian_components",
+        "windows": 96,
+        "wins": 20,
+        "median_delta": -0.09430753348393128,
+        "p10_delta": -0.28102685463758925,
+        "p90_delta": 0.004956024814612214
+      },
+      {
+        "arm": "gaussian_price_only",
+        "windows": 96,
+        "wins": 5,
+        "median_delta": -0.20152820821619583,
+        "p10_delta": -0.3635168866431565,
+        "p90_delta": -0.01149079211620907
+      },
+      {
+        "arm": "gaussian_pooled",
+        "windows": 96,
+        "wins": 5,
+        "median_delta": -0.30180811937538554,
+        "p10_delta": -0.48254936049849434,
+        "p90_delta": -0.018938420662633848
+      }
+    ],
+    "forecasts": [
+      {
+        "arm": "empirical_latest24",
+        "common_scored_n": 97,
+        "crps": 0.4627306252397833,
+        "brier": 0.40634924693435986,
+        "coverage80": 0.5670103092783505,
+        "width80": 1.3416892682291055,
+        "fitted_origins": 112,
+        "first_fitted_origin": "2017-07-31"
+      },
+      {
+        "arm": "empirical_split24",
+        "common_scored_n": 97,
+        "crps": 0.5269839659956355,
+        "brier": 0.44940967473759263,
+        "coverage80": 0.41237113402061853,
+        "width80": 0.9341913047629135,
+        "fitted_origins": 105,
+        "first_fitted_origin": "2018-02-28"
+      },
+      {
+        "arm": "gaussian_split24",
+        "common_scored_n": 97,
+        "crps": 2.4948314422349243,
+        "brier": 0.3851732211441114,
+        "coverage80": 0.5051546391752577,
+        "width80": 8.157673852271996,
+        "fitted_origins": 105,
+        "first_fitted_origin": "2018-02-28"
+      },
+      {
+        "arm": "gaussian_expanding",
+        "common_scored_n": 97,
+        "crps": 0.47244610765139594,
+        "brier": 0.3548076161764391,
+        "coverage80": 0.4845360824742268,
+        "width80": 1.1773864870272024,
+        "fitted_origins": 105,
+        "first_fitted_origin": "2018-02-28"
+      },
+      {
+        "arm": "gaussian_components",
+        "common_scored_n": 97,
+        "crps": 0.7101868587089412,
+        "brier": 0.35572566041372167,
+        "coverage80": 0.4948453608247423,
+        "width80": 2.1001008901384868,
+        "fitted_origins": 105,
+        "first_fitted_origin": "2018-02-28"
+      },
+      {
+        "arm": "gaussian_price_only",
+        "common_scored_n": 97,
+        "crps": 0.48137846553353825,
+        "brier": 0.36339125298721886,
+        "coverage80": 0.4948453608247423,
+        "width80": 1.256505958698963,
+        "fitted_origins": 105,
+        "first_fitted_origin": "2018-02-28"
+      },
+      {
+        "arm": "gaussian_pooled",
+        "common_scored_n": 97,
+        "crps": 0.505887436790331,
+        "brier": 0.40574823252345577,
+        "coverage80": 0.3917525773195876,
+        "width80": 0.8783637616387038,
+        "fitted_origins": 105,
+        "first_fitted_origin": "2018-02-28"
+      }
+    ]
+  },
+  "elapsed_seconds": 72.15866900000037,
+  "status": "exploratory_research_not_production_acceptance",
+  "output_sha256": {
+    "failures.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "market_eras.csv": "5ef76f709e90e59cae5bfbebbda58f65edf2df8827e28cc041a59328151dffb2",
+    "market_forecast_summary.csv": "8630e8d86c3fa277675108fe2e6d38419f2aff0712f1e0588b5f00652dfe3379",
+    "market_forecasts.json.gz": "7858499380a7ab626a2f2b21559c2fcf37c56477619d7964def834d8d51d0a78",
+    "market_inputs.csv": "c2638b8830413efd54c1ed579a34f596797996d8deda73db095f1af2aeeff75c",
+    "market_summary.csv": "3e4554dae0b05e1a88d05ae410b90096fc9b6461ec4be614ccf6a291d8642b25",
+    "market_windows.csv": "f5fe3f7556b19bf04e3cf92403600dfb2405f4020d3d8f3b0dc3a41e6e289488",
+    "synthetic_summary.json": "17074b387666037f204d8a3d5a82a5252471b93e6d5742139870a0ab684be23c",
+    "world-null-00.json.gz": "f077baa2b005cab44185ef93ca6430c56ad0598081b749d94583036e5d45c51e",
+    "world-null-01.json.gz": "c7489a41a184f80484d9868fa96fa929426b99f841cc733e80bbbbc6e97c8a98",
+    "world-null-02.json.gz": "3f1b5f0fbae626c3dd9bb08ff2f825aa3cd2ddccdd7bb9bc7b0168251c957f17",
+    "world-null-03.json.gz": "3c8bdd150dd3b8357e089a9c81c4fd8ba97657cd54b8d60cd34f76c3ea8bbd95",
+    "world-null-04.json.gz": "ae3077b381b8760596edd27c9e70ced25919c2ba4faea0033e4e0da2b204cb41",
+    "world-null-05.json.gz": "700b5c6699bf70904ed0707ffc91cb76b1da79f1840983e31d92edf071e32ba4",
+    "world-null-06.json.gz": "9f19973fca4e3eace04bb7a9bf90d4ac16c3e2fad6f20dbdabac6dfe092a95ad",
+    "world-null-07.json.gz": "d9b90c1d733d04aec17f301755dd92ea3a3d10b014c30352b8cd5f9ff9ed7b09",
+    "world-null-08.json.gz": "37e1c98e0870adc33cd1cf6a7a5ad495651b824231ed9cca286ab782e9efd56f",
+    "world-null-09.json.gz": "a55a4ea5ab9f8a3fe68c11d1717b41bd4fbc2bdc5ed3f176b32d5831d37082b2",
+    "world-null-10.json.gz": "a916d07a453eb603367c1758fb88c0e2bca7854a3e6b4b9e7050978a2c07ee99",
+    "world-null-11.json.gz": "1f3eaa08115f08313d9eead4011871aa4771f55ac65081fee5122ad6ef00d166",
+    "world-null-12.json.gz": "423408df3c733956d8343ea2bf786895cc952cc31f01b3b67fe98bca5e0159f2",
+    "world-null-13.json.gz": "7e815bde277a9aa5d0cd6d98319f386ac8366e9b96f4883b4a95029f7cfdedfb",
+    "world-null-14.json.gz": "c63dcd5b8ca3418169a6ffe708c3a0e7a1742fb482d1cbc1c32a663760a771a7",
+    "world-null-15.json.gz": "37c2253d1e85d7d1e6a942296aae6392dde519b08a6b0f998f9091690df62352",
+    "world-null-16.json.gz": "32908db9c51fd6d24b04b31309b0d50d412eda1cac4ecfb2d1366be9c1211205",
+    "world-null-17.json.gz": "adba3e87ffc7d5eb8ac11d969c800e8bd16ad0579603e531aeb0cc6a24a097d6",
+    "world-null-18.json.gz": "2bbfb179a04a69c5ab69c606164263486a19997befb597b20c402edda8aa2c83",
+    "world-null-19.json.gz": "7c89e3ad022b6ea67ca75d327fb5039232cbd39b3e2ed796e8ef15574ffc9894",
+    "world-null-20.json.gz": "13c58068f2c3d45d357b82ad872d06d2e416d2e53e09e6957c0928eff7f49b40",
+    "world-null-21.json.gz": "6f41c4be140d1169c43f211c6aee43e940eeca8bfa39181c9aabd46a0c298fae",
+    "world-null-22.json.gz": "60ca46d04383bb7028d28560090077c865915e5e1008b72622d02ee6a8608ada",
+    "world-null-23.json.gz": "8aaa7e591aa6a55325fe3513d8b5340b18883ab1f9fb87f936e7be4c4251286f",
+    "world-null-24.json.gz": "05c6a1010a448f9177b0a59dea5a0ae16485ad389bb0ffa0d823756b66c24c17",
+    "world-null-25.json.gz": "228f92dcc4bff3835c67b6dc686702792799218253513198f6e780efad17114a",
+    "world-null-26.json.gz": "9ce7c0125fd5fca8bddf9fe69ead46382e39c505b666d35bef433583524c431b",
+    "world-null-27.json.gz": "f3e54ca36242ea6110d39c0ad9c3c574fab4c8c2411b9ca1ee215b209a76fbec",
+    "world-null-28.json.gz": "bbe1edafaaac35ab379850453503171b6aee1626b63a5b5b2cb26b062c162576",
+    "world-null-29.json.gz": "111e76d008d9ce6c14bcc7768ded849cc3ba73838657fa0eeffbf1deb8d54ab6",
+    "world-null-30.json.gz": "815d2cec60a9a45fed524a489a59e17a00c0799cabcfbbce486fc2724246a46a",
+    "world-null-31.json.gz": "c915ffb0e9bd962897a35ec0dd50aa180c82a12fb969ffcb688666783dcccd46",
+    "world-persistent_drift-00.json.gz": "5c7574eca63747b69c057f50d0363f5d3c3867ecba811c7309897767435c6bd5",
+    "world-persistent_drift-01.json.gz": "ecfbe1c2e841e3cf330fa73280fc4255420dacf0d7e1ef89e373b4e74b61a846",
+    "world-persistent_drift-02.json.gz": "ae5077c2f449eea08de02179b7863f7cf26eab78ba24ef15f677217caa9993d0",
+    "world-persistent_drift-03.json.gz": "b3e8c28340134ff2c1ceaf3ade0300326547d17258d36833cd7dcb53a241cdd8",
+    "world-persistent_drift-04.json.gz": "a97cb77aaec5be3e56163123eba6db9ab8069aff69a8d4849db7e6a987267efc",
+    "world-persistent_drift-05.json.gz": "1c2ca2c37486d415f77bcb4ab034fbf59e2d149f443b2e24ece99d727002abfa",
+    "world-persistent_drift-06.json.gz": "fe1317586933919c4275b251c87804b722c61345c14463241f58c44ac3f56d4a",
+    "world-persistent_drift-07.json.gz": "8156719ffa08938f70e05561d448dd4e9bb7feeef284861ab8416c4b4c23fa32",
+    "world-persistent_drift-08.json.gz": "3f28462f5b4df503938cabe003492db0d8a3eb1151c7aeebe0531af13d37adf3",
+    "world-persistent_drift-09.json.gz": "5c736559ae438cced2a1c9a29bd505730b4b264561c82b01b1d44116f02e95ad",
+    "world-persistent_drift-10.json.gz": "d1d5d91deab0e54c220631890a11557dfe7fabcde4b7697d9824da4636bcbf4d",
+    "world-persistent_drift-11.json.gz": "68e95ecfe7fe15919f936642809a7d75c7d8432eab19d01d030fd9c011cacdc0",
+    "world-persistent_drift-12.json.gz": "1a606a53cea22f2278018b8bdf088ce61db312043fa860a5642cfd17828c7ae6",
+    "world-persistent_drift-13.json.gz": "80792be697f9645c70b240e34807dbf5c1e767d8e7ae71d899ee8fe1906144f4",
+    "world-persistent_drift-14.json.gz": "9dd5f831d56b907cedd8e12e0f88ce62468eeab50b7e092b5ab4075497a7ac2f",
+    "world-persistent_drift-15.json.gz": "a34d483d9adec07b1d1375e11749d1e025483f14228aed3a7459bb51c9753a05",
+    "world-persistent_drift-16.json.gz": "5afdb977462d910f45661337f008ec2476702e85768f83e0457017b934aa3561",
+    "world-persistent_drift-17.json.gz": "132ada9793aa73f5f752371c617b2c624f3b3c8253b163714f8543cb55be8ea3",
+    "world-persistent_drift-18.json.gz": "f99d1b9514d4d176a5789c71ca50392cd82d7bf14e0850f2378bcb8b158a0e29",
+    "world-persistent_drift-19.json.gz": "3f9d1867cb8c1cb8b58619876f80eb84ea38685e66f8997f9a21b9b1a2052a96",
+    "world-persistent_drift-20.json.gz": "5b6ed4439b812ed8f755bd32cdc3a94354deb39aae86f160d5e7fe0061c09a13",
+    "world-persistent_drift-21.json.gz": "656e0d0c1e3ff0ba1225dd78ccc2dcc724e7c9697917fe679455b23f8cb1a136",
+    "world-persistent_drift-22.json.gz": "d1a3507c6b802c61c32255d69c5353bbec182d959b5e8ed890080f62a81beea3",
+    "world-persistent_drift-23.json.gz": "50a28a24f56055bf66a56fddf68a1a46974218a7d46d494e683c83c30871f2fe",
+    "world-persistent_drift-24.json.gz": "4f292aaeea6a63ad3313af4c5b52bd3d1888e58183cbbbf009531c681b0b51df",
+    "world-persistent_drift-25.json.gz": "3272a121db5865f6b6222a293b9b5b51e61a2702ab973f4e45d963199413fe51",
+    "world-persistent_drift-26.json.gz": "171097ce045c22abebb2a84d493d3fe4886ffbca133149b54ff06247a57fface",
+    "world-persistent_drift-27.json.gz": "32f5bd23ab99bf4e28f2fb9c3517d44abc27d3b91a168150fd4ead2ee572aeed",
+    "world-persistent_drift-28.json.gz": "3a12416dfce9348cb8e8eab6aa2506bfa68bbb54ce28818035854203be512e9b",
+    "world-persistent_drift-29.json.gz": "13e0363caa888b0dad203b51de9990e614ce54144a8b91ca41ccb0fbaa837209",
+    "world-persistent_drift-30.json.gz": "f003dfbd11028e9580a93b079ec5fa920221412dcce2786eb7532e8123273a62",
+    "world-persistent_drift-31.json.gz": "8983047032bdb78b9160e736fcbb6c75b4c2005284aa43b5c3c7340a66732623",
+    "world-persistent_volatility-00.json.gz": "269e45830fc7771e6b58f967bc0bdfb4d9051083ca6b36ec88f0915e442ecae8",
+    "world-persistent_volatility-01.json.gz": "9e92fbad978ee810c73c9cb933c4ebe549ec264cf30749695f64e2923663486c",
+    "world-persistent_volatility-02.json.gz": "30e7e4f624893bad13485c7a6487f8fa3e8cd46273ceb9f1066dfe635b8a2efd",
+    "world-persistent_volatility-03.json.gz": "a2c58303f7e68326fc45b04e7c43a9df08e408bfb565be028c63dd6cf48ba1d2",
+    "world-persistent_volatility-04.json.gz": "658b20753128bfb3395a92eccf0dbafbff90a4225f1d59430ff3620156a1c1c9",
+    "world-persistent_volatility-05.json.gz": "6dbbe1e784f24409e23a834c1b2cab62d4e8b47367ace47eb7709593472d2e84",
+    "world-persistent_volatility-06.json.gz": "79b4c89490ebe15608588fe583651a1ad664195b16e7347b53874d5ff1c74f24",
+    "world-persistent_volatility-07.json.gz": "8af05b74b249d7cbdbfc9cd709bb9a2d4183c899fe16fb30d7b9cf04d3e75803",
+    "world-persistent_volatility-08.json.gz": "556dce0db28fed95dcfeefe2c8f14954cc949c5daf0c8ae09d59228d3151e81c",
+    "world-persistent_volatility-09.json.gz": "6ba95f9df5d39c3e943d129ce8f673054dfee95b1be942b37e3ee4aabf7e0515",
+    "world-persistent_volatility-10.json.gz": "32643152718646ea7fccdf1c7ecb7670eb2500c76add3e1d3192bd494dfc99b1",
+    "world-persistent_volatility-11.json.gz": "4ca38f3005b0429ba1850018052d71339ba12ccb44a0eb2eb7a7cb05e13b0e4a",
+    "world-persistent_volatility-12.json.gz": "a7ead143076f4af9522d3b141a8046494ac0931cea85caa2c7fbd95fac2e827f",
+    "world-persistent_volatility-13.json.gz": "9b4dac7fee6aa7facf272485c4c18f628701b23f4c66d2585b72ff288955465f",
+    "world-persistent_volatility-14.json.gz": "e62f3155c1c65151479761abede06d4ca882a83ffc62c74305a3c9b09eda3afa",
+    "world-persistent_volatility-15.json.gz": "aa2288397396073b2a51da87455f4818aeb48549b212ed4a64d48dcc92d7c397",
+    "world-persistent_volatility-16.json.gz": "497b0a78a2a08aa245bd0a200029ed6a1db036ae3294b2b0dd295ebc52cb33a3",
+    "world-persistent_volatility-17.json.gz": "2d54a9bf0d7fae3cae76d1714e32fa165603bde1652d995d62a23c514d26a85b",
+    "world-persistent_volatility-18.json.gz": "d559127cea56b53ec5a7ba3aa14a18d4d4274b2494e919e300764a8958f5078e",
+    "world-persistent_volatility-19.json.gz": "60682b6db29253a327d908bc9e05d14c62c1ea852868b04a32df75140066bc42",
+    "world-persistent_volatility-20.json.gz": "2ad4240f94f637c65a083947f9e4205a6c1f67a923af27c17494611c66e865e1",
+    "world-persistent_volatility-21.json.gz": "410f5a567a5f6953611d0d10dbbfd953802ad32fcf06568b9937d96ac8e13b07",
+    "world-persistent_volatility-22.json.gz": "c37535ef59ce97cdc515d879114100e98fe21ca1b4ae617da5d84df11303fae5",
+    "world-persistent_volatility-23.json.gz": "b1043f7be87379d9aca5d1e5e2e4b8155d40ec6446ed4d4a6ff9c097927f69d9",
+    "world-persistent_volatility-24.json.gz": "99c7ff895351b5c0905641ef5c0eba29b5e6257b607194bb2ef6182d56070191",
+    "world-persistent_volatility-25.json.gz": "5ff8514e34deac3ba34adef5bacf376b86463116f126ee2071db5a3693276af5",
+    "world-persistent_volatility-26.json.gz": "290c2768d131f04d1e0cbe18bce187c8c79d659d4d4afbc1c768a18c5ee01ad9",
+    "world-persistent_volatility-27.json.gz": "6e7654b6a2a9a3202943b5b6e58d354d7f3ca08a102a722315fb2670ed7dfcfe",
+    "world-persistent_volatility-28.json.gz": "ded0a58820eb14015228b81e36cd7e550105bd8ff28b62237cce6c33ef8f3105",
+    "world-persistent_volatility-29.json.gz": "9be154f3bee122c5bf6658a099f8d85de7e9e30990b4e2c61343472295e5780b",
+    "world-persistent_volatility-30.json.gz": "d044a809c852c660979440cb49b90afb28a6a0167a95caa90e3882b6ffe45004",
+    "world-persistent_volatility-31.json.gz": "409e20733248191d45961a0c333bdb76f23aa7a3cd2c372330f5f697487609f0",
+    "world_means.csv": "8ad73309e790b16a2bbb5e4357ec96dd8292dd9e534e46cbd67281c8fa8c2044"
+  }
+}

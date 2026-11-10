@@ -1,0 +1,236 @@
+{
+  "classification": "postassessment descriptive pairing of all registered market arms; no retuning",
+  "rows": [
+    {
+      "arm": "fixed_dca",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 0,
+      "median_btc_ratio_difference": 0.0
+    },
+    {
+      "arm": "fixed_dca",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 49,
+      "median_btc_ratio_difference": 0.0034149654270047014
+    },
+    {
+      "arm": "fixed_dca",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 91,
+      "median_btc_ratio_difference": 0.2523953428889941
+    },
+    {
+      "arm": "incumbent",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 23,
+      "median_btc_ratio_difference": -0.1921565778739206
+    },
+    {
+      "arm": "incumbent",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 6,
+      "median_btc_ratio_difference": 0.0
+    },
+    {
+      "arm": "incumbent",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 57,
+      "median_btc_ratio_difference": 0.18320232273161896
+    },
+    {
+      "arm": "incumbent_capped6",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 27,
+      "median_btc_ratio_difference": -0.0918926161273727
+    },
+    {
+      "arm": "incumbent_capped6",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 37,
+      "median_btc_ratio_difference": -0.035141028939232655
+    },
+    {
+      "arm": "incumbent_capped6",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 66,
+      "median_btc_ratio_difference": 0.19693241223281954
+    },
+    {
+      "arm": "warmup_matched_incumbent",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 47,
+      "median_btc_ratio_difference": -0.003402943812657877
+    },
+    {
+      "arm": "warmup_matched_incumbent",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 0,
+      "median_btc_ratio_difference": 0.0
+    },
+    {
+      "arm": "warmup_matched_incumbent",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 87,
+      "median_btc_ratio_difference": 0.20770662099886794
+    },
+    {
+      "arm": "empirical_latest24",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 4,
+      "median_btc_ratio_difference": -0.3124346534018703
+    },
+    {
+      "arm": "empirical_latest24",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 0,
+      "median_btc_ratio_difference": -0.1805995132837142
+    },
+    {
+      "arm": "empirical_latest24",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 44,
+      "median_btc_ratio_difference": -0.005111738162256629
+    },
+    {
+      "arm": "empirical_split24",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 5,
+      "median_btc_ratio_difference": -0.39070402065670123
+    },
+    {
+      "arm": "empirical_split24",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 0,
+      "median_btc_ratio_difference": -0.38269244427955673
+    },
+    {
+      "arm": "empirical_split24",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 0,
+      "median_btc_ratio_difference": -0.21485924049472682
+    },
+    {
+      "arm": "gaussian_split24",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 16,
+      "median_btc_ratio_difference": -0.1748360871371607
+    },
+    {
+      "arm": "gaussian_split24",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 24,
+      "median_btc_ratio_difference": -0.026168933304731523
+    },
+    {
+      "arm": "gaussian_split24",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 63,
+      "median_btc_ratio_difference": 0.024493507545944593
+    },
+    {
+      "arm": "gaussian_expanding",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 5,
+      "median_btc_ratio_difference": -0.21910795078229228
+    },
+    {
+      "arm": "gaussian_expanding",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 12,
+      "median_btc_ratio_difference": -0.13500279619693284
+    },
+    {
+      "arm": "gaussian_expanding",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 49,
+      "median_btc_ratio_difference": 0.0010231317555566832
+    },
+    {
+      "arm": "gaussian_components",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 20,
+      "median_btc_ratio_difference": -0.09430753348393128
+    },
+    {
+      "arm": "gaussian_components",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 36,
+      "median_btc_ratio_difference": -0.012437292542924028
+    },
+    {
+      "arm": "gaussian_components",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 65,
+      "median_btc_ratio_difference": 0.03787416688450573
+    },
+    {
+      "arm": "gaussian_price_only",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 5,
+      "median_btc_ratio_difference": -0.20152820821619583
+    },
+    {
+      "arm": "gaussian_price_only",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 9,
+      "median_btc_ratio_difference": -0.17196349102767977
+    },
+    {
+      "arm": "gaussian_price_only",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 0,
+      "median_btc_ratio_difference": 0.0
+    },
+    {
+      "arm": "gaussian_pooled",
+      "reference": "fixed_dca",
+      "windows": 96,
+      "wins": 5,
+      "median_btc_ratio_difference": -0.30180811937538554
+    },
+    {
+      "arm": "gaussian_pooled",
+      "reference": "warmup_matched_incumbent",
+      "windows": 96,
+      "wins": 4,
+      "median_btc_ratio_difference": -0.29156289533239366
+    },
+    {
+      "arm": "gaussian_pooled",
+      "reference": "gaussian_price_only",
+      "windows": 96,
+      "wins": 0,
+      "median_btc_ratio_difference": -0.12000519361589229
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "sha256": "608e991b392d5b7863ce80a26bbd1ff536afe0de172b2cf7663ae59e4098dcfb",
+  "bytes": 34273844,
+  "manifest_files": 125,
+  "extracted_engineering_tests_passed": 26,
+  "extracted_output_checker": "1056 ledgers,161280 forecasts,105 hashed outputs passed",
+  "assessment_rerun": false,
+  "inputs_and_frozen_source_hashes": "verified before archive generation and after extraction",
+  "raw_macro_captures": "excluded"
+}

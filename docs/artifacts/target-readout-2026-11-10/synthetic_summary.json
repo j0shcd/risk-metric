@@ -1,0 +1,1226 @@
+[
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "empirical_latest24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.13970175878633873,
+    "mean_brier": 0.3045107600980679,
+    "coverage80": 0.6285438144329896,
+    "mean_width80": 0.41597272305499866,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": 0.0
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "empirical_latest24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.14445285702472122,
+    "mean_brier": 0.3155407419491637,
+    "coverage80": 0.5856958762886598,
+    "mean_width80": 0.38644285877905116,
+    "gain_vs_own_price_only": -0.004751098238382462,
+    "gain_ci95_pointwise": [
+      -0.00606898183882364,
+      -0.0034725771745054805
+    ],
+    "gain_vs_old_price_only": -0.004751098238382462
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "empirical_latest24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.14447715440587192,
+    "mean_brier": 0.3113946117633348,
+    "coverage80": 0.5914948453608248,
+    "mean_width80": 0.3863642724567861,
+    "gain_vs_own_price_only": -0.004775395619533199,
+    "gain_ci95_pointwise": [
+      -0.006418662151213251,
+      -0.0032408704508791963
+    ],
+    "gain_vs_old_price_only": -0.004775395619533199
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "empirical_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.16083246772924653,
+    "mean_brier": 0.3579736861185625,
+    "coverage80": 0.4642396907216495,
+    "mean_width80": 0.31934660950651594,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.021130708942907788
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "empirical_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.1614553759173121,
+    "mean_brier": 0.358032708485832,
+    "coverage80": 0.4513530927835051,
+    "mean_width80": 0.311325778265812,
+    "gain_vs_own_price_only": -0.0006229081880655741,
+    "gain_ci95_pointwise": [
+      -0.0012609970757071476,
+      5.4706608038669233e-05
+    ],
+    "gain_vs_old_price_only": -0.02175361713097336
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "empirical_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.16171001509905897,
+    "mean_brier": 0.360811890941138,
+    "coverage80": 0.4548969072164949,
+    "mean_width80": 0.31225632001737247,
+    "gain_vs_own_price_only": -0.000877547369812443,
+    "gain_ci95_pointwise": [
+      -0.0014037834191175918,
+      -0.00031987981106118573
+    ],
+    "gain_vs_old_price_only": -0.02200825631272023
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "gaussian_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.3335431175470257,
+    "mean_brier": 0.3770918872168646,
+    "coverage80": 0.4729381443298969,
+    "mean_width80": 0.9928487508649098,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.193841358760687
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "gaussian_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.5231359211424957,
+    "mean_brier": 0.382548569127231,
+    "coverage80": 0.5170747422680412,
+    "mean_width80": 1.76506848383832,
+    "gain_vs_own_price_only": -0.18959280359547004,
+    "gain_ci95_pointwise": [
+      -0.36586252995986107,
+      -0.06836378283813035
+    ],
+    "gain_vs_old_price_only": -0.383434162356157
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "gaussian_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.5073501069460808,
+    "mean_brier": 0.3826840047591993,
+    "coverage80": 0.49613402061855666,
+    "mean_width80": 1.8170195448652544,
+    "gain_vs_own_price_only": -0.17380698939905523,
+    "gain_ci95_pointwise": [
+      -0.27601179877883614,
+      -0.08581021734087416
+    ],
+    "gain_vs_old_price_only": -0.36764834815974223
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "gaussian_expanding",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.1840543481953164,
+    "mean_brier": 0.36165536796662623,
+    "coverage80": 0.4375,
+    "mean_width80": 0.38716112382283574,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.044352589408977676
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "gaussian_expanding",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.21194912537141816,
+    "mean_brier": 0.36459737586297525,
+    "coverage80": 0.45393041237113396,
+    "mean_width80": 0.4911400061695824,
+    "gain_vs_own_price_only": -0.027894777176101764,
+    "gain_ci95_pointwise": [
+      -0.04945768356605647,
+      -0.012186540439752258
+    ],
+    "gain_vs_old_price_only": -0.07224736658507945
+  },
+  {
+    "law": "null",
+    "horizon": 6,
+    "method": "gaussian_expanding",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.1979393683368018,
+    "mean_brier": 0.3593479172202879,
+    "coverage80": 0.43588917525773196,
+    "mean_width80": 0.44383477453885734,
+    "gain_vs_own_price_only": -0.013885020141485398,
+    "gain_ci95_pointwise": [
+      -0.029377940686568262,
+      0.002281714301495089
+    ],
+    "gain_vs_old_price_only": -0.05823760955046308
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "empirical_latest24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.3589504627938451,
+    "mean_brier": 0.3661418782182444,
+    "coverage80": 0.33648255813953487,
+    "mean_width80": 0.5258616795042294,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": 0.0
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "empirical_latest24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.36043175225025603,
+    "mean_brier": 0.3747231065626886,
+    "coverage80": 0.31613372093023256,
+    "mean_width80": 0.4971543941821098,
+    "gain_vs_own_price_only": -0.0014812894564109852,
+    "gain_ci95_pointwise": [
+      -0.0056769491159334206,
+      0.0026487136609574476
+    ],
+    "gain_vs_old_price_only": -0.0014812894564109852
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "empirical_latest24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.3695105598708476,
+    "mean_brier": 0.3829896598884359,
+    "coverage80": 0.3125,
+    "mean_width80": 0.4920788062217192,
+    "gain_vs_own_price_only": -0.010560097077002447,
+    "gain_ci95_pointwise": [
+      -0.016760214183110474,
+      -0.005059262548129346
+    ],
+    "gain_vs_old_price_only": -0.010560097077002447
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "empirical_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.3934421187900196,
+    "mean_brier": 0.39060038818398,
+    "coverage80": 0.21656976744186046,
+    "mean_width80": 0.31803042759937494,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.034491655996174486
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "empirical_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.3955451006173091,
+    "mean_brier": 0.395313263977466,
+    "coverage80": 0.21148255813953487,
+    "mean_width80": 0.31154086734060693,
+    "gain_vs_own_price_only": -0.0021029818272894855,
+    "gain_ci95_pointwise": [
+      -0.003397252731150474,
+      -0.0009911143010144581
+    ],
+    "gain_vs_old_price_only": -0.03659463782346398
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "empirical_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.3935757993867083,
+    "mean_brier": 0.3914650953192566,
+    "coverage80": 0.2122093023255814,
+    "mean_width80": 0.310536563982318,
+    "gain_vs_own_price_only": -0.00013368059668867737,
+    "gain_ci95_pointwise": [
+      -0.001246918806672856,
+      0.0010333814192309814
+    ],
+    "gain_vs_old_price_only": -0.03462533659286316
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "gaussian_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.9018631755562141,
+    "mean_brier": 0.37816180706013913,
+    "coverage80": 0.3335755813953488,
+    "mean_width80": 1.3424191911095515,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.542912712762369
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "gaussian_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 1.2711100495992422,
+    "mean_brier": 0.3760069322332186,
+    "coverage80": 0.373546511627907,
+    "mean_width80": 2.2966050586965565,
+    "gain_vs_own_price_only": -0.36924687404302803,
+    "gain_ci95_pointwise": [
+      -0.6962130773604678,
+      -0.14894474705199656
+    ],
+    "gain_vs_old_price_only": -0.912159586805397
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "gaussian_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.9430448412756282,
+    "mean_brier": 0.3685825826932977,
+    "coverage80": 0.39098837209302323,
+    "mean_width80": 2.485646485129434,
+    "gain_vs_own_price_only": -0.04118166571941408,
+    "gain_ci95_pointwise": [
+      -0.33438227268675985,
+      0.3209493439140203
+    ],
+    "gain_vs_old_price_only": -0.584094378481783
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "gaussian_expanding",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.6510822064221808,
+    "mean_brier": 0.4206735680624553,
+    "coverage80": 0.251453488372093,
+    "mean_width80": 0.7035704573544037,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.29213174362833566
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "gaussian_expanding",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.8065010175277922,
+    "mean_brier": 0.3959576136215885,
+    "coverage80": 0.3175872093023256,
+    "mean_width80": 1.4767201060670665,
+    "gain_vs_own_price_only": -0.15541881110561145,
+    "gain_ci95_pointwise": [
+      -0.6359870658806608,
+      0.19916670708030237
+    ],
+    "gain_vs_old_price_only": -0.4475505547339471
+  },
+  {
+    "law": "null",
+    "horizon": 24,
+    "method": "gaussian_expanding",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.7049706710371418,
+    "mean_brier": 0.42347342228577706,
+    "coverage80": 0.27834302325581395,
+    "mean_width80": 1.1739619839490385,
+    "gain_vs_own_price_only": -0.05388846461496108,
+    "gain_ci95_pointwise": [
+      -0.2734571228481523,
+      0.17999535355659194
+    ],
+    "gain_vs_old_price_only": -0.3460202082432967
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "empirical_latest24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.33797413554724665,
+    "mean_brier": 0.3230129417703518,
+    "coverage80": 0.5260953608247423,
+    "mean_width80": 0.7542451487307795,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": 0.0
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "empirical_latest24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.34629713293400344,
+    "mean_brier": 0.33362013105225635,
+    "coverage80": 0.5077319587628866,
+    "mean_width80": 0.7177657566564564,
+    "gain_vs_own_price_only": -0.008322997386756795,
+    "gain_ci95_pointwise": [
+      -0.011278488321043379,
+      -0.005256099567876331
+    ],
+    "gain_vs_old_price_only": -0.008322997386756795
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "empirical_latest24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.3295857844207863,
+    "mean_brier": 0.3154507575741434,
+    "coverage80": 0.5135309278350515,
+    "mean_width80": 0.7111553650024883,
+    "gain_vs_own_price_only": 0.008388351126460362,
+    "gain_ci95_pointwise": [
+      0.004161289544218992,
+      0.01288193525770127
+    ],
+    "gain_vs_old_price_only": 0.008388351126460362
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "empirical_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.34474332686019205,
+    "mean_brier": 0.32804818527899776,
+    "coverage80": 0.3627577319587629,
+    "mean_width80": 0.47103610974057236,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.00676919131294535
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "empirical_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.34546912760175197,
+    "mean_brier": 0.3293996296838108,
+    "coverage80": 0.35309278350515466,
+    "mean_width80": 0.4587438511228096,
+    "gain_vs_own_price_only": -0.000725800741560003,
+    "gain_ci95_pointwise": [
+      -0.0020366359584495725,
+      0.0005914817647938995
+    ],
+    "gain_vs_old_price_only": -0.007494992054505353
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "empirical_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.3463301795486963,
+    "mean_brier": 0.3290433864092781,
+    "coverage80": 0.3540592783505155,
+    "mean_width80": 0.4596495992762982,
+    "gain_vs_own_price_only": -0.0015868526885043002,
+    "gain_ci95_pointwise": [
+      -0.0024842077892769463,
+      -0.0006844778899415982
+    ],
+    "gain_vs_old_price_only": -0.00835604400144965
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "gaussian_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 1.0075072838036923,
+    "mean_brier": 0.3682534381831506,
+    "coverage80": 0.3843427835051546,
+    "mean_width80": 2.4874427954332745,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.6695331482564456
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "gaussian_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 1.6176052332281012,
+    "mean_brier": 0.3700943204060737,
+    "coverage80": 0.4326675257731959,
+    "mean_width80": 4.717948436353771,
+    "gain_vs_own_price_only": -0.6100979494244089,
+    "gain_ci95_pointwise": [
+      -1.164203392156664,
+      -0.24565568629886061
+    ],
+    "gain_vs_old_price_only": -1.2796310976808545
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "gaussian_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 1.3165565725957422,
+    "mean_brier": 0.33585592378759505,
+    "coverage80": 0.44394329896907214,
+    "mean_width80": 3.712329806883124,
+    "gain_vs_own_price_only": -0.30904928879204996,
+    "gain_ci95_pointwise": [
+      -0.6488169028640777,
+      -0.019798911020734423
+    ],
+    "gain_vs_old_price_only": -0.9785824370484957
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "gaussian_expanding",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.4697847956334814,
+    "mean_brier": 0.3426473997880627,
+    "coverage80": 0.3543814432989691,
+    "mean_width80": 0.7771185148262635,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.1318106600862347
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "gaussian_expanding",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.4892169951161549,
+    "mean_brier": 0.34251408045998394,
+    "coverage80": 0.3682345360824742,
+    "mean_width80": 0.911093553265007,
+    "gain_vs_own_price_only": -0.019432199482673586,
+    "gain_ci95_pointwise": [
+      -0.05276069891466145,
+      0.026330755619198502
+    ],
+    "gain_vs_old_price_only": -0.1512428595689083
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 6,
+    "method": "gaussian_expanding",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.398606425347766,
+    "mean_brier": 0.2564931712237732,
+    "coverage80": 0.45103092783505155,
+    "mean_width80": 0.9528273616660693,
+    "gain_vs_own_price_only": 0.07117837028571536,
+    "gain_ci95_pointwise": [
+      0.02022323862394945,
+      0.11533819570287555
+    ],
+    "gain_vs_old_price_only": -0.060632289800519344
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "empirical_latest24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 1.1981353903080691,
+    "mean_brier": 0.3688210542412607,
+    "coverage80": 0.29796511627906974,
+    "mean_width80": 1.349423306356189,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": 0.0
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "empirical_latest24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 1.2034662348226326,
+    "mean_brier": 0.3742894790908937,
+    "coverage80": 0.28633720930232553,
+    "mean_width80": 1.295306377956452,
+    "gain_vs_own_price_only": -0.00533084451456351,
+    "gain_ci95_pointwise": [
+      -0.017100773749764663,
+      0.005843712216134507
+    ],
+    "gain_vs_old_price_only": -0.00533084451456351
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "empirical_latest24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 1.2160226139565924,
+    "mean_brier": 0.37584544482090854,
+    "coverage80": 0.2747093023255814,
+    "mean_width80": 1.281304327701916,
+    "gain_vs_own_price_only": -0.017887223648523475,
+    "gain_ci95_pointwise": [
+      -0.03410898347519842,
+      -0.0035377937761678375
+    ],
+    "gain_vs_old_price_only": -0.017887223648523475
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "empirical_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 1.2919880184385568,
+    "mean_brier": 0.4197092953733092,
+    "coverage80": 0.14534883720930233,
+    "mean_width80": 0.6271213078888813,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.09385262813048771
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "empirical_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 1.293636749495017,
+    "mean_brier": 0.42097201339656504,
+    "coverage80": 0.1431686046511628,
+    "mean_width80": 0.615259342426409,
+    "gain_vs_own_price_only": -0.0016487310564601322,
+    "gain_ci95_pointwise": [
+      -0.0035539424127804674,
+      0.00014707971075097684
+    ],
+    "gain_vs_old_price_only": -0.09550135918694784
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "empirical_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 1.2958626091984642,
+    "mean_brier": 0.420595872039465,
+    "coverage80": 0.14171511627906977,
+    "mean_width80": 0.6143451529811598,
+    "gain_vs_own_price_only": -0.003874590759907379,
+    "gain_ci95_pointwise": [
+      -0.007691114464414719,
+      -0.0006251263444226545
+    ],
+    "gain_vs_old_price_only": -0.09772721889039508
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "gaussian_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 5.948490059228046,
+    "mean_brier": 0.43082351872635927,
+    "coverage80": 0.22020348837209303,
+    "mean_width80": 8.475052036176372,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -4.750354668919978
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "gaussian_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 6.510640307853444,
+    "mean_brier": 0.42234959027464813,
+    "coverage80": 0.2761627906976744,
+    "mean_width80": 15.084401877107492,
+    "gain_vs_own_price_only": -0.5621502486253964,
+    "gain_ci95_pointwise": [
+      -3.2497498681349177,
+      2.772104446294819
+    ],
+    "gain_vs_old_price_only": -5.312504917545374
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "gaussian_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 6.922704363439944,
+    "mean_brier": 0.40967325580288483,
+    "coverage80": 0.28488372093023256,
+    "mean_width80": 15.230443197123098,
+    "gain_vs_own_price_only": -0.9742143042118971,
+    "gain_ci95_pointwise": [
+      -4.01660162420262,
+      1.8498620394412983
+    ],
+    "gain_vs_old_price_only": -5.724568973131875
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "gaussian_expanding",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 2.3221322479426596,
+    "mean_brier": 0.40134711811498713,
+    "coverage80": 0.2550872093023256,
+    "mean_width80": 4.416070026631725,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -1.1239968576345905
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "gaussian_expanding",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 2.360723081834832,
+    "mean_brier": 0.4164683133237196,
+    "coverage80": 0.21875,
+    "mean_width80": 3.8489289777069806,
+    "gain_vs_own_price_only": -0.03859083389217244,
+    "gain_ci95_pointwise": [
+      -0.5691950673408137,
+      0.6535949236375265
+    ],
+    "gain_vs_old_price_only": -1.1625876915267628
+  },
+  {
+    "law": "persistent_drift",
+    "horizon": 24,
+    "method": "gaussian_expanding",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 2.3733448792658525,
+    "mean_brier": 0.3806803269785868,
+    "coverage80": 0.2790697674418604,
+    "mean_width80": 7.154017493828391,
+    "gain_vs_own_price_only": -0.05121263132319334,
+    "gain_ci95_pointwise": [
+      -1.297125114487383,
+      0.9807516302261432
+    ],
+    "gain_vs_old_price_only": -1.1752094889577838
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "empirical_latest24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.1819662818704802,
+    "mean_brier": 0.30651281880892944,
+    "coverage80": 0.6153350515463918,
+    "mean_width80": 0.518974104916547,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": 0.0
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "empirical_latest24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.18754022227089734,
+    "mean_brier": 0.31559986697339254,
+    "coverage80": 0.5876288659793815,
+    "mean_width80": 0.48629923858337665,
+    "gain_vs_own_price_only": -0.005573940400417152,
+    "gain_ci95_pointwise": [
+      -0.007841330597375759,
+      -0.003242890970084323
+    ],
+    "gain_vs_old_price_only": -0.005573940400417152
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "empirical_latest24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.1865234664620334,
+    "mean_brier": 0.315723596233076,
+    "coverage80": 0.601159793814433,
+    "mean_width80": 0.49265178922765085,
+    "gain_vs_own_price_only": -0.004557184591553232,
+    "gain_ci95_pointwise": [
+      -0.006086438044173662,
+      -0.0031229747116845795
+    ],
+    "gain_vs_old_price_only": -0.004557184591553232
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "empirical_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.20345636404912137,
+    "mean_brier": 0.3595412933415957,
+    "coverage80": 0.4771262886597938,
+    "mean_width80": 0.4054437769289365,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.021490082178641203
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "empirical_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.20489962250536675,
+    "mean_brier": 0.36095250331661877,
+    "coverage80": 0.4648840206185567,
+    "mean_width80": 0.39370914282207514,
+    "gain_vs_own_price_only": -0.0014432584562453794,
+    "gain_ci95_pointwise": [
+      -0.0027353305962258445,
+      -0.0003380689015501081
+    ],
+    "gain_vs_old_price_only": -0.022933340634886584
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "empirical_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.2050144641777471,
+    "mean_brier": 0.36341494377363276,
+    "coverage80": 0.46713917525773196,
+    "mean_width80": 0.3944147769179424,
+    "gain_vs_own_price_only": -0.0015581001286257214,
+    "gain_ci95_pointwise": [
+      -0.002296520589129202,
+      -0.0008389748187245538
+    ],
+    "gain_vs_old_price_only": -0.023048182307266924
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "gaussian_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.7924870058833823,
+    "mean_brier": 0.38139672374747324,
+    "coverage80": 0.43492268041237114,
+    "mean_width80": 2.6178087043381577,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.6105207240129021
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "gaussian_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 1.3227685448243265,
+    "mean_brier": 0.39067966253946046,
+    "coverage80": 0.4742268041237113,
+    "mean_width80": 4.817570505497782,
+    "gain_vs_own_price_only": -0.5302815389409443,
+    "gain_ci95_pointwise": [
+      -1.019451730808997,
+      -0.14563440746645728
+    ],
+    "gain_vs_old_price_only": -1.1408022629538463
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "gaussian_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 1.0173844386284545,
+    "mean_brier": 0.3861536514322851,
+    "coverage80": 0.4896907216494845,
+    "mean_width80": 3.409016344701434,
+    "gain_vs_own_price_only": -0.2248974327450722,
+    "gain_ci95_pointwise": [
+      -0.5630127792139079,
+      0.10627643250934665
+    ],
+    "gain_vs_old_price_only": -0.8354181567579744
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "gaussian_expanding",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.2708658326944963,
+    "mean_brier": 0.3483655090152227,
+    "coverage80": 0.4455541237113402,
+    "mean_width80": 0.6002295655257436,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.08889955082401613
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "gaussian_expanding",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.3687240138873921,
+    "mean_brier": 0.35940988018893166,
+    "coverage80": 0.4378221649484536,
+    "mean_width80": 1.1777242440728517,
+    "gain_vs_own_price_only": -0.09785818119289579,
+    "gain_ci95_pointwise": [
+      -0.25082311874523905,
+      -0.010243636228444026
+    ],
+    "gain_vs_old_price_only": -0.1867577320169119
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 6,
+    "method": "gaussian_expanding",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.2729904902484958,
+    "mean_brier": 0.3500803611408667,
+    "coverage80": 0.4635953608247423,
+    "mean_width80": 0.7239890020479447,
+    "gain_vs_own_price_only": -0.0021246575539995358,
+    "gain_ci95_pointwise": [
+      -0.049341541293810666,
+      0.05047052588482543
+    ],
+    "gain_vs_old_price_only": -0.09102420837801567
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "empirical_latest24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.5243461385691972,
+    "mean_brier": 0.3808823776947349,
+    "coverage80": 0.31976744186046513,
+    "mean_width80": 0.6996201489783771,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": 0.0
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "empirical_latest24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.5326180167949822,
+    "mean_brier": 0.38263583110139365,
+    "coverage80": 0.31031976744186046,
+    "mean_width80": 0.6670537928529408,
+    "gain_vs_own_price_only": -0.00827187822578504,
+    "gain_ci95_pointwise": [
+      -0.014489559407844339,
+      -0.002243852117348498
+    ],
+    "gain_vs_old_price_only": -0.00827187822578504
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "empirical_latest24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.5301430472320593,
+    "mean_brier": 0.38469592635416305,
+    "coverage80": 0.30523255813953487,
+    "mean_width80": 0.6634162979861973,
+    "gain_vs_own_price_only": -0.005796908662862083,
+    "gain_ci95_pointwise": [
+      -0.011440392133774667,
+      -0.00033804708952327194
+    ],
+    "gain_vs_old_price_only": -0.005796908662862083
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "empirical_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 0.5639337851777653,
+    "mean_brier": 0.393483490052998,
+    "coverage80": 0.20712209302325582,
+    "mean_width80": 0.41774617767887656,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.03958764660856802
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "empirical_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.5656747052099325,
+    "mean_brier": 0.39578829419667577,
+    "coverage80": 0.20421511627906977,
+    "mean_width80": 0.4110909691336148,
+    "gain_vs_own_price_only": -0.0017409200321672619,
+    "gain_ci95_pointwise": [
+      -0.003817256673615605,
+      0.00048604745299981195
+    ],
+    "gain_vs_old_price_only": -0.04132856664073528
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "empirical_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 0.565341194996664,
+    "mean_brier": 0.395216243989117,
+    "coverage80": 0.20494186046511628,
+    "mean_width80": 0.4095174075264786,
+    "gain_vs_own_price_only": -0.0014074098188986747,
+    "gain_ci95_pointwise": [
+      -0.002799665761799699,
+      -0.0001439692083003694
+    ],
+    "gain_vs_old_price_only": -0.04099505642746669
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "gaussian_split24",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 1.9272506439876986,
+    "mean_brier": 0.41466690499852266,
+    "coverage80": 0.3103197674418605,
+    "mean_width80": 5.039153216230499,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -1.4029045054185016
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "gaussian_split24",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 2.5276201379839827,
+    "mean_brier": 0.39837123033252997,
+    "coverage80": 0.3539244186046512,
+    "mean_width80": 8.195394784918175,
+    "gain_vs_own_price_only": -0.600369493996284,
+    "gain_ci95_pointwise": [
+      -1.2135511392488905,
+      -0.01410408389987799
+    ],
+    "gain_vs_old_price_only": -2.0032739994147857
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "gaussian_split24",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 2.128758471243157,
+    "mean_brier": 0.3966898914657462,
+    "coverage80": 0.35029069767441867,
+    "mean_width80": 6.979575675108375,
+    "gain_vs_own_price_only": -0.2015078272554584,
+    "gain_ci95_pointwise": [
+      -0.9949490962243612,
+      0.7269208942181087
+    ],
+    "gain_vs_old_price_only": -1.6044123326739599
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "gaussian_expanding",
+    "arm": "price_only",
+    "worlds": 32,
+    "mean_crps": 1.004396792100001,
+    "mean_brier": 0.42623688066183907,
+    "coverage80": 0.25799418604651164,
+    "mean_width80": 1.4090648202328901,
+    "gain_vs_own_price_only": 0.0,
+    "gain_ci95_pointwise": [
+      0.0,
+      0.0
+    ],
+    "gain_vs_old_price_only": -0.4800506535308036
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "gaussian_expanding",
+    "arm": "nuisance",
+    "worlds": 32,
+    "mean_crps": 0.9142483598285068,
+    "mean_brier": 0.39974689316226775,
+    "coverage80": 0.30523255813953487,
+    "mean_width80": 1.6767907368293673,
+    "gain_vs_own_price_only": 0.09014843227149406,
+    "gain_ci95_pointwise": [
+      -0.0993704976621406,
+      0.33041190683291766
+    ],
+    "gain_vs_old_price_only": -0.3899022212593096
+  },
+  {
+    "law": "persistent_volatility",
+    "horizon": 24,
+    "method": "gaussian_expanding",
+    "arm": "exact",
+    "worlds": 32,
+    "mean_crps": 1.0609182514893252,
+    "mean_brier": 0.41730354436349204,
+    "coverage80": 0.3117732558139535,
+    "mean_width80": 2.4719163224445326,
+    "gain_vs_own_price_only": -0.056521459389324374,
+    "gain_ci95_pointwise": [
+      -0.5051857802362862,
+      0.3960915092061469
+    ],
+    "gain_vs_old_price_only": -0.536572112920128
+  }
+]

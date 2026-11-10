@@ -1,0 +1,152 @@
+{
+  "schema": "target-readout-registration-v1",
+  "registered_date": "2026-11-10",
+  "base_head": "e9e1795ee66798f8ec04eee6572a44df21a76e86",
+  "accepted_target": "continuous six-month buy-deferral log gain",
+  "target_formula": "log(price[origin+1]/price[origin+1+horizon])",
+  "training_availability": "endpoint plus one day strictly before query; fit endpoints plus one day strictly before first calibration origin",
+  "horizon_months": 6,
+  "last_complete_month": "2026-10-31",
+  "fit_minimum": 16,
+  "calibration_rows": 8,
+  "latest_pool": 24,
+  "ridge": 0.1,
+  "feature_processing": "fit-only mean/std context; OLS indicator residualization against context; inactive constant/duplicate indicators removed; existing ridge mean/scale",
+  "residual_model": "Gaussian mean and RMS centered scale from separate calibration residuals; parameter inflation sqrt(1+(active_features+1)/fit_n); variance floor 1e-12",
+  "readouts": [
+    "empirical_latest24",
+    "empirical_split24",
+    "gaussian_split24",
+    "gaussian_expanding"
+  ],
+  "market_forecasters": [
+    {
+      "name": "empirical_latest24",
+      "method": "empirical_latest24",
+      "feature": "composite"
+    },
+    {
+      "name": "empirical_split24",
+      "method": "empirical_split24",
+      "feature": "composite"
+    },
+    {
+      "name": "gaussian_split24",
+      "method": "gaussian_split24",
+      "feature": "composite"
+    },
+    {
+      "name": "gaussian_expanding",
+      "method": "gaussian_expanding",
+      "feature": "composite"
+    },
+    {
+      "name": "gaussian_components",
+      "method": "gaussian_expanding",
+      "feature": "components"
+    },
+    {
+      "name": "gaussian_price_only",
+      "method": "gaussian_expanding",
+      "feature": "price_only"
+    },
+    {
+      "name": "gaussian_pooled",
+      "method": "gaussian_expanding",
+      "feature": "pooled"
+    }
+  ],
+  "market_controls": [
+    "fixed_dca",
+    "incumbent",
+    "incumbent_capped6",
+    "warmup_matched_incumbent"
+  ],
+  "execution_policy": {
+    "score": "fitted Pr(deferral log gain > 0); use prior-month forecast",
+    "buy_region_max": 0.25,
+    "maximum_buy_multiple": 3.0,
+    "missing_forecast": "buy current contribution as Fixed DCA",
+    "fees_plus_slippage": 0.002,
+    "annual_cash_yield": 0,
+    "sales": false,
+    "borrowing": false,
+    "window_months": 48,
+    "terminal_cash": "fully deploy at final close",
+    "no_automatic_production_change": true
+  },
+  "synthetic": {
+    "root_seed": 2026111007,
+    "engineering_seed": 2026111019,
+    "world_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "laws": [
+      "null",
+      "persistent_drift",
+      "persistent_volatility"
+    ],
+    "horizons": [
+      6,
+      24
+    ],
+    "arms": [
+      "price_only",
+      "nuisance",
+      "exact"
+    ],
+    "monthly_rows": 178,
+    "first_query_index": 35,
+    "state_ar": 0.9,
+    "monthly_drift": 0.01,
+    "drift_loading": 0.08,
+    "base_monthly_volatility": 0.08,
+    "volatility_loading": 0.6,
+    "bootstrap_world_resamples": 4000,
+    "bootstrap_seed": 2026111023,
+    "primary": "six-month deferral-gain CRPS; other horizons/outcomes cannot rescue failure",
+    "reporting": "all methods/arms/laws; paired whole-world percentile95% intervals pointwise not simultaneous; calibration and event Brier separate; no universal sensitivity or error-control certificate"
+  },
+  "input_sha256": {
+    "docs/artifacts/dca-diagnosis-2026-11-09/monthly_components.csv": "22ca410c18e5c14f93fbd19f894b90d92f937818ce26471d6d3660aff319c390",
+    "data/btc_daily.csv": "e0bec321eb0e7acbdcaccf4f1b942417a7f7780ffff482831cddef18cf41603a"
+  },
+  "registered_failure_handling": "retain all arms, failed/partial histories and causes; no hidden retries, new candidate or parameter tuning after assessment feedback",
+  "classification": "synthetic assessment plus exposed-history BTC reconstruction, not prospective evidence or production acceptance",
+  "budget": {
+    "world_law_jobs": 96,
+    "market_snapshot_runs": 1,
+    "wall_clock_cap_seconds": 3600
+  }
+}
