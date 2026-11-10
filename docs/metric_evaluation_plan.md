@@ -520,20 +520,23 @@ November 30 collection remains separate; no scheduler was installed.
 
 ### Training-target and readout implementation request — November 10
 
-Status: implementation requested; target framing pending. No new candidate,
-alternative decoder or market score has been executed for this request.
+Status: six-month target confirmed by Josh on November 10; implementation and
+engineering verification next. No assessment or market score has been executed.
 Josh asked to tackle the training-target and forecast-readout issues and then
 test the changes against Fixed DCA. The previously confirmed comparison remains
 48 identical monthly contributions, equal final deployment, common dates/prices,
 costs and prior-month execution. The frozen October 2026 dataset remains the
 comparison input; a new provider refresh is not part of this iteration.
 
-One foundational choice is awaiting Josh's answer: a continuous six-month
-buy-deferral gain/loss target (recommended for the monthly purchase decision),
-or continuous outcomes retaining the legacy 36/48-month horizons. This is a
-proposed experimental target, not a changed production or investor-utility
-contract. The older twelve/twenty-four/forty-eight-month research scores and
-their primary outcome must remain separately identified.
+Josh chose the continuous six-month buy-deferral gain/loss target. At score date
+`t`, the common ledger executes at the next month's close `t+1`; the target is
+`log(P[t+1] / P[t+7])`. Positive means waiting six months buys more BTC for the
+same notional, before identical proportional costs. Its realized outcome becomes
+available the day after `t+7`, strictly before a training origin can use it.
+This is an experimental target, not a changed production or investor-utility
+contract. Older twelve/twenty-four/forty-eight-month research scores and their
+primary outcome remain separately identified. Restoring future-aware cutoffs
+to manufacture positive legacy classes is rejected.
 
 Source inspection found the existing `research/location_scale_readout.py`
 continuous mean/scale estimator and the frozen empirical-CDF implementation.
@@ -553,10 +556,39 @@ training cannot be mistaken for forecast skill. Do not silently alter the
 original benchmark, reuse an exposed period as a protected holdout, or promote
 a variant through the existing production gate without its separate checks.
 
-Next bounded step: resolve the pending target question, then register and
-implement the study, test its timing/information identities, measure forecast
-loss and calibration, and run the existing equal-budget DCA comparison. The
-exact decoder settings and new score-to-action mapping are not frozen yet.
+The [registration](artifacts/target-readout-2026-11-10-registration.json) fixes a
+new protocol with old empirical latest-24 and matched split controls, a continuous
+Gaussian mean/scale readout on the matched split, and an expanding-fit variant.
+Reuse the existing ridge mean/scale estimator; estimate residual location/scale
+on eight separate later calibration rows. Fit labels must mature before the
+first calibration origin. Keep at least sixteen fit rows, fit-only scaling and
+price-context residualization, and explicit inactive/duplicate-feature identities.
+Gaussian tails allow forecasts beyond a stale finite atom range; they do not
+guarantee calibration, so coverage/Brier/CRPS and fit/fallback counts stay visible.
+The Gaussian residual distribution is a testable model assumption, not accepted
+truth. Expanding data can also hurt under regime change; retain that comparison.
+
+Freeze implementation before the fixed new independent null, drift and volatility
+worlds are scored. Six-month forecast loss is primary for this new action-target
+study; two-year losses remain a separate diagnostic and do not regrade previous
+market experiments. No model selection or retuning on assessment histories is
+allowed. Run the predeclared market variants once on the already exposed snapshot.
+
+The new research risk score is the fitted probability of positive deferral gain,
+not the old ordinal score. Feed it into the same frozen 0.25 purchase region and
+three-contribution maximum, and retain the full final deployment rule. When a
+forecast cannot be fitted, buy the current contribution as Fixed DCA; include a
+warm-up-matched incumbent control to measure that mechanical fallback separately.
+Do not attribute its early exposure advantage to learning. All variants use the
+same 96 windows and fees, no sales or borrowing, and zero cash interest in the
+equal-spend comparison. Production scoring, canonical identity and gates stay
+unchanged. This separately versioned research adapter is the reversible change;
+production integration depends on results and its existing acceptance process.
+
+Next bounded step: implement and verify the registered readouts and target
+availability boundary, freeze their identities, then execute and independently
+check all assessment worlds and the single historical comparison. Preserve failures
+and state whether any wealth advantage survives price-only and fallback controls.
 
 ### Publication and operations
 
