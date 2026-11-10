@@ -5,7 +5,7 @@ information without better primary two-year forecasts. Pause feature searches;
 specify a separate readout study. Nineteen historical indicator variants remain
 unqualified. An older, different finite known-law panel procedure passes only
 its own synthetic scope. The prospective paper witness has no mature outcomes.
-No production model or market benchmark changed. Updated 2026-11-09.
+No production model or market benchmark changed. Updated 2026-11-10.
 
 This is the canonical maintainer record for the research benchmark, its measured
 results and next bounded work. Legacy strategy-specific results remain in
@@ -517,6 +517,46 @@ retune the frozen benchmark on these worlds to turn nineteen failures into wins.
 This study is proposed, not executed; the precise small candidate set and law
 contract remain to be preregistered. No alternative decoder is promoted.
 November 30 collection remains separate; no scheduler was installed.
+
+### Training-target and readout implementation request — November 10
+
+Status: implementation requested; target framing pending. No new candidate,
+alternative decoder or market score has been executed for this request.
+Josh asked to tackle the training-target and forecast-readout issues and then
+test the changes against Fixed DCA. The previously confirmed comparison remains
+48 identical monthly contributions, equal final deployment, common dates/prices,
+costs and prior-month execution. The frozen October 2026 dataset remains the
+comparison input; a new provider refresh is not part of this iteration.
+
+One foundational choice is awaiting Josh's answer: a continuous six-month
+buy-deferral gain/loss target (recommended for the monthly purchase decision),
+or continuous outcomes retaining the legacy 36/48-month horizons. This is a
+proposed experimental target, not a changed production or investor-utility
+contract. The older twelve/twenty-four/forty-eight-month research scores and
+their primary outcome must remain separately identified.
+
+Source inspection found the existing `research/location_scale_readout.py`
+continuous mean/scale estimator and the frozen empirical-CDF implementation.
+Prefer reusing those owners in a separately versioned study. The relevant
+design layers are target-to-action alignment, actual label availability,
+fit/calibration separation, forecast support and uncertainty, and the effect of
+warm-up/fallback behavior on the equal-budget result. Neither a wider target
+support nor a new forecast distribution establishes improved profitability.
+
+After the target choice, freeze the complete small readout/candidate set and
+execution mapping before assessment: old-readout and price-only references,
+independent positive/no-information synthetic histories, unchanged engineering
+fixtures, and one retained historical comparison. Keep all failed arms. Enforce
+strict label maturity and fit-only preprocessing, expose learned/fallback state,
+and include a matched warm-up/fallback control so adopting Fixed DCA during
+training cannot be mistaken for forecast skill. Do not silently alter the
+original benchmark, reuse an exposed period as a protected holdout, or promote
+a variant through the existing production gate without its separate checks.
+
+Next bounded step: resolve the pending target question, then register and
+implement the study, test its timing/information identities, measure forecast
+loss and calibration, and run the existing equal-budget DCA comparison. The
+exact decoder settings and new score-to-action mapping are not frozen yet.
 
 ### Publication and operations
 
