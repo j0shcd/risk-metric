@@ -1,11 +1,13 @@
 # Indicator benchmark and evaluation plan
 
-Status: the registered audit of the current readout found useful synthetic
-information without better primary two-year forecasts. Pause feature searches;
-specify a separate readout study. Nineteen historical indicator variants remain
-unqualified. An older, different finite known-law panel procedure passes only
-its own synthetic scope. The prospective paper witness has no mature outcomes.
-No production model or market benchmark changed. Updated 2026-11-10.
+Status: the registered six-month target/readout study is complete. None of seven
+forecast variants beats Fixed DCA at the historical median; Gaussian uncertainty
+remains poorly calibrated. Keep the continuous target as research infrastructure,
+reject these variants for production, and specify a smaller forecast-scale and
+decision-rule study before another assessment. Nineteen earlier indicator variants
+remain unqualified under their unchanged two-year benchmark. The prospective paper
+witness has no mature outcomes. No production model or acceptance gate changed.
+Updated 2026-11-10.
 
 This is the canonical maintainer record for the research benchmark, its measured
 results and next bounded work. Legacy strategy-specific results remain in
@@ -41,6 +43,7 @@ adopted combined investor utility or universal automatic promotion score.
 | Chronology-assisted forecast | 19.7% development error reduction became about 74% worse than unconditional in the later check | Stop this branch; percentages concern forecast error, not investment returns |
 | Artificial-market qualification | A separate continuous forecast/conditional-test procedure detected planted information 398/400 times and declared skill 24/1500 times under specified no-added-information cases | Finite scope only; not a sensitivity certificate for the current 97-date scalar readout or a market success-rate claim |
 | Current scalar readout | Useful exact state worsens mean two-year forecast loss in the registered artificial law; nominal 80% intervals cover only 26.4% | Pause feature searches; preregister a separate readout study |
+| Six-month target/readout study | Continuous labels fit; expanding Gaussian detects planted drift but remains miscalibrated and no market variant beats DCA at the median | Retain the experiment; no model promotion; stabilize scale and specify the decision objective next |
 | Archived live baselines | Six forecasts reproduced exactly, zero mature outcomes | Continue separate forward collection; correctness is not predictive success |
 
 ### First completed round: three different remaining ideas
@@ -514,14 +517,15 @@ Separate development laws from frozen assessment laws; keep the old decoder as a
 fixed reference and report return, downside and calibration separately. Only
 then consider a newly registered market comparison or benchmark version. Do not
 retune the frozen benchmark on these worlds to turn nineteen failures into wins.
-This study is proposed, not executed; the precise small candidate set and law
-contract remain to be preregistered. No alternative decoder is promoted.
+The November 10 study below supersedes this proposal with a registered candidate
+set, completed assessment and retained failures. No alternative decoder is promoted.
 November 30 collection remains separate; no scheduler was installed.
 
 ### Training-target and readout implementation request — November 10
 
-Status: six-month target confirmed by Josh on November 10; implementation and
-engineering verification next. No assessment or market score has been executed.
+Status: implemented, frozen and assessed on November 10. All 96 synthetic jobs and
+the single historical comparison completed without failed arms or network attempts.
+The candidate changes are research-only; none qualifies as a production upgrade.
 Josh asked to tackle the training-target and forecast-readout issues and then
 test the changes against Fixed DCA. The previously confirmed comparison remains
 48 identical monthly contributions, equal final deployment, common dates/prices,
@@ -540,55 +544,200 @@ to manufacture positive legacy classes is rejected.
 
 Source inspection found the existing `research/location_scale_readout.py`
 continuous mean/scale estimator and the frozen empirical-CDF implementation.
-Prefer reusing those owners in a separately versioned study. The relevant
+The separately versioned study reuses those owners. The relevant
 design layers are target-to-action alignment, actual label availability,
 fit/calibration separation, forecast support and uncertainty, and the effect of
 warm-up/fallback behavior on the equal-budget result. Neither a wider target
 support nor a new forecast distribution establishes improved profitability.
 
-After the target choice, freeze the complete small readout/candidate set and
-execution mapping before assessment: old-readout and price-only references,
-independent positive/no-information synthetic histories, unchanged engineering
-fixtures, and one retained historical comparison. Keep all failed arms. Enforce
-strict label maturity and fit-only preprocessing, expose learned/fallback state,
-and include a matched warm-up/fallback control so adopting Fixed DCA during
-training cannot be mistaken for forecast skill. Do not silently alter the
-original benchmark, reuse an exposed period as a protected holdout, or promote
-a variant through the existing production gate without its separate checks.
+After the target choice, the protocol froze the complete readout/candidate set
+and execution mapping: old-readout and price-only references, independent synthetic
+controls, separate engineering fixtures and one historical comparison. All failed
+arms are retained. Strict label maturity, fit-only preprocessing, explicit
+learned/fallback state and a matched warm-up control separate learning from
+mechanically buying as DCA during training. The exposed period remains exposed;
+the original benchmark and production gate are unchanged.
 
 The [registration](artifacts/target-readout-2026-11-10-registration.json) fixes a
 new protocol with old empirical latest-24 and matched split controls, a continuous
 Gaussian mean/scale readout on the matched split, and an expanding-fit variant.
-Reuse the existing ridge mean/scale estimator; estimate residual location/scale
-on eight separate later calibration rows. Fit labels must mature before the
-first calibration origin. Keep at least sixteen fit rows, fit-only scaling and
-price-context residualization, and explicit inactive/duplicate-feature identities.
+The implementation estimates residual location/scale on eight separate later
+calibration rows. Fit labels must mature before the first calibration origin.
+It requires at least sixteen fit rows, fit-only scaling, price-context
+residualization and explicit inactive/duplicate-feature identities.
 Gaussian tails allow forecasts beyond a stale finite atom range; they do not
 guarantee calibration, so coverage/Brier/CRPS and fit/fallback counts stay visible.
 The Gaussian residual distribution is a testable model assumption, not accepted
 truth. Expanding data can also hurt under regime change; retain that comparison.
 
-Freeze implementation before the fixed new independent null, drift and volatility
-worlds are scored. Six-month forecast loss is primary for this new action-target
+Implementation was frozen before the new independent null, drift and volatility
+worlds were scored. Six-month forecast loss is primary for this new action-target
 study; two-year losses remain a separate diagnostic and do not regrade previous
 market experiments. No model selection or retuning on assessment histories is
-allowed. Run the predeclared market variants once on the already exposed snapshot.
+allowed. All predeclared market variants ran once on the already exposed snapshot.
 
 The new research risk score is the fitted probability of positive deferral gain,
-not the old ordinal score. Feed it into the same frozen 0.25 purchase region and
-three-contribution maximum, and retain the full final deployment rule. When a
-forecast cannot be fitted, buy the current contribution as Fixed DCA; include a
-warm-up-matched incumbent control to measure that mechanical fallback separately.
-Do not attribute its early exposure advantage to learning. All variants use the
+not the old ordinal score. It feeds the frozen 0.25 purchase region and
+three-contribution maximum with full final deployment. When a forecast cannot be
+fitted, the adapter buys the current contribution as Fixed DCA. A warm-up-matched
+incumbent control measures that mechanical fallback separately. Its early
+exposure advantage cannot be attributed to learning. All variants use the
 same 96 windows and fees, no sales or borrowing, and zero cash interest in the
 equal-spend comparison. Production scoring, canonical identity and gates stay
 unchanged. This separately versioned research adapter is the reversible change;
 production integration depends on results and its existing acceptance process.
 
-Next bounded step: implement and verify the registered readouts and target
-availability boundary, freeze their identities, then execute and independently
-check all assessment worlds and the single historical comparison. Preserve failures
-and state whether any wealth advantage survives price-only and fallback controls.
+#### Completed assessment and interpretation
+
+Registration `e62e3f8` preceded implementation assessment at `188e061`.
+The [implementation freeze](artifacts/target-readout-2026-11-10-implementation.json)
+has SHA256 `17b3a4cf72d9ac33426f84c52a0736ceebc2a25c1d3016f48e42c333e4b83692`.
+The [results](artifacts/target-readout-2026-11-10/summary.json) retain every arm.
+The run used Python 3.12.16, NumPy 2.4.6 and pandas 2.3.3 with one BLAS thread,
+empty environment, scratch HOME/TMPDIR, blocked socket operations and a separate
+3,600-second watchdog (CPU 3,500 seconds, per-file 64 MiB, core dumps disabled).
+It finished in 72.49 seconds, exit zero; no replacement assessment or tuning ran.
+The runtime was recovered offline from expanded cached packages with RECORD checks;
+original wheel hashes were not revalidated. No provider, dependency or model-setting
+change was needed.
+
+The target removes the legacy rare-class barrier: the expanding models first fit
+at February 2018 and produce 105 fitted origins, rather than waiting for both
+extreme cycle classes. Empirical latest-24 first fits July 2017 (112 origins).
+Forecast comparisons use the same 97 mature origins, February 2018–February 2026.
+This is a working continuous learner, not evidence that its predictions are good.
+
+All seven variants use the target and the fixed probability adapter described
+above. The [DCA evidence](dca_evidence.md#six-month-target-and-readout-results-10-november-2026)
+owns the full 11-arm trading comparison. The four-component Gaussian's median
+BTC difference is **−9.43%**, with 20/96 wins, versus the incumbent's **−19.22%**
+and 23/96 wins. The warm-up-matched incumbent is **−0.34%**, with 47/96 wins.
+Comparing the same windows directly, the component model wins only 36/96 against
+that control; its median BTC ratio difference is **−1.24%**. Against Gaussian
+price-only it wins 65/96, with a paired median **+3.79%**, while still losing to
+DCA. These paired ratios are not differences of separate median summaries.
+
+Changing forecast distributions does not establish a forecast improvement:
+
+| Forecaster, common 97 BTC origins | Six-month CRPS (lower is better) | Event Brier | Nominal 80% coverage |
+| --- | ---: | ---: | ---: |
+| Empirical latest-24, composite | 0.462731 | 0.406349 | 56.70% |
+| Empirical split-24, composite | 0.526984 | 0.449410 | 41.24% |
+| Gaussian split-24, composite | 2.494831 | 0.385173 | 50.52% |
+| Gaussian expanding, composite | 0.472446 | 0.354808 | 48.45% |
+| Gaussian expanding, components | 0.710187 | 0.355726 | 49.48% |
+| Gaussian expanding, price-only | 0.481378 | 0.363391 | 49.48% |
+| Gaussian expanding, pooled | 0.505887 | 0.405748 | 39.18% |
+
+The matched split isolates distribution choice from fit/calibration support.
+Gaussian split CRPS is worse than empirical split on BTC and in **all 18**
+synthetic law/horizon/feature cells. A genuine fitted tail instability explains
+much of its BTC loss: September 2022 mean 272.689, standard deviation 221.896,
+CRPS 171.233, accounting for 70.76% of the total. No clipping or removal was
+applied after seeing it. Continuous support permits extrapolation but does not
+make extrapolation reliable. Four components improve this fixed trading adapter
+relative to the Gaussian price-only control while worsening forecast CRPS.
+
+Synthetic primary results below compare exact state with **the same method's**
+price-only forecast. Each cell averages dates within each of 32 independent worlds,
+then averages worlds. Positive CRPS gain means improvement. Brackets are paired
+whole-world percentile 95% intervals, pointwise across 4,000 bootstrap resamples;
+they are not simultaneous guarantees or a calibrated selection/error-control test.
+All nuisance, price-only, 24-month, Brier, width and coverage results remain in
+the [synthetic table](artifacts/target-readout-2026-11-10/synthetic_summary.json).
+
+| Six-month CRPS gain from exact state | Null law | Persistent drift | Persistent volatility |
+| --- | --- | --- | --- |
+| Empirical latest-24 | −0.00478 [−0.00642, −0.00324] | +0.00839 [+0.00416, +0.01288] | −0.00456 [−0.00609, −0.00312] |
+| Empirical split-24 | −0.00088 [−0.00140, −0.00032] | −0.00159 [−0.00248, −0.00068] | −0.00156 [−0.00230, −0.00084] |
+| Gaussian split-24 | −0.17381 [−0.27601, −0.08581] | −0.30905 [−0.64882, −0.01980] | −0.22490 [−0.56301, +0.10628] |
+| Gaussian expanding | −0.01389 [−0.02938, +0.00228] | +0.07118 [+0.02022, +0.11534] | −0.00212 [−0.04934, +0.05047] |
+
+Expanding Gaussian detects planted drift information, but its exact-state CRPS
+0.39861 is still worse than the old price-only 0.33797. It does not establish
+volatility sensitivity. No method has a positive mean 24-month exact-state gain
+in these laws. The new 24-month diagnostic uses this study's deferral target;
+it does not replace or regrade the earlier two-year return benchmark. Under null
+and volatility laws, adding state does not produce a persuasive forecast benefit.
+All methods' uncertainty remains too narrow in aggregate; Gaussian expanding's
+six-month coverage is only 35–46% across these feature/law cells. Eight highly
+overlapping calibration outcomes and the heuristic inflation do not provide
+a calibrated predictive distribution.
+
+#### Verification, reproducibility and next bounded work
+
+`scripts/check-target-readout-study.py` imports no producer code. It reconstructs
+all 1,056 contribution/cash/BTC ledgers with a separate cash recurrence and
+independently rescores 161,280 synthetic forecast records, checks strict chronology,
+common synthetic support, all output hashes, means and market forecast summaries.
+An independent reviewer additionally checked all 72 paired-bootstrap cells and
+686 scored market records, source/input identities and common dates. No arithmetic,
+timing or chronology defect remained. Deliberate wrong hashes, doubled funding,
+corrupted BTC balances with refreshed hashes and unavailable labels were rejected.
+Engineering regressions also rejected future-suffix contamination, duplicate and
+linearly redundant feature effects, and mislabeled variance inflation before the
+assessment freeze. The [verification record](artifacts/target-readout-2026-11-10/verification.json)
+records the checks, runtime limits and portability status.
+The complete backend suite passes **540 tests**. Its first run passed 539/540:
+the portability fixture intentionally denies `/private/tmp`, conflicting with the
+supplied scratch TMPDIR. All three portability tests and then the full suite pass
+with macOS's native temp directory. No source fix or assessment rerun was needed.
+
+The [portable packet](artifacts/target-readout-2026-11-10.zip) retains all issued
+assessment forecasts, derived tables, frozen source/tests/protocol, exact BTC and
+derived component inputs, and the independent checker. It contains no raw macro
+captures. In its `source` directory, use the recorded requirements and run:
+
+```sh
+env -i PATH=/usr/bin:/bin HOME=/private/tmp TMPDIR=/private/tmp \
+  PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 \
+  <python> -m research.target_readout_study run \
+  --freeze docs/artifacts/target-readout-2026-11-10-implementation.json \
+  --output <absent-run-directory>
+<python> -I scripts/check-target-readout-study.py <run-directory>
+```
+
+The packet's SHA256 is
+`608e991b392d5b7863ce80a26bbd1ff536afe0de172b2cf7663ae59e4098dcfb`.
+After extraction, all 125 manifest file hashes, 26 engineering tests and the full
+forecast/ledger checker pass. This verifies portability without spending another
+assessment slot. From its `source` directory, the checker can inspect `../results`
+directly. The adjacent public artifact directory contains compact summaries;
+the packet's `results` directory contains the complete hash-checked run.
+
+Use an external 3,600-second subprocess timeout when replaying: the driver's
+internal check operates between worlds and cannot interrupt a single blocked job.
+The original assessment had this hard watchdog. The optional checker `--plot`
+flag saves a static image and opens no window; the recorded plot uses a separate
+matplotlib 3.11.2 environment and does not regenerate forecasts.
+
+**Brief versus delivered:** user-approved six-month continuous target, chronological
+readout, predeclared synthetic controls and one same-budget, fully deployed 48-month
+DCA comparison are as briefed. The readout's empirical support and label feasibility
+issues are addressed mechanically; calibrated forecasts and improved DCA performance
+are **not achieved**. No research winner was adopted, no provider was activated,
+and production code/settings/acceptance policy remain unchanged.
+
+**Limitations and not checked:** this is one exposed BTC path with overlapping
+windows, reconstructed legacy component availability and stale source limitations.
+It cannot establish future profitability or point-in-time live validity. Synthetic
+laws have limited scope and the intervals are unadjusted pointwise diagnostics.
+Warm-up differs across latest-24 and split variants; matched forecast support and
+the warm-up control expose that distinction. The adapter uses Pr(gain > 0) and a
+legacy 0.25 threshold; it does not optimize expected BTC or the whole cash path.
+The new target alone was not isolated from its score semantics in an otherwise
+identical production learner, so no causal effect of changing only the target is
+claimed. No fresh forward outcomes or independent market acceptance were collected.
+
+Next bounded step (proposed, not executed): register a small forecast-scale study
+with pooled/constant-scale shrinkage and calibration outcomes separated by their
+full horizon; retain all current readouts as references and qualify drift, volatility
+and null behavior on fresh worlds before another market score. Separately specify
+an explicit expected-BTC incremental deferral decision with funding and a maximum
+cash-wait constraint, including DCA, matched fallback and price-only controls.
+That objective and its constraints need to be frozen before choosing an adapter;
+do not retune the 0.25 threshold to rescue these exposed results. Keep the current
+production model and existing acceptance gate unchanged.
 
 ### Publication and operations
 

@@ -4,15 +4,82 @@ Status: current-source descriptive replay complete; production acceptance unreso
 
 Latest replay window: 2014-12-31 through 2026-10-31
 
-Last evaluated: 2026-11-09
+Last evaluated: 2026-11-10
 
 The [indicator benchmark redesign](metric_evaluation_plan.md) is the current plan
 for future evaluation. It moves primary optimization from one contribution policy
 to information value on identical fixed-notional opportunities. This page records
 the implemented historical suite, not that proposed benchmark. Its policy cash
 'deadline' and entry-relative drawdown naming have limitations recorded in the
-plan. The fresh replay below retains those policy semantics and adds an explicitly
-separate equal-deployment diagnostic. The August results remain historical.
+plan. The November 9 replay below retains those policy semantics and adds an
+explicitly separate equal-deployment diagnostic. The November 10 experiment tests
+a new research target/readout; it changes no production model. August results
+remain historical.
+
+## Six-month target and readout results: 10 November 2026
+
+Status: registered research iteration complete; **no new variant beats Fixed DCA
+at the historical median**. Josh confirmed the continuous six-month deferral
+target. The [research plan](metric_evaluation_plan.md#training-target-and-readout-implementation-request--november-10)
+owns its definition, chronological training/calibration, synthetic assessment,
+forecast losses and next proposed work. Production code, thresholds, source
+settings and acceptance gates are unchanged.
+
+All rows use the same 96 overlapping 48-contribution windows and frozen October
+2026 snapshot as the earlier equal-deployment comparison: identical monthly
+funding and closes, prior-month signals, 0.20% purchase costs, no sales/borrowing,
+zero cash yield, and all unspent principal bought at the final close. Thus BTC
+units and terminal wealth have the same relative difference, and each strategy
+spends exactly 48 contribution units. Neither strategy receives earlier cash.
+
+| Arm | Median BTC difference vs Fixed DCA | Wins | 10th–90th percentiles |
+| --- | ---: | ---: | ---: |
+| Fixed DCA | 0.00% | Reference | 0.00% to 0.00% |
+| Incumbent | −19.22% | 23/96 | −72.26% to +11.54% |
+| Incumbent, six-month cash-wait cap | −9.19% | 27/96 | −36.73% to +7.77% |
+| Incumbent, DCA until component model first fits | −0.34% | 47/96 | −22.51% to +11.54% |
+| Six-month target, empirical latest-24 | −31.24% | 4/96 | −42.96% to −0.06% |
+| Empirical split-24, separate fit/calibration | −39.07% | 5/96 | −56.31% to −1.94% |
+| Gaussian split-24, same fit/calibration support | −17.48% | 16/96 | −30.26% to +0.36% |
+| Gaussian expanding, composite | −21.91% | 5/96 | −31.21% to −1.41% |
+| Gaussian expanding, four components | −9.43% | 20/96 | −28.10% to +0.50% |
+| Gaussian expanding, price-only | −20.15% | 5/96 | −36.35% to −1.15% |
+| Gaussian expanding, pooled | −30.18% | 5/96 | −48.25% to −1.89% |
+
+Quantiles describe dispersion across this finite, exposed, dependent history;
+they are not confidence intervals or 96 independent trials. New forecasters buy
+the current contribution as DCA during training warm-up, then use the frozen
+probability adapter. The matched incumbent control uses precisely the component
+model's learned/fallback mask. It shows why comparing −9.43% with −19.22% alone
+would overstate learned improvement: even that control achieves −0.34%.
+On paired windows, the component model wins 36/96 against the matched incumbent,
+with median BTC ratio difference **−1.24%**. Against Gaussian price-only it wins
+65/96, with paired median **+3.79%**. These are medians of window-by-window ratios,
+not differences between the table's separate median rows.
+
+The era diagnostic is adverse for every new forecaster: **zero wins in all 59
+windows starting in 2018–2022**. The component version's median is +0.12% for
+2014–2017 starts, −13.04% for 2018–2020 and −27.72% for 2021–2022. Its latest
+November 2022–October 2026 window is −21.69%, versus incumbent −1.86%. The
+component model reduces median contribution waiting to 3.44 months and terminal
+sweeps to 5.70% of funding, but those mechanical changes do not make its timing
+profitable. A six-month training target does not itself impose a six-month cash
+deadline; only the explicitly capped incumbent row has that rule.
+
+The [summary](artifacts/target-readout-2026-11-10/summary.json), adjacent per-window
+and era CSVs, and [figure](artifacts/target-readout-2026-11-10/comparison.png) retain
+all arms. The [portable packet](artifacts/target-readout-2026-11-10.zip) includes
+frozen source/inputs, all synthetic and BTC forecast records, output hashes and
+an independent checker. Two independent ledger implementations agree across
+1,056 windows. The forecast audit finds poor coverage and a fitted Gaussian tail
+instability; better policy results in some arms do not establish better forecasts.
+The research plan records all failures rather than selecting a winner afterward.
+
+Brief versus delivered: the confirmed continuous target and fully invested equal
+budgets are implemented and tested. DCA outperformance, live point-in-time data
+readiness and production acceptance are not achieved. Next bounded work is a new
+registered scale/calibration and explicit expected-BTC decision study, as proposed
+in the research plan; it has not run. No candidate is promoted from these results.
 
 ## Fresh comparison: 9 November 2026
 

@@ -1,0 +1,83 @@
+{
+  "schema": "target-readout-verification-v1",
+  "implementation_head": "188e061e2d0abf8a2ab3499ac8dadbc21e552eea",
+  "freeze_sha256": "17b3a4cf72d9ac33426f84c52a0736ceebc2a25c1d3016f48e42c333e4b83692",
+  "assessment": {
+    "exit_code": 0,
+    "watchdog_timeout": false,
+    "elapsed_seconds": 72.48622420799802,
+    "wall_clock_cap_seconds": 3600,
+    "cpu_seconds_cap": 3500,
+    "file_bytes_cap": 67108864
+  },
+  "root_checker": {
+    "command": "python -I scripts/check-target-readout-study.py <full-run>",
+    "status": "passed",
+    "independent_ledger_windows": 1056,
+    "synthetic_forecasts_rescored": 161280,
+    "output_files_hash_checked": 105
+  },
+  "independent_reviewer": {
+    "status": "no arithmetic, execution-timing, or chronology defect found",
+    "frozen_source_input_output_hashes": "passed",
+    "synthetic_forecasts": 161280,
+    "world_mean_cells": 2304,
+    "paired_bootstrap_summary_cells": 72,
+    "market_scored_forecasts": 686,
+    "market_common_origins": 97,
+    "market_ledgers": 1056,
+    "scope": "read-only; no assessments or tuning"
+  },
+  "engineering": {
+    "focused_tests_passed": 26,
+    "negative_controls_rejected": [
+      "future-suffix contamination",
+      "duplicate and linearly redundant indicator effects",
+      "sigma multiplier mislabeled as variance inflation",
+      "wrong output hash before parsing",
+      "unavailable calibration/fit labels",
+      "doubled funding",
+      "corrupted BTC balance with refreshed table hash"
+    ]
+  },
+  "broad_tests": {
+    "initial_run": "539 of 540 passed; existing native-temp portability test failed because custom TMPDIR was under the intentionally denied /private/tmp root",
+    "isolated_native_temp_rerun": "all 3 portability tests passed",
+    "complete_native_temp_rerun": {
+      "exit_code": 0,
+      "elapsed_seconds": 168.4279002919975,
+      "native_TMPDIR": "/private/var/folders/4r/xv20l5gj1dq4zmwylq_kyhv40000gn/T",
+      "command": "python -m unittest discover -s tests",
+      "tests_passed": 540
+    }
+  },
+  "plot": {
+    "matplotlib": "3.11.2",
+    "python": "3.12",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "role": "recorded-table plotting only; Agg backend; no UI; no forecast generation"
+  },
+  "runtime_provenance": "Python3.12.16 and 11 exact requirement pins recovered offline from expanded cached distributions with RECORD integrity checks; original wheel hashes not revalidated",
+  "method_limits": [
+    "All 96 BTC windows are overlapping exposed history, not independent or protected tests",
+    "Bootstrap intervals are paired whole-world pointwise intervals, not simultaneous or selection-valid bounds",
+    "Eight overlapping calibration residuals and heuristic inflation provide no calibration guarantee",
+    "Probability adapter does not optimize expected BTC; six-month label does not constrain maximum portfolio cash wait",
+    "Legacy component release vintages and live source readiness remain unverified"
+  ],
+  "publication": {
+    "production_code_settings_policy": "unchanged",
+    "model_acceptance": "not achieved",
+    "status": "local commits and evidence; push and merge require confirmation"
+  },
+  "portability": {
+    "compact_directory": "summaries, tables, figure and verification only",
+    "full_packet": "../target-readout-2026-11-10.zip",
+    "full_run_path_in_packet": "results",
+    "source_path_in_packet": "source",
+    "raw_macro_captures": "excluded",
+    "replay": "source ROOT plus exact recorded numerical runtime required; external3600second subprocess timeout; independent checker can inspect existing results with stdlib only"
+  },
+  "skill_harvest": "reviewed loaded skill self-improvement clauses; no global skill change proposed; experiment-specific invariants and next work retained in canonical research plan and tests"
+}
