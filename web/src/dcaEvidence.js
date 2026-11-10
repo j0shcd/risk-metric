@@ -1,76 +1,47 @@
-export const DCA_EVIDENCE = Object.freeze({
-  evidenceTier: "Retrospective reconstruction",
-  evaluatedAt: "2026-08-01",
-  dataWindow: "2014-12-31 \u2192 2026-07-31",
-  runId: "dca-evidence-three-tests",
-  headline: "We tested the score three ways. It passed once.",
-  summary:
-    "Buying more when the reading is low did worse than just buying the same amount every month. Selling into high readings did help someone who already held Bitcoin. The third test, which checks the score on its own without any trading rules, does not have enough Bitcoin history behind it to settle anything.",
-  cannotDo: [
-    "It cannot tell you what happens next. Every number here is measured on history that has already happened.",
-    "It cannot tell you when to buy. That is test 1, and test 1 failed.",
-    "It has never been graded live. The thresholds were picked by someone who had already seen the chart.",
-  ],
-  tests: [
-    {
-      id: "accumulation",
-      number: "01",
-      title: "Does it help you buy?",
-      verdict: "Not supported",
-      tone: "red",
-      featuredValue: "\u221221.46%",
-      featuredLabel: "less money at the end than buying the same amount every month",
-      explanation:
-        "Every version got the same deposits and none of them were allowed to sell. Waiting for a lower reading cost more than the cheaper entries made back.",
-      stats: [
-        ["Start dates tested", "93"],
-        ["Start dates it won", "26.88%"],
-        ["Interest on idle cash", "3% a year"],
-      ],
-    },
-    {
-      id: "derisking",
-      number: "02",
-      title: "Does it help you sell?",
-      verdict: "Historically promising",
-      tone: "green",
-      featuredValue: "90.32%",
-      featuredLabel: "of start dates had a better return-per-drawdown than holding",
-      explanation:
-        "Each run started with one Bitcoin and no new deposits. Selling into high readings and buying back into low ones gave a smoother ride than sitting still, in most stretches of history.",
-      stats: [
-        ["Ended richer than holding", "68.82%"],
-        ["Typical drawdown avoided", "24.18 pp"],
-        ["Start dates tested", "93"],
-      ],
-    },
-    {
-      id: "signal",
-      number: "03",
-      title: "Is the score itself any good?",
-      verdict: "Not supported",
-      tone: "red",
-      featuredValue: "1",
-      featuredLabel: "genuinely independent four-year observation in all of Bitcoin history",
-      explanation:
-        "This test skips trading entirely and just asks whether low readings were followed by better four years than high ones. They were not. But four-year windows overlap so heavily that Bitcoin has only really been through this once, so the result settles nothing either way.",
-      stats: [
-        ["Horizon", "48 months"],
-        ["Low minus high return", "\u2212938.61%"],
-        ["Timing-placebo p", "0.881"],
-      ],
-    },
-  ],
-  attribution: [
-    ["Same amount every month", "Baseline", "\u2014"],
-    ["Buy more when low", "\u221221.46%", "26.88%"],
-    ["Buy the same, sell when high", "\u22129.23%", "5.38%"],
-    ["Buy more when low, sell when high", "\u221226.01%", "26.88%"],
-  ],
-  safeguards: [
-    "Every decision uses last month\u2019s reading, never today\u2019s.",
-    "Future-score and future-price mutations cannot change earlier trades.",
-    "Buying comparisons use identical deposits, costs, and interest.",
-    "The four-year horizon was fixed before the test ran.",
-  ],
-});
+import windowsCsv from "../../docs/artifacts/target-readout-2026-11-10/market_windows.csv?raw";
+import inputsCsv from "../../docs/artifacts/target-readout-2026-11-10/market_inputs.csv?raw";
+
+// Frozen producer CSVs contain only unquoted names, dates and numbers.
+function records(csv) {
+  const [header, ...lines] = csv.trim().split(/\r?\n/).map((line) => line.split(","));
+  return lines.map((values) => Object.fromEntries(header.map((key, i) => [key, values[i]])));
+}
+const windows = records(windowsCsv);
+const prices = new Map(records(inputsCsv).map((row) => [row.date, Number(row.price)]));
+const labels = {
+  incumbent: "Score-based buying",
+  incumbent_capped6: "Score-based buying, six-month cash limit",
+  warmup_matched_incumbent: "Score-based buying, matched regular-buying warm-up",
+  empirical_latest24: "Six-month target, empirical latest-24",
+  empirical_split24: "Six-month target, empirical split-24",
+  gaussian_split24: "Six-month target, Gaussian split-24",
+  gaussian_expanding: "Six-month target, Gaussian expanding composite",
+  gaussian_components: "Six-month target, Gaussian four components",
+  gaussian_price_only: "Six-month target, Gaussian price-only",
+  gaussian_pooled: "Six-month target, Gaussian pooled",
+};
+
+export const DCA_PERIODS = windows.filter((row) => row.arm === "incumbent").map((row) => ({
+  start: row.start_date, end: row.end_date,
+  fixedBtc: Number(row.fixed_btc_units), scoreBtc: Number(row.btc_units),
+  delta: Number(row.delta_vs_fixed), waitMonths: Number(row.mean_wait_months),
+  sweepShare: Number(row.terminal_sweep_share), endPrice: prices.get(row.end_date),
+}));
+function summarize(arm) {
+  const values = windows.filter((row) => row.arm === arm).map((row) => Number(row.delta_vs_fixed)).sort((a, b) => a-b);
+  const middle = Math.floor(values.length/2);
+  return { arm, label: labels[arm], median: values.length % 2 ? values[middle] : (values[middle-1]+values[middle])/2,
+    wins: values.filter((value) => value > 1e-12).length, count: values.length };
+}
+export const DCA_EVIDENCE = {
+  evaluatedAt: "2026-11-10", evidenceTier: "Retrospective reconstruction",
+  summary: summarize("incumbent"), comparisons: Object.keys(labels).map(summarize),
+};
+export function compareDca(period, monthlyAmount) {
+  const amount = Number(monthlyAmount);
+  if (String(monthlyAmount).trim() === "" || !Number.isFinite(amount) || amount < .01 || amount > 1_000_000
+      || Math.abs(amount*100-Math.round(amount*100)) > 1e-6) return null;
+  return { total: amount*48, fixedBtc: period.fixedBtc*amount, scoreBtc: period.scoreBtc*amount,
+    fixedValue: period.fixedBtc*amount*period.endPrice, scoreValue: period.scoreBtc*amount*period.endPrice,
+    finalBuy: period.sweepShare*amount*48 };
+}

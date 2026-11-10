@@ -81,6 +81,15 @@ readiness and production acceptance are not achieved. Next bounded work is a new
 registered scale/calibration and explicit expected-BTC decision study, as proposed
 in the research plan; it has not run. No candidate is promoted from these results.
 
+The website's Track record now displays this frozen equal-budget evidence, replacing
+the August three-test presentation. Visitors select one of the 96 complete 48-month
+periods and a monthly USD contribution. BTC, ending USD value and final catch-up
+spend scale linearly; the selected relative result and cash waiting are unchanged
+by the amount. The default is the latest period with $100/month, not a selected
+winning period. All ten alternative/control summaries remain in the existing
+view's disclosure. This adds no new market evaluation, source refresh or model
+acceptance; the remaining research step above is unchanged.
+
 ## Fresh comparison: 9 November 2026
 
 Status: replay complete against source `4211817`, with independent ledger checks.

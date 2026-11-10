@@ -347,7 +347,7 @@ describe("App", () => {
   it("renders the Track record evidence tier from its evidence metadata", async () => {
     render(<App />);
     fireEvent.click(await screen.findByRole("button", { name: "Track record" }));
-    const term = screen.getByText("Evidence type");
+    const term = await screen.findByText("Evidence type");
     expect(term.tagName).toBe("DT");
     expect(term.nextElementSibling).toHaveTextContent(DCA_EVIDENCE.evidenceTier);
     expect(DCA_EVIDENCE.evidenceTier).toBe("Retrospective reconstruction");
@@ -445,13 +445,11 @@ describe("App", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Track record" }));
 
-    expect(await screen.findByText("We tested the score three ways. It passed once.")).toBeInTheDocument();
-    expect(screen.getByText("What it cannot do")).toBeInTheDocument();
-    expect(screen.getByText("Does it help you buy?")).toBeInTheDocument();
-    expect(screen.getByText("Does it help you sell?")).toBeInTheDocument();
-    expect(screen.getByText("Is the score itself any good?")).toBeInTheDocument();
-    expect(screen.getAllByText("Not supported")).toHaveLength(2);
-    expect(screen.getByText("Historically promising")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Did waiting to buy help?" })).toBeInTheDocument();
+    expect(screen.getByText(/Across 96/)).toHaveTextContent("19.22% less BTC");
+    expect(screen.getByLabelText("Historical period")).toHaveValue("2022-11-30");
+    expect(screen.getByLabelText("Monthly contribution (USD)")).toHaveValue(100);
+    expect(screen.queryByText("Historically promising")).not.toBeInTheDocument();
   });
 
   it("surfaces validation failures from diagnostics", async () => {
@@ -677,12 +675,13 @@ describe("App", () => {
   it("labels the mobile research table values with their column meanings", async () => {
     render(<App />);
     fireEvent.click(await screen.findByRole("button", { name: "Track record" }));
+    await screen.findByRole("heading", { name: "Did waiting to buy help?" });
     const rows = document.querySelectorAll(".bb-research-table tbody tr");
     expect(rows.length).toBeGreaterThan(0);
     rows.forEach((row) => {
       expect(row.querySelector("th")).toHaveTextContent(/.+/);
-      expect(row.querySelectorAll("td")[0]).toHaveAttribute("data-label", "Money at the end");
-      expect(row.querySelectorAll("td")[1]).toHaveAttribute("data-label", "Start dates it won");
+      expect(row.querySelectorAll("td")[0]).toHaveAttribute("data-label", "Median vs Fixed DCA");
+      expect(row.querySelectorAll("td")[1]).toHaveAttribute("data-label", "Periods ahead");
     });
   });
 
