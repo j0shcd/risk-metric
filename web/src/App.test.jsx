@@ -414,7 +414,8 @@ describe("App", () => {
     render(<App />);
 
     expect(await screen.findByText("How heated does the Bitcoin market look today?")).toBeInTheDocument();
-    expect(screen.getByText(/Updated daily|days behind/)).toBeInTheDocument();
+    expect(screen.getByText(/Recent reading|days behind/)).toBeInTheDocument();
+    expect(screen.queryByText("Updated daily")).not.toBeInTheDocument();
     expect(screen.getByText(/Higher than \d+% of days since/)).toBeInTheDocument();
     expect(screen.getByText("Risk against price")).toBeInTheDocument();
     expect(screen.getByText("you are here")).toBeInTheDocument();

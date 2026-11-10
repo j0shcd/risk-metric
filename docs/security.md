@@ -5,6 +5,23 @@ Update it when an audit, runtime change, or monitoring activation changes the
 facts below. The [dated inventory](artifacts/dependency-audit-2026-10-27.json)
 retains the exact package versions and advisory IDs from this audit.
 
+Current operating policy (10 November 2026): relevant tests and security checks
+run locally before pushing. Ordinary PRs and main pushes start no Actions jobs;
+Cloudflare builds the website independently. Full hosted validation, production
+model acceptance and data publishing are manual-only. The sole automatic runner
+is the existing daily dependency security scan. Billing failures remain a scan
+coverage gap, so dependency changes require a local exact-candidate security scan.
+The inactive CI-dependent auto-merger and its dedicated code/tests are removed;
+native Dependabot alerts/security PRs remain. Earlier automatic-CI, auto-merge
+activation and daily-publisher instructions below are historical and superseded
+by this policy and [ADR 0009](adr/0009-separate-research-ci-from-production-promotion.md).
+No branch protection, model identity or acceptance threshold was changed.
+Local verification of this reduction passed 540 Python tests, 78 frontend tests,
+the six retained release-script tests, the web build and actionlint 1.7.12 on all
+four remaining workflows. Reintroducing an automatic PR trigger failed the new
+workflow-budget regression. The existing publication-identity/runtime guard tests
+still pass. No optional hosted validation or model evaluation was dispatched.
+
 ## Hardening and validation: 9 November 2026
 
 Implementation in [PR #7](https://github.com/j0shcd/risk-metric/pull/7) addresses
@@ -89,21 +106,21 @@ Current GitHub observations (read-only):
 
 | Control | Observed state and remaining work |
 | --- | --- |
-| Main protection | Strict/admin enforcement enabled, force push/deletion disabled, but required contexts/checks are **empty**. Add the three named CI checks only after exact-head CI is green and reconcile the existing direct-to-main data publisher with protection; do not enable a bypass as an incidental fix. The Dependabot merge guard currently withholds merging. |
+| Main protection | Strict/admin enforcement and force-push/deletion protection remain. Required contexts/checks are **empty**, reverified 10 November and left unchanged so billable runners cannot become a merge prerequisite. The inactive automatic patch merger is removed; merges are explicit. |
 | Dependabot | Alerts/security updates enabled, zero open alerts, dependency graph populated (186 SBOM packages). Separate malware-alert setting and failure-notification delivery remain unverified. |
 | Secret protection | Secret scanning and push protection are disabled. Enabling these needs an explicit hosted-settings change; none was made here. |
 | Security run freshness | [Push scan 42526630796](https://github.com/j0shcd/risk-metric/actions/runs/42526630796) passed 8 November at the original reviewed `0e93227` head; [scheduled scan 42478102999](https://github.com/j0shcd/risk-metric/actions/runs/42478102999) also passed 8 November. These do not verify the new hardening commits. |
 | Publisher | [Scheduled run 42481189243](https://github.com/j0shcd/risk-metric/actions/runs/42481189243) failed at the accepted-model guard. Independent source-hash reconstruction confirms its model fingerprint differs from canonical. The guard is correctly withholding publication, rather than failing on credentials or HTTP hardening. |
 
 Acquisition code participates in the model fingerprint. The hardening therefore
-also needs the existing explicit frozen-data acceptance process before scheduled
-publication can resume. **Do not refresh canonical identity or weaken the gate
+also needs the existing explicit frozen-data acceptance process before manual
+publication can proceed. **Do not refresh canonical identity or weaken the gate
 merely to make publication pass.** No production model, acceptance thresholds,
 source data or generated web artifacts were changed.
 
 Remaining bounded work: complete explicit model acceptance before publication;
-correctness CI is now verified for the hardening code. Hosted required checks/
-secret protection need deliberate settings work. Pages project/
+correctness checks are verified for the hardening code. Secret protection needs
+deliberate settings work; required Actions checks remain intentionally empty. Pages project/
 header/preview attachment, upload-origin configuration, native backport assurance
 and complete historical-secret scanning remain unverified. Lower-priority
 conditional design notes (same-owner filesystem races, evaluation IDs before
@@ -120,9 +137,9 @@ findings below; the new explicit production-acceptance workflow reuses the same
 pinned checkout/Python actions with read-only permissions and no application
 credentials. The recorded bootstrap replacement remains the next remediation.
 
-Research CI remains mandatory. Production performance evaluation is now explicit,
-and the scheduled publisher checks accepted source identity and resolved model
-settings before fetching data or writing releases. The policy and canonical model
+Relevant local validation remains mandatory. Hosted validation and production
+performance evaluation are explicit, and the manual publisher checks accepted
+source identity and resolved model settings before fetching data or writing releases. The policy and canonical model
 were not changed. [ADR 0009](adr/0009-separate-research-ci-from-production-promotion.md)
 owns this distinction; the [research record](metric_evaluation_plan.md) owns the
 results and limitations. Publication approval does not approve an experimental
@@ -468,9 +485,10 @@ Runtime sources: [Node October security release](https://nodejs.org/en/blog/vuln
 
 ## Monitoring and safe updates
 
-`.github/workflows/dependency-security.yml` is configured to run daily at 05:17 UTC, on pull
-requests and main pushes, and on manual dispatch. CI and daily publishing
-call it before installing project dependencies. It needs only read access
+`.github/workflows/dependency-security.yml` runs daily at 05:17 UTC and on manual
+dispatch. Optional hosted validation, model acceptance and publishing reuse it
+before installing dependencies. Its duplicate standalone PR/main triggers are
+removed; no other workflow runs automatically on PRs, pushes or workflow completion. It needs only read access
 and no application secrets. Scanner download failures, checksum mismatches,
 advisory-service failures and known findings fail the job. GitHub schedules
 can be delayed or disabled; check run freshness as well as the last result.
@@ -489,107 +507,28 @@ version PRs are disabled with `open-pull-requests-limit: 0`. Security updates
 have their own GitHub limit and bypass cooldown. Actions version checks remain
 weekly because bundled-library fixes may arrive without an advisory against
 the action itself. Routine Actions updates have a seven-day cooldown. There is
-no automatic merge for routine updates. The guarded security-patch policy below
-is pushed and authorized, but remains inactive until branch protection is
-complete and cloud CI is verified. CI rejects Python lock upgrades outside `requirements.in`.
+no automatic merge for routine updates. Automatic patch merging is removed under the local-first policy below.
+The local dependency-policy tests reject Python lock upgrades outside `requirements.in`.
 The existing daily Codex security/software-updates automation also
 tracks runtime releases, residual Actions findings and cloud-monitor health.
 That is a local-app monitor, separate from GitHub's cloud schedule.
 
-### Guarded security-patch auto-merge
+### Dependency updates
 
-Josh authorized automatic merging of narrowly eligible security patches on
-2026-10-27. The implementation is in `scripts/lib/dependabot-policy.mjs` and
-`scripts/dependabot-auto-merge.mjs`; the privileged workflow is
-`.github/workflows/dependabot-auto-merge.yml`.
+The guarded auto-merger authorized on 27 October never became active because
+required checks were incomplete. The 10 November billing constraint supersedes
+that approach: its privileged workflow, driver, policy module and dedicated tests
+are deleted. Keeping it would require reintroducing automatic Actions validation.
+Native Dependabot continues to report security updates; no new automatic merge
+or repository-setting change replaces the removed guard.
 
-Only a completed, successful `CI Quality And Benchmark` pull-request run can
-start it. The job checks out **main only**, does not install dependencies, and
-never executes PR code or downloads PR artifacts/caches. It uses the built-in
-GitHub token only; no PAT, app key, application secret or new service is needed.
-
-Every condition must hold:
-
-- An open, non-draft, same-repository Dependabot PR targets main. Author IDs and
-  all commit signatures are checked; human-authored follow-up commits deny it.
-- The exact current head/base pair passed all three canonical CI jobs, with no
-  missing, skipped, stale or failing job: `dependency-security / scan`,
-  `test-and-benchmark-gate`, and `web-test-and-build`.
-- Only `web/package.json` plus `web/package-lock.json`, or only
-  `requirements.txt`, changed. Every resolved upgrade is a strict X.Y.Z patch
-  increase within the same major/minor. No added/removed packages, source-bound
-  changes, script/engine changes, registry changes, or same-version hash changes
-  are accepted. npm integrity and Python distribution hashes stay mandatory.
-- OSV confirms at least one reviewed vulnerability affected an old version and
-  no known finding affects any proposed changed version. Labels and PR wording
-  are not security evidence. Known malware needs incident review and cannot
-  auto-merge. Missing/malformed/incomplete responses or service errors deny it.
-- Repository **Allow auto-merge** is enabled, and main has a classic branch
-  protection rule requiring the three checks, up-to-date branches, and admin
-  enforcement. Missing or unreadable protection data denies merging; there is
-  no permission-broadening fallback.
-
-The sole write is GitHub's squash-merge mutation with `expectedHeadOid` set to
-that verified head. GitHub enforces its current protections and reviews; the
-job never approves a PR, forces a merge, or bypasses a rule. It does not leave a
-native auto-merge request queued against a PR that may later change. If a review
-or deployment requirement is still outstanding, merge is withheld; rerun CI
-once those requirements are satisfied to reevaluate. Minor/major/prerelease
-updates, Actions/runtime changes, new dependencies and ambiguous cases remain
-manual. Security updates that require them are still reported, not discarded.
-
-Limits: these guards do not prove a new package release is free of undisclosed
-malware. Candidate code runs only in the existing unprivileged CI jobs with
-install scripts disabled. Validation allows at most two dependency files,
-1 MiB per file, 12 changed packages, 20 signed commits and 40 unique advisory
-lookups. Requests time out after 20 seconds; the workflow is bounded to ten
-minutes. Failures withhold the write. GitHub-token merges do not themselves
-start other Actions push workflows; the next scheduled scan remains important.
-
-Activation status is owned by the operational status section above. The guard
-currently supports classic branch protection; a ruleset-only setup needs
-explicit support. Existing routine upgrade PRs are not eligible. Disable
-**Allow auto-merge** to disarm the guard immediately.
-
-Verification: Node fixtures exercise successful guarded merging, dry-run
-withholding, identity/signature checks, every policy rejection and API errors.
-Workflow sentinels protect the trusted checkout and single SHA-guarded merge
-sink. Live OSV metadata accepted Vitest 4.1.9 → 4.1.12 as a known security patch
-(655 ms), and refused Requests 2.32.4 because newer findings still affect it.
-All 80 Node tests passed (56 guard cases plus 24 existing tests), along with
-two privileged-workflow sentinels and four Node setup regressions. Deliberately
-removing bot validation, security evidence, the expected-head binding, or
-malformed-result rejection made the regressions fail; all were restored.
-Independent review rechecked the production boundary and final fixtures.
-No production PR has been merged by this implementation.
-
-Selected approach: GitHub-native Dependabot plus open-source OSV avoids an
-additional commercial integration for this public repository. Alternatives
-reviewed were Renovate (more updater configuration), npm audit/pip-audit
-(useful cross-checks; unresolved pip resolution can execute package code),
-Socket (additional malware behavior analysis and app permissions), and Snyk
-(additional account and usage limits). Reassess Socket if known-advisory
-coverage proves insufficient. Do not install another app silently.
-
-Run locally before installing or changing dependencies:
-
-```sh
-bash scripts/security-check.sh
-python -m pip install --require-hashes --only-binary=:all: -r requirements.txt
-cd web && npm run reinstall
-```
-
-The frontend installer resolves requested updates as metadata, scans the new
-lock, then runs `npm ci --ignore-scripts` outside iCloud. `.npmrc` disables
-dependency install scripts; trusted cleanup/data sync are explicit commands
-inside dev/build/test, since automatic pre-hooks are also suppressed.
-Cloudflare must retain this `.npmrc` in its build root.
-
-To refresh Python pins, use the command recorded at the top of
-`requirements.txt`, on Python 3.11, with `--upgrade` when deliberately updating
-existing pins. Scan the result before installing it. Review lock diffs, run
-backend tests, frontend tests/build and script tests, then commit the
-bounded update. Do not push or deploy as a side effect of a routine audit.
+Before publishing a dependency patch, run `bash scripts/security-check.sh` on the
+exact proposed lockfiles and run the relevant existing local tests/build. Failed
+or unavailable scanning remains unresolved, never a clean result. Review the
+resolved dependency diff and request the normal explicit push/merge approval.
+This preserves prompt security remediation without requiring a billable runner.
+The optional `Manual validation` workflow remains available for an independently
+hosted check when specifically needed.
 
 ## Verification record
 

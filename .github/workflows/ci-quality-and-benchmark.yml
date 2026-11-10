@@ -1,9 +1,6 @@
-name: CI Quality And Benchmark
+name: Manual validation
 
 on:
-  pull_request:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -15,7 +12,7 @@ jobs:
       contents: read
     uses: ./.github/workflows/dependency-security.yml
 
-  test-and-benchmark-gate:
+  backend-tests:
     needs: dependency-security
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -43,13 +40,6 @@ jobs:
 
       - name: Run unit tests
         run: python -m unittest discover -s tests
-
-      - name: Run legacy benchmark diagnostic
-        continue-on-error: true
-        run: |
-          python -m risk_engine.benchmark_gate \
-            --sota config/ci_benchmark_baseline.json \
-            --foundation config/ci_benchmark_foundation.json
 
   web-test-and-build:
     needs: dependency-security

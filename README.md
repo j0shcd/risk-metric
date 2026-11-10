@@ -52,14 +52,16 @@ including purchase costs. The comparison scales frozen November evidence; it
 does not fetch live prices or run a new model. Experimental alternatives and
 their limitations are available in the same view.
 
-Python produces versioned JSON for the market dashboard and React displays it. Its scheduled refresh must
+Python produces versioned JSON for the market dashboard and React displays it. A manual refresh must
 refuse an engine/model identity that differs from the accepted production model,
 before fetching data or publishing. Research commits can therefore be published
 without silently promoting an experimental model. The legacy model-acceptance
-gate and canonical identity remain unchanged. Research CI checks correctness and
-security; production performance evaluation runs in the explicit
+gate and canonical identity remain unchanged. Relevant correctness and security
+checks run locally before pushing; hosted validation is available on manual
+dispatch. Production performance evaluation runs in the explicit
 `model-acceptance.yml` workflow. Current engine revisions are unaccepted, so the
-scheduled dashboard refresh is held and existing published artifacts remain.
+dashboard refresh is held and existing published artifacts remain. The publisher
+is manual-only; there is no daily refresh promise while acceptance is unresolved.
 See [ADR 0009](docs/adr/0009-separate-research-ci-from-production-promotion.md).
 
 ## How it fits together
@@ -68,25 +70,25 @@ See [ADR 0009](docs/adr/0009-separate-research-ci-from-production-promotion.md).
 public APIs ──► risk_engine (Python) ──► data/web/v2/*.json ──► web/ (React + Vite) ──► Cloudflare Pages
                                                 ▲
                                                 │
-                                  GitHub Action (daily cron, 06:00 UTC)
+                                  GitHub Action (manual dispatch)
 ```
 
 - `risk_engine/` — fetch, normalize, score, and aggregate. Source modules grouped by signal family: `market`, `onchain`, `sentiment`, `social`, `cycle`.
 - `publish_web.py` — pipeline entrypoint. Runs the engine and writes the JSON the frontend consumes.
 - `web/` — React + Vite dashboard, Chart.js for plots. Reads only the JSON artifacts; has no knowledge of the Python side.
-- `.github/workflows/daily-web-publish.yml` — the daily cron that keeps everything fresh.
+- `.github/workflows/daily-web-publish.yml` — the manual publisher, retaining the accepted-model guard.
 
 ## Release operations
 
-CI and daily publishing use a checksum-verified official Node 22.23.4 archive
+Optional hosted validation and publishing use a checksum-verified official Node 22.23.4 archive
 in an isolated runner directory. The shared local action checks its version
 and prepends its bin directory through `GITHUB_PATH`, preserving the configured
-Python interpreter. Daily publishing sets up Node before syncing or validating
+Python interpreter. Publishing sets up Node before syncing or validating
 release artifacts. Shell regressions in `tests/test_workflow_node_setup.py`
 cover runtime shadowing, checksum failure, version mismatch and setup ordering.
 
 Each web publish has a `release_id`. Every JSON artifact carries that ID, and
-`manifest.json` records each artifact's SHA-256 digest and byte size. The daily
+`manifest.json` records each artifact's SHA-256 digest and byte size. The manual
 workflow validates both the source and copied web release before staging it.
 The ID is the full SHA-256 of the complete canonical artifact digests plus the
 model/config identity; both backend validation and the browser reject mixed
@@ -121,7 +123,7 @@ Version 1 is stable: fields only get added, never renamed. There is no key,
 server code, or user data. Users bring their own rules; the numbers are not
 validated buy or sell signals.
 
-The daily workflow commits refreshed release artifacts. Cloudflare Pages runs
+The manual publishing workflow commits refreshed release artifacts. Cloudflare Pages runs
 `npm run build` in `web`: `prepare:web` syncs that release, then
 `scripts/build-public-api.mjs` generates `public/api/v1/*.json` before Vite
 copies it into the site. Generated API files follow the tracked `public/data`
@@ -155,7 +157,7 @@ without a combined winner. A finite known-law synthetic panel test now passes;
 market automatic promotion remains unqualified. A portable snapshot and offline replay command
 are in the plan. The existing acceptance gate remains unchanged.
 
-CI prepares the ignored `config/runtime.json` from the credential-free
+Optional hosted validation prepares the ignored `config/runtime.json` from the credential-free
 `config/model_acceptance_runtime.json` before testing. This fixture reproduces
 the frozen canonical model/configuration hashes. Preserve its bytes when moving
 it; changing it is a model change. In a fresh checkout, initialize it only when
@@ -164,8 +166,20 @@ no local runtime override exists:
 ```bash
 test -e config/runtime.json || cp config/model_acceptance_runtime.json config/runtime.json
 python -m unittest discover -s tests
-cd web && npm test
+node --test scripts/lib/*.test.mjs
+npm --prefix web test
+npm --prefix web run build
 ```
+
+Run the checks relevant to the change locally before requesting a push. Full
+backend tests and the legacy benchmark are not automatic Actions jobs. For an
+explicit performance diagnosis, run
+`python -m risk_engine.benchmark_gate --sota config/ci_benchmark_baseline.json --foundation config/ci_benchmark_foundation.json`
+locally; a failure is research evidence, not a reason to change the baseline.
+Dependency changes also require `bash scripts/security-check.sh` on the proposed
+lockfiles. `Manual validation` offers the same correctness checks on demand.
+Cloudflare builds/deploys the website; the only scheduled Actions runner is the
+daily dependency security scan. No billable Actions status is a merge prerequisite.
 
 ## License
 

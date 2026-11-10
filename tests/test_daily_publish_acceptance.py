@@ -1,4 +1,4 @@
-"""Scheduled publication must fail before fetching data for an unaccepted model."""
+"""Publication must fail before fetching data for an unaccepted model."""
 import os
 import importlib.util
 from pathlib import Path
