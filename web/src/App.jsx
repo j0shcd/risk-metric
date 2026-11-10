@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -27,7 +27,7 @@ import {
   valueLabel,
 } from "./data";
 import { CURATED_METRICS, METRIC_COPY } from "./copy";
-import { DCA_EVIDENCE } from "./dcaEvidence";
+const TrackRecord = lazy(() => import("./TrackRecord"));
 
 ChartJS.register(
   CategoryScale,
@@ -558,89 +558,6 @@ function loadStoredActiveTab() {
   };
   const resolved = migrations[tab] ?? tab;
   return TAB_KEYS.includes(resolved) ? resolved : "today";
-}
-
-function TrackRecordPanel() {
-  return (
-    <section className="bb-research" aria-labelledby="track-record-title">
-      <header className="bb-research-hero">
-        <div className="bb-research-hero__copy">
-          <h1 id="track-record-title">{DCA_EVIDENCE.headline}</h1>
-          <p>{DCA_EVIDENCE.summary}</p>
-          <dl className="bb-research-meta">
-            <div><dt>Last run</dt><dd>{formatDay(DCA_EVIDENCE.evaluatedAt)}</dd></div>
-            <div><dt>History used</dt><dd>{DCA_EVIDENCE.dataWindow}</dd></div>
-            <div><dt>Evidence type</dt><dd>{DCA_EVIDENCE.evidenceTier}</dd></div>
-          </dl>
-        </div>
-        <aside className="bb-research-cannot">
-          <h2>What it cannot do</h2>
-          <ul>
-            {DCA_EVIDENCE.cannotDo.map((item) => <li key={item}>{item}</li>)}
-          </ul>
-        </aside>
-      </header>
-
-      <div className="bb-research-tests">
-        {DCA_EVIDENCE.tests.map((test) => (
-          <article className={`bb-research-test bb-research-test--${test.tone}`} key={test.id}>
-            <div className="bb-research-test__head">
-              <span className="bb-research-test__number">{test.number}</span>
-              <span className={`bb-research-verdict bb-research-verdict--${test.tone}`}>{test.verdict}</span>
-            </div>
-            <h2>{test.title}</h2>
-            <p className="bb-research-test__value">{test.featuredValue}</p>
-            <p className="bb-research-test__value-label">{test.featuredLabel}</p>
-            <p className="bb-research-test__explanation">{test.explanation}</p>
-            <dl className="bb-research-test__stats">
-              {test.stats.map(([label, value]) => (
-                <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
-              ))}
-            </dl>
-          </article>
-        ))}
-      </div>
-
-      <div className="bb-research-lower">
-        <section className="bb-research-attribution" aria-labelledby="policy-attribution-title">
-          <div className="bb-research-section-head">
-            <h2 id="policy-attribution-title">Buying versus selling</h2>
-          </div>
-          <div className="bb-research-table-wrap">
-            <table className="bb-research-table">
-              <thead><tr><th>Rule</th><th>Money at the end</th><th>Start dates it won</th></tr></thead>
-              <tbody>
-                {DCA_EVIDENCE.attribution.map(([policy, wealth, wins]) => (
-                  <tr key={policy}>
-                    <th scope="row">{policy}</th>
-                    <td data-label="Money at the end" className={wealth.startsWith("\u2212") ? "bb-research-negative" : ""}>{wealth}</td>
-                    <td data-label="Start dates it won">{wins}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="bb-research-caption">
-            Same deposits, same trading costs. Selling helped more than varying the buys, but nothing
-            here beat simply buying the same amount every month.
-          </p>
-        </section>
-
-        <aside className="bb-research-guardrails" aria-labelledby="evidence-guardrails-title">
-          <h2 id="evidence-guardrails-title">What the test refuses to know</h2>
-          <ol>
-            {DCA_EVIDENCE.safeguards.map((safeguard) => <li key={safeguard}>{safeguard}</li>)}
-          </ol>
-          <p className="bb-research-run">Frozen run / {DCA_EVIDENCE.runId}</p>
-        </aside>
-      </div>
-
-      <p className="bb-research-disclaimer">
-        This grades one frozen score and one set of rules. A different selling rule, or a stop-loss,
-        or a price target would each need their own test. None of this is investment advice.
-      </p>
-    </section>
-  );
 }
 
 function PublicDataRow({ label, path }) {
@@ -1181,7 +1098,7 @@ export default function App() {
           </>
         )}
 
-        {activeTab === "record" && <TrackRecordPanel />}
+        {activeTab === "record" && <Suspense fallback={<p className="bb-empty" role="status">Loading the comparison…</p>}><TrackRecord /></Suspense>}
 
         {activeTab === "method" && (
           <MethodPanel

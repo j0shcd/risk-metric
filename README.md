@@ -32,9 +32,12 @@ explicitly reconstructed rather than authenticated historical vintages.
 Its three new ideas also failed the primary comparison. A registered artificial
 market audit then found useful input information without improved two-year
 forecasts from the current readout. Its uncertainty intervals were much too
-narrow. Further feature searches are paused while a separate readout study is
-specified; the market benchmark and historical verdicts stay fixed. The research
-record contains results, uncertainty and a portable replay packet.
+narrow. The November 10 six-month target/readout study provides usable continuous
+training labels, but none of its seven new forecasters beats Fixed DCA at the
+historical median and uncertainty remains poorly calibrated. Feature searches
+remain paused; the next proposed work concerns scale calibration and an explicit
+decision objective. The original market benchmark and historical verdicts stay
+fixed. The research record contains results and portable replay packets.
 Separately, six baseline forecasts were archived before their starting point;
 none has a mature outcome yet. The next registered monthly observation is
 November 30, 2026.
@@ -42,7 +45,14 @@ November 30, 2026.
 ## Existing dashboard
 
 The original dashboard combines market, on-chain, macro and attention inputs.
-Python produces versioned JSON and React displays it. Its scheduled refresh must
+Track record now lets visitors choose among 96 historical four-year periods and
+set a monthly USD contribution to compare regular buying with score-based buying.
+Both strategies receive identical cashflows and spend the full budget by the end,
+including purchase costs. The comparison scales frozen November evidence; it
+does not fetch live prices or run a new model. Experimental alternatives and
+their limitations are available in the same view.
+
+Python produces versioned JSON for the market dashboard and React displays it. Its scheduled refresh must
 refuse an engine/model identity that differs from the accepted production model,
 before fetching data or publishing. Research commits can therefore be published
 without silently promoting an experimental model. The legacy model-acceptance
