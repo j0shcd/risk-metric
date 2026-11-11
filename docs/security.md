@@ -5,6 +5,15 @@ Update it when an audit, runtime change, or monitoring activation changes the
 facts below. The [dated inventory](artifacts/dependency-audit-2026-10-27.json)
 retains the exact package versions and advisory IDs from this audit.
 
+11 November 2026 helper refresh: the pinned Setup Python 7.1.0 production
+lock now additionally matches fast-xml-parser 5.11.2 / GHSA-474x-hrwr-fgx4,
+raising its known pair count from six to seven; Checkout retains eleven. Upstream
+latest tags remain unchanged. The parser finding needs non-default stopNodes;
+bundle inclusion alone does not prove a reachable Action exploit. The public-only
+bootstrap prototype remains unintegrated. The local tracked scanner and canaries
+pass; runtime defaults and manual-only publishing policy are unchanged. Dated
+bundle/lock evidence is in the cross-project monitor report for 11 November.
+
 Current operating policy (10 November 2026): relevant tests and security checks
 run locally before pushing. Ordinary PRs and main pushes start no Actions jobs;
 Cloudflare builds the website independently. Full hosted validation, production
