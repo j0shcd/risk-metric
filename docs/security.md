@@ -5,6 +5,17 @@ Update it when an audit, runtime change, or monitoring activation changes the
 facts below. The [dated inventory](artifacts/dependency-audit-2026-10-27.json)
 retains the exact package versions and advisory IDs from this audit.
 
+12 November 2026 local security candidate: runtime pins/floors now require the
+November security patches (Node 24.22.3; already supported 22/26 lines use
+22.23.5/26.13.1). No supported major was added or global default changed. The
+official Node release fixes high-severity HTTP/2 and TLS issues; application
+reachability and managed-provider patch status remain separate. Verification
+uses a checksum-verified disposable official runtime. Publication/hosting and
+actual selected runtime require separate verification; this candidate is local.
+Evidence: /Users/josh/Documents/Codex/2026-10-27/new-chat/work/monitor-20261112.
+The checksum-pinned Linux Node bootstrap selects 22.23.5; its matching archive
+was downloaded and checksum-verified, but Linux execution remains hosted work.
+
 11 November 2026 helper refresh: the pinned Setup Python 7.1.0 production
 lock now additionally matches fast-xml-parser 5.11.2 / GHSA-474x-hrwr-fgx4,
 raising its known pair count from six to seven; Checkout retains eleven. Upstream

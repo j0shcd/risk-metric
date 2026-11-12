@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = sorted((ROOT / ".github/workflows").glob("*.yml"))
 ACTION = ROOT / ".github/actions/setup-node/action.yml"
 PIN = (ROOT / "web/.node-version").read_text().strip()
-DIGEST = "1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce"
+DIGEST = "cdeb8670a0c81f51b4dc4ac61919f9b1ad917b304bf8221eb939570663d240f8"
 
 
 def setup_script():
@@ -86,7 +86,7 @@ class WorkflowNodeSetupTests(unittest.TestCase):
         self.assertEqual(next_step.stdout.splitlines(), [f"v{PIN}", "patched-npm", "patched-npx", "configured-python"])
 
     def test_version_mismatch_does_not_select_unverified_runtime(self):
-        for version in ("22.23.3", "24.22.1", "22.23.5"):
+        for version in ("22.23.4", "24.22.3", "22.23.6"):
             with self.subTest(version=version):
                 result, _, entries, _ = self.run_setup(installed_version=version)
                 self.assertNotEqual(result.returncode, 0)
